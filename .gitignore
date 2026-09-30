@@ -4,3 +4,4 @@ coverage/
 *.log
 datos/
 capturas/
+.claude/worktrees/

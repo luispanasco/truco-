@@ -271,6 +271,19 @@ button {
   display: grid;
   gap: 1px;
   justify-items: center;
+  align-content: center;
+  min-height: 52px;
+}
+.segmentado strong {
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+/* El botón principal desactivado queda neutro, no amarillo apagado. */
+.pantalla-inicio .boton:disabled {
+  opacity: 1;
+  background: rgb(255 255 255 / 0.12);
+  color: rgb(255 255 255 / 0.45);
+  box-shadow: none;
 }
 .segmentado small {
   font-size: 0.7rem;
