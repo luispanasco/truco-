@@ -20,6 +20,17 @@
   --basto: #2f6b2a;
   --oro: #b8860b;
   --copa: #a8232a;
+  /* Mesa: equipos, turno, respuestas y paneles. */
+  --equipo-nuestro: var(--acento);
+  --equipo-rival: #f0a08f;
+  --turno: var(--acento);
+  --exito: #2e8b57;
+  --panel: rgb(0 0 0 / 0.32);
+  --panel-borde: rgb(255 255 255 / 0.1);
+  --accion-truco: var(--acento);
+  --accion-envido: var(--papel);
+  --accion-flor: var(--papel);
+  --fuente-titulo: 'Alfa Slab One', Georgia, serif;
   font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--texto-claro);
   background: var(--madera);
@@ -455,35 +466,51 @@ button {
   display: grid;
   grid-template-columns: 1fr auto auto;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px 6px 12px;
-  background: linear-gradient(rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.3));
-  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  gap: 10px;
+  padding: calc(7px + env(safe-area-inset-top)) 10px 7px 12px;
+  background: linear-gradient(rgb(0 0 0 / 0.5), rgb(0 0 0 / 0.32));
+  border-bottom: 1px solid var(--panel-borde);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.25);
+  z-index: 3;
 }
 .marcador-filas {
   display: grid;
-  gap: 3px;
+  gap: 4px;
   min-width: 0;
 }
 .marcador-fila {
   display: grid;
-  grid-template-columns: 64px 1fr 26px;
+  grid-template-columns: minmax(58px, 84px) minmax(0, 1fr) 30px;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 .marcador-nombre {
-  font-size: 0.72rem;
-  font-weight: 700;
-  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 800;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.marcador-fila.nosotros .marcador-nombre {
-  color: var(--acento);
+.marcador-nombre::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--equipo-rival);
 }
-.marcador-fila strong {
-  font-size: 1.05rem;
+.marcador-fila.nosotros .marcador-nombre {
+  color: var(--equipo-nuestro);
+}
+.marcador-fila.nosotros .marcador-nombre::before {
+  background: var(--equipo-nuestro);
+}
+.marcador-puntos {
+  font-weight: 900;
+  font-size: 1.2rem;
+  line-height: 1;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -496,15 +523,38 @@ button {
 .marcador-centro {
   display: grid;
   justify-items: center;
-  gap: 3px;
+  gap: 4px;
+  min-width: 62px;
   font-size: 0.7rem;
+}
+.marcador-mano {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+.marcador-mano b {
+  font-size: 0.85rem;
+  opacity: 1;
+}
+.marcador-chips {
+  display: flex;
+  gap: 4px;
 }
 .marcador-valor {
   background: var(--acento);
   color: var(--tinta);
-  padding: 1px 6px;
-  border-radius: 6px;
-  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.marcador-valor.pica {
+  background: rgb(255 255 255 / 0.16);
+  color: var(--texto-claro);
 }
 
 .tapete {
@@ -514,8 +564,12 @@ button {
   border-radius: 28px;
   background: radial-gradient(ellipse at center, var(--tapete), var(--tapete-oscuro));
   border: 6px solid var(--madera-clara);
-  box-shadow: inset 0 0 30px rgb(0 0 0 / 0.4);
+  box-shadow:
+    inset 0 0 0 2px rgb(0 0 0 / 0.18),
+    inset 0 0 36px rgb(0 0 0 / 0.45),
+    0 6px 16px rgb(0 0 0 / 0.35);
   min-height: 280px;
+  container: mesa / size;
 }
 
 .registro {
@@ -523,14 +577,28 @@ button {
   bottom: 38px;
   left: 50%;
   transform: translateX(-50%);
-  width: 92%;
-  font-size: 0.72rem;
+  width: 58%;
+  display: grid;
+  gap: 1px;
+  font-size: 0.74rem;
+  line-height: 1.35;
   text-align: center;
-  opacity: 0.85;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
+}
+.registro div {
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .registro div:last-child {
+  justify-self: center;
+  max-width: 100%;
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: var(--panel);
   font-weight: 700;
   opacity: 1;
 }
@@ -540,7 +608,7 @@ button {
   position: absolute;
   display: grid;
   justify-items: center;
-  gap: 2px;
+  gap: 3px;
   font-size: 0.75rem;
   z-index: 2;
 }
@@ -548,11 +616,70 @@ button {
   display: flex;
   gap: 2px;
 }
-.asiento.le-toca .avatar {
-  box-shadow: 0 0 0 3px var(--acento);
+.asiento-avatar {
+  position: relative;
+  flex: none;
+}
+/* Anillo de turno: gira mientras ese jugador piensa. */
+.asiento-avatar::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: conic-gradient(var(--turno) 0 72%, transparent 72%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.le-toca .asiento-avatar::before {
+  opacity: 1;
+  animation: girar 1.4s linear infinite;
+}
+.le-toca .avatar {
+  box-shadow: 0 0 14px 3px color-mix(in srgb, var(--turno) 55%, transparent);
+}
+@keyframes girar {
+  to {
+    rotate: 1turn;
+  }
+}
+.asiento-nombre {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 108px;
+  padding: 1px 8px 1px 6px;
+  border-radius: 999px;
+  background: var(--panel);
+  font-weight: 700;
+  line-height: 1.35;
+}
+.asiento-nombre::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--equipo-rival);
+}
+.asiento-apodo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .asiento.companiero .asiento-nombre {
-  color: var(--acento);
+  color: var(--equipo-nuestro);
+}
+.asiento.companiero .asiento-nombre::before {
+  background: var(--equipo-nuestro);
+}
+.asiento.companiero .avatar {
+  border-color: var(--equipo-nuestro);
+}
+.asiento.rival .avatar {
+  border-color: color-mix(in srgb, var(--equipo-rival) 70%, transparent);
 }
 
 .n-2 .asiento.pos-1 {
@@ -577,11 +704,11 @@ button {
 }
 .n-6 .asiento.pos-1 {
   right: 6px;
-  bottom: 18%;
+  bottom: 17%;
 }
 .n-6 .asiento.pos-2 {
   right: 6px;
-  top: 16%;
+  top: 19%;
 }
 .n-6 .asiento.pos-3 {
   top: 8px;
@@ -590,11 +717,11 @@ button {
 }
 .n-6 .asiento.pos-4 {
   left: 6px;
-  top: 16%;
+  top: 19%;
 }
 .n-6 .asiento.pos-5 {
   left: 6px;
-  bottom: 18%;
+  bottom: 17%;
 }
 
 .avatar {
@@ -607,40 +734,80 @@ button {
   font-weight: 700;
   background: rgb(0 0 0 / 0.35);
   border: 2px solid rgb(255 255 255 / 0.5);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+  transition: box-shadow 0.2s;
 }
 .avatar-chico {
-  width: 30px;
-  height: 30px;
-  font-size: 1rem;
+  width: 32px;
+  height: 32px;
+  font-size: 1.05rem;
 }
+/* La "M" de mano: una ficha sobre el borde del avatar. */
 .marca-mano {
-  margin-left: 4px;
-  padding: 0 4px;
-  border-radius: 4px;
+  position: absolute;
+  right: -5px;
+  bottom: -3px;
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
   background: var(--acento);
   color: var(--tinta);
-  font-size: 0.65rem;
-  font-weight: 800;
+  border: 2px solid var(--tapete-oscuro);
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+  z-index: 1;
+}
+.mi-info .marca-mano {
+  width: 16px;
+  height: 16px;
+  font-size: 0.55rem;
+  border-color: var(--madera);
 }
 
+/* Globos de canto: arriba del avatar, con la colita apuntando al que habla. */
 .globo {
+  --cola: 50%;
   position: absolute;
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  margin-bottom: 4px;
-  padding: 4px 10px;
-  border-radius: 12px;
+  transform-origin: var(--cola) 100%;
+  margin-bottom: 8px;
+  padding: 5px 12px;
+  border-radius: 14px;
   background: var(--papel);
   color: var(--tinta);
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 800;
   white-space: nowrap;
-  box-shadow: var(--sombra);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.4);
   z-index: 5;
+  animation: globo-entra 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.3);
 }
+.globo::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: var(--cola);
+  margin-left: -6px;
+  border: 6px solid transparent;
+  border-top-color: var(--papel);
+}
+@keyframes globo-entra {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+/* Asientos pegados a la derecha o a la izquierda: el globo se alinea hacia adentro. */
 .n-4 .pos-1 .globo,
 .n-6 .pos-1 .globo,
 .n-6 .pos-2 .globo {
+  --cola: calc(100% - 24px);
   left: auto;
   right: 0;
   transform: none;
@@ -648,19 +815,26 @@ button {
 .n-4 .pos-3 .globo,
 .n-6 .pos-4 .globo,
 .n-6 .pos-5 .globo {
+  --cola: 24px;
   left: 0;
   transform: none;
 }
-.asiento.pos-2 .globo,
-.asiento.pos-3 .globo {
-  bottom: auto;
-}
+/* El de arriba de todo habla hacia abajo, debajo de sus cartas. */
 .n-2 .asiento.pos-1 .globo,
 .n-4 .asiento.pos-2 .globo,
 .n-6 .asiento.pos-3 .globo {
   top: 100%;
   bottom: auto;
-  margin-top: 4px;
+  margin: 8px 0 0;
+  transform-origin: 50% 0;
+}
+.n-2 .asiento.pos-1 .globo::after,
+.n-4 .asiento.pos-2 .globo::after,
+.n-6 .asiento.pos-3 .globo::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--papel);
 }
 
 /* Cartas jugadas: cada una entre su jugador y el centro. */
@@ -741,37 +915,99 @@ button {
 
 .mi-lugar {
   position: relative;
-  padding: 6px 10px calc(10px + env(safe-area-inset-bottom));
-  background: rgb(0 0 0 / 0.25);
+  padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+  background: linear-gradient(rgb(0 0 0 / 0.28), rgb(0 0 0 / 0.4));
+  border-top: 1px solid var(--panel-borde);
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
+  transition: box-shadow 0.2s;
 }
 .mi-lugar.le-toca {
-  box-shadow: inset 0 3px 0 var(--acento);
+  box-shadow: inset 0 3px 0 var(--turno);
 }
 .mi-info {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 34px;
   font-size: 0.85rem;
 }
+.mi-info .asiento-avatar::before {
+  inset: -4px;
+}
 .mi-nombre {
-  font-weight: 700;
+  min-width: 2.5em;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  max-width: 34%;
 }
 .mi-tanto {
-  opacity: 0.85;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+.mi-tanto b {
+  font-weight: 800;
+}
+.mi-flor {
+  margin-left: 6px;
+  color: var(--acento);
+}
+.mi-estado {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
 }
 .te-toca {
-  margin-left: auto;
-  padding: 2px 8px;
-  border-radius: 8px;
-  background: var(--acento);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--turno);
   color: var(--tinta);
+  font-size: 0.78rem;
   font-weight: 800;
+  white-space: nowrap;
+}
+/* Irse al mazo: chico y aparte, pero con zona de toque de 44 px. */
+.boton-mazo {
+  position: relative;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto-claro);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.boton-mazo::before {
+  content: '';
+  position: absolute;
+  inset: -6px -2px;
+}
+.boton-mazo:hover {
+  background: rgb(255 255 255 / 0.08);
 }
 .globo-yo {
   bottom: 100%;
   left: 50%;
+}
+/* Botonera o resultado de la mano: el lugar queda reservado para que la mesa no salte. */
+.mi-lugar-pie {
+  min-height: 44px;
+  display: grid;
+  align-content: center;
 }
 .mi-mano {
   display: flex;
@@ -780,82 +1016,284 @@ button {
   min-height: calc(min(21vw, 86px) * 1.5);
 }
 
+/* Botonera: respuestas arriba, cantos agrupados abajo. Máximo dos filas; si no entran, se deslizan. */
 .acciones {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  min-height: 42px;
+  display: grid;
+  gap: 8px;
 }
-.boton-accion {
-  padding: 10px 14px;
-  border: 0;
+.acciones-fila {
+  display: flex;
+  justify-content: safe center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+  margin: -2px -2px -4px;
+  scrollbar-width: none;
+}
+.acciones-fila::-webkit-scrollbar {
+  display: none;
+}
+.acciones-grupo {
+  display: flex;
+  flex: none;
   border-radius: var(--radio);
-  background: var(--acento);
-  color: var(--tinta);
-  font-weight: 800;
+  overflow: hidden;
   box-shadow: var(--sombra);
 }
-.boton-accion.accion-no {
-  background: var(--papel);
+.boton-accion {
+  flex: none;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radio);
+  background: var(--accion-truco);
+  color: var(--tinta);
+  font-size: 0.9rem;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: var(--sombra);
+  transition:
+    filter 0.12s,
+    transform 0.12s;
 }
-.boton-accion.accion-mazo {
-  background: rgb(255 255 255 / 0.15);
-  color: var(--texto-claro);
-  font-weight: 600;
+.boton-accion:hover {
+  filter: brightness(1.06);
+}
+.boton-accion:active {
+  filter: brightness(0.92);
+  transform: translateY(1px);
+}
+.boton-accion:focus-visible {
+  outline: 2px solid var(--texto-claro);
+  outline-offset: 2px;
+}
+.acciones-grupo .boton-accion {
+  border-radius: 0;
   box-shadow: none;
 }
+.acciones-grupo .boton-accion + .boton-accion {
+  border-left: 1px solid rgb(0 0 0 / 0.16);
+}
+.acciones-grupo .boton-accion:focus-visible {
+  outline-offset: -3px;
+  outline-color: var(--tinta);
+}
+.grupo-envido .boton-accion {
+  background: var(--accion-envido);
+}
+.grupo-flor .boton-accion {
+  background: var(--accion-flor);
+}
+.acciones-respuestas .boton-accion {
+  flex: 1 1 0;
+  max-width: 180px;
+  background: var(--papel);
+}
+.boton-accion.accion-si {
+  background: var(--exito);
+  color: #fff;
+}
+.boton-accion.accion-no {
+  background: var(--peligro);
+  color: #fff;
+}
 
-.aviso {
+/* Avisos (errores y señas): arriba del paño, sin tapar el marcador. */
+.avisos {
   position: absolute;
+  top: 8px;
   left: 50%;
-  top: 6px;
   transform: translateX(-50%);
-  max-width: 92%;
-  padding: 8px 14px;
-  border-radius: var(--radio);
-  background: rgb(0 0 0 / 0.8);
-  font-size: 0.85rem;
+  width: max-content;
+  max-width: 86%;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  pointer-events: none;
   z-index: 20;
 }
+.aviso {
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.82);
+  border: 1px solid var(--panel-borde);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.4);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  text-align: center;
+  animation: globo-entra 0.2s ease-out;
+}
+.aviso-error {
+  border-color: var(--peligro);
+}
 .aviso-senia {
-  top: 6px;
   background: rgb(20 60 120 / 0.95);
+}
+.aviso-detalle {
+  opacity: 0.8;
 }
 
 .boton-salir {
-  width: 32px;
-  height: 32px;
-  border: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--panel-borde);
   border-radius: 50%;
-  background: rgb(255 255 255 / 0.15);
+  background: rgb(255 255 255 / 0.12);
   color: var(--texto-claro);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.boton-salir:hover {
+  background: rgb(255 255 255 / 0.2);
 }
 
-.fin {
+/* Modales (fin de partida y salir): mismo marco de madera y paño. */
+.modal {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgb(0 0 0 / 0.6);
+  padding: 16px;
+  background: radial-gradient(circle at 50% 40%, rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.78));
+  backdrop-filter: blur(3px);
   z-index: 30;
+  animation: modal-fondo 0.2s ease-out;
 }
-.fin-caja {
-  width: min(88%, 340px);
-  padding: 24px;
-  border-radius: 18px;
-  background: var(--tapete-oscuro);
-  border: 4px solid var(--madera-clara);
+.modal-caja {
+  position: relative;
+  width: min(100%, 350px);
+  margin-top: 40px;
+  padding: 50px 22px 22px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, var(--tapete), var(--tapete-oscuro));
+  border: 1px solid rgb(255 255 255 / 0.14);
+  box-shadow:
+    0 0 0 5px var(--madera-clara),
+    0 0 0 6px rgb(0 0 0 / 0.3),
+    0 20px 44px rgb(0 0 0 / 0.55);
   display: grid;
-  gap: 12px;
+  gap: 10px;
   text-align: center;
+  animation: modal-entra 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.25);
 }
-.fin-caja h2 {
+.fin-emblema {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% -50%;
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, var(--madera-clara), var(--madera));
+  border: 3px solid var(--acento);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.45);
+  font-size: 2.6rem;
+  line-height: 1;
+}
+.fin-emblema.chico {
+  width: 64px;
+  height: 64px;
+  font-size: 1.9rem;
+  border-color: var(--madera-clara);
+}
+.modal-caja:has(.fin-emblema.chico) {
+  padding-top: 40px;
+}
+.modal-titulo {
   margin: 0;
-  font-size: 2rem;
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: 1.4rem;
+  line-height: 1.15;
+  color: var(--papel);
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.3);
 }
-.fin-caja p {
-  margin: 0 0 8px;
+.modal-texto {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+.modal-botones {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+}
+.fin-titulo {
+  font-size: 2.5rem;
+  letter-spacing: 0.01em;
+}
+.fin-ganada {
+  background:
+    repeating-conic-gradient(from 0deg at 50% 0%, rgb(255 255 255 / 0.06) 0 9deg, transparent 9deg 18deg),
+    linear-gradient(180deg, var(--tapete), var(--tapete-oscuro));
+}
+.fin-ganada .fin-titulo {
+  color: var(--acento);
+  text-shadow:
+    0 3px 0 var(--dorso),
+    0 8px 18px rgb(0 0 0 / 0.45);
+}
+.fin-perdida .fin-emblema {
+  border-color: var(--madera-clara);
+}
+.fin-resultado {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 4px;
+  padding: 12px 10px;
+  border-radius: 16px;
+  background: rgb(0 0 0 / 0.28);
+  border: 1px solid var(--panel-borde);
+}
+.fin-equipo {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.fin-equipo span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fin-equipo.nosotros span {
+  color: var(--equipo-nuestro);
+}
+.fin-equipo.ellos span {
+  color: var(--equipo-rival);
+}
+.fin-equipo strong {
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: 2.4rem;
+  line-height: 1;
+  opacity: 0.6;
+}
+.fin-equipo.gano strong {
+  opacity: 1;
+  color: var(--papel);
+}
+.fin-guion {
+  font-size: 1.4rem;
+  opacity: 0.5;
+}
+@keyframes modal-fondo {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes modal-entra {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
 }
 
 /* En pica-pica, los que no juegan el duelo actual quedan atenuados. */
@@ -893,24 +1331,21 @@ button {
 
 /* Resultado de la mano, durante la pausa antes de repartir de nuevo. */
 .fin-de-mano {
-  position: absolute;
-  left: 50%;
-  top: 6px;
-  transform: translateX(-50%);
-  pointer-events: none;
-  width: min(86%, 360px);
-  padding: 12px 16px;
+  width: min(100%, 420px);
+  margin: 0 auto;
+  padding: 8px 14px;
   border-radius: 14px;
-  background: rgb(0 0 0 / 0.78);
-  border: 2px solid var(--acento);
+  background: rgb(0 0 0 / 0.35);
+  border: 1.5px solid var(--acento);
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   line-height: 1.4;
-  z-index: 25;
+  animation: globo-entra 0.25s ease-out;
 }
 .fin-de-mano div:first-child {
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  color: var(--acento);
 }
 
 .mazo-chico {
@@ -922,6 +1357,7 @@ button {
 .te-toca.espera {
   background: rgb(255 255 255 / 0.15);
   color: var(--texto-claro);
+  font-weight: 700;
 }
 
 .pantalla-baraja {
@@ -936,13 +1372,152 @@ button {
   background: var(--peligro);
   color: #fff;
 }
-.titulo-dialogo {
-  font-size: 1.4rem !important;
+
+/* ── Mesa: tamaños de pantalla ────────────────────────────────── */
+
+/* Celular chico (o bajito): todo un poco más apretado para que entre el paño. */
+@media (max-height: 760px) {
+  .marcador {
+    padding-top: calc(5px + env(safe-area-inset-top));
+    padding-bottom: 5px;
+  }
+  .tapete {
+    margin: 6px;
+    border-width: 5px;
+  }
+  .mi-lugar {
+    padding-top: 6px;
+    gap: 6px;
+  }
+  .avatar:not(.avatar-chico) {
+    width: 40px;
+    height: 40px;
+    font-size: 1.35rem;
+  }
 }
-.marcador-mano {
-  opacity: 0.8;
-  font-size: 0.72rem;
-  white-space: nowrap;
+
+/* Celular angosto: nombres más compactos para no rozar las cartas jugadas de los costados. */
+@media (max-width: 380px) {
+  .asiento {
+    font-size: 0.7rem;
+  }
+  .asiento-nombre {
+    max-width: 92px;
+    padding: 1px 7px 1px 5px;
+    gap: 4px;
+  }
+  .n-4 .asiento.pos-1,
+  .n-6 .asiento.pos-1,
+  .n-6 .asiento.pos-2 {
+    right: 3px;
+  }
+  .n-4 .asiento.pos-3,
+  .n-6 .asiento.pos-4,
+  .n-6 .asiento.pos-5 {
+    left: 3px;
+  }
+}
+
+/* Escritorio: la mesa centrada como un tablero con marco, sin estirarse. */
+@media (min-width: 720px) and (min-height: 640px) {
+  .pantalla-mesa {
+    max-width: 620px;
+    height: calc(100dvh - 32px);
+    margin: 16px auto;
+    border-radius: 24px;
+    background: rgb(0 0 0 / 0.16);
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.06),
+      0 24px 60px rgb(0 0 0 / 0.45);
+  }
+  .marcador {
+    padding: 10px 14px 10px 18px;
+  }
+  .fosforos {
+    height: 21px;
+  }
+  .marcador-nombre {
+    font-size: 0.8rem;
+  }
+  .marcador-puntos {
+    font-size: 1.3rem;
+  }
+  .tapete {
+    margin: 12px 14px;
+  }
+  .avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 1.8rem;
+  }
+  .asiento {
+    font-size: 0.82rem;
+  }
+  .mi-lugar {
+    padding: 10px 18px 14px;
+  }
+}
+
+/*
+ * 3 contra 3 en un paño bajito (escritorio o celular acostado): los asientos de los
+ * costados van acostados, con las cartas hacia el centro, para que no se pisen.
+ */
+@container mesa (max-height: 480px) and (min-width: 480px) {
+  .n-6 .asiento.pos-1,
+  .n-6 .asiento.pos-2,
+  .n-6 .asiento.pos-4,
+  .n-6 .asiento.pos-5 {
+    grid-template-areas:
+      'avatar cartas'
+      'nombre cartas';
+    align-items: center;
+    column-gap: 8px;
+  }
+  .n-6 .asiento.pos-1,
+  .n-6 .asiento.pos-2 {
+    grid-template-areas:
+      'cartas avatar'
+      'cartas nombre';
+  }
+  .n-6 .asiento.pos-1 .asiento-avatar,
+  .n-6 .asiento.pos-2 .asiento-avatar,
+  .n-6 .asiento.pos-4 .asiento-avatar,
+  .n-6 .asiento.pos-5 .asiento-avatar {
+    grid-area: avatar;
+  }
+  .n-6 .asiento.pos-1 .asiento-nombre,
+  .n-6 .asiento.pos-2 .asiento-nombre,
+  .n-6 .asiento.pos-4 .asiento-nombre,
+  .n-6 .asiento.pos-5 .asiento-nombre {
+    grid-area: nombre;
+  }
+  .n-6 .asiento.pos-1 .asiento-cartas,
+  .n-6 .asiento.pos-2 .asiento-cartas,
+  .n-6 .asiento.pos-4 .asiento-cartas,
+  .n-6 .asiento.pos-5 .asiento-cartas {
+    grid-area: cartas;
+  }
+}
+
+/* Paño muy bajito en 3 contra 3: el mazo se achica un poco más para no pisar asientos. */
+@container mesa (max-height: 440px) {
+  .mazo-chico {
+    scale: 0.68;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .le-toca .asiento-avatar::before {
+    animation: none;
+    background: var(--turno);
+  }
+  .globo,
+  .aviso,
+  .modal,
+  .modal-caja,
+  .fin-de-mano {
+    animation: none;
+  }
 }
 
 /* ── Animaciones ── */

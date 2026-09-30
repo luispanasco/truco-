@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
 import { GESTO, SIGNIFICADO, esPiezaOMata } from '../senias'
-import { Acciones } from '../componentes/Acciones'
-import { Asiento, Avatar } from '../componentes/Asiento'
+import { Acciones, BotonMazo } from '../componentes/Acciones'
+import { Asiento, Avatar, MarcaMano } from '../componentes/Asiento'
 import { Carta } from '../componentes/Carta'
 import { Fosforos } from '../componentes/Fosforos'
 import { Mazo } from '../componentes/Mazo'
@@ -79,6 +79,9 @@ export function Mesa() {
   const enEquipos = n > 2
   const vueltas = e.vueltas.filter((v) => v.resultado !== null)
   const lugarYo = sala.lugares[yo]!
+  const nombreNuestro = enEquipos ? 'Nosotros' : 'Vos'
+  const nombreEllos = (enEquipos ? 'Ellos' : sala.lugares[1 - yo]?.apodo) ?? 'Ellos'
+  const ganamos = vista.ganador === nuestro
   const salirDeLaMesa = () => {
     salir()
     navegar('/')
@@ -89,20 +92,26 @@ export function Mesa() {
       <header className="marcador">
         <div className="marcador-filas">
           <div className="marcador-fila nosotros">
-            <span className="marcador-nombre">{enEquipos ? 'Nosotros' : 'Vos'}</span>
+            <span className="marcador-nombre">{nombreNuestro}</span>
             <Fosforos puntos={pn} malas={vista.config.puntosMalas} />
-            <strong>{pn}</strong>
+            <strong className="marcador-puntos">{pn}</strong>
           </div>
           <div className="marcador-fila ellos">
-            <span className="marcador-nombre">{enEquipos ? 'Ellos' : sala.lugares[1 - yo]?.apodo}</span>
+            <span className="marcador-nombre">{nombreEllos}</span>
             <Fosforos puntos={pe} malas={vista.config.puntosMalas} />
-            <strong>{pe}</strong>
+            <strong className="marcador-puntos">{pe}</strong>
           </div>
         </div>
         <div className="marcador-centro">
-          <span className="marcador-mano">Mano {vista.mano.numero}</span>
-          {e.truco.valor > 1 && <div className="marcador-valor">vale {e.truco.valor}</div>}
-          {vista.mano.picaPica && <div className="marcador-valor">pica-pica</div>}
+          <span className="marcador-mano">
+            Mano <b>{vista.mano.numero}</b>
+          </span>
+          {(e.truco.valor > 1 || vista.mano.picaPica) && (
+            <div className="marcador-chips">
+              {e.truco.valor > 1 && <span className="marcador-valor">vale {e.truco.valor}</span>}
+              {vista.mano.picaPica && <span className="marcador-valor pica">pica-pica</span>}
+            </div>
+          )}
         </div>
         <button type="button" className="boton-salir" onClick={() => setConfirmarSalida(true)} aria-label="Salir de la mesa">
           ✕
@@ -112,8 +121,17 @@ export function Mesa() {
       <main className="tapete">
         <div className="registro" aria-live="polite">
           {registro.slice(-3).map((l) => (
-            <div key={l.id}>{l.texto}</div>
+            <div key={l.id}>{l.texto.replace(/[━─]+/g, '').trim()}</div>
           ))}
+        </div>
+        <div className="avisos">
+          {aviso && <div className="aviso aviso-error">{aviso}</div>}
+          {seniaVisible && (
+            <div className="aviso aviso-senia" key={seniaVisible.id}>
+              <span aria-hidden="true">👀</span> <b>{sala.lugares[seniaVisible.de]?.apodo}</b>: {GESTO[seniaVisible.senia].toLowerCase()}{' '}
+              <span className="aviso-detalle">({SIGNIFICADO[seniaVisible.senia]})</span>
+            </div>
+          )}
         </div>
 
         {sala.lugares
@@ -175,19 +193,22 @@ export function Mesa() {
           </div>
         )}
         <div className="mi-info">
-          <Avatar lugar={lugarYo} tam="chico" />
-          <span className="mi-nombre">
-            {lugarYo.apodo}
-            {e.mano === yo && <span className="marca-mano">M</span>}
-          </span>
+          <div className="asiento-avatar">
+            <Avatar lugar={lugarYo} tam="chico" />
+            {e.mano === yo && <MarcaMano />}
+          </div>
+          <span className="mi-nombre">{lugarYo.apodo}</span>
           {sala.ayudas && (
             <span className="mi-tanto">
-              envido {vista.mano.miTanto.envido}
-              {vista.mano.miTanto.flor !== null && <strong> · ¡flor de {vista.mano.miTanto.flor}!</strong>}
+              envido <b>{vista.mano.miTanto.envido}</b>
+              {vista.mano.miTanto.flor !== null && <strong className="mi-flor">flor {vista.mano.miTanto.flor}</strong>}
             </span>
           )}
-          {meToca && <span className="te-toca">Te toca</span>}
-          {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
+          <span className="mi-estado">
+            {meToca && <span className="te-toca">Te toca</span>}
+            {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
+            {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
+          </span>
         </div>
         <div className="mi-mano">
           {misCartas.map((c, i) => (
@@ -209,52 +230,71 @@ export function Mesa() {
             </motion.div>
           ))}
         </div>
-        {!finDeMano && <Acciones vista={vista} alElegir={jugar} />}
+        <div className="mi-lugar-pie">
+          {finDeMano ? (
+            // Durante la pausa entre manos, el resultado va donde estaban los botones: no tapa la mesa.
+            <div className="fin-de-mano" role="status">
+              {finDeMano.split('\n').map((l, i) => (
+                <div key={i}>{l.trim().replace(/^✔\s*/, '')}</div>
+              ))}
+            </div>
+          ) : (
+            <Acciones vista={vista} alElegir={jugar} />
+          )}
+        </div>
       </section>
 
-      {finDeMano && (
-        // Durante la pausa entre manos, el resultado se muestra arriba, sin tapar la mesa.
-        <div className="fin-de-mano" role="status">
-          {finDeMano.split('\n').map((l, i) => (
-            <div key={i}>{l.trim().replace(/^✔\s*/, '')}</div>
-          ))}
-        </div>
-      )}
-      {aviso && <div className="aviso">{aviso}</div>}
-      {seniaVisible && (
-        <div className="aviso aviso-senia" key={seniaVisible.id}>
-          👀 {sala.lugares[seniaVisible.de]?.apodo}: {GESTO[seniaVisible.senia].toLowerCase()} ({SIGNIFICADO[seniaVisible.senia]})
-        </div>
-      )}
-
       {vista.ganador !== null && (
-        <div className="fin">
-          <div className="fin-caja">
-            <h2>{vista.ganador === nuestro ? (enEquipos ? '¡Ganaron!' : '¡Ganaste!') : enEquipos ? 'Perdieron' : 'Perdiste'}</h2>
-            <p>
-              {enEquipos ? 'Nosotros' : 'Vos'} {pn} · {enEquipos ? 'Ellos' : sala.lugares[1 - yo]?.apodo} {pe}
-            </p>
-            <button type="button" className="boton" onClick={() => enviar('revancha', {})}>
-              Revancha
-            </button>
-            <button type="button" className="boton boton-secundario" onClick={salirDeLaMesa}>
-              Volver al inicio
-            </button>
+        <div className="modal" role="dialog" aria-modal="true" aria-labelledby="fin-titulo">
+          <div className={`modal-caja fin-caja ${ganamos ? 'fin-ganada' : 'fin-perdida'}`}>
+            <div className="fin-emblema" aria-hidden="true">
+              {ganamos ? '🏆' : '🧉'}
+            </div>
+            <h2 id="fin-titulo" className="modal-titulo fin-titulo">
+              {ganamos ? (enEquipos ? '¡Ganaron!' : '¡Ganaste!') : enEquipos ? 'Perdieron' : 'Perdiste'}
+            </h2>
+            <p className="modal-texto">{ganamos ? 'Partida ganada' : 'Esta vez no se dio'} · a {vista.config.puntosPartida} puntos</p>
+            <div className="fin-resultado" aria-label="Resultado final">
+              <div className={`fin-equipo nosotros${ganamos ? ' gano' : ''}`}>
+                <span>{nombreNuestro}</span>
+                <strong>{pn}</strong>
+              </div>
+              <span className="fin-guion" aria-hidden="true">–</span>
+              <div className={`fin-equipo ellos${ganamos ? '' : ' gano'}`}>
+                <span>{nombreEllos}</span>
+                <strong>{pe}</strong>
+              </div>
+            </div>
+            <div className="modal-botones">
+              <button type="button" className="boton boton-grande" onClick={() => enviar('revancha', {})}>
+                Revancha
+              </button>
+              <button type="button" className="boton boton-secundario" onClick={salirDeLaMesa}>
+                Volver al inicio
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {confirmarSalida && (
-        <div className="fin" role="dialog" aria-modal="true" aria-label="Abandonar la partida">
-          <div className="fin-caja">
-            <h2 className="titulo-dialogo">¿Abandonar la partida?</h2>
-            <p>{vista.ganador === null ? 'La partida en curso se pierde.' : 'Volvés al inicio.'}</p>
-            <button type="button" className="boton boton-peligro" onClick={salirDeLaMesa}>
-              Abandonar
-            </button>
-            <button type="button" className="boton boton-secundario" onClick={() => setConfirmarSalida(false)}>
-              Seguir jugando
-            </button>
+        <div className="modal" role="dialog" aria-modal="true" aria-labelledby="salir-titulo">
+          <div className="modal-caja">
+            <div className="fin-emblema chico" aria-hidden="true">
+              🚪
+            </div>
+            <h2 id="salir-titulo" className="modal-titulo">
+              ¿Abandonar la partida?
+            </h2>
+            <p className="modal-texto">{vista.ganador === null ? 'La partida en curso se pierde.' : 'Volvés al inicio.'}</p>
+            <div className="modal-botones">
+              <button type="button" className="boton boton-peligro" onClick={salirDeLaMesa}>
+                Abandonar
+              </button>
+              <button type="button" className="boton boton-secundario" onClick={() => setConfirmarSalida(false)}>
+                Seguir jugando
+              </button>
+            </div>
           </div>
         </div>
       )}

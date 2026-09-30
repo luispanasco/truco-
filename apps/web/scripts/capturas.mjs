@@ -1,18 +1,21 @@
 /**
- * Capturas de pantalla en tamaño celular (390x844): inicio, y la mesa en 1v1, 2v2 y 3v3
- * con cartas en juego y durante la pausa de fin de mano.
+ * Capturas de pantalla (por defecto tamaño celular, 390x844): inicio, y la mesa en 1v1, 2v2
+ * y 3v3 con cartas en juego y durante la pausa de fin de mano.
  * Uso, con la web levantada (pnpm web):
- *   node scripts/capturas.mjs [carpeta] [url]
+ *   node scripts/capturas.mjs [carpeta] [url] [ancho x alto]
+ * Por ejemplo `node scripts/capturas.mjs capturas http://localhost:5173 1280x800` para escritorio.
  */
 import { mkdirSync } from 'node:fs'
 import { chromium } from '@playwright/test'
 
 const dir = process.argv[2] ?? 'capturas'
 const url = process.argv[3] ?? 'http://localhost:5173'
+const [ancho, alto] = (process.argv[4] ?? '390x844').split('x').map(Number)
+const celular = ancho < 700
 mkdirSync(dir, { recursive: true })
 
 const nav = await chromium.launch()
-const ctx = await nav.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true })
+const ctx = await nav.newContext({ viewport: { width: ancho, height: alto }, deviceScaleFactor: celular ? 2 : 1, isMobile: celular, hasTouch: celular })
 const p = await ctx.newPage()
 p.on('pageerror', (e) => console.log('ERROR EN PÁGINA:', e.message))
 p.on('console', (m) => {
@@ -24,14 +27,14 @@ await p.fill('input', 'Luis')
 await p.screenshot({ path: `${dir}/1-inicio.png` })
 
 for (const [formato, etiqueta] of [
-  ['Mano a mano', '1v1'],
-  ['Parejas', '2v2'],
-  ['Tríos', '3v3'],
+  ['1 vs 1', '1v1'],
+  ['2 vs 2', '2v2'],
+  ['3 vs 3', '3v3'],
 ]) {
   await p.goto(url + '/')
   await p.fill('input', 'Luis')
   await p.click('text=' + formato)
-  await p.click('button.boton-grande')
+  await p.click('button:text-is("Jugar")')
   await p.waitForSelector('.mi-mano .carta')
   await p.screenshot({ path: `${dir}/2-${etiqueta}-inicio.png` })
   let jugadas = 0
