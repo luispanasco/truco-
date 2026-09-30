@@ -24,14 +24,14 @@ await p.fill('input', 'Luis')
 await p.screenshot({ path: `${dir}/1-inicio.png` })
 
 for (const [formato, etiqueta] of [
-  ['1 contra 1', '1v1'],
-  ['2 contra 2', '2v2'],
-  ['3 contra 3', '3v3'],
+  ['Mano a mano', '1v1'],
+  ['Parejas', '2v2'],
+  ['Tríos', '3v3'],
 ]) {
   await p.goto(url + '/')
   await p.fill('input', 'Luis')
   await p.click('text=' + formato)
-  await p.click('text=Jugar contra bots')
+  await p.click('button.boton-grande')
   await p.waitForSelector('.mi-mano .carta')
   await p.screenshot({ path: `${dir}/2-${etiqueta}-inicio.png` })
   let jugadas = 0
