@@ -12,7 +12,7 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 | 1A | Motor de reglas | Hecha | 2026-09-30 | `55961aa` |
 | 1B | Bots | Hecha | 2026-09-30 | `117d29d` |
 | 1C | Servidor | Hecha | 2026-09-30 | `039be94` |
-| 1D | Interfaz | En curso (D1 y D2 hechos) | — | — |
+| 1D | Interfaz | En curso (D1, D2 y D3 hechos) | — | — |
 | 1E | Señas, avatares y cantos | Pendiente | — | — |
 | Fase 2 | Cuentas, economía y voz | Pendiente | — | — |
 | Fase 3 | Modo sucio | Pendiente | — | — |
@@ -369,3 +369,50 @@ Se hizo mientras el usuario no estaba, con autorización para seguir con el D2 y
 - En 360 px con 3v3, un globo puede rozar el mazo por un momento.
 - Con flor, "Te toca" y "Mazo" a la vez en 360 px, la pastilla del envido se corta con puntos suspensivos.
 - Mientras una carta sale de la mesa (0,3 s), puede verse apenas por debajo de la nueva.
+
+### Tramo D3 — 2026-09-30
+
+La base la hice yo: conexión online, estado de la conexión, `pnpm dev` y prueba de humo. Después trabajaron tres agentes en paralelo, cada uno en su propia rama: pantallas online, mesa online y ojeo. Se integraron a `main` con dos conflictos chicos de imports y rutas.
+
+- **Conexión online** (`ConexionOnline`, con `@colyseus/sdk`):
+  - crear sala, unirse por código y cola pública;
+  - estados conectada, reconectando y caída;
+  - guarda la partida en curso para "Volver a la partida";
+  - la dirección del servidor es el mismo host de la página en el puerto 2567, o `VITE_SERVIDOR`.
+- **Pantallas online:**
+  - inicio con Crear sala, Unirme con código, Buscar partida y la tarjeta "Tenés una partida en curso";
+  - `/crear`, con las reglas de la mesa y sus explicaciones;
+  - `/unirme`;
+  - `/s/:codigo`, que pide el apodo si falta;
+  - `/sala`: código grande, Compartir y Copiar link, lugares por equipo, cambio de lugar, configuración del anfitrión y Empezar;
+  - `/buscar`, con la oferta de jugar contra un bot.
+- **Mesa online:**
+  - chat en hoja inferior con pestañas General y Equipo, **frases rápidas** y contador de no leídos;
+  - menú de jugador para silenciar y reportar;
+  - panel de señas;
+  - reloj de turno en el anillo, y "Te quedan N s";
+  - desconectados atenuados con "juega un bot";
+  - franja de reconexión y modal de conexión perdida con reintento;
+  - revancha con progreso ("Revancha 1/2").
+- **Ojeo de cartas** (pedido nuevo del usuario, anotado en la especificación):
+  - `ManoOjeable` con pointer events: el arrastre es 1:1 en vertical, con los límites pedidos, y la mano se abre sola a los 600 ms;
+  - "Ver todas", y tocar una carta en tu turno abre el abanico;
+  - vibración y movimiento reducido;
+  - la lógica pura está en `src/ojeo.ts`, con sus tests;
+  - página de prueba `/ojeo`;
+  - interruptor "Ojear cartas" en Más opciones;
+  - las cartas SVG se ajustaron: número en las dos esquinas de arriba, entre el 8% y el 25% de la altura, y dibujo desde el 25%.
+- **Error del servidor encontrado con los tests de punta a punta:** quien recargaba la página no podía volver a la sala ("La sala está llena"). Su conexión vieja seguía esperando reconexión y ocupaba el cupo, y Colyseus rechazaba la nueva antes de que la sala reconociera el ID de invitado. Ahora el tope de conexiones es el doble de los lugares, y quién se sienta lo controla la sala. Tiene un test de integración, y se comprobó que sin el arreglo falla.
+- **Instalación:** reapareció la copia duplicada de `@colyseus/core` al instalar el SDK en la web. Se resolvió con una reinstalación limpia, y ahora la **prueba de humo** (`pnpm --filter @truco/server humo`) corre dentro de `pnpm test` y lo detecta.
+- **Tests:**
+  - 202 unitarios y de integración: motor 123, bots 13, servidor 22, web 44;
+  - 2 de punta a punta con Playwright (`pnpm --filter @truco/web e2e`): dos navegadores crean la sala, entran con el código, juegan, se mandan un chat, y uno recarga y vuelve. Estables en 3 corridas.
+
+**Pendientes:**
+- "Compartir" (`navigator.share`) falta probarlo en un celular de verdad.
+- Recargar estando en `/sala` vuelve al inicio, y desde ahí se entra con "Volver a la partida"; no reconecta solo.
+- "Descartar" la partida guardada solo la olvida en el navegador.
+- Las reglas extra de `/crear` no se recuerdan para la próxima.
+- El botón "Enviar" del chat desactivado queda de un color oliva apagado.
+- El ojeo no se midió en un Android real.
+- Con teclado o lector de pantalla, activar una carta desde la pila la juega directo, sin abrir el abanico.

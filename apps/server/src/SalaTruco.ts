@@ -76,6 +76,14 @@ interface DatosCliente {
 
 const idJugador = (asiento: number) => `j${asiento}`
 
+/**
+ * Tope de conexiones de la sala. Es el doble de los lugares porque quien recarga la
+ * página entra con una conexión nueva mientras la vieja sigue esperando reconectarse:
+ * con el tope justo, Colyseus la rechazaría por sala llena antes de que `onJoin` la
+ * reconozca por su ID de invitado. Quién se sienta lo controla `onJoin`.
+ */
+const margenConexiones = (lugares: number) => lugares * 2
+
 function lugarLibre(asiento: number): Lugar {
   return { asiento, tipo: 'libre', invitadoId: null, apodo: '', avatar: null, sessionId: null, conectado: false }
 }
@@ -148,7 +156,7 @@ export class SalaTruco extends Room {
       await this.setPrivate(true)
     }
     this.lugares = Array.from({ length: cantidadJugadores(this.config.formato) }, (_, a) => lugarLibre(a))
-    this.maxClients = this.lugares.length
+    this.maxClients = margenConexiones(this.lugares.length)
     this.registrarMensajes()
     this.revisarCierre()
   }
@@ -367,7 +375,7 @@ export class SalaTruco extends Room {
       const client = h.sessionId ? this.clients.get(h.sessionId) : undefined
       if (client) client.userData = { asiento: i } satisfies DatosCliente
     })
-    this.maxClients = n
+    this.maxClients = margenConexiones(n)
   }
 
   private exigirAnfitrion(asiento: number) {

@@ -22,6 +22,7 @@ pnpm install
 | `pnpm simular --a dificil --b medio --n 200 --formato 2v2` | Partidas bot contra bot y porcentaje de victorias. |
 | `pnpm servidor` | Levanta el servidor de juego en `ws://localhost:2567` (queda corriendo; se corta con Ctrl+C). Ojo: `pnpm server`, en inglés, es un comando propio de pnpm y no hace nada acá. |
 | `pnpm jugar` | Cliente de terminal para jugar online contra el servidor. |
+| `pnpm --filter @truco/web e2e` | Tests de punta a punta: levanta servidor y web, y juegan dos navegadores. |
 | `pnpm web` | Levanta la app web en `http://localhost:5173`. Desde el celular, en la misma red wifi: `http://IP-de-tu-compu:5173`. |
 
 ### Jugar online en la terminal

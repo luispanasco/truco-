@@ -124,6 +124,25 @@ describe('sala privada', () => {
     await expect(Jugador.unirse(colyseus, codigo)).rejects.toThrow()
   })
 
+  it('quien recarga la página vuelve aunque su conexión vieja siga esperando reconectarse', async () => {
+    const a = await Jugador.crear(colyseus, { config: { formato: '1v1' } })
+    await a.esperar(() => a.sala !== null)
+    const codigo = a.sala!.codigo!
+    const b = await Jugador.unirse(colyseus, codigo)
+    await b.esperar(() => b.sala?.yo === 1)
+    a.enviar('iniciar', {})
+    await b.esperar(() => b.vista !== null)
+
+    // Corte sin avisar (como cerrar la pestaña): el servidor le guarda la sesión para reconectar.
+    await b.room.leave(false)
+    // Enseguida entra de nuevo con otra conexión y el mismo ID, con la sala "llena" de sesiones.
+    const b2 = await Jugador.unirse(colyseus, codigo, b.invitadoId, 'Invitado')
+    await b2.esperar(() => b2.sala?.yo === 1 && b2.vista !== null)
+    expect(b2.vista!.yo.asiento).toBe(1)
+    // Y nadie nuevo puede sentarse: los lugares siguen siendo dos.
+    await expect(Jugador.unirse(colyseus, codigo)).rejects.toThrow()
+  })
+
   it('las señas y el chat de equipo llegan solo a los compañeros', async () => {
     const a = await Jugador.crear(colyseus, { config: { formato: '2v2' } })
     await a.esperar(() => a.sala !== null)
