@@ -19,12 +19,12 @@ pnpm install
 | `pnpm test` | Corre todos los tests (motor, bots y servidor). |
 | `pnpm cli [semilla]` | Juega una mano en la terminal contra un rival al azar, sin servidor. |
 | `pnpm simular --a dificil --b medio --n 200 --formato 2v2` | Partidas bot contra bot y porcentaje de victorias. |
-| `pnpm server` | Levanta el servidor de juego en `ws://localhost:2567` (queda corriendo; se corta con Ctrl+C). |
+| `pnpm servidor` | Levanta el servidor de juego en `ws://localhost:2567` (queda corriendo; se corta con Ctrl+C). Ojo: `pnpm server`, en inglés, es un comando propio de pnpm y no hace nada acá. |
 | `pnpm jugar` | Cliente de terminal para jugar online contra el servidor. |
 
 ### Jugar online en la terminal
 
-1. En una terminal: `pnpm server`.
+1. En una terminal: `pnpm servidor`.
 2. En otra: `pnpm jugar`, elegí un apodo y "Crear una sala privada". Te muestra un código de 5 letras.
 3. En una tercera (o en otra compu de la misma red, con `--servidor ws://IP-de-tu-compu:2567`): `pnpm jugar` y "Unirme a una sala con código".
 4. El anfitrión escribe `iniciar`. Los lugares vacíos se llenan con bots.
@@ -33,7 +33,14 @@ Dentro de la partida: el número elige una opción, `/c texto` es chat general, 
 `/s` muestra las señas y `/s número` hace una, `/salir` sale. Para volver a una partida después de cerrar:
 `pnpm jugar --id <tu ID>` (el ID se muestra al entrar).
 
-Para probar más rápido: `TRUCO_BOT_MS=0 pnpm server` hace que los bots jueguen sin demora.
+Para probar más rápido, que los bots jueguen sin demora:
+
+```
+# PowerShell
+$env:TRUCO_BOT_MS=0; pnpm servidor
+# bash
+TRUCO_BOT_MS=0 pnpm servidor
+```
 
 ### Playground
 

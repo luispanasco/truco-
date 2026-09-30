@@ -114,7 +114,7 @@ async function main() {
     }
   } catch (e) {
     console.log(`No se pudo entrar: ${(e as Error).message}`)
-    console.log(`¿Está el servidor prendido? (pnpm server) · ${servidor}`)
+    console.log(`¿Está el servidor prendido? (pnpm servidor) · ${servidor}`)
     process.exit(1)
   }
   console.log(`Tu ID de invitado: ${invitadoId}  (para volver: pnpm jugar --id ${invitadoId})`)

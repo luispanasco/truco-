@@ -208,7 +208,7 @@ El resto de las cartas no tiene seña. Los unos bravos comparten seña, y lo mis
   - silenciar y reportar.
 - Límite de 10 acciones por segundo por jugador.
 - Registro de cada partida en `datos/partidas/` (semilla, configuración y acciones) y de los reportes en `datos/reportes.jsonl`.
-- `pnpm server` levanta el servidor en `ws://localhost:2567`.
+- `pnpm servidor` levanta el servidor en `ws://localhost:2567`.
 
 ### Tests (17)
 
@@ -259,3 +259,5 @@ Hasta que exista la interfaz (1D), el servidor no tenía forma de probarse a man
 pnpm había dejado **dos copias** de `@colyseus/core` 0.18.18 en `node_modules`, con distinta resolución de dependencias opcionales, después de sacar `@colyseus/schema`. El transporte WebSocket usaba una copia y las salas otra, así que ningún cliente real podía entrar: fallaba con "seat reservation expired". Los tests no lo detectaban porque se conectan por otro camino. Se resolvió reinstalando las dependencias desde cero.
 
 Si vuelve a aparecer ese error: `rm -rf node_modules packages/*/node_modules apps/*/node_modules && pnpm install`.
+
+**Corrección:** el script para levantar el servidor se llamaba `pnpm server`, pero ese nombre es un comando propio de pnpm (administra su almacén de paquetes). pnpm ejecutaba el suyo, que no hace nada visible, y nunca llegaba al nuestro. Se renombró a **`pnpm servidor`**.
