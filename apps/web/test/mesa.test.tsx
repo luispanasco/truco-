@@ -25,10 +25,10 @@ afterEach(() => {
 describe('interfaz', () => {
   it('desde el inicio, con apodo, se entra a la mesa contra bots', async () => {
     render(<App ruta="/" />)
-    const jugar = screen.getByRole('button', { name: 'Jugar contra bots' })
+    const jugar = screen.getByRole('button', { name: 'Jugar' })
     expect(jugar).toHaveProperty('disabled', true)
     fireEvent.change(screen.getByPlaceholderText('¿Cómo te dicen?'), { target: { value: 'Luis' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Jugar contra bots' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Jugar' }))
     await waitFor(() => expect(screen.getByLabelText('Mazo y muestra')).toBeTruthy())
     expect(screen.getAllByLabelText(/^Jugar el /)).toHaveLength(3)
   })

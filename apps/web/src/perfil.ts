@@ -8,6 +8,10 @@ export interface Perfil {
   avatar: string
   formato: Formato
   nivelBots: Nivel
+  ayudas: boolean
+  picaPica: boolean
+  /** Bots sin demora, para partidas cortas. */
+  rapido: boolean
 }
 
 export const AVATARES = ['🧉', '🐴', '🦉', '🐂', '🦊', '🐸', '🐶', '🐱', '🌞', '⭐']
@@ -21,7 +25,7 @@ function nuevoId(): string {
 }
 
 export function leerPerfil(): Perfil {
-  const porDefecto: Perfil = { invitadoId: nuevoId(), apodo: '', avatar: AVATARES[0]!, formato: '1v1', nivelBots: 'medio' }
+  const porDefecto: Perfil = { invitadoId: nuevoId(), apodo: '', avatar: AVATARES[0]!, formato: '1v1', nivelBots: 'medio', ayudas: true, picaPica: true, rapido: false }
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as Partial<Perfil> | null
     return { ...porDefecto, ...(guardado ?? {}) }

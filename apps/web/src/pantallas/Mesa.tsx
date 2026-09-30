@@ -5,6 +5,7 @@ import { GESTO, SIGNIFICADO, esPiezaOMata } from '../senias'
 import { Acciones } from '../componentes/Acciones'
 import { Asiento, Avatar } from '../componentes/Asiento'
 import { Carta } from '../componentes/Carta'
+import { Fosforos } from '../componentes/Fosforos'
 import { Mazo } from '../componentes/Mazo'
 import { useJuego } from '../estado'
 
@@ -12,6 +13,7 @@ export function Mesa() {
   const navegar = useNavigate()
   const { sala, vista, mesa, globos, registro, senias, error, turno, finDeMano, enviar, salir } = useJuego()
   const [aviso, setAviso] = useState<string | null>(null)
+  const [confirmarSalida, setConfirmarSalida] = useState(false)
 
   useEffect(() => {
     if (!useJuego.getState().conexion) navegar('/')
@@ -67,19 +69,26 @@ export function Mesa() {
   return (
     <div className={`pantalla-mesa n-${n}`}>
       <header className="marcador">
-        <div className="marcador-equipo nosotros">
-          <span>{enEquipos ? 'Nosotros' : 'Vos'}</span>
-          <strong>{pn}</strong>
+        <div className="marcador-filas">
+          <div className="marcador-fila nosotros">
+            <span className="marcador-nombre">{enEquipos ? 'Nosotros' : 'Vos'}</span>
+            <Fosforos puntos={pn} malas={vista.config.puntosMalas} />
+            <strong>{pn}</strong>
+          </div>
+          <div className="marcador-fila ellos">
+            <span className="marcador-nombre">{enEquipos ? 'Ellos' : sala.lugares[1 - yo]?.apodo}</span>
+            <Fosforos puntos={pe} malas={vista.config.puntosMalas} />
+            <strong>{pe}</strong>
+          </div>
         </div>
         <div className="marcador-centro">
           <span className="marcador-mano">Mano {vista.mano.numero}</span>
           {e.truco.valor > 1 && <div className="marcador-valor">vale {e.truco.valor}</div>}
           {vista.mano.picaPica && <div className="marcador-valor">pica-pica</div>}
         </div>
-        <div className="marcador-equipo ellos">
-          <span>{enEquipos ? 'Ellos' : sala.lugares[1 - yo]?.apodo}</span>
-          <strong>{pe}</strong>
-        </div>
+        <button type="button" className="boton-salir" onClick={() => setConfirmarSalida(true)} aria-label="Salir de la mesa">
+          ✕
+        </button>
       </header>
 
       <main className="tapete">
@@ -193,9 +202,20 @@ export function Mesa() {
         </div>
       )}
 
-      <button type="button" className="boton-salir" onClick={salirDeLaMesa} aria-label="Salir de la mesa">
-        ✕
-      </button>
+      {confirmarSalida && (
+        <div className="fin" role="dialog" aria-modal="true" aria-label="Abandonar la partida">
+          <div className="fin-caja">
+            <h2 className="titulo-dialogo">¿Abandonar la partida?</h2>
+            <p>{vista.ganador === null ? 'La partida en curso se pierde.' : 'Volvés al inicio.'}</p>
+            <button type="button" className="boton boton-peligro" onClick={salirDeLaMesa}>
+              Abandonar
+            </button>
+            <button type="button" className="boton boton-secundario" onClick={() => setConfirmarSalida(false)}>
+              Seguir jugando
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

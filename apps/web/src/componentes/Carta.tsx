@@ -1,7 +1,6 @@
 import type { Carta as TCarta, Palo } from '@truco/engine'
+import { Dorso, Frente } from './dibujo'
 
-/** Provisoria (tramo D1): número y símbolo del palo. En el tramo D2 se reemplaza por el SVG definitivo. */
-const SIMBOLO: Record<Palo, string> = { espada: '🗡️', basto: '🪵', oro: '🪙', copa: '🏆' }
 const NOMBRE_PALO: Record<Palo, string> = { espada: 'espadas', basto: 'bastos', oro: 'oros', copa: 'copas' }
 
 interface Props {
@@ -15,26 +14,27 @@ interface Props {
 }
 
 export function Carta({ carta, oculta, tam = 'normal', jugable, resaltada, ganadora, alTocar }: Props) {
-  const clases = ['carta', `carta-${tam}`, oculta || !carta ? 'carta-dorso' : `palo-${carta.palo}`]
+  const clases = ['carta', `carta-${tam}`]
+  if (oculta || !carta) clases.push('carta-dorso')
   if (jugable) clases.push('carta-jugable')
   if (resaltada) clases.push('carta-resaltada')
   if (ganadora) clases.push('carta-ganadora')
-  if (oculta || !carta) return <div className={clases.join(' ')} aria-label="carta boca abajo" />
+  if (oculta || !carta) {
+    return (
+      <div className={clases.join(' ')} aria-label="carta boca abajo">
+        <Dorso />
+      </div>
+    )
+  }
   const etiqueta = `${carta.numero} de ${NOMBRE_PALO[carta.palo]}`
-  const contenido = (
-    <>
-      <span className="carta-numero">{carta.numero}</span>
-      <span className="carta-palo">{SIMBOLO[carta.palo]}</span>
-      <span className="carta-numero carta-numero-abajo">{carta.numero}</span>
-    </>
-  )
+  const frente = <Frente palo={carta.palo} numero={carta.numero} />
   return alTocar ? (
     <button type="button" className={clases.join(' ')} onClick={alTocar} disabled={!jugable} aria-label={`Jugar el ${etiqueta}`}>
-      {contenido}
+      {frente}
     </button>
   ) : (
-    <div className={clases.join(' ')} aria-label={etiqueta}>
-      {contenido}
+    <div className={clases.join(' ')} aria-label={etiqueta} role="img">
+      {frente}
     </div>
   )
 }

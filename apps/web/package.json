@@ -14,6 +14,7 @@
     "@truco/bots": "workspace:*",
     "@truco/engine": "workspace:*",
     "@truco/shared": "workspace:*",
+    "motion": "^13.4.6",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router": "^8.4.0",

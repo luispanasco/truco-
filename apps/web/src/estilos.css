@@ -20,7 +20,7 @@
   --basto: #2f6b2a;
   --oro: #b8860b;
   --copa: #a8232a;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--texto-claro);
   background: var(--madera);
   -webkit-tap-highlight-color: transparent;
@@ -113,25 +113,143 @@ button {
 /* ── Inicio ───────────────────────────────────────────────────── */
 
 .pantalla-inicio {
-  max-width: 440px;
+  max-width: 460px;
   margin: 0 auto;
-  padding: 24px 16px 40px;
+  padding: 12px 16px calc(28px + env(safe-area-inset-bottom));
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
-.pantalla-inicio h1 {
-  margin: 8px 0 4px;
-  text-align: center;
-  font-size: 2.4rem;
-  letter-spacing: 0.02em;
+.inicio-cabecera {
+  display: grid;
+  justify-items: center;
+  padding: 18px 0 6px;
 }
-.pantalla-inicio h1 span {
-  display: block;
-  font-size: 1rem;
+.abanico {
+  display: flex;
+  justify-content: center;
+  height: 104px;
+  margin-bottom: 6px;
+}
+.abanico .carta {
+  --ancho: 62px;
+  margin: 0 -12px;
+  transform-origin: 50% 110%;
+}
+.abanico .carta:nth-child(1) {
+  transform: rotate(-16deg);
+}
+.abanico .carta:nth-child(2) {
+  transform: translateY(-8px);
+  z-index: 1;
+}
+.abanico .carta:nth-child(3) {
+  transform: rotate(16deg);
+}
+.inicio-cabecera h1 {
+  margin: 0;
+  font-family: 'Alfa Slab One', Georgia, serif;
   font-weight: 400;
-  opacity: 0.8;
+  font-size: 3.4rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--papel);
+  text-shadow:
+    0 3px 0 var(--dorso),
+    0 6px 14px rgb(0 0 0 / 0.45);
+}
+.subtitulo {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
 }
 
+.tarjeta {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgb(31 107 58 / 0.95), rgb(21 77 41 / 0.95));
+  border: 1px solid rgb(255 255 255 / 0.12);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+}
+.tarjeta h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tarjeta-online {
+  background: rgb(0 0 0 / 0.22);
+}
+.insignia {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.15);
+}
+.nota-izq {
+  margin: -6px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+.botones-fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.perfil {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  background: rgb(0 0 0 / 0.22);
+}
+.perfil-avatar {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid var(--acento);
+  background: rgb(255 255 255 / 0.12);
+  font-size: 2rem;
+}
+.perfil-editar {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--acento);
+  color: var(--tinta);
+  font-size: 0.75rem;
+}
+.perfil-apodo {
+  display: grid;
+  gap: 4px;
+}
+.perfil-apodo span {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+.perfil-apodo input {
+  padding: 11px 12px;
+  border-radius: var(--radio);
+  border: 0;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  background: var(--papel);
+  color: var(--tinta);
+}
+.perfil .avatares {
+  grid-column: 1 / -1;
+}
 .avatares {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -149,91 +267,157 @@ button {
   background: rgb(255 255 255 / 0.25);
 }
 
-/* ── Cartas (provisorias) ─────────────────────────────────────── */
+.segmentado button {
+  display: grid;
+  gap: 1px;
+  justify-items: center;
+}
+.segmentado small {
+  font-size: 0.7rem;
+  opacity: 0.75;
+  font-weight: 600;
+}
+
+.mas-opciones {
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+  padding-top: 10px;
+}
+.mas-opciones summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.interruptor {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0 0;
+  cursor: pointer;
+}
+.interruptor > span:first-child {
+  display: grid;
+}
+.interruptor small {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+.interruptor input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.interruptor-pista {
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.2);
+  position: relative;
+  transition: background 0.2s;
+}
+.interruptor-pista::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+.interruptor input:checked + .interruptor-pista {
+  background: var(--acento);
+}
+.interruptor input:checked + .interruptor-pista::after {
+  transform: translateX(18px);
+}
+.interruptor input:focus-visible + .interruptor-pista {
+  outline: 2px solid var(--papel);
+  outline-offset: 2px;
+}
+.inicio-pie {
+  text-align: center;
+  font-size: 0.75rem;
+  opacity: 0.55;
+}
+
+/* ── Cartas (SVG) ─────────────────────────────────────────────── */
 
 .carta {
   --ancho: 64px;
   position: relative;
   width: var(--ancho);
   aspect-ratio: 2 / 3;
-  border-radius: calc(var(--ancho) * 0.1);
-  background: var(--papel);
-  color: var(--tinta);
-  border: 1px solid rgb(0 0 0 / 0.25);
-  box-shadow: var(--sombra);
-  display: grid;
-  place-items: center;
+  border-radius: calc(var(--ancho) * 0.08);
+  border: 0;
   padding: 0;
+  background: none;
+  box-shadow: var(--sombra);
   flex: none;
+  display: block;
+}
+.carta-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .carta-chica {
   --ancho: 26px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
 }
 .carta-mesa {
-  --ancho: 56px;
+  --ancho: 58px;
 }
 .carta-grande {
-  --ancho: min(21vw, 86px);
+  --ancho: min(21vw, 88px);
 }
-.carta-numero {
-  position: absolute;
-  top: 4%;
-  left: 9%;
-  font-weight: 800;
-  font-size: calc(var(--ancho) * 0.24);
-  line-height: 1;
+.dorso-fondo {
+  fill: var(--dorso);
 }
-.carta-numero-abajo {
-  top: auto;
-  left: auto;
-  bottom: 4%;
-  right: 9%;
-  transform: rotate(180deg);
+.dorso-borde {
+  stroke: var(--dorso-detalle);
 }
-.carta-palo {
-  font-size: calc(var(--ancho) * 0.42);
+.dorso-linea {
+  stroke: rgb(255 255 255 / 0.14);
 }
-.carta-chica .carta-numero-abajo {
-  display: none;
-}
-.palo-espada {
-  color: var(--espada);
-}
-.palo-basto {
-  color: var(--basto);
-}
-.palo-oro {
-  color: var(--oro);
-}
-.palo-copa {
-  color: var(--copa);
-}
-.carta-dorso {
-  background:
-    repeating-linear-gradient(45deg, transparent 0 5px, rgb(255 255 255 / 0.12) 5px 7px),
-    var(--dorso);
-  border: 2px solid var(--dorso-detalle);
+.dorso-detalle {
+  fill: var(--dorso-detalle);
 }
 .carta-jugable {
   cursor: pointer;
-  outline: 3px solid var(--acento);
-  outline-offset: 1px;
+  box-shadow:
+    0 0 0 3px var(--acento),
+    var(--sombra);
+  transition: transform 0.15s ease;
+}
+.carta-jugable:hover,
+.carta-jugable:focus-visible {
+  transform: translateY(-6px);
 }
 .carta:disabled {
   cursor: default;
-  opacity: 1;
 }
 .carta-resaltada::after {
   content: '★';
   position: absolute;
-  top: 2px;
-  right: 5px;
-  color: var(--oro);
-  font-size: calc(var(--ancho) * 0.18);
+  top: -8px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--acento);
+  color: var(--tinta);
+  font-size: 12px;
+  box-shadow: var(--sombra);
 }
 .carta-ganadora {
-  outline: 3px solid var(--acento);
-  transform: scale(1.06);
+  box-shadow:
+    0 0 0 3px var(--acento),
+    0 0 16px 4px rgb(242 193 78 / 0.6);
 }
 
 /* ── Mesa ─────────────────────────────────────────────────────── */
@@ -256,31 +440,51 @@ button {
 
 .marcador {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
   gap: 8px;
-  padding: 8px 48px 8px 12px;
-  background: rgb(0 0 0 / 0.3);
+  padding: 6px 8px 6px 12px;
+  background: linear-gradient(rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.3));
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
 }
-.marcador-equipo {
+.marcador-filas {
   display: grid;
-  font-size: 0.8rem;
+  gap: 3px;
+  min-width: 0;
 }
-.marcador-equipo strong {
-  font-size: 1.5rem;
+.marcador-fila {
+  display: grid;
+  grid-template-columns: 64px 1fr 26px;
+  align-items: center;
+  gap: 6px;
 }
-.marcador-equipo.ellos {
+.marcador-nombre {
+  font-size: 0.72rem;
+  font-weight: 700;
+  opacity: 0.9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.marcador-fila.nosotros .marcador-nombre {
+  color: var(--acento);
+}
+.marcador-fila strong {
+  font-size: 1.05rem;
   text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.fosforos {
+  display: block;
+  height: 18px;
+  width: auto;
+  max-width: 100%;
 }
 .marcador-centro {
   display: grid;
   justify-items: center;
-  gap: 2px;
+  gap: 3px;
   font-size: 0.7rem;
-}
-.marcador-mano {
-  opacity: 0.8;
-  font-size: 0.75rem;
 }
 .marcador-valor {
   background: var(--acento);
@@ -607,9 +811,6 @@ button {
 }
 
 .boton-salir {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   width: 32px;
   height: 32px;
   border: 0;
@@ -708,4 +909,25 @@ button {
 .te-toca.espera {
   background: rgb(255 255 255 / 0.15);
   color: var(--texto-claro);
+}
+
+.pantalla-baraja {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px;
+  justify-content: center;
+}
+
+.boton-peligro {
+  background: var(--peligro);
+  color: #fff;
+}
+.titulo-dialogo {
+  font-size: 1.4rem !important;
+}
+.marcador-mano {
+  opacity: 0.8;
+  font-size: 0.72rem;
+  white-space: nowrap;
 }
