@@ -10,7 +10,7 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 | --- | --- | --- | --- | --- |
 | Reglas | Confirmación de las reglas configurables | Hecha | 2026-09-30 | — |
 | 1A | Motor de reglas | Hecha | 2026-09-30 | `55961aa` |
-| 1B | Bots | Plan en revisión | — | — |
+| 1B | Bots | Hecha | 2026-09-30 | ver abajo |
 | 1C | Servidor | Pendiente | — | — |
 | 1D | Interfaz | Pendiente | — | — |
 | 1E | Señas, avatares y cantos | Pendiente | — | — |
@@ -100,3 +100,72 @@ Precisiones sobre la flor y el pica-pica:
 
 - La opción "quién empieza tras una parda" no cambia nada en la práctica. La única parda que no termina la mano es la de la primera vuelta, y esa siempre la empieza el mano. Quedó como parámetro igual.
 - pnpm se instaló con `npm i -g pnpm`, porque corepack pedía permisos de administrador.
+
+---
+
+## Señas — 2026-09-30
+
+Se definió la lista de señas de las mesas del usuario (quedó en la sección "Señas" de la especificación). Hay una seña por carta, más la de la flor:
+
+| Carta | Seña |
+| --- | --- |
+| 2 de la muestra | Levantar las cejas |
+| 4 de la muestra | Beso |
+| 5 de la muestra | Fruncir la nariz |
+| Perico (11) | Guiño derecho |
+| Perica (10) | Guiño izquierdo |
+| 1 de espadas o 1 de bastos | Mueca con la pera hacia la derecha |
+| 7 de espadas o 7 de oros | Mueca con la pera hacia la izquierda |
+| Un 3 | Morderse el labio inferior |
+| Un 2 que no es pieza | Abrir la boca |
+| 1 de copas o 1 de oros | Sacar la lengua |
+| Flor | Inflar la boca como un sapo |
+
+El resto de las cartas no tiene seña. Los unos bravos comparten seña, y lo mismo los sietes bravos.
+
+---
+
+## Etapa 1B: bots — 2026-09-30
+
+### Qué se hizo
+
+- Paquete `packages/bots` con `crearBot(nivel, semilla)`. Cada bot tiene dos funciones:
+  - `decidir(vista, senias)` recibe solo la `vistaPara` de su jugador y las señas de su equipo, nunca el estado completo.
+  - `hacerSenias(vista)` devuelve las señas del jugador al empezar la mano.
+- Tres niveles:
+  - **Fácil:** tira la más baja que gana la vuelta; canta envido con 30 o más y truco con dos bravas; casi nunca sube.
+  - **Medio:** estima la fuerza de su propia mano imaginando manos ajenas al azar. Canta con umbrales fijos, va de farol una de cada siete veces y juega con reglas: guarda la brava si ganó la primera y le deja la vuelta al compañero que le señó que puede matar.
+  - **Difícil:** imagina manos ajenas coherentes con todo lo que sabe (cartas vistas, tantos declarados, flor, señas del compañero) y las pesa según lo probable que es que el rival haya cantado lo que cantó. Con cada una simula el resto de la mano jugando perfecto (minimax) y decide por valor esperado.
+- El difícil ya trae programado mentir en el tanto y pedir ver, pero apagado (`permitirMentiras: false`) hasta la fase 3.
+- Simulador: `pnpm simular --a dificil --b medio --n 1000 --formato 2v2 --procesos 6`. Alterna equipos y reparto, y da lo mismo con cualquier cantidad de procesos.
+
+### Criterio (1000 partidas cada uno, semilla 2026)
+
+| Enfrentamiento | 1v1 | 2v2 | Mínimo |
+| --- | --- | --- | --- |
+| Difícil contra medio | 64,0% ± 3,0% | 67,7% ± 2,9% | 60% |
+| Medio contra fácil | 69,2% ± 2,9% | 68,5% ± 2,9% | 65% |
+
+### Tests (13, más los 123 del motor)
+
+- Con fast-check, partidas enteras con bots de cualquier nivel, en cualquier formato y configuración: siempre eligen acciones válidas y terminan.
+- La misma semilla reproduce la misma partida.
+- Las señas de cada mano, incluidos los casos en que la muestra es pieza.
+- El difícil no quiere un vale cuatro que no puede ganar, y las manos que imagina para el compañero respetan sus señas.
+- El medio le deja la vuelta al compañero que le señó un uno bravo y, si el compañero no hizo ninguna seña, mata él.
+- El fácil casi nunca sube el truco y nunca sube el envido.
+- Sin mentiras habilitadas, en modo sucio declaran siempre el tanto real y nunca piden ver.
+
+### Decisiones
+
+1. La interfaz quedó `decidir(vista, senias)` en vez de `decidir(vista, config)` como decía el prompt: la configuración viene dentro de la vista y las señas no las guarda el motor.
+2. Las señas no entran al motor porque no cambian el estado del juego. Las reparte el simulador, y en la 1C las va a repartir el servidor, siempre solo al propio equipo. En 1v1 y en los duelos de pica-pica no hay señas.
+3. Todos los niveles hacen sus señas honestas; lo que cambia entre niveles es cómo las leen.
+4. El medio usa las señas solo para dejarle la vuelta al compañero, no para calcular probabilidades. Con las señas en sus cálculos, en 2v2 quedaba casi tan bien informado como el difícil (58,8%, abajo del criterio).
+5. En 3v3 el difícil simula con la política simple en vez de minimax, porque el árbol de 6 jugadores es muy grande. Los duelos de pica-pica son 1v1 y usan minimax.
+6. Cuando responde un equipo, contesta el primero de ese equipo en el orden de la mesa.
+
+### Notas
+
+- Duración aproximada por partida: fácil y medio de 10 a 100 ms; difícil 40 ms en 1v1 y 0,9 s en 2v2 (en un solo proceso).
+- Variantes probadas sin mejora medible: cantar truco con menos juego, más farol, más prudencia para querer, más muestras, deducir del envido con más exigencia en equipos, y leer como mano floja que el rival no cante truco.

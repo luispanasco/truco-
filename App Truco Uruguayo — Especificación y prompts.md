@@ -200,7 +200,23 @@ Las señas son parte del juego y van en fase 1; el chat de texto también, y la 
 
 ### Señas
 
-- Panel de señas tradicionales, cada una asociada a una carta: guiñar, levantar cejas, morder el labio, inflar cachetes, etc. La lista exacta y su significado se definen en la fase 1.
+- Panel de señas tradicionales, cada una asociada a una carta:
+
+| Carta | Seña |
+| --- | --- |
+| 2 de la muestra (pieza) | Levantar las cejas |
+| 4 de la muestra (pieza) | Beso |
+| 5 de la muestra (pieza) | Fruncir la nariz |
+| 11 de la muestra (perico) | Guiño derecho |
+| 10 de la muestra (perica) | Guiño izquierdo |
+| 1 de espadas o 1 de bastos | Mueca con la pera hacia la derecha |
+| 7 de espadas o 7 de oros | Mueca con la pera hacia la izquierda |
+| Un 3 | Morderse el labio inferior |
+| Un 2 que no es pieza | Abrir la boca |
+| 1 de copas o 1 de oros | Sacar la lengua |
+| Flor | Inflar la boca como un sapo |
+
+- El resto de las cartas no tiene seña.
 - Se muestran como animación en el avatar del que la hace, y solo las recibe su compañero. El servidor nunca se las manda al equipo rival.
 - Los bots hacen señas según su mano y las leen para decidir.
 
