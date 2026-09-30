@@ -1,14 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
+import type { Senia } from '@truco/bots'
 import { GESTO, SIGNIFICADO, esPiezaOMata } from '../senias'
 import { Acciones, BotonMazo } from '../componentes/Acciones'
 import { Asiento, Avatar, MarcaMano } from '../componentes/Asiento'
 import { Carta } from '../componentes/Carta'
+import { BotonChat, PanelChat, useNoLeidos } from '../componentes/Chat'
+import { EstadoConexion } from '../componentes/EstadoConexion'
 import { Fosforos } from '../componentes/Fosforos'
 import { Mazo } from '../componentes/Mazo'
+import { MenuJugador, useSilenciados } from '../componentes/MenuJugador'
+import { AnilloReloj, RelojPropio } from '../componentes/Reloj'
+import { BotonSenias, PanelSenias } from '../componentes/Senias'
+import type { ConexionOnline } from '../conexion/online'
 import { useJuego } from '../estado'
+import '../estilos-mesa-online.css'
 
 /**
  * Hacia dónde queda cada jugador visto desde el centro (x a la derecha, y hacia abajo), por
@@ -29,9 +37,17 @@ function direccion(n: number, pos: number): [number, number] {
 
 export function Mesa() {
   const navegar = useNavigate()
-  const { sala, vista, mesa, globos, registro, senias, error, turno, finDeMano, enviar, salir } = useJuego()
+  const { sala, vista, mesa, globos, registro, chat, senias, error, turno, finDeMano, conexion, enviar, salir } = useJuego()
   const [aviso, setAviso] = useState<string | null>(null)
   const [confirmarSalida, setConfirmarSalida] = useState(false)
+  // Paneles de la mesa: chat y señas (hojas desde abajo) y el menú sobre otro jugador.
+  const [panel, setPanel] = useState<'chat' | 'senias' | null>(null)
+  const [menuDe, setMenuDe] = useState<number | null>(null)
+  const [seniaHecha, setSeniaHecha] = useState<{ texto: string; id: number } | null>(null)
+  const online = conexion?.tipo === 'online'
+  const { silenciados, cambiar: cambiarSilencio } = useSilenciados(online ? (conexion as ConexionOnline).roomId : null)
+  const { noLeidos, marcarLeidos } = useNoLeidos(chat, sala?.yo ?? 0, silenciados, panel === 'chat')
+  const cerrarPanel = useCallback(() => setPanel(null), [])
 
   useEffect(() => {
     if (!useJuego.getState().conexion) navegar('/')
@@ -52,6 +68,12 @@ export function Mesa() {
     const t = setTimeout(() => setSeniaVisible(undefined), 3500)
     return () => clearTimeout(t)
   }, [ultimaSenia])
+
+  useEffect(() => {
+    if (!seniaHecha) return
+    const t = setTimeout(() => setSeniaHecha(null), 2500)
+    return () => clearTimeout(t)
+  }, [seniaHecha])
 
   if (!sala || !vista) return <div className="cargando">Repartiendo…</div>
 
@@ -86,6 +108,23 @@ export function Mesa() {
     salir()
     navegar('/')
   }
+  // Señas: solo si en el duelo actual hay compañeros (en equipos y fuera del pica-pica).
+  const hayCompanieros = enEquipos && !vista.mano.picaPica && vista.ganador === null
+  const hacerSenia = (s: Senia) => {
+    enviar('senia', { senia: s })
+    setPanel(null)
+    setSeniaHecha({ texto: GESTO[s].toLowerCase(), id: Date.now() })
+  }
+  // Menú de jugador: solo online y solo sobre otras personas.
+  const menuPara = (a: number) => (online && a !== yo && sala.lugares[a]?.tipo === 'humano' ? () => setMenuDe(a) : undefined)
+  const lugarMenu = menuDe !== null ? sala.lugares[menuDe] : undefined
+  // Reloj del turno (solo online, cuando el juego espera a una persona).
+  const miReloj = meToca && turno.asientos.includes(yo) ? turno.venceEn : null
+  // Revancha online: cuántas personas la pidieron, de las que siguen conectadas.
+  const humanos = sala.lugares.filter((l) => l.tipo === 'humano' && l.conectado).length
+  const pediRevancha = sala.revancha.includes(yo)
+  const textoRevancha =
+    !online || humanos <= 1 ? 'Revancha' : pediRevancha ? 'Esperando a los demás…' : `Revancha ${sala.revancha.length}/${humanos}`
 
   return (
     <div className={`pantalla-mesa n-${n}`}>
@@ -113,10 +152,14 @@ export function Mesa() {
             </div>
           )}
         </div>
-        <button type="button" className="boton-salir" onClick={() => setConfirmarSalida(true)} aria-label="Salir de la mesa">
-          ✕
-        </button>
+        <div className="marcador-botones">
+          <BotonChat noLeidos={noLeidos} alTocar={() => setPanel('chat')} />
+          <button type="button" className="boton-salir" onClick={() => setConfirmarSalida(true)} aria-label="Salir de la mesa">
+            ✕
+          </button>
+        </div>
       </header>
+      <EstadoConexion alIrAlInicio={salirDeLaMesa} />
 
       <main className="tapete">
         <div className="registro" aria-live="polite">
@@ -126,6 +169,11 @@ export function Mesa() {
         </div>
         <div className="avisos">
           {aviso && <div className="aviso aviso-error">{aviso}</div>}
+          {seniaHecha && (
+            <div className="aviso aviso-senia" key={seniaHecha.id} role="status">
+              <span aria-hidden="true">😉</span> Le hiciste la seña: {seniaHecha.texto}
+            </div>
+          )}
           {seniaVisible && (
             <div className="aviso aviso-senia" key={seniaVisible.id}>
               <span aria-hidden="true">👀</span> <b>{sala.lugares[seniaVisible.de]?.apodo}</b>: {GESTO[seniaVisible.senia].toLowerCase()}{' '}
@@ -147,6 +195,9 @@ export function Mesa() {
               esMano={e.mano === l.asiento}
               participa={participa(l.asiento)}
               globo={globos[l.asiento]}
+              venceEn={turno.venceEn}
+              silenciado={silenciados.has(l.asiento)}
+              alTocarNombre={menuPara(l.asiento)}
             />
           ))}
 
@@ -186,7 +237,7 @@ export function Mesa() {
         </div>
       </main>
 
-      <section className={`mi-lugar${meToca ? ' le-toca' : ''}${participa(yo) ? '' : ' fuera'}`}>
+      <section className={`mi-lugar${meToca ? ' le-toca' : ''}${miReloj !== null ? ' con-reloj' : ''}${participa(yo) ? '' : ' fuera'}`}>
         {globos[yo] && (
           <div key={globos[yo]!.id} className="globo globo-yo">
             {globos[yo]!.texto}
@@ -195,18 +246,21 @@ export function Mesa() {
         <div className="mi-info">
           <div className="asiento-avatar">
             <Avatar lugar={lugarYo} tam="chico" />
+            {miReloj !== null && <AnilloReloj venceEn={miReloj} />}
             {e.mano === yo && <MarcaMano />}
           </div>
           <span className="mi-nombre">{lugarYo.apodo}</span>
           {sala.ayudas && (
             <span className="mi-tanto">
-              envido <b>{vista.mano.miTanto.envido}</b>
+              <span className="mi-tanto-etiqueta">envido </span>
+              <b>{vista.mano.miTanto.envido}</b>
               {vista.mano.miTanto.flor !== null && <strong className="mi-flor">flor {vista.mano.miTanto.flor}</strong>}
             </span>
           )}
           <span className="mi-estado">
-            {meToca && <span className="te-toca">Te toca</span>}
+            {meToca && (miReloj !== null ? <RelojPropio venceEn={miReloj} /> : <span className="te-toca">Te toca</span>)}
             {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
+            {hayCompanieros && <BotonSenias alTocar={() => setPanel('senias')} />}
             {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
           </span>
         </div>
@@ -266,8 +320,8 @@ export function Mesa() {
               </div>
             </div>
             <div className="modal-botones">
-              <button type="button" className="boton boton-grande" onClick={() => enviar('revancha', {})}>
-                Revancha
+              <button type="button" className="boton boton-grande" onClick={() => enviar('revancha', {})} disabled={online && pediRevancha}>
+                {textoRevancha}
               </button>
               <button type="button" className="boton boton-secundario" onClick={salirDeLaMesa}>
                 Volver al inicio
@@ -275,6 +329,35 @@ export function Mesa() {
             </div>
           </div>
         </div>
+      )}
+
+      {panel === 'chat' && (
+        <PanelChat
+          sala={sala}
+          yo={yo}
+          chat={chat}
+          silenciados={silenciados}
+          alEnviar={(texto, canal) => enviar('chat', { texto, canal })}
+          alTocarJugador={online ? (a) => setMenuDe(a) : undefined}
+          alCerrar={() => {
+            marcarLeidos()
+            setPanel(null)
+          }}
+        />
+      )}
+      {panel === 'senias' && hayCompanieros && <PanelSenias alElegir={hacerSenia} alCerrar={cerrarPanel} />}
+      {lugarMenu && (
+        <MenuJugador
+          key={menuDe}
+          lugar={lugarMenu}
+          silenciado={silenciados.has(lugarMenu.asiento)}
+          alSilenciar={(silenciar) => {
+            enviar('silenciar', { asiento: lugarMenu.asiento, silenciar })
+            cambiarSilencio(lugarMenu.asiento, silenciar)
+          }}
+          alReportar={(motivo) => enviar('reportar', { asiento: lugarMenu.asiento, motivo })}
+          alCerrar={() => setMenuDe(null)}
+        />
       )}
 
       {confirmarSalida && (
