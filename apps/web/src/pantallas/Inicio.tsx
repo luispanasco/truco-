@@ -177,6 +177,12 @@ export function Inicio() {
         <details className="mas-opciones">
           <summary>Más opciones</summary>
           <Interruptor
+            activo={perfil.ojear}
+            alCambiar={(v) => cambiar({ ojear: v })}
+            titulo="Ojear cartas"
+            detalle="Al repartir, descubrís tus cartas de a poco, como en la mesa (también online)"
+          />
+          <Interruptor
             activo={perfil.ayudas}
             alCambiar={(v) => cambiar({ ayudas: v })}
             titulo="Ayudas"
