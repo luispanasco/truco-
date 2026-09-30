@@ -1,0 +1,528 @@
+/*
+ * Pantallas online: menú, crear sala, unirse, sala de espera y cola pública.
+ * Usan las mismas piezas que el inicio (tarjetas, segmentados, interruptores).
+ */
+
+/* ── Menú online en el inicio ─────────────────────────────────── */
+
+.opciones-online {
+  display: grid;
+  gap: 8px;
+}
+.opcion-online {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--panel-borde);
+  border-radius: var(--radio);
+  background: rgb(255 255 255 / 0.1);
+  color: var(--texto-claro);
+  text-align: left;
+  transition: background 0.15s;
+}
+.opcion-online:not(:disabled):hover,
+.opcion-online:focus-visible {
+  background: rgb(255 255 255 / 0.18);
+}
+.opcion-online:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.opcion-online-icono {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.2);
+  font-size: 1.3rem;
+}
+.opcion-online-texto {
+  display: grid;
+  gap: 1px;
+}
+.opcion-online-texto small {
+  font-size: 0.78rem;
+  opacity: 0.75;
+}
+.opcion-online-flecha {
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--acento);
+}
+
+.partida-en-curso {
+  border: 2px solid var(--acento);
+  background: linear-gradient(180deg, rgb(242 193 78 / 0.2), rgb(0 0 0 / 0.25)), var(--tapete-oscuro);
+}
+.botones-volver {
+  grid-template-columns: 1.6fr 1fr;
+}
+.partida-en-curso h2::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--acento);
+  animation: latido 1.6s ease-in-out infinite;
+}
+
+/* ── Estructura de las pantallas online ───────────────────────── */
+
+.pantalla-online {
+  padding-top: calc(8px + env(safe-area-inset-top));
+}
+.online-cabecera {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  padding: 6px 0 2px;
+}
+.online-cabecera h1 {
+  margin: 0;
+  text-align: center;
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: 1.55rem;
+  color: var(--papel);
+  text-shadow: 0 2px 0 var(--dorso);
+}
+.online-volver {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.22);
+  color: var(--texto-claro);
+  font-size: 1.8rem;
+  line-height: 1;
+  padding-bottom: 4px;
+}
+.online-volver:hover,
+.online-volver:focus-visible {
+  background: rgb(0 0 0 / 0.35);
+}
+
+.boton-chico {
+  width: auto;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+.boton-texto {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid rgb(242 193 78 / 0.6);
+  border-radius: 999px;
+  background: none;
+  color: var(--acento);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.boton-texto:hover,
+.boton-texto:focus-visible {
+  background: rgb(242 193 78 / 0.15);
+}
+
+.error-online {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radio);
+  background: var(--peligro-fondo);
+  border: 1px solid var(--peligro);
+  color: var(--papel);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+}
+.aviso-temporal {
+  animation: aviso-se-va 4s ease forwards;
+}
+@keyframes aviso-se-va {
+  0%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.aviso-conexion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radio);
+  background: rgb(0 0 0 / 0.35);
+  border: 1px solid var(--acento);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.aviso-conexion.caida {
+  border-color: var(--peligro);
+  background: var(--peligro-fondo);
+}
+
+.punto-latido {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--acento);
+  animation: latido 1.6s ease-in-out infinite;
+}
+@keyframes latido {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+}
+
+/* ── Formulario de la sala ────────────────────────────────────── */
+
+.formulario-sala {
+  display: grid;
+  gap: 14px;
+}
+.formulario-sala .interruptor {
+  padding-top: 0;
+}
+.campo-detalle {
+  font-size: 0.78rem;
+  opacity: 0.75;
+  line-height: 1.35;
+}
+.reglas-contenido {
+  display: grid;
+  gap: 16px;
+  padding-top: 14px;
+}
+.reglas-mesa summary::marker {
+  color: var(--acento);
+}
+
+/* ── Unirse con código ────────────────────────────────────────── */
+
+.campo-codigo {
+  display: grid;
+  gap: 8px;
+}
+.campo-codigo span {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+.campo-codigo input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid transparent;
+  border-radius: var(--radio);
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--fuente-titulo);
+  font-size: 2rem;
+  letter-spacing: 0.35em;
+  text-indent: 0.35em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.campo-codigo input::placeholder {
+  color: rgb(29 26 22 / 0.25);
+}
+.campo-codigo input:focus-visible {
+  outline: none;
+  border-color: var(--acento);
+}
+.campo-codigo input[aria-invalid='true'] {
+  border-color: var(--peligro);
+}
+
+/* ── Sala de espera ───────────────────────────────────────────── */
+
+.invitacion {
+  justify-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.invitacion > div {
+  width: 100%;
+}
+.invitacion-texto {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+.codigo-sala {
+  display: block;
+  padding: 6px 18px 8px 26px;
+  border-radius: 14px;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: clamp(2.6rem, 14vw, 3.6rem);
+  line-height: 1.1;
+  letter-spacing: 0.18em;
+  box-shadow:
+    inset 0 -3px 0 rgb(0 0 0 / 0.12),
+    var(--sombra);
+  user-select: all;
+}
+.codigo-mediano {
+  font-size: 2rem;
+}
+.copiado {
+  margin: -2px 0 0;
+  color: var(--acento);
+  font-weight: 800;
+  animation: aviso-se-va 2.2s ease forwards;
+}
+.link-a-mano {
+  margin: 0;
+  font-size: 0.85rem;
+  word-break: break-all;
+  user-select: all;
+}
+
+.equipos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.equipo {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+.equipo h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+.equipo-tuyo {
+  font-size: 0.68rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--acento);
+}
+
+.lugar {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.22);
+  border: 1px solid var(--panel-borde);
+  color: var(--texto-claro);
+  text-align: left;
+}
+.lugar.yo {
+  border-color: var(--acento);
+  background: rgb(242 193 78 / 0.14);
+}
+.lugar.libre {
+  border: 1.5px dashed rgb(255 255 255 / 0.35);
+  background: none;
+}
+.lugar.libre:not(:disabled):hover,
+.lugar.libre:focus-visible {
+  border-color: var(--acento);
+  background: rgb(255 255 255 / 0.06);
+}
+.lugar.libre:disabled {
+  cursor: default;
+}
+.lugar.desconectado {
+  opacity: 0.6;
+}
+.lugar-avatar {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.14);
+  font-size: 1.35rem;
+}
+.lugar.libre .lugar-avatar {
+  background: none;
+  border: 1.5px dashed rgb(255 255 255 / 0.35);
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+.lugar-texto {
+  display: grid;
+  min-width: 0;
+}
+.lugar-texto strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.92rem;
+}
+.lugar-vos {
+  color: var(--acento);
+  font-weight: 700;
+}
+.lugar-texto small {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+.lugar-punto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.4);
+}
+.lugar-punto.en-linea {
+  background: var(--en-linea);
+}
+.lugar-anfitrion {
+  position: absolute;
+  top: -7px;
+  left: 30px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--acento);
+  color: var(--tinta);
+  font-size: 0.72rem;
+  box-shadow: var(--sombra);
+}
+
+.resumen-sala {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.resumen-sala li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.22);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.resumen-sala li:first-child {
+  background: var(--acento);
+  color: var(--tinta);
+  font-weight: 800;
+}
+
+.esperando-anfitrion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border-radius: var(--radio);
+  background: rgb(0 0 0 / 0.22);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ── Buscar partida ───────────────────────────────────────────── */
+
+.buscando {
+  justify-items: center;
+  text-align: center;
+  padding: 26px 16px 22px;
+}
+.buscando h2 {
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: 1.5rem;
+}
+.buscando-cartas {
+  display: flex;
+  gap: 10px;
+  height: 84px;
+  align-items: flex-end;
+}
+.buscando-cartas .carta {
+  --ancho: 46px;
+  animation: carta-busca 1.8s ease-in-out infinite;
+}
+.buscando-cartas .carta:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.buscando-cartas .carta:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes carta-busca {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-14px);
+  }
+}
+
+.oferta-bot {
+  border: 2px solid var(--acento);
+  animation: aparece 0.25s ease-out;
+}
+@keyframes aparece {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (min-width: 720px) {
+  .pantalla-online {
+    max-width: 560px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buscando-cartas .carta,
+  .punto-latido,
+  .partida-en-curso h2::before,
+  .oferta-bot {
+    animation: none;
+  }
+}
+
+/* En el celular, los dos botones de la oferta van uno abajo del otro para no partir el texto. */
+@media (max-width: 479px) {
+  .oferta-bot .botones-fila {
+    grid-template-columns: 1fr;
+  }
+}
