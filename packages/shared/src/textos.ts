@@ -1,6 +1,6 @@
 import { nombreCarta, type Accion, type Evento, type VistaPartida } from '@truco/engine'
 
-const TEXTO_CANTO: Record<string, string> = {
+export const TEXTO_CANTO: Record<string, string> = {
   truco: 'Truco',
   retruco: 'Quiero retruco',
   valeCuatro: 'Quiero vale cuatro',

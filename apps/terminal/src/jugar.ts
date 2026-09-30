@@ -11,7 +11,7 @@ import { Client } from '@colyseus/sdk'
 import { nombreCarta, type Evento, type Formato, type VistaPartida } from '@truco/engine'
 import { GESTO, SENIAS, SIGNIFICADO, type Nivel, type Senia } from '@truco/bots'
 import { SALAS, type InfoSala, type MensajeChat, type MensajesCliente, type MensajesServidor } from '@truco/shared'
-import { describirAccion, describirEvento } from './texto'
+import { describirAccion, describirEvento } from '@truco/shared'
 
 function arg(nombre: string): string | undefined {
   const i = process.argv.indexOf(`--${nombre}`)

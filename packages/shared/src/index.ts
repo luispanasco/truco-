@@ -59,6 +59,8 @@ export interface MensajesCliente {
   iniciar: Record<string, never>
   /** Cola pública: aceptar jugar contra un bot en vez de esperar. */
   jugarContraBot: Record<string, never>
+  /** Terminada la partida, pedir jugar otra con la misma mesa. */
+  revancha: Record<string, never>
 }
 
 // ── Servidor → cliente ──────────────────────────────────────────────
@@ -118,3 +120,5 @@ export interface MensajesServidor {
 
 export type TipoMensajeCliente = keyof MensajesCliente
 export type TipoMensajeServidor = keyof MensajesServidor
+
+export { describirAccion, describirEvento, TEXTO_CANTO } from './textos'

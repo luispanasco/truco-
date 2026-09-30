@@ -8,6 +8,7 @@
     "cli": "pnpm --filter @truco/engine cli",
     "simular": "pnpm --filter @truco/bots simular",
     "jugar": "pnpm --filter @truco/terminal jugar",
-    "servidor": "pnpm --filter @truco/server start"
+    "servidor": "pnpm --filter @truco/server start",
+    "web": "pnpm --filter @truco/web dev"
   }
 }

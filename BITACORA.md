@@ -12,7 +12,7 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 | 1A | Motor de reglas | Hecha | 2026-09-30 | `55961aa` |
 | 1B | Bots | Hecha | 2026-09-30 | `117d29d` |
 | 1C | Servidor | Hecha | 2026-09-30 | `039be94` |
-| 1D | Interfaz | Pendiente | — | — |
+| 1D | Interfaz | En curso (D1 hecho) | — | — |
 | 1E | Señas, avatares y cantos | Pendiente | — | — |
 | Fase 2 | Cuentas, economía y voz | Pendiente | — | — |
 | Fase 3 | Modo sucio | Pendiente | — | — |
@@ -261,3 +261,43 @@ pnpm había dejado **dos copias** de `@colyseus/core` 0.18.18 en `node_modules`,
 Si vuelve a aparecer ese error: `rm -rf node_modules packages/*/node_modules apps/*/node_modules && pnpm install`.
 
 **Corrección:** el script para levantar el servidor se llamaba `pnpm server`, pero ese nombre es un comando propio de pnpm (administra su almacén de paquetes). pnpm ejecutaba el suyo, que no hace nada visible, y nunca llegaba al nuestro. Se renombró a **`pnpm servidor`**.
+
+---
+
+## Etapa 1D: interfaz — plan aprobado 2026-09-30
+
+- **Tecnologías:** React 19, Vite 8, TypeScript, Zustand, React Router, Motion (animaciones), vite-plugin-pwa, `@colyseus/sdk`. Tests con Vitest + Testing Library y Playwright.
+- **Cartas:** SVG propio con figuras estilizadas. Más adelante se busca un set con licencia libre.
+- **Mesa:** paño verde con madera, estilo boliche. Colores de paño, madera y dorso como variables de tema, para los cosméticos.
+- **Cuatro tramos, con revisión al final de cada uno:**
+  - **D1:** mesa jugable contra bots.
+  - **D2:** cartas SVG, fósforos, animaciones y disposición.
+  - **D3:** pantallas online y revancha.
+  - **D4:** PWA, ayudas, pulido y Playwright.
+
+### Tramo D1 — 2026-09-30
+
+- `apps/web`, que se levanta con `pnpm web` (`--host`, así se abre desde el celular en la misma red).
+- **Conexión con dos versiones que hablan el mismo protocolo que el servidor.** La local (`ConexionLocal`) corre el motor y los bots en el navegador: demoras de bots, señas del compañero y revancha. La online llega en D3.
+- **Estado con Zustand.** Además de los mensajes, arma lo que se ve:
+  - la última vuelta queda en la mesa hasta que se tira la carta siguiente;
+  - globos de texto para los cantos;
+  - registro de las últimas jugadas;
+  - avisos de señas y errores.
+- **Pantallas:**
+  - inicio: apodo, avatar entre 10, formato y nivel;
+  - mesa para 1v1, 2v2 y 3v3, con asientos relativos a quien mira: la M marca al mano, se ve a quién le toca, y en pica-pica se atenúan los que no juegan el duelo;
+  - la muestra y el valor del truco arriba;
+  - tu mano abajo, que se juega tocando las cartas;
+  - solo los botones de canto válidos;
+  - resultado de las vueltas;
+  - fin de partida con revancha.
+- **Cartas provisorias:** número y símbolo del palo; las definitivas llegan en D2. Con ayudas activas se ven el envido, la flor y una estrella en piezas y matas.
+- `packages/shared` ahora tiene también los textos de cantos y eventos (`describirAccion`, `describirEvento`), que usan la web y la terminal. Se agregó el mensaje `revancha`.
+- **Tests (7):**
+  - la conexión local juega partidas enteras en 1v1, 2v2 y 3v3 sin mostrar cartas ajenas;
+  - las señas del compañero llegan;
+  - una jugada inválida se rechaza con su motivo;
+  - desde el inicio se entra a la mesa;
+  - se juega tocando cartas.
+- **Revisión visual con Playwright:** `apps/web/scripts/capturas.mjs` saca capturas en tamaño celular. Así se corrigió que el registro y los avisos tapaban jugadores y que las cartas del centro se superponían en 1v1.
