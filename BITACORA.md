@@ -11,7 +11,7 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 | Reglas | Confirmación de las reglas configurables | Hecha | 2026-09-30 | — |
 | 1A | Motor de reglas | Hecha | 2026-09-30 | `55961aa` |
 | 1B | Bots | Hecha | 2026-09-30 | `117d29d` |
-| 1C | Servidor | Hecha | 2026-09-30 | ver abajo |
+| 1C | Servidor | Hecha | 2026-09-30 | `039be94` |
 | 1D | Interfaz | Pendiente | — | — |
 | 1E | Señas, avatares y cantos | Pendiente | — | — |
 | Fase 2 | Cuentas, economía y voz | Pendiente | — | — |
@@ -176,7 +176,7 @@ El resto de las cartas no tiene seña. Los unos bravos comparten seña, y lo mis
 
 ## Etapa 1C: servidor — 2026-09-30
 
-**Commit:** ver abajo
+**Commit:** `039be94`
 
 ### Decisiones previas
 
