@@ -11,7 +11,7 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 | Reglas | Confirmación de las reglas configurables | Hecha | 2026-09-30 | — |
 | 1A | Motor de reglas | Hecha | 2026-09-30 | `55961aa` |
 | 1B | Bots | Hecha | 2026-09-30 | `117d29d` |
-| 1C | Servidor | Pendiente | — | — |
+| 1C | Servidor | Hecha | 2026-09-30 | ver abajo |
 | 1D | Interfaz | Pendiente | — | — |
 | 1E | Señas, avatares y cantos | Pendiente | — | — |
 | Fase 2 | Cuentas, economía y voz | Pendiente | — | — |
@@ -171,3 +171,73 @@ El resto de las cartas no tiene seña. Los unos bravos comparten seña, y lo mis
 
 - Duración aproximada por partida: fácil y medio de 10 a 100 ms; difícil 40 ms en 1v1 y 0,9 s en 2v2 (en un solo proceso).
 - Variantes probadas sin mejora medible: cantar truco con menos juego, más farol, más prudencia para querer, más muestras, deducir del envido con más exigencia en equipos, y leer como mano floja que el rival no cante truco.
+
+---
+
+## Etapa 1C: servidor — 2026-09-30
+
+**Commit:** ver abajo
+
+### Decisiones previas
+
+- Un bot de nivel **medio** juega por quien se desconecta o se queda sin tiempo.
+- La cola pública ofrece jugar contra un bot a los 30 segundos de espera.
+- Tecnologías: TypeScript, Node 24, Colyseus 0.18 con WebSocket, `@colyseus/sdk` para el cliente, `packages/shared` para los mensajes, registro en archivos JSON, Vitest + `@colyseus/testing`.
+
+### Qué se hizo
+
+- `packages/shared`: los tipos de todos los mensajes entre cliente y servidor, en los dos sentidos.
+- `apps/server` con Colyseus y dos tipos de sala:
+  - `privada`: se entra con un código de 5 caracteres, sin O/0 ni I/1/L. El código es el ID de la sala.
+  - `publica`: cola 1v1 que empieza sola con dos personas.
+- El servidor es la única autoridad:
+  - valida cada jugada con el motor;
+  - pone el jugador según la conexión, no según lo que dice el mensaje;
+  - le manda a cada uno solo su `vistaPara` y los eventos públicos.
+- Turnos de 30 segundos: si vencen, juega un bot por el jugador. Los bots esperan entre 0,8 y 2 segundos antes de jugar.
+- Desconexiones:
+  - un bot juega por quien se fue;
+  - Colyseus permite reconectarse a la misma sesión durante 20 segundos;
+  - después, se vuelve con el mismo ID de invitado y se recupera el lugar;
+  - sin humanos conectados, la sala se cierra a los 2 minutos.
+- Señas: se reenvían solo a los compañeros, nunca en 1v1 ni en pica-pica. Los bots señan al empezar cada mano.
+- Chat:
+  - general en todas las salas; de equipo solo en las privadas de 2v2 y 3v3;
+  - filtro de palabras (lista en `src/palabras.ts`);
+  - límite de 3 mensajes cada 5 segundos, de hasta 200 caracteres;
+  - silenciar y reportar.
+- Límite de 10 acciones por segundo por jugador.
+- Registro de cada partida en `datos/partidas/` (semilla, configuración y acciones) y de los reportes en `datos/reportes.jsonl`.
+- `pnpm server` levanta el servidor en `ws://localhost:2567`.
+
+### Tests (17)
+
+- Integración con clientes que se conectan de verdad:
+  - partida 2v2 completa con dos humanos y dos bots;
+  - la partida se reproduce idéntica desde el registro;
+  - ninguna vista recibida trae cartas ajenas;
+  - acción inválida o mal formada;
+  - desconexión, bot de reemplazo y regreso con el mismo ID;
+  - señas y chat de equipo aislados del rival;
+  - filtro, límite y silenciar del chat;
+  - reportes;
+  - turno vencido;
+  - cola pública (con dos personas y con la oferta de bot);
+  - cierre de la sala sin humanos.
+- Unitarios: filtro de palabras, límite de frecuencia y códigos de sala.
+
+### Decisiones
+
+1. No se usa el estado sincronizado de Colyseus. La información pública de la sala (lugares, apodos, conexión y configuración) va en el mensaje `sala`, y la partida en `vista` y `eventos`. Así ninguna carta puede filtrarse por la sincronización automática.
+2. El modo sucio queda forzado en apagado hasta la fase 3, aunque el cliente lo pida.
+3. Cuando empieza, la sala pública se marca privada para que no entren desconocidos. Solo vuelven los que ya tenían lugar.
+4. Si el anfitrión se va antes de empezar, pasa a serlo el siguiente humano. Antes de empezar, irse libera el lugar.
+5. Las señas de un humano les llegan también a sus compañeros bots. El bot supone que son todas las señas de esa mano, así que si el humano seña solo una parte, el bot puede equivocarse. Es aceptable por ahora.
+6. Un bot que no tiene ninguna carta con seña "no hace nada", y sus compañeros bots lo tienen en cuenta.
+7. Terminada la partida, la sala queda abierta hasta que se van todos. La revancha queda para la 1D, junto con la pantalla de fin de partida.
+8. Los tests del servidor corren de a un archivo por vez: dos servidores de Colyseus en paralelo se traban entre sí.
+
+### Notas
+
+- La primera corrida de los tests tarda más de un minuto porque Vitest arma su caché de dependencias. Las siguientes tardan entre 7 y 20 segundos.
+- El jugador simulado de los tests reintenta cuando el servidor le rechaza una jugada por el límite de acciones por segundo, como haría un cliente real.
