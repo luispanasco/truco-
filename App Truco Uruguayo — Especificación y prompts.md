@@ -190,6 +190,21 @@ Toda partida es una sala del servidor con 2, 4 o 6 lugares; cada lugar lo ocupa 
 - Si alguien se desconecta, un bot lo reemplaza hasta que vuelve con el mismo ID.
 - Si nadie humano queda en la sala, la sala se cierra después de 2 minutos.
 
+### Ojeo de cartas
+
+Al empezar cada mano, las tres cartas llegan apiladas y el jugador las descubre de a poco, como en la mesa real: desliza la de adelante hacia abajo y la de atrás se asoma desde su borde superior. Primero se ven los cortes del marco, que indican el palo, y después el número de la esquina.
+
+- **Cartas:** el marco tiene los cortes arriba (oros 0, copas 1, espadas 2, bastos 3) y el número va en las dos esquinas superiores. Las zonas son configurables: cortes del 0% al 8% de la altura, número del 8% al 25%, y el dibujo más abajo.
+- **Gesto:** el arrastre sigue el dedo 1:1, solo en vertical, y la carta queda donde se la suelta. Una carta no sube más arriba de su posición inicial ni baja tanto que tape el número de la que tiene detrás. Cuenta como "ojeada" cuando se ve entera la zona del número.
+- **Abrir la mano:**
+  - con las tres ojeadas, la mano se abre en abanico a los 600 ms;
+  - el botón "Ver todas" la abre de una;
+  - si llega el turno, tocar cualquier carta abre el abanico.
+
+  El ojeo no frena el reloj.
+- **Ajuste:** "Ojear cartas", activado por defecto. Con movimiento reducido no hay animaciones, pero el gesto funciona igual, y hay una vibración opcional al ojear cada carta.
+- **Técnica:** es puramente visual y local: no manda nada al servidor. La muestra no se ojea.
+
 ### Ayudas para principiantes
 
 Resaltar piezas y matas, mostrar el tanto de envido y avisar si hay flor. Se activan por sala; en salas públicas quedan apagadas.
