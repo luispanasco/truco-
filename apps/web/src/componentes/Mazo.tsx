@@ -8,22 +8,23 @@ import { Carta } from './Carta'
  */
 const POSICIONES: Record<number, [number, number][]> = {
   2: [
-    [74, 84],
-    [26, 18],
+    [84, 66],
+    [17, 16],
   ],
   4: [
-    [74, 86],
+    [85, 86],
     [84, 24],
-    [26, 16],
+    [17, 15],
     [16, 76],
   ],
+  // En 3 contra 3 va a las esquinas: el medio de arriba y de abajo es de los asientos y del registro.
   6: [
-    [64, 91],
+    [84, 91],
     [86, 50],
-    [70, 12],
-    [30, 12],
+    [78, 9],
+    [22, 9],
     [14, 50],
-    [36, 91],
+    [16, 91],
   ],
 }
 

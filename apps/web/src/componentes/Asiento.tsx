@@ -20,6 +20,15 @@ export function Avatar({ lugar, tam = 'normal' }: { lugar: LugarPublico; tam?: '
   return <div className={`avatar avatar-${tam}`}>{contenido}</div>
 }
 
+/** La "M" de mano, como ficha sobre el avatar. */
+export function MarcaMano() {
+  return (
+    <span className="marca-mano" title="Es mano" aria-label="Es mano">
+      M
+    </span>
+  )
+}
+
 export function Asiento({ lugar, posicion, cartasEnMano, esCompaniero, leToca, esMano, participa, globo }: Props) {
   return (
     <div
@@ -30,10 +39,12 @@ export function Asiento({ lugar, posicion, cartasEnMano, esCompaniero, leToca, e
           {globo.texto}
         </div>
       )}
-      <Avatar lugar={lugar} />
+      <div className="asiento-avatar">
+        <Avatar lugar={lugar} />
+        {esMano && <MarcaMano />}
+      </div>
       <div className="asiento-nombre">
-        {lugar.apodo}
-        {esMano && <span className="marca-mano" title="Es mano">M</span>}
+        <span className="asiento-apodo">{lugar.apodo}</span>
         {lugar.tipo === 'humano' && !lugar.conectado && <span title="Desconectado"> 📴</span>}
       </div>
       <div className="asiento-cartas">
