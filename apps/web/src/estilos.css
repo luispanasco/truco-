@@ -944,3 +944,12 @@ button {
   font-size: 0.72rem;
   white-space: nowrap;
 }
+
+/* ── Animaciones ── */
+
+/* Envoltorios que anima motion (vuelo de la jugada, reparto de la mano): no ocupan lugar extra. */
+.jugada-vuelo,
+.mano-reparto {
+  display: block;
+  flex: none;
+}

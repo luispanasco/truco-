@@ -1,3 +1,4 @@
+import { motion } from 'motion/react'
 import type { Carta as TCarta, Palo } from '@truco/engine'
 import { Dorso, Frente } from './dibujo'
 
@@ -33,8 +34,16 @@ export function Carta({ carta, oculta, tam = 'normal', jugable, resaltada, ganad
       {frente}
     </button>
   ) : (
-    <div className={clases.join(' ')} aria-label={etiqueta} role="img">
+    // La ganadora de la vuelta late una vez (la escala no pisa el transform de quien la ubica).
+    <motion.div
+      className={clases.join(' ')}
+      aria-label={etiqueta}
+      role="img"
+      initial={false}
+      animate={ganadora ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+      transition={{ duration: 0.5, ease: 'easeInOut' }}
+    >
       {frente}
-    </div>
+    </motion.div>
   )
 }
