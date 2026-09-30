@@ -5,6 +5,7 @@ import { MotionConfig } from 'motion/react'
 import { Baraja } from './pantallas/Baraja'
 import { Inicio } from './pantallas/Inicio'
 import { Mesa } from './pantallas/Mesa'
+import { PruebaOjeo } from './pantallas/PruebaOjeo'
 import './estilos.css'
 
 createRoot(document.getElementById('raiz')!).render(
@@ -16,6 +17,7 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/" element={<Inicio />} />
           <Route path="/mesa" element={<Mesa />} />
           <Route path="/baraja" element={<Baraja />} />
+          <Route path="/ojeo" element={<PruebaOjeo />} />
         </Routes>
       </BrowserRouter>
     </MotionConfig>
