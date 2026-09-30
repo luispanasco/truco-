@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { AnimatePresence, motion } from 'motion/react'
 import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
 import { GESTO, SIGNIFICADO, esPiezaOMata } from '../senias'
 import { Acciones } from '../componentes/Acciones'
@@ -8,6 +9,23 @@ import { Carta } from '../componentes/Carta'
 import { Fosforos } from '../componentes/Fosforos'
 import { Mazo } from '../componentes/Mazo'
 import { useJuego } from '../estado'
+
+/**
+ * Hacia dónde queda cada jugador visto desde el centro (x a la derecha, y hacia abajo), por
+ * cantidad de jugadores y posición relativa. Las cartas tiradas llegan desde ahí.
+ */
+const DIRECCION: Record<number, [number, number][]> = {
+  2: [[0, 1], [0, -1]],
+  4: [[0, 1], [1, 0], [0, -1], [-1, 0]],
+  6: [[0, 1], [0.8, 0.6], [0.8, -0.6], [0, -1], [-0.8, -0.6], [-0.8, 0.6]],
+}
+/** Distancia (px) desde la que llega volando una carta tirada. */
+const VUELO = 170
+const DURACION = 0.3
+
+function direccion(n: number, pos: number): [number, number] {
+  return DIRECCION[n]?.[pos] ?? [0, 1]
+}
 
 export function Mesa() {
   const navegar = useNavigate()
@@ -117,11 +135,27 @@ export function Mesa() {
         <Mazo muestra={vista.mano.muestra} n={n} reparteRel={rel(vista.mano.reparte)} />
 
         <div className="centro">
-          {mesa.jugadas.map((j) => (
-            <div key={`${j.asiento}-${j.carta.numero}-${j.carta.palo}`} className={`jugada pos-${rel(j.asiento)}`}>
-              <Carta carta={j.carta} tam="mesa" ganadora={mesa.cerrada && mesa.ganador === j.asiento} />
-            </div>
-          ))}
+          {/* Las jugadas se ubican con transform en CSS; lo animado va en un envoltorio adentro. */}
+          <AnimatePresence>
+            {mesa.jugadas.map((j) => {
+              const [dx, dy] = direccion(n, rel(j.asiento))
+              return (
+                <div key={`${j.asiento}-${j.carta.numero}-${j.carta.palo}`} className={`jugada pos-${rel(j.asiento)}`}>
+                  <motion.div
+                    className="jugada-vuelo"
+                    // Llega desde el lado de quien la tiró, un poco girada.
+                    initial={{ x: dx * VUELO, y: dy * VUELO, rotate: (dx || 1) * 14, opacity: 0 }}
+                    animate={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
+                    // Al levantar la mesa se achica y se va hacia el centro.
+                    exit={{ x: -dx * 30, y: -dy * 30, scale: 0.6, opacity: 0 }}
+                    transition={{ duration: DURACION, ease: 'easeOut' }}
+                  >
+                    <Carta carta={j.carta} tam="mesa" ganadora={mesa.cerrada && mesa.ganador === j.asiento} />
+                  </motion.div>
+                </div>
+              )
+            })}
+          </AnimatePresence>
           {vueltas.length > 0 && (
             <div className="vueltas" aria-label="Resultado de las vueltas">
               {vueltas.map((v, i) => (
@@ -156,15 +190,23 @@ export function Mesa() {
           {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
         </div>
         <div className="mi-mano">
-          {misCartas.map((c) => (
-            <Carta
-              key={`${c.numero}-${c.palo}`}
-              carta={c}
-              tam="grande"
-              jugable={puedeJugar(c)}
-              resaltada={sala.ayudas && esPiezaOMata(c, vista.mano.muestra)}
-              alTocar={() => jugarCarta(c)}
-            />
+          {misCartas.map((c, i) => (
+            // La clave lleva el número de mano: en cada reparto las cartas entran de nuevo, escalonadas.
+            <motion.div
+              key={`${vista.mano.numero}-${c.numero}-${c.palo}`}
+              className="mano-reparto"
+              initial={{ y: -90, scale: 0.7, opacity: 0 }}
+              animate={{ y: 0, scale: 1, opacity: 1 }}
+              transition={{ duration: DURACION, ease: 'easeOut', delay: i * 0.08 }}
+            >
+              <Carta
+                carta={c}
+                tam="grande"
+                jugable={puedeJugar(c)}
+                resaltada={sala.ayudas && esPiezaOMata(c, vista.mano.muestra)}
+                alTocar={() => jugarCarta(c)}
+              />
+            </motion.div>
           ))}
         </div>
         {!finDeMano && <Acciones vista={vista} alElegir={jugar} />}
