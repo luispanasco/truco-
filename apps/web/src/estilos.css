@@ -577,7 +577,8 @@ button {
   bottom: 38px;
   left: 50%;
   transform: translateX(-50%);
-  width: 58%;
+  /* Angosto: el mazo puede estar en las esquinas de abajo. */
+  width: 48%;
   display: grid;
   gap: 1px;
   font-size: 0.74rem;

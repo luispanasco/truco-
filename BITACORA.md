@@ -12,7 +12,7 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 | 1A | Motor de reglas | Hecha | 2026-09-30 | `55961aa` |
 | 1B | Bots | Hecha | 2026-09-30 | `117d29d` |
 | 1C | Servidor | Hecha | 2026-09-30 | `039be94` |
-| 1D | Interfaz | En curso (D1 hecho) | — | — |
+| 1D | Interfaz | En curso (D1 y D2 hechos) | — | — |
 | 1E | Señas, avatares y cantos | Pendiente | — | — |
 | Fase 2 | Cuentas, economía y voz | Pendiente | — | — |
 | Fase 3 | Modo sucio | Pendiente | — | — |
@@ -316,3 +316,56 @@ Si vuelve a aparecer ese error: `rm -rf node_modules packages/*/node_modules app
 - En pica-pica, si el duelo en juego no es el tuyo, tu mano se atenúa y dice "Esperás tu duelo".
 - El registro muestra una línea por evento.
 - Test nuevo de la pausa entre manos: se ven las cartas y el resultado, la mano nueva espera, y después se levanta la mesa.
+
+### Tramo D2 — 2026-09-30
+
+Se hizo mientras el usuario no estaba, con autorización para seguir con el D2 y revisar toda la interfaz. Parte del trabajo se repartió entre tres agentes en paralelo, cada uno en su propia rama (worktree); después se integraron las tres ramas a `main`.
+
+- **Cartas SVG propias.** Las 40 están dibujadas por código:
+  - pintas del marco: oros sin cortes, copas con uno, espadas con dos y bastos con tres;
+  - palos distribuidos del 1 al 7, con espadas y bastos invertidos en la mitad de abajo;
+  - anchos más grandes;
+  - figuras estilizadas: sota, caballo y rey;
+  - dorso con colores de tema.
+
+  La página `/baraja`, de desarrollo, muestra las 40 juntas.
+- **Fósforos en el marcador:** de a 5 (cuatro en cuadrado y uno cruzado), con malas y buenas separadas.
+- **Menú de inicio rediseñado:**
+  - cabecera con cartas en abanico y título en Alfa Slab One; el texto va en Nunito, desde Google Fonts;
+  - perfil con avatar editable;
+  - "Contra la compu" con formato, dificultad y "Más opciones" (ayudas, pica-pica y juego rápido);
+  - "Online" como próximamente.
+
+  El perfil se guarda mientras se edita.
+- **Confirmación antes de abandonar** la partida.
+- **Animaciones con Motion** (agente):
+  - la carta entra desde el lado de quien la tira;
+  - la mesa se levanta con una animación de salida;
+  - reparto escalonado de la mano;
+  - pulso de la carta ganadora;
+  - respeta el "movimiento reducido" del sistema.
+- **Pulido visual de la mesa** (agente):
+  - botonera agrupada: respuestas arriba (Quiero en verde, No quiero en rojo), cantos abajo en grupos ("Envido | Real | Falta"), dos filas como máximo, y "Mazo" aparte, junto a tu nombre;
+  - anillo de turno que gira;
+  - ficha "M" de mano;
+  - nombres en pastillas con color de equipo;
+  - globos con colita que no se cortan;
+  - resultado de la mano en el hueco de la botonera;
+  - modales de fin de partida y de salir con el mismo estilo;
+  - responsive en 360 × 740 y en escritorio (tablero centrado de hasta 620 px).
+
+  Todos los colores nuevos son variables de tema.
+- **Revancha en el servidor** (agente, adelanto del D3):
+  - arranca cuando la piden todos los humanos conectados;
+  - rota quién reparte;
+  - `InfoSala.revancha` informa quién ya la pidió;
+  - el registro guarda `reparte` para poder reproducir las revanchas;
+  - 4 tests de integración nuevos.
+- **Script de capturas:** acepta el tamaño de pantalla (`node scripts/capturas.mjs <carpeta> <url> 1280x800`).
+- **Tests:** 166 en total (motor 123, bots 13, web 9, servidor 21), todos en verde.
+
+**Pendientes:**
+- En escritorio las cartas siguen con tamaño de celular.
+- En 360 px con 3v3, un globo puede rozar el mazo por un momento.
+- Con flor, "Te toca" y "Mazo" a la vez en 360 px, la pastilla del envido se corta con puntos suspensivos.
+- Mientras una carta sale de la mesa (0,3 s), puede verse apenas por debajo de la nueva.
