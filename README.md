@@ -16,7 +16,8 @@ pnpm install
 
 | Comando | Qué hace |
 | --- | --- |
-| `pnpm test` | Corre todos los tests (motor, bots y servidor). |
+| `pnpm dev` | Levanta el servidor y la web juntos (lo más cómodo para probar). |
+| `pnpm test` | Corre todos los tests (motor, bots, servidor y web) y la prueba de humo del servidor. |
 | `pnpm cli [semilla]` | Juega una mano en la terminal contra un rival al azar, sin servidor. |
 | `pnpm simular --a dificil --b medio --n 200 --formato 2v2` | Partidas bot contra bot y porcentaje de victorias. |
 | `pnpm servidor` | Levanta el servidor de juego en `ws://localhost:2567` (queda corriendo; se corta con Ctrl+C). Ojo: `pnpm server`, en inglés, es un comando propio de pnpm y no hace nada acá. |

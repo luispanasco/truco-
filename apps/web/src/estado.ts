@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { Carta, Evento, ResultadoVuelta, VistaPartida } from '@truco/engine'
 import type { Senia } from '@truco/bots'
 import { describirEvento, TEXTO_CANTO, type InfoSala, type MensajeChat, type MensajesCliente } from '@truco/shared'
-import type { Conexion, MensajeServidor } from './conexion/tipos'
+import type { Conexion, EstadoConexion, MensajeServidor } from './conexion/tipos'
 
 export interface Jugada {
   asiento: number
@@ -40,6 +40,10 @@ interface EstadoJuego {
   senias: { de: number; senia: Senia; id: number }[]
   turno: { asientos: number[]; venceEn: number | null }
   error: { motivo: string; id: number } | null
+  /** Solo online: si hay conexión con el servidor. */
+  estadoConexion: EstadoConexion
+  /** Cola pública: el servidor ofrece jugar contra un bot porque no aparece nadie. */
+  ofrecerBot: boolean
   /** Resultado de la mano que acaba de terminar, mientras dura la pausa entre manos. */
   finDeMano: string | null
 
@@ -58,6 +62,7 @@ export const PAUSA_ENTRE_MANOS = 2500
 
 let contador = 0
 let desuscribir: (() => void) | null = null
+let desuscribirEstado: (() => void) | null = null
 let enPausa = false
 let cola: MensajeServidor[] = []
 let timerPausa: ReturnType<typeof setTimeout> | null = null
@@ -163,7 +168,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     }
     switch (m.tipo) {
       case 'sala':
-        set({ sala: m.datos })
+        set({ sala: m.datos, ...(m.datos.fase !== 'esperando' ? { ofrecerBot: false } : {}) })
         break
       case 'vista':
         set({ vista: m.datos })
@@ -184,6 +189,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         set({ error: { motivo: m.datos.motivo, id: ++contador } })
         break
       case 'ofrecerBot':
+        set({ ofrecerBot: true })
         break
     }
   }
@@ -200,11 +206,14 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     turno: { asientos: [], venceEn: null },
     error: null,
     finDeMano: null,
+    estadoConexion: 'conectada',
+    ofrecerBot: false,
 
     conectar(conexion) {
       get().salir()
       set({ conexion })
       desuscribir = conexion.escuchar(alMensaje)
+      desuscribirEstado = conexion.observarEstado?.((estadoConexion) => set({ estadoConexion })) ?? null
     },
 
     enviar(tipo, datos) {
@@ -214,6 +223,8 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     salir() {
       desuscribir?.()
       desuscribir = null
+      desuscribirEstado?.()
+      desuscribirEstado = null
       if (timerPausa) clearTimeout(timerPausa)
       timerPausa = null
       enPausa = false
@@ -231,6 +242,8 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         turno: { asientos: [], venceEn: null },
         error: null,
         finDeMano: null,
+        estadoConexion: 'conectada',
+        ofrecerBot: false,
       })
     },
   }
