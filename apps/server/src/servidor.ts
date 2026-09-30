@@ -1,4 +1,5 @@
-import { resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineRoom, defineServer, playground, type ServerOptions } from 'colyseus'
 import { SALAS } from '@truco/shared'
 import { Archivo } from './registro'
@@ -14,7 +15,8 @@ export interface OpcionesServidor {
 
 export function crearServidor(op: OpcionesServidor = {}) {
   const tiempos = { ...TIEMPOS_DEFAULT, ...op.tiempos }
-  const archivo = new Archivo(op.dirDatos ?? resolve('datos'))
+  // Por defecto, apps/server/datos, sin importar desde qué carpeta se arranque el servidor.
+  const archivo = new Archivo(op.dirDatos ?? resolve(dirname(fileURLToPath(import.meta.url)), '..', 'datos'))
 
   class SalaPrivada extends SalaTruco {
     override tiempos = tiempos
