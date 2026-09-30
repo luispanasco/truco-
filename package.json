@@ -1,0 +1,10 @@
+{
+  "name": "truco",
+  "private": true,
+  "packageManager": "pnpm@10.34.6",
+  "scripts": {
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "cli": "pnpm --filter @truco/engine cli"
+  }
+}
