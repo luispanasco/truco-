@@ -1,57 +1,98 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import type { Nivel } from '@truco/bots'
-import type { Formato } from '@truco/engine'
 import { Carta } from '../componentes/Carta'
+import { FORMATOS, NIVELES } from '../componentes/FormularioSala'
+import { Interruptor } from '../componentes/Interruptor'
+import { datosUnirse, destinoAlEntrar, MensajeError } from '../componentes/Online'
+import { TarjetaPerfil, usePerfil } from '../componentes/TarjetaPerfil'
 import { ConexionLocal } from '../conexion/local'
+import { ConexionOnline, descartarPartidaGuardada, leerPartidaGuardada, motivoError } from '../conexion/online'
 import { useJuego } from '../estado'
-import { AVATARES, guardarPerfil, leerPerfil, type Perfil } from '../perfil'
 
-const FORMATOS: [Formato, string, string][] = [
-  ['1v1', 'Mano a mano', '1 vs 1'],
-  ['2v2', 'Parejas', '2 vs 2'],
-  ['3v3', 'Tríos', '3 vs 3'],
-]
-const NIVELES: [Nivel, string][] = [
-  ['facil', 'Fácil'],
-  ['medio', 'Medio'],
-  ['dificil', 'Difícil'],
-]
-
-function Interruptor({
-  activo,
-  alCambiar,
+/** Una opción del menú online: ícono, título y una línea que explica. */
+function OpcionOnline({
+  icono,
   titulo,
   detalle,
+  deshabilitada,
+  alTocar,
 }: {
-  activo: boolean
-  alCambiar: (v: boolean) => void
+  icono: string
   titulo: string
   detalle: string
+  deshabilitada: boolean
+  alTocar: () => void
 }) {
   return (
-    <label className="interruptor">
-      <span>
+    <button type="button" className="opcion-online" disabled={deshabilitada} onClick={alTocar}>
+      <span className="opcion-online-icono" aria-hidden="true">
+        {icono}
+      </span>
+      <span className="opcion-online-texto">
         <strong>{titulo}</strong>
         <small>{detalle}</small>
       </span>
-      <input type="checkbox" role="switch" checked={activo} onChange={(e) => alCambiar(e.target.checked)} />
-      <span className="interruptor-pista" aria-hidden="true" />
-    </label>
+      <span className="opcion-online-flecha" aria-hidden="true">
+        ›
+      </span>
+    </button>
+  )
+}
+
+/** Si quedó una partida online a medias (se recargó o se cerró la app), se ofrece volver. */
+function PartidaEnCurso({ apodo, alVolver }: { apodo: boolean; alVolver: () => Promise<string | null> }) {
+  const [partida, setPartida] = useState(leerPartidaGuardada)
+  const [volviendo, setVolviendo] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  if (!partida && !error) return null
+
+  const volver = async () => {
+    setVolviendo(true)
+    setError(null)
+    const motivo = await alVolver()
+    if (motivo) {
+      setError(motivo)
+      setVolviendo(false)
+      if (!leerPartidaGuardada()) setPartida(null)
+    }
+  }
+
+  return (
+    <section className="tarjeta partida-en-curso">
+      <h2>Tenés una partida en curso</h2>
+      {partida ? (
+        <>
+          <p className="nota-izq">
+            {partida.publica ? 'Un mano a mano online' : `La sala ${partida.roomId}`}: mientras no estás, juega un bot por vos.
+          </p>
+          {error && <MensajeError>{error}</MensajeError>}
+          <div className="botones-fila botones-volver">
+            <button type="button" className="boton" disabled={!apodo || volviendo} onClick={volver}>
+              {volviendo ? 'Volviendo…' : 'Volver a la partida'}
+            </button>
+            <button
+              type="button"
+              className="boton boton-secundario"
+              disabled={volviendo}
+              onClick={() => {
+                descartarPartidaGuardada()
+                setPartida(null)
+              }}
+            >
+              Descartar
+            </button>
+          </div>
+        </>
+      ) : (
+        <MensajeError>{error}</MensajeError>
+      )}
+    </section>
   )
 }
 
 export function Inicio() {
   const navegar = useNavigate()
-  const [perfil, setPerfil] = useState(leerPerfil)
-  const [eligiendoAvatar, setEligiendoAvatar] = useState(false)
-  // El perfil se guarda mientras se edita, así sobrevive a recargar la página.
-  const cambiar = (p: Partial<Perfil>) =>
-    setPerfil((x) => {
-      const nuevo = { ...x, ...p }
-      guardarPerfil(nuevo)
-      return nuevo
-    })
+  const [perfil, cambiar] = usePerfil()
   const apodo = perfil.apodo.trim()
 
   const jugarContraBots = () => {
@@ -69,6 +110,26 @@ export function Inicio() {
     navegar('/mesa')
   }
 
+  /** Vuelve a la partida guardada; devuelve el motivo si no se pudo. */
+  const volverALaPartida = async (): Promise<string | null> => {
+    const partida = leerPartidaGuardada()
+    if (!partida) return 'Esa partida ya no está disponible.'
+    try {
+      const c = await ConexionOnline.unirse(partida.roomId, datosUnirse(perfil))
+      useJuego.getState().conectar(c)
+      navegar(destinoAlEntrar())
+      return null
+    } catch (e) {
+      const motivo = motivoError(e)
+      // Si la sala ya no existe (terminó o se cerró), no tiene sentido seguir ofreciéndola.
+      if (motivo === 'No existe una sala con ese código.') {
+        descartarPartidaGuardada()
+        return 'Esa partida ya terminó o se cerró.'
+      }
+      return motivo
+    }
+  }
+
   return (
     <div className="pantalla-inicio">
       <header className="inicio-cabecera">
@@ -81,46 +142,9 @@ export function Inicio() {
         <p className="subtitulo">uruguayo · con muestra, piezas y flor</p>
       </header>
 
-      <section className="tarjeta perfil">
-        <button
-          type="button"
-          className="perfil-avatar"
-          aria-label="Elegir avatar"
-          aria-expanded={eligiendoAvatar}
-          onClick={() => setEligiendoAvatar((v) => !v)}
-        >
-          {perfil.avatar}
-          <span className="perfil-editar">✎</span>
-        </button>
-        <label className="perfil-apodo">
-          <span>Tu apodo</span>
-          <input
-            value={perfil.apodo}
-            maxLength={20}
-            placeholder="¿Cómo te dicen?"
-            onChange={(e) => cambiar({ apodo: e.target.value })}
-          />
-        </label>
-        {eligiendoAvatar && (
-          <div className="avatares" role="radiogroup" aria-label="Avatar">
-            {AVATARES.map((a) => (
-              <button
-                key={a}
-                type="button"
-                role="radio"
-                aria-checked={perfil.avatar === a}
-                className={`avatar-opcion${perfil.avatar === a ? ' elegido' : ''}`}
-                onClick={() => {
-                  cambiar({ avatar: a })
-                  setEligiendoAvatar(false)
-                }}
-              >
-                {a}
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
+      <PartidaEnCurso apodo={apodo.length > 0} alVolver={volverALaPartida} />
+
+      <TarjetaPerfil perfil={perfil} cambiar={cambiar} />
 
       <section className="tarjeta">
         <h2>Contra la compu</h2>
@@ -139,7 +163,12 @@ export function Inicio() {
           <span>Dificultad</span>
           <div className="segmentado">
             {NIVELES.map(([nv, t]) => (
-              <button key={nv} type="button" className={perfil.nivelBots === nv ? 'elegido' : ''} onClick={() => cambiar({ nivelBots: nv })}>
+              <button
+                key={nv}
+                type="button"
+                className={perfil.nivelBots === nv ? 'elegido' : ''}
+                onClick={() => cambiar({ nivelBots: nv })}
+              >
                 {t}
               </button>
             ))}
@@ -173,18 +202,32 @@ export function Inicio() {
       </section>
 
       <section className="tarjeta tarjeta-online">
-        <h2>
-          Online <span className="insignia">Próximamente</span>
-        </h2>
+        <h2>Online</h2>
         <p className="nota-izq">Jugá con amigos con un código o un link, o con gente de todos lados.</p>
-        <div className="botones-fila">
-          <button type="button" className="boton boton-secundario" disabled>
-            Crear sala
-          </button>
-          <button type="button" className="boton boton-secundario" disabled>
-            Unirme con código
-          </button>
+        <div className="opciones-online">
+          <OpcionOnline
+            icono="👥"
+            titulo="Crear sala"
+            detalle="Armá la mesa y pasale el código a tus amigos"
+            deshabilitada={!apodo}
+            alTocar={() => navegar('/crear')}
+          />
+          <OpcionOnline
+            icono="🔑"
+            titulo="Unirme con código"
+            detalle="Entrá a la sala que armó otro"
+            deshabilitada={!apodo}
+            alTocar={() => navegar('/unirme')}
+          />
+          <OpcionOnline
+            icono="🌎"
+            titulo="Buscar partida"
+            detalle="Mano a mano con desconocidos"
+            deshabilitada={!apodo}
+            alTocar={() => navegar('/buscar')}
+          />
         </div>
+        {!apodo && <p className="nota">Poné tu apodo para jugar online.</p>}
       </section>
 
       <footer className="inicio-pie">Truco uruguayo · versión de prueba</footer>

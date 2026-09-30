@@ -35,6 +35,11 @@ export function leerPartidaGuardada(): PartidaGuardada | null {
   }
 }
 
+/** Olvidar la partida guardada (por ejemplo, si ya no existe o la persona no quiere volver). */
+export function descartarPartidaGuardada() {
+  guardarPartida(null)
+}
+
 function guardarPartida(p: PartidaGuardada | null) {
   try {
     if (p) localStorage.setItem(CLAVE_PARTIDA, JSON.stringify(p))
