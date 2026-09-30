@@ -241,3 +241,21 @@ El resto de las cartas no tiene seña. Los unos bravos comparten seña, y lo mis
 
 - La primera corrida de los tests tarda más de un minuto porque Vitest arma su caché de dependencias. Las siguientes tardan entre 7 y 20 segundos.
 - El jugador simulado de los tests reintenta cuando el servidor le rechaza una jugada por el límite de acciones por segundo, como haría un cliente real.
+
+---
+
+## Herramientas para probar el servidor — 2026-09-30
+
+Hasta que exista la interfaz (1D), el servidor no tenía forma de probarse a mano. Se agregaron:
+
+- **Cliente de terminal** (`apps/terminal`, `pnpm jugar`). Tiene salas privadas con código, cola pública, chat, señas y reconexión con `--id`. Se probó de punta a punta: dos clientes y dos bots en una sala 2v2, con partida completa.
+- **Playground de Colyseus** en `/playground`, solo en desarrollo.
+- `TRUCO_BOT_MS` y `TRUCO_TURNO_MS`, para acortar los tiempos al probar.
+- `README.md` con todos los comandos.
+- `SIGNIFICADO` en `@truco/bots`: qué carta anuncia cada seña (para mostrarlas).
+
+### Problema encontrado
+
+pnpm había dejado **dos copias** de `@colyseus/core` 0.18.18 en `node_modules`, con distinta resolución de dependencias opcionales, después de sacar `@colyseus/schema`. El transporte WebSocket usaba una copia y las salas otra, así que ningún cliente real podía entrar: fallaba con "seat reservation expired". Los tests no lo detectaban porque se conectan por otro camino. Se resolvió reinstalando las dependencias desde cero.
+
+Si vuelve a aparecer ese error: `rm -rf node_modules packages/*/node_modules apps/*/node_modules && pnpm install`.

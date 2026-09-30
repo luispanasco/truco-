@@ -1,0 +1,21 @@
+{
+  "name": "@truco/terminal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "jugar": "tsx src/jugar.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@colyseus/sdk": "^0.18.4",
+    "@truco/bots": "workspace:*",
+    "@truco/engine": "workspace:*",
+    "@truco/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

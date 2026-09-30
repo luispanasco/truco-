@@ -1,0 +1,2006 @@
+{
+ "sala": "YPD4U",
+ "inicio": "2026-09-30T19:05:39.808Z",
+ "fin": "2026-09-30T19:05:55.349Z",
+ "semilla": 1504615091,
+ "config": {
+  "formato": "2v2",
+  "puntosPartida": 30,
+  "puntosMalas": 15,
+  "florConPiezas": "piezaMayorMasDigitos",
+  "valorContraflor": 6,
+  "faltaEnvidoEnMalas": "loQueFalta",
+  "picaPica": true,
+  "tramoPicaPica": {
+   "desde": 0,
+   "hasta": 15
+  },
+  "florObligatoria": true,
+  "envidoEnvido": true,
+  "empiezaTrasParda": "quienEmpezo",
+  "mazoCobraEnvidoPendiente": true,
+  "modoSucio": false,
+  "penalidadMentira": "puntosAlRival"
+ },
+ "jugadores": [
+  {
+   "asiento": 0,
+   "apodo": "Luis",
+   "tipo": "humano",
+   "invitadoId": "bcdf82d3-e72a-47eb-8e52-3c1ee0b3e8d3"
+  },
+  {
+   "asiento": 1,
+   "apodo": "Nami",
+   "tipo": "humano",
+   "invitadoId": "03347e72-90ce-4f44-a004-9a38f6438e7e"
+  },
+  {
+   "asiento": 2,
+   "apodo": "Bot 1",
+   "tipo": "bot",
+   "invitadoId": null
+  },
+  {
+   "asiento": 3,
+   "apodo": "Bot 2",
+   "tipo": "bot",
+   "invitadoId": null
+  }
+ ],
+ "acciones": [
+  {
+   "ms": 30,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 4,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 60,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 2,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 83,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 6,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 89,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j3"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 122,
+   "asiento": 0,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j0",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 137,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 5,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 169,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 3,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 186,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j2"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 216,
+   "asiento": 1,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j1",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 232,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 7,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 249,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j3"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 280,
+   "asiento": 0,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j0",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 295,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 2,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 326,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 5,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 342,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 5,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 359,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 2,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 391,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 1,
+     "palo": "basto"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 424,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 1,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 455,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 1,
+     "palo": "espada"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 470,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarFlor",
+    "jugador": "j2",
+    "canto": "flor"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 478,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 10,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 492,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 6,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 518,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 6,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 550,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 4,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 568,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 12,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 582,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j3"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 613,
+   "asiento": 0,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j0",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 615,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 3,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 645,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 5,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 653,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarEnvido",
+    "jugador": "j2",
+    "canto": "envido"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 691,
+   "asiento": 1,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j1",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 707,
+   "asiento": 2,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j2",
+    "tanto": 28
+   },
+   "porBot": true
+  },
+  {
+   "ms": 709,
+   "asiento": 3,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j3",
+    "tanto": "sonBuenas"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 738,
+   "asiento": 1,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j1",
+    "tanto": "sonBuenas"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 755,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 11,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 772,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j3"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 800,
+   "asiento": 0,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j0",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 815,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 2,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 846,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 4,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 878,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 1,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 893,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 6,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 3903,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 5,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 3933,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 1,
+     "palo": "espada"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 3950,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 6,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 3958,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j3"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 3981,
+   "asiento": 0,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j0",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 3995,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 12,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4027,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 7,
+     "palo": "espada"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4058,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 2,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4074,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j2"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4106,
+   "asiento": 1,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j1",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4120,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 5,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4152,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 10,
+     "palo": "espada"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4185,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 5,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4200,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 3,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4216,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 4,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4218,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 12,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4248,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 6,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4279,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 7,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4294,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 5,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4326,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 6,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4357,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 1,
+     "palo": "espada"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4373,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j2"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4404,
+   "asiento": 1,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j1",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4419,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 7,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4434,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarFlor",
+    "jugador": "j3",
+    "canto": "flor"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4451,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j3"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4481,
+   "asiento": 0,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j0",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4496,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 1,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4528,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 11,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4544,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j2"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4575,
+   "asiento": 1,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j1",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4591,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 12,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4606,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 10,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 4637,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 12,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4668,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 2,
+     "palo": "basto"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 4671,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarEnvido",
+    "jugador": "j2",
+    "canto": "realEnvido"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 7679,
+   "asiento": 1,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j1",
+    "respuesta": "noQuiero"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 7693,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j2"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 7722,
+   "asiento": 1,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j1",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 7738,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 3,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 7753,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j3"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 7783,
+   "asiento": 0,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j0",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 7799,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 12,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 7831,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 3,
+     "palo": "basto"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 7846,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j2"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 7877,
+   "asiento": 1,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j1",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 7893,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 12,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 7894,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 2,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 7924,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 10,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 7956,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 6,
+     "palo": "espada"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 7970,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 2,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8003,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 11,
+     "palo": "espada"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8034,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 4,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8049,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 2,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8066,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarEnvido",
+    "jugador": "j2",
+    "canto": "envido"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8096,
+   "asiento": 1,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j1",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8111,
+   "asiento": 2,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j2",
+    "tanto": 33
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8126,
+   "asiento": 3,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j3",
+    "tanto": "sonBuenas"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8158,
+   "asiento": 1,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j1",
+    "tanto": "sonBuenas"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8176,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j2"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8205,
+   "asiento": 1,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j1",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8221,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 2,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8238,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 3,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8268,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 11,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8299,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 11,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8301,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 4,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8331,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 5,
+     "palo": "espada"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8361,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 3,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8377,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 6,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8407,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 6,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8439,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 7,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8454,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 10,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8470,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 5,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8479,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarEnvido",
+    "jugador": "j3",
+    "canto": "faltaEnvido"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8501,
+   "asiento": 0,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j0",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8516,
+   "asiento": 3,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j3",
+    "tanto": 31
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8547,
+   "asiento": 0,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j0",
+    "tanto": "sonBuenas"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 8562,
+   "asiento": 2,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j2",
+    "tanto": "sonBuenas"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8581,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 4,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 8610,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 7,
+     "palo": "basto"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 11623,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 10,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 11635,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 12,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 11639,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 6,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 11650,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 11,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 11681,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 5,
+     "palo": "espada"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 11713,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 11,
+     "palo": "espada"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 11728,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 4,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 11759,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 12,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 11791,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 7,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 11807,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 10,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 11838,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 3,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 11870,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 12,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 11874,
+   "asiento": 2,
+   "accion": {
+    "tipo": "cantarEnvido",
+    "jugador": "j2",
+    "canto": "envido"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 11902,
+   "asiento": 1,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j1",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 11932,
+   "asiento": 0,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j0",
+    "tanto": 24
+   },
+   "porBot": false
+  },
+  {
+   "ms": 11964,
+   "asiento": 1,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j1",
+    "tanto": "sonBuenas"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 11979,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarFlor",
+    "jugador": "j3",
+    "canto": "flor"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12003,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 6,
+     "palo": "oro"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12012,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j3"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12042,
+   "asiento": 0,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j0",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 12043,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 5,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12057,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 11,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12089,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 5,
+     "palo": "espada"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 12120,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 3,
+     "palo": "basto"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 12136,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 12,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12152,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 10,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12166,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 2,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12198,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 1,
+     "palo": "copa"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 12230,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 12,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 12261,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 5,
+     "palo": "oro"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 12281,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 5,
+     "palo": "basto"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12294,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarEnvido",
+    "jugador": "j3",
+    "canto": "realEnvido"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12324,
+   "asiento": 0,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j0",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 12356,
+   "asiento": 1,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j1",
+    "tanto": 29
+   },
+   "porBot": false
+  },
+  {
+   "ms": 12370,
+   "asiento": 2,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j2",
+    "tanto": "sonBuenas"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12402,
+   "asiento": 0,
+   "accion": {
+    "tipo": "declararTanto",
+    "jugador": "j0",
+    "tanto": "sonBuenas"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 12419,
+   "asiento": 3,
+   "accion": {
+    "tipo": "cantarTruco",
+    "jugador": "j3"
+   },
+   "porBot": true
+  },
+  {
+   "ms": 12450,
+   "asiento": 0,
+   "accion": {
+    "tipo": "responder",
+    "jugador": "j0",
+    "respuesta": "quiero"
+   },
+   "porBot": false
+  },
+  {
+   "ms": 12466,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 4,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 15478,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 5,
+     "palo": "espada"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 15509,
+   "asiento": 1,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j1",
+    "carta": {
+     "numero": 1,
+     "palo": "basto"
+    }
+   },
+   "porBot": false
+  },
+  {
+   "ms": 15512,
+   "asiento": 2,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j2",
+    "carta": {
+     "numero": 5,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 15514,
+   "asiento": 3,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j3",
+    "carta": {
+     "numero": 11,
+     "palo": "copa"
+    }
+   },
+   "porBot": true
+  },
+  {
+   "ms": 15539,
+   "asiento": 0,
+   "accion": {
+    "tipo": "jugarCarta",
+    "jugador": "j0",
+    "carta": {
+     "numero": 2,
+     "palo": "basto"
+    }
+   },
+   "porBot": false
+  }
+ ],
+ "resultado": {
+  "ganador": 1,
+  "puntos": [
+   21,
+   30
+  ]
+ }
+}

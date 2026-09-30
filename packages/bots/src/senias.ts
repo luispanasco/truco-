@@ -30,6 +30,21 @@ export const GESTO: Record<Senia, string> = {
   flor: 'Inflar la boca como un sapo',
 }
 
+/** Qué carta anuncia cada seña. */
+export const SIGNIFICADO: Record<Senia, string> = {
+  pieza2: '2 de la muestra',
+  pieza4: '4 de la muestra',
+  pieza5: '5 de la muestra',
+  perico: 'perico',
+  perica: 'perica',
+  unoBravo: '1 de espadas o de bastos',
+  sieteBravo: '7 de espadas o de oros',
+  tres: 'un 3',
+  dosComun: 'un 2',
+  unoFalso: '1 de copas o de oros',
+  flor: 'flor',
+}
+
 const SENIA_PIEZA = { 2: 'pieza2', 4: 'pieza4', 5: 'pieza5', 11: 'perico', 10: 'perica' } as const
 
 /** Seña que corresponde a una carta, o null si esa carta no tiene seña. */

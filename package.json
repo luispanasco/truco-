@@ -7,6 +7,7 @@
     "typecheck": "pnpm -r typecheck",
     "cli": "pnpm --filter @truco/engine cli",
     "simular": "pnpm --filter @truco/bots simular",
-    "server": "pnpm --filter @truco/server start"
+    "server": "pnpm --filter @truco/server start",
+    "jugar": "pnpm --filter @truco/terminal jugar"
   }
 }
