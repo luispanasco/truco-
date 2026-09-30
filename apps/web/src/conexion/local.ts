@@ -147,6 +147,7 @@ export class ConexionLocal implements Conexion {
         anfitrion: a === 0,
       })),
       yo: 0,
+      revancha: [],
     }
   }
 
