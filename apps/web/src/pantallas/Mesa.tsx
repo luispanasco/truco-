@@ -7,8 +7,10 @@ import { Acciones, BotonMazo } from '../componentes/Acciones'
 import { Asiento, Avatar, MarcaMano } from '../componentes/Asiento'
 import { Carta } from '../componentes/Carta'
 import { Fosforos } from '../componentes/Fosforos'
+import { ManoOjeable } from '../componentes/ManoOjeable'
 import { Mazo } from '../componentes/Mazo'
 import { useJuego } from '../estado'
+import { leerPerfil } from '../perfil'
 
 /**
  * Hacia dónde queda cada jugador visto desde el centro (x a la derecha, y hacia abajo), por
@@ -210,26 +212,18 @@ export function Mesa() {
             {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
           </span>
         </div>
-        <div className="mi-mano">
-          {misCartas.map((c, i) => (
-            // La clave lleva el número de mano: en cada reparto las cartas entran de nuevo, escalonadas.
-            <motion.div
-              key={`${vista.mano.numero}-${c.numero}-${c.palo}`}
-              className="mano-reparto"
-              initial={{ y: -90, scale: 0.7, opacity: 0 }}
-              animate={{ y: 0, scale: 1, opacity: 1 }}
-              transition={{ duration: DURACION, ease: 'easeOut', delay: i * 0.08 }}
-            >
-              <Carta
-                carta={c}
-                tam="grande"
-                jugable={puedeJugar(c)}
-                resaltada={sala.ayudas && esPiezaOMata(c, vista.mano.muestra)}
-                alTocar={() => jugarCarta(c)}
-              />
-            </motion.div>
-          ))}
-        </div>
+        {/* La clave es el número de mano: en cada reparto las cartas entran de nuevo y se vuelven a ojear. */}
+        <ManoOjeable
+          key={vista.mano.numero}
+          className="mi-mano"
+          cartas={misCartas}
+          ojeoActivado={leerPerfil().ojear}
+          abrirAlTocar={meToca}
+          reparto
+          jugable={puedeJugar}
+          resaltada={(c) => sala.ayudas && esPiezaOMata(c, vista.mano.muestra)}
+          alTocar={jugarCarta}
+        />
         <div className="mi-lugar-pie">
           {finDeMano ? (
             // Durante la pausa entre manos, el resultado va donde estaban los botones: no tapa la mesa.

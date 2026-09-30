@@ -1,0 +1,147 @@
+/*
+ * Ojeo de la mano (ManoOjeable). Las cartas apiladas se mueven con transform (translateY)
+ * desde el código, sin cambiar el layout. --franja (0.25) y --n vienen del componente.
+ */
+.mano-ojeable {
+  --ancho-mano: min(21vw, 88px);
+  position: relative;
+}
+/* Abierta: las tres en fila, como siempre. */
+.mano-abanico {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.ojeo-carta {
+  flex: none;
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+/* Pila: una exactamente encima de la otra, arriba de todo; lugar para el escalonado completo. */
+.mano-apilada {
+  height: calc(var(--ancho-mano) * 1.5 * (1 + (var(--n) - 1) * var(--franja)));
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.mano-apilada .ojeo-carta {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  transition: none;
+  will-change: transform;
+  cursor: grab;
+  touch-action: none;
+}
+.mano-apilada .ojeo-carta:active {
+  cursor: grabbing;
+}
+/* Mientras está apilada se agarra la envoltura: la carta no recibe el toque (no se juega). */
+.mano-apilada .carta {
+  pointer-events: none;
+}
+.mano-apilada .carta-jugable:hover,
+.mano-apilada .carta-jugable:focus-visible {
+  transform: none;
+}
+/* La estrella de pieza o mata no delata a una carta que todavía no se ojeó. */
+.mano-apilada .tapada .carta-resaltada::after {
+  display: none;
+}
+
+.ojeo-ayuda,
+.ojeo-ver-todas {
+  position: absolute;
+  top: calc(var(--ancho-mano) * 0.75);
+}
+.ojeo-ayuda {
+  right: calc(50% + var(--ancho-mano) / 2 + 14px);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  text-align: right;
+  opacity: 0.6;
+}
+/* Mismo estilo que "Irse al mazo": chico, con zona de toque de 44 px. */
+.ojeo-ver-todas {
+  left: calc(50% + var(--ancho-mano) / 2 + 14px);
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.2);
+  color: var(--texto-claro);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ojeo-ver-todas::before {
+  content: '';
+  position: absolute;
+  inset: -6px -2px;
+}
+.ojeo-ver-todas:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+/* Página de prueba (/ojeo). */
+.pantalla-ojeo {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 16px 32px;
+  display: grid;
+  gap: 14px;
+}
+.pantalla-ojeo h1 {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-size: 1.3rem;
+  font-weight: 400;
+}
+.ojeo-manos,
+.ojeo-opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ojeo-manos .boton {
+  width: auto;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+.ojeo-manos .boton[aria-pressed='true'] {
+  box-shadow: 0 0 0 3px var(--acento);
+}
+.ojeo-opciones label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+.ojeo-muestra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+.ojeo-escenario {
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--tapete);
+  box-shadow: inset 0 0 0 6px var(--tapete-oscuro);
+  display: grid;
+  gap: 10px;
+}
+.ojeo-registro {
+  min-height: 1.3em;
+  margin: 0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ojeo-carta {
+    transition: none;
+  }
+}
