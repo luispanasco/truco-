@@ -92,6 +92,8 @@ export interface InfoSala {
   lugares: LugarPublico[]
   /** Tu asiento, o null si todavía no tenés. */
   yo: number | null
+  /** Terminada la partida: asientos que ya pidieron la revancha (vacío en otra fase). */
+  revancha: number[]
 }
 
 export interface MensajeChat {

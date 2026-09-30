@@ -117,6 +117,10 @@ export class SalaTruco extends Room {
   private numeroMano = -1
   private registro: RegistroPartida | null = null
   private inicioMs = 0
+  /** Quién repartió la primera mano de la partida actual; en la revancha reparte el siguiente. */
+  private reparteInicial: number | null = null
+  /** Terminada la partida: asientos que pidieron la revancha. */
+  private pedidosRevancha = new Set<number>()
 
   private version = 0
   private timerJuego: NodeJS.Timeout | null = null
@@ -212,8 +216,11 @@ export class SalaTruco extends Room {
       this.limpiarTimer('timerOfrecer')
     } else {
       // Con la partida en curso, el lugar queda guardado y juega un bot hasta que vuelva.
+      // Terminada, el lugar también queda (si hay revancha, juega su reemplazo), pero
+      // su pedido de revancha ya no cuenta.
       lugar.sessionId = null
       lugar.conectado = false
+      this.pedidosRevancha.delete(lugar.asiento)
     }
     this.alCambiarConexion()
   }
@@ -330,6 +337,13 @@ export class SalaTruco extends Room {
       if (!this.publica || this.fase !== 'esperando') throw new Rechazo('Ahora no se puede')
       this.iniciar(true)
     })
+
+    manejar('revancha', (_client, asiento) => {
+      if (this.fase !== 'terminada') throw new Rechazo('La partida no terminó')
+      if (this.pedidosRevancha.has(asiento)) return
+      this.pedidosRevancha.add(asiento)
+      if (!this.revisarRevancha()) this.enviarSala()
+    })
   }
 
   // ── Configuración y espera ───────────────────────────────────────
@@ -385,6 +399,19 @@ export class SalaTruco extends Room {
       l.conectado = false
     }
     this.limpiarTimer('timerOfrecer')
+    this.empezarPartida()
+  }
+
+  /**
+   * Arranca una partida con los lugares como están: la primera o una revancha.
+   * En la revancha reparte el siguiente al que repartió primero la anterior, así la mano rota.
+   */
+  private empezarPartida() {
+    const n = this.lugares.length
+    // Por defecto reparte el último, así el asiento 0 es mano (como en el motor).
+    const reparte = this.reparteInicial === null ? n - 1 : (this.reparteInicial + 1) % n
+    this.reparteInicial = reparte
+    this.pedidosRevancha.clear()
     this.bots = this.lugares.map((l) => (l.tipo === 'bot' ? crearBot(this.nivelBots, randomInt(2 ** 31)) : null))
     this.reemplazos = this.lugares.map(() => crearBot(NIVEL_REEMPLAZO, randomInt(2 ** 31)))
     const semilla = randomInt(2 ** 31)
@@ -392,6 +419,7 @@ export class SalaTruco extends Room {
       jugadores: this.lugares.map((l) => ({ id: idJugador(l.asiento), nombre: l.apodo })),
       semilla,
       config: this.config,
+      reparte,
     })
     this.fase = 'jugando'
     if (this.publica) void this.setPrivate(true)
@@ -401,6 +429,7 @@ export class SalaTruco extends Room {
       inicio: new Date().toISOString(),
       fin: null,
       semilla,
+      reparte,
       config: this.config,
       jugadores: this.lugares.map((l) => ({
         asiento: l.asiento,
@@ -415,6 +444,18 @@ export class SalaTruco extends Room {
     this.alNuevaMano()
     this.difundir([])
     this.programar()
+  }
+
+  /**
+   * Si todos los humanos conectados pidieron la revancha, la arranca. Devuelve si arrancó.
+   * Los desconectados no cuentan: conservan su lugar y juega su reemplazo.
+   */
+  private revisarRevancha(): boolean {
+    if (this.fase !== 'terminada') return false
+    const conectados = this.lugares.filter((l) => this.humanoConectado(l.asiento))
+    if (conectados.length === 0 || !conectados.every((l) => this.pedidosRevancha.has(l.asiento))) return false
+    this.empezarPartida()
+    return true
   }
 
   /** Aplica una jugada; devuelve el motivo si es inválida. */
@@ -568,6 +609,7 @@ export class SalaTruco extends Room {
         anfitrion: l.invitadoId !== null && l.invitadoId === this.anfitrion,
       })),
       yo,
+      revancha: this.fase === 'terminada' ? [...this.pedidosRevancha].sort((x, y) => x - y) : [],
     }
   }
 
@@ -587,6 +629,11 @@ export class SalaTruco extends Room {
   }
 
   private alCambiarConexion() {
+    // Si se fue el único que faltaba pedir la revancha, arranca con los que quedan.
+    if (this.revisarRevancha()) {
+      this.revisarCierre()
+      return
+    }
     this.enviarSala()
     this.revisarCierre()
     // Si esperábamos a quien se fue, ahora juega su bot (o viceversa).
