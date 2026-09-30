@@ -40,6 +40,8 @@ interface EstadoJuego {
   senias: { de: number; senia: Senia; id: number }[]
   turno: { asientos: number[]; venceEn: number | null }
   error: { motivo: string; id: number } | null
+  /** Resultado de la mano que acaba de terminar, mientras dura la pausa entre manos. */
+  finDeMano: string | null
 
   conectar(conexion: Conexion): void
   enviar<K extends keyof MensajesCliente>(tipo: K, datos: MensajesCliente[K]): void
@@ -48,9 +50,17 @@ interface EstadoJuego {
 
 const MESA_VACIA: MesaVisible = { jugadas: [], cerrada: false, resultado: null, ganador: null }
 const DURACION_GLOBO = 2600
+/**
+ * Al terminar una mano, las cartas quedan a la vista este tiempo con el resultado y después
+ * se levantan. Lo que llegue mientras tanto (la mano nueva) espera en cola.
+ */
+export const PAUSA_ENTRE_MANOS = 2500
 
 let contador = 0
 let desuscribir: (() => void) | null = null
+let enPausa = false
+let cola: MensajeServidor[] = []
+let timerPausa: ReturnType<typeof setTimeout> | null = null
 
 export const useJuego = create<EstadoJuego>()((set, get) => {
   const nombre = (a: number) => get().sala?.lugares[a]?.apodo ?? `Jugador ${a + 1}`
@@ -77,7 +87,9 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
   const alEvento = (ev: Evento) => {
     const texto = describirEvento(ev, nombre, equipo, gana)
     if (texto) {
-      set((s) => ({ registro: [...s.registro.slice(-40), { id: ++contador, texto: texto.trim() }] }))
+      // Al registro va solo la primera línea (el resultado de la mano trae varias).
+      const linea = texto.trim().split('\n')[0]!.trim()
+      set((s) => ({ registro: [...s.registro.slice(-40), { id: ++contador, texto: linea }] }))
     }
     switch (ev.tipo) {
       case 'cartaJugada':
@@ -113,7 +125,42 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     }
   }
 
+  /** Pausa entre manos: muestra el resultado, deja las cartas y después levanta la mesa. */
+  const pausar = (texto: string | null) => {
+    enPausa = true
+    set({ finDeMano: texto })
+    timerPausa = setTimeout(() => {
+      timerPausa = null
+      enPausa = false
+      set({ finDeMano: null, mesa: MESA_VACIA })
+      const pendientes = cola
+      cola = []
+      for (const m of pendientes) alMensaje(m)
+    }, PAUSA_ENTRE_MANOS)
+  }
+
+  const alEventos = (eventos: Evento[]) => {
+    const terminaPartida = eventos.some((ev) => ev.tipo === 'partidaTerminada')
+    for (let i = 0; i < eventos.length; i++) {
+      const ev = eventos[i]!
+      alEvento(ev)
+      if (ev.tipo === 'enfrentamientoTerminado' && !terminaPartida) {
+        // El resto (puntos, reparto nuevo) se muestra después de la pausa.
+        const texto = describirEvento(ev, nombre, equipo, gana)
+        const resto = eventos.slice(i + 1)
+        pausar(texto?.trim() ?? null)
+        if (resto.length > 0) cola.push({ tipo: 'eventos', datos: resto })
+        return
+      }
+    }
+  }
+
   const alMensaje = (m: MensajeServidor) => {
+    // Durante la pausa, todo lo de la mano nueva espera (el chat y los errores no).
+    if (enPausa && m.tipo !== 'chat' && m.tipo !== 'error') {
+      cola.push(m)
+      return
+    }
     switch (m.tipo) {
       case 'sala':
         set({ sala: m.datos })
@@ -122,7 +169,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         set({ vista: m.datos })
         break
       case 'eventos':
-        for (const ev of m.datos) alEvento(ev)
+        alEventos(m.datos)
         break
       case 'turno':
         set({ turno: m.datos })
@@ -152,6 +199,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     senias: [],
     turno: { asientos: [], venceEn: null },
     error: null,
+    finDeMano: null,
 
     conectar(conexion) {
       get().salir()
@@ -166,6 +214,10 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     salir() {
       desuscribir?.()
       desuscribir = null
+      if (timerPausa) clearTimeout(timerPausa)
+      timerPausa = null
+      enPausa = false
+      cola = []
       get().conexion?.salir()
       set({
         conexion: null,
@@ -178,6 +230,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         senias: [],
         turno: { asientos: [], venceEn: null },
         error: null,
+        finDeMano: null,
       })
     },
   }

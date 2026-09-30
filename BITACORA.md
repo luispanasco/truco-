@@ -301,3 +301,18 @@ Si vuelve a aparecer ese error: `rm -rf node_modules packages/*/node_modules app
   - desde el inicio se entra a la mesa;
   - se juega tocando cartas.
 - **Revisión visual con Playwright:** `apps/web/scripts/capturas.mjs` saca capturas en tamaño celular. Así se corrigió que el registro y los avisos tapaban jugadores y que las cartas del centro se superponían en 1v1.
+
+### Ajustes al D1 pedidos al probarlo — 2026-09-30
+
+- **Pausa entre manos.** Al terminar una mano, las cartas quedan 2,5 s a la vista con el resultado arriba, y después se levantan de la mesa. Lo que llega mientras tanto espera en cola. Durante la pausa no aparecen "Te toca" ni los botones, y la carta recién jugada no se repite en la mano.
+- **Ritmo más tranquilo:**
+  - los bots tardan entre 1 y 1,8 s;
+  - hay 0,9 s extra al cerrar una vuelta, para ver quién la ganó;
+  - hay 2,7 s extra al terminar una mano.
+
+  Vale igual contra bots y en el servidor, con las opciones nuevas `pausaVueltaMs` y `pausaManoMs`; `TRUCO_BOT_MS=0` también las anula.
+- **Muestra en la mesa, como se juega.** Va boca arriba, a la derecha del que reparte (hacia el mano) y con el mazo cruzado encima dejándola ver. Salió del marcador, que ahora muestra el número de mano.
+- **Mano propia más chica**, y cartas del centro en cruz, separadas según el formato.
+- En pica-pica, si el duelo en juego no es el tuyo, tu mano se atenúa y dice "Esperás tu duelo".
+- El registro muestra una línea por evento.
+- Test nuevo de la pausa entre manos: se ven las cartas y el resultado, la mano nueva espera, y después se levanta la mesa.

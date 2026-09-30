@@ -40,15 +40,20 @@ export interface Tiempos {
   ofrecerBotMs: number
   /** Ventana para reconectarse a la misma sesión tras un corte. */
   reconexionS: number
+  /** Espera extra al cerrar una vuelta y al terminar una mano, para que se vea el resultado. */
+  pausaVueltaMs: number
+  pausaManoMs: number
 }
 
 export const TIEMPOS_DEFAULT: Tiempos = {
   turnoMs: 30_000,
-  botMinMs: 800,
-  botMaxMs: 2_000,
+  botMinMs: 1_000,
+  botMaxMs: 1_800,
   cierreSinHumanosMs: 120_000,
   ofrecerBotMs: 30_000,
   reconexionS: 20,
+  pausaVueltaMs: 900,
+  pausaManoMs: 2_700,
 }
 
 /** Nivel del bot que juega por un humano desconectado o que se quedó sin tiempo. */
@@ -421,7 +426,7 @@ export class SalaTruco extends Room {
     if (r.estado.mano.numero !== this.numeroMano) this.alNuevaMano()
     this.difundir(r.eventos)
     if (r.estado.ganador !== null) this.terminar()
-    else this.programar()
+    else this.programar(r.eventos)
     return null
   }
 
@@ -439,10 +444,15 @@ export class SalaTruco extends Room {
   }
 
   /** Decide quién tiene que jugar y arma el reloj del turno o la jugada del bot. */
-  private programar() {
+  private programar(eventos: Evento[] = []) {
     this.version++
     this.limpiarTimer('timerJuego')
     if (this.fase !== 'jugando' || !this.estado) return
+    const extra = eventos.some((ev) => ev.tipo === 'enfrentamientoTerminado')
+      ? this.tiempos.pausaManoMs
+      : eventos.some((ev) => ev.tipo === 'vueltaTerminada')
+        ? this.tiempos.pausaVueltaMs
+        : 0
     const version = this.version
     const esperando = esperandoA(this.estado)
     const humanos = esperando.filter((a) => this.humanoConectado(a))
@@ -450,12 +460,13 @@ export class SalaTruco extends Room {
       const a = esperando[0]
       if (a === undefined) return
       const { botMinMs, botMaxMs } = this.tiempos
-      const demora = botMinMs + (botMaxMs > botMinMs ? randomInt(botMaxMs - botMinMs + 1) : 0)
+      const demora = extra + botMinMs + (botMaxMs > botMinMs ? randomInt(botMaxMs - botMinMs + 1) : 0)
       this.timerJuego = setTimeout(() => this.jugarBot(a, version), demora)
       this.broadcast('turno', { asientos: esperando, venceEn: null })
     } else {
-      const venceEn = Date.now() + this.tiempos.turnoMs
-      this.timerJuego = setTimeout(() => this.jugarBot(humanos[0]!, version), this.tiempos.turnoMs)
+      const espera = extra + this.tiempos.turnoMs
+      const venceEn = Date.now() + espera
+      this.timerJuego = setTimeout(() => this.jugarBot(humanos[0]!, version), espera)
       this.broadcast('turno', { asientos: esperando, venceEn })
     }
   }

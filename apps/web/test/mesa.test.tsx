@@ -29,7 +29,7 @@ describe('interfaz', () => {
     expect(jugar).toHaveProperty('disabled', true)
     fireEvent.change(screen.getByPlaceholderText('¿Cómo te dicen?'), { target: { value: 'Luis' } })
     fireEvent.click(screen.getByRole('button', { name: 'Jugar contra bots' }))
-    await waitFor(() => expect(screen.getByText('muestra')).toBeTruthy())
+    await waitFor(() => expect(screen.getByLabelText('Mazo y muestra')).toBeTruthy())
     expect(screen.getAllByLabelText(/^Jugar el /)).toHaveLength(3)
   })
 

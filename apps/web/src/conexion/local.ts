@@ -24,10 +24,15 @@ export interface OpcionesLocal {
   ayudas?: boolean
   /** Demora de los bots en ms [mínimo, máximo]. En los tests, [0, 0]. */
   demoraBots?: [number, number]
+  /** Espera extra al cerrar una vuelta y al terminar una mano, para que se vea el resultado. */
+  pausas?: { vuelta: number; mano: number }
   semilla?: number
 }
 
 const NOMBRES_BOTS = ['Bot Pepe', 'Bot Chela', 'Bot Tito', 'Bot Mirta', 'Bot Ruben']
+const DEMORA_BOTS: [number, number] = [1000, 1800]
+/** La pausa entre manos coincide con la de la interfaz (PAUSA_ENTRE_MANOS), más un margen. */
+const PAUSAS = { vuelta: 900, mano: 2700 }
 const id = (asiento: number) => `j${asiento}`
 
 /**
@@ -158,12 +163,12 @@ export class ConexionLocal implements Conexion {
     }
     if (r.estado.mano.numero !== this.numeroMano) this.alNuevaMano()
     this.difundir(r.eventos)
-    this.programar()
+    this.programar(r.eventos)
     return null
   }
 
   /** Si el juego espera a un bot, lo hace jugar después de una demora. */
-  private programar() {
+  private programar(eventos: Evento[] = []) {
     this.version++
     if (this.timer) clearTimeout(this.timer)
     const esperando = esperandoA(this.estado)
@@ -172,7 +177,13 @@ export class ConexionLocal implements Conexion {
       return
     }
     const a = esperando[0]!
-    const [min, max] = this.op.demoraBots ?? [700, 1400]
+    const [min, max] = this.op.demoraBots ?? DEMORA_BOTS
+    const pausas = this.op.pausas ?? (this.op.demoraBots ? { vuelta: 0, mano: 0 } : PAUSAS)
+    const extra = eventos.some((ev) => ev.tipo === 'enfrentamientoTerminado')
+      ? pausas.mano
+      : eventos.some((ev) => ev.tipo === 'vueltaTerminada')
+        ? pausas.vuelta
+        : 0
     const version = this.version
     this.emitir('turno', { asientos: esperando, venceEn: null })
     this.timer = setTimeout(
@@ -182,7 +193,7 @@ export class ConexionLocal implements Conexion {
         const motivo = this.aplicar(a, accion)
         if (motivo) console.error('Un bot eligió una acción inválida:', motivo)
       },
-      min + Math.random() * (max - min),
+      extra + min + Math.random() * (max - min),
     )
   }
 

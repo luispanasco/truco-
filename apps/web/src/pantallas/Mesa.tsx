@@ -5,11 +5,12 @@ import { GESTO, SIGNIFICADO, esPiezaOMata } from '../senias'
 import { Acciones } from '../componentes/Acciones'
 import { Asiento, Avatar } from '../componentes/Asiento'
 import { Carta } from '../componentes/Carta'
+import { Mazo } from '../componentes/Mazo'
 import { useJuego } from '../estado'
 
 export function Mesa() {
   const navegar = useNavigate()
-  const { sala, vista, mesa, globos, registro, senias, error, turno, enviar, salir } = useJuego()
+  const { sala, vista, mesa, globos, registro, senias, error, turno, finDeMano, enviar, salir } = useJuego()
   const [aviso, setAviso] = useState<string | null>(null)
 
   useEffect(() => {
@@ -39,14 +40,20 @@ export function Mesa() {
   const rel = (a: number) => (a - yo + n) % n
   const e = vista.mano.enfrentamientos[vista.mano.actual]!
   const participa = (a: number) => e.participantes.includes(a)
-  const meToca = vista.esperandoA.includes(yo) && vista.ganador === null
+  // Durante la pausa entre manos no se juega: la vista todavía es la de la mano que terminó.
+  const meToca = vista.esperandoA.includes(yo) && vista.ganador === null && !finDeMano
   const jugar = (a: Accion) => enviar('accion', { accion: a })
   const jugarCarta = (c: TCarta) => {
     const a = vista.accionesValidas.find((x) => x.tipo === 'jugarCarta' && mismaCarta(x.carta, c))
     if (a) jugar(a)
   }
   const puedeJugar = (c: TCarta) =>
+    !finDeMano &&
     vista.accionesValidas.some((x) => x.tipo === 'jugarCarta' && mismaCarta(x.carta, c))
+  // En la pausa entre manos la vista todavía no trae la última jugada: no mostrar dos veces la carta.
+  const misCartas = vista.mano.misCartas.filter(
+    (c) => !mesa.jugadas.some((j) => j.asiento === yo && mismaCarta(j.carta, c)),
+  )
   const nuestro = yo % 2
   const [pn, pe] = [vista.puntos[nuestro as 0 | 1], vista.puntos[(1 - nuestro) as 0 | 1]]
   const enEquipos = n > 2
@@ -65,10 +72,7 @@ export function Mesa() {
           <strong>{pn}</strong>
         </div>
         <div className="marcador-centro">
-          <div className="marcador-muestra">
-            <Carta carta={vista.mano.muestra} tam="chica" />
-            <span>muestra</span>
-          </div>
+          <span className="marcador-mano">Mano {vista.mano.numero}</span>
           {e.truco.valor > 1 && <div className="marcador-valor">vale {e.truco.valor}</div>}
           {vista.mano.picaPica && <div className="marcador-valor">pica-pica</div>}
         </div>
@@ -101,6 +105,8 @@ export function Mesa() {
             />
           ))}
 
+        <Mazo muestra={vista.mano.muestra} n={n} reparteRel={rel(vista.mano.reparte)} />
+
         <div className="centro">
           {mesa.jugadas.map((j) => (
             <div key={`${j.asiento}-${j.carta.numero}-${j.carta.palo}`} className={`jugada pos-${rel(j.asiento)}`}>
@@ -119,7 +125,7 @@ export function Mesa() {
         </div>
       </main>
 
-      <section className={`mi-lugar${meToca ? ' le-toca' : ''}`}>
+      <section className={`mi-lugar${meToca ? ' le-toca' : ''}${participa(yo) ? '' : ' fuera'}`}>
         {globos[yo] && (
           <div key={globos[yo]!.id} className="globo globo-yo">
             {globos[yo]!.texto}
@@ -138,9 +144,10 @@ export function Mesa() {
             </span>
           )}
           {meToca && <span className="te-toca">Te toca</span>}
+          {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
         </div>
         <div className="mi-mano">
-          {vista.mano.misCartas.map((c) => (
+          {misCartas.map((c) => (
             <Carta
               key={`${c.numero}-${c.palo}`}
               carta={c}
@@ -151,9 +158,17 @@ export function Mesa() {
             />
           ))}
         </div>
-        <Acciones vista={vista} alElegir={jugar} />
+        {!finDeMano && <Acciones vista={vista} alElegir={jugar} />}
       </section>
 
+      {finDeMano && (
+        // Durante la pausa entre manos, el resultado se muestra arriba, sin tapar la mesa.
+        <div className="fin-de-mano" role="status">
+          {finDeMano.split('\n').map((l, i) => (
+            <div key={i}>{l.trim().replace(/^✔\s*/, '')}</div>
+          ))}
+        </div>
+      )}
       {aviso && <div className="aviso">{aviso}</div>}
       {seniaVisible && (
         <div className="aviso aviso-senia" key={seniaVisible.id}>

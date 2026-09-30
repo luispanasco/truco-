@@ -7,7 +7,7 @@ let colyseus: ColyseusTestServer
 
 beforeAll(async () => {
   ;({ colyseus } = await levantar(2572, {
-    tiempos: { turnoMs: 150, botMinMs: 0, botMaxMs: 0, ofrecerBotMs: 100, cierreSinHumanosMs: 200, reconexionS: 1 },
+    tiempos: { turnoMs: 150, botMinMs: 0, botMaxMs: 0, pausaVueltaMs: 0, pausaManoMs: 0, ofrecerBotMs: 100, cierreSinHumanosMs: 200, reconexionS: 1 },
   }))
 })
 afterAll(async () => colyseus.shutdown())

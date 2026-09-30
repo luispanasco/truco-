@@ -10,7 +10,7 @@ let colyseus: ColyseusTestServer
 let dirDatos: string
 
 beforeAll(async () => {
-  ;({ colyseus, dirDatos } = await levantar(2571, { tiempos: { botMinMs: 0, botMaxMs: 0, turnoMs: 60_000, reconexionS: 1 } }))
+  ;({ colyseus, dirDatos } = await levantar(2571, { tiempos: { botMinMs: 0, botMaxMs: 0, pausaVueltaMs: 0, pausaManoMs: 0, turnoMs: 60_000, reconexionS: 1 } }))
 })
 afterAll(async () => colyseus.shutdown())
 beforeEach(async () => colyseus.cleanup())

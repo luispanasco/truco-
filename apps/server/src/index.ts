@@ -8,7 +8,7 @@ const turnoMs = process.env.TRUCO_TURNO_MS ? Number(process.env.TRUCO_TURNO_MS) 
 const servidor = crearServidor({
   playground: desarrollo,
   tiempos: {
-    ...(botMs !== undefined ? { botMinMs: botMs, botMaxMs: botMs } : {}),
+    ...(botMs !== undefined ? { botMinMs: botMs, botMaxMs: botMs, pausaVueltaMs: botMs, pausaManoMs: botMs } : {}),
     ...(turnoMs !== undefined ? { turnoMs } : {}),
   },
 })
