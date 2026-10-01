@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
-import { seniasDeMano, type Senia } from '@truco/bots'
+import { seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
 import { MOTIVO_SENIA_TARDE, yaJugoEnLaMano } from '@truco/shared'
 import { esPiezaOMata } from '../senias'
 import { Acciones, BotonMazo } from '../componentes/Acciones'
@@ -15,7 +15,7 @@ import { Mazo } from '../componentes/Mazo'
 import { MenuJugador, useSilenciados } from '../componentes/MenuJugador'
 import { AnilloReloj, RelojPropio } from '../componentes/Reloj'
 import { useGestos } from '../componentes/Cara'
-import { AvisoSeniaHecha, BotonSenias, PanelSenias } from '../componentes/Senias'
+import { AvisoSeniaHecha, BotonSenias, PanelSenias, seniasRapidas, TiraSenias } from '../componentes/Senias'
 import type { ConexionOnline } from '../conexion/online'
 import { useJuego } from '../estado'
 import { leerPerfil } from '../perfil'
@@ -31,6 +31,10 @@ export function Mesa() {
   const [panel, setPanel] = useState<'chat' | 'senias' | null>(null)
   const [menuDe, setMenuDe] = useState<number | null>(null)
   const [seniaHecha, setSeniaHecha] = useState<{ senia: Senia; id: number } | null>(null)
+  // Señas rápidas: las que ya hiciste en esta mano (quedan marcadas) y si ya abriste la mano
+  // (mientras está apilada para ojear, la tira no delata tus cartas).
+  const [hechas, setHechas] = useState<{ mano: number; senias: Senia[] }>({ mano: 0, senias: [] })
+  const [abiertaEn, setAbiertaEn] = useState<number | null>(null)
   // Las señas de compañeros y las pescadas a rivales se ven como gestos en sus avatares.
   const llegadasSenias = useMemo(() => [...senias, ...pescadas].sort((x, y) => x.id - y.id), [senias, pescadas])
   const gestos = useGestos(llegadasSenias)
@@ -43,13 +47,17 @@ export function Mesa() {
     if (!useJuego.getState().conexion) navegar('/')
   }, [navegar])
 
-  // Los errores se muestran un rato y se van.
+  // Los errores (y los avisos de la propia mesa) se muestran un rato y se van.
+  const timerAviso = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mostrarAviso = useCallback((texto: string) => {
+    if (timerAviso.current) clearTimeout(timerAviso.current)
+    setAviso(texto)
+    timerAviso.current = setTimeout(() => setAviso(null), 2500)
+  }, [])
+  useEffect(() => () => clearTimeout(timerAviso.current ?? undefined), [])
   useEffect(() => {
-    if (!error) return
-    setAviso(`⚠ ${error.motivo}`)
-    const t = setTimeout(() => setAviso(null), 2500)
-    return () => clearTimeout(t)
-  }, [error])
+    if (error) mostrarAviso(`⚠ ${error.motivo}`)
+  }, [error, mostrarAviso])
 
   if (!sala || !vista) return <div className="cargando">Repartiendo…</div>
 
@@ -92,14 +100,28 @@ export function Mesa() {
     salir()
     navegar('/')
   }
-  // Señas: solo si en el duelo actual hay compañeros (en equipos y fuera del pica-pica).
-  const hayCompanieros = enEquipos && !vista.mano.picaPica && vista.ganador === null
+  // Señas: solo si la mesa se juega con señas y en el duelo actual hay compañeros (en equipos
+  // y fuera del pica-pica).
+  const conSenias = sala.senias.habilitadas !== false
+  const hayCompanieros = conSenias && enEquipos && !vista.mano.picaPica && vista.ganador === null
   // La cara de señas se cierra sola después de mostrar el gesto.
   const hacerSenia = (s: Senia) => {
     enviar('senia', { senia: s })
     setSeniaHecha({ senia: s, id: Date.now() })
+    const numero = vista.mano.numero
+    setHechas((h) => ({ mano: numero, senias: h.mano === numero ? [...new Set([...h.senias, s])] : [s] }))
   }
   const seniasCerradas = sala.senias.momento === 'antesDeJugar' && yaJugoEnLaMano(vista.mano, yo) ? MOTIVO_SENIA_TARDE : null
+  // Mantener apretada una carta hace su seña.
+  const seniaDeMiCarta = (c: TCarta) => {
+    const s = seniaDeCarta(c, vista.mano.muestra)
+    if (seniasCerradas) mostrarAviso(`⚠ ${seniasCerradas}`)
+    else if (!s) mostrarAviso('Esa carta no tiene seña')
+    else hacerSenia(s)
+  }
+  const ojear = leerPerfil().ojear
+  const manoAbierta = !ojear || misCartas.length !== 3 || abiertaEn === vista.mano.numero
+  const conTira = hayCompanieros && !finDeMano && misCartas.length > 0 && manoAbierta
   // Menú de jugador: solo online y solo sobre otras personas.
   const menuPara = (a: number) => (online && a !== yo && sala.lugares[a]?.tipo === 'humano' ? () => setMenuDe(a) : undefined)
   const lugarMenu = menuDe !== null ? sala.lugares[menuDe] : undefined
@@ -173,7 +195,7 @@ export function Mesa() {
               venceEn={turno.venceEn}
               silenciado={silenciados.has(l.asiento)}
               alTocarNombre={menuPara(l.asiento)}
-              gesto={gestos[l.asiento]}
+              gesto={conSenias ? gestos[l.asiento] : undefined}
             />
           ))}
 
@@ -216,17 +238,28 @@ export function Mesa() {
             {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
           </span>
         </div>
+        {conTira && (
+          <TiraSenias
+            rapidas={seniasRapidas(misCartas, vista.mano.muestra)}
+            hechas={hechas.mano === vista.mano.numero ? hechas.senias : []}
+            cerrado={seniasCerradas}
+            alHacer={hacerSenia}
+            alRechazar={(motivo) => mostrarAviso(`⚠ ${motivo}`)}
+          />
+        )}
         {/* La clave es el número de mano: en cada reparto las cartas entran de nuevo y se vuelven a ojear. */}
         <ManoOjeable
           key={vista.mano.numero}
           className="mi-mano"
           cartas={misCartas}
-          ojeoActivado={leerPerfil().ojear}
+          ojeoActivado={ojear}
+          onAbrir={() => setAbiertaEn(vista.mano.numero)}
           abrirAlTocar={meToca}
           reparto
           jugable={puedeJugar}
           resaltada={(c) => sala.ayudas && esPiezaOMata(c, vista.mano.muestra)}
           alTocar={jugarCarta}
+          alMantener={hayCompanieros && !finDeMano ? seniaDeMiCarta : undefined}
         />
         <div className="mi-lugar-pie">
           {finDeMano ? (

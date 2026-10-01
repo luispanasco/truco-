@@ -22,6 +22,7 @@ export function Crear() {
     setError(null)
     // Lo elegido queda como propuesta para la próxima vez.
     cambiarPerfil({ formato: opciones.formato, nivelBots: opciones.nivelBots, ayudas: opciones.ayudas, picaPica: opciones.reglas.picaPica })
+    cambiarPerfil({ seniasHabilitadas: opciones.senias.habilitadas })
     try {
       const c = await ConexionOnline.crearSala({ ...datosUnirse(perfil), ...opcionesParaServidor(opciones) })
       useJuego.getState().conectar(c)

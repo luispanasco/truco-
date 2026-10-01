@@ -16,6 +16,7 @@ import { crearBot, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibida
 import {
   LIMITES,
   MOTIVO_SENIA_TARDE,
+  MOTIVO_SIN_SENIAS,
   SENIAS_DEFAULT,
   normalizarSenias,
   yaJugoEnLaMano,
@@ -295,6 +296,7 @@ export class SalaTruco extends Room {
     manejar('senia', (client, asiento, { senia }) => {
       if (!this.limite(this.limitesAccion, client, 10, 1000)) throw new Rechazo('Demasiadas acciones seguidas')
       if (!(SENIAS as readonly string[]).includes(senia)) throw new Rechazo('Seña inválida')
+      if (!this.configSenias.habilitadas) throw new Rechazo(MOTIVO_SIN_SENIAS)
       if (!this.hayCompanieros()) throw new Rechazo('Ahora no hay compañeros a quien hacerle señas')
       if (this.configSenias.momento === 'antesDeJugar' && yaJugoEnLaMano(this.estado!.mano, asiento)) {
         throw new Rechazo(MOTIVO_SENIA_TARDE)
@@ -555,7 +557,8 @@ export class SalaTruco extends Room {
   private alNuevaMano() {
     this.numeroMano = this.estado!.mano.numero
     this.senias = this.lugares.map(() => ({}))
-    if (!this.hayCompanieros()) return
+    // Sin señas en la mesa, los bots no hacen ni reciben ninguna (juegan a ciegas).
+    if (!this.hayCompanieros() || !this.configSenias.habilitadas) return
     // Los bots (y los reemplazos de quien no está) hacen sus señas al empezar la mano.
     for (const l of this.lugares) {
       if (this.humanoConectado(l.asiento)) continue

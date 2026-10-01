@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type { Carta as TCarta } from '@truco/engine'
-import { ManoOjeable, UMBRAL_JUGAR_PX } from '../src/componentes/ManoOjeable'
+import { MANTENER_MS, ManoOjeable, UMBRAL_JUGAR_PX } from '../src/componentes/ManoOjeable'
 import { ESPERA_ABRIR_MS, TOPE_CORTES, VIBRACION_TOPE_MS } from '../src/ojeo'
 
 const MANO: TCarta[] = [
@@ -177,5 +177,55 @@ describe('abanico', () => {
     fireEvent.pointerUp(c, { pointerId: 1, clientX: 101, clientY: 101, pointerType: 'touch' })
     fireEvent.click(screen.getByLabelText('Jugar el 3 de copas'))
     expect(alTocar).toHaveBeenCalledExactlyOnceWith(MANO[2])
+  })
+})
+
+describe('mantener apretada', () => {
+  const toque = { pointerId: 1, clientX: 100, clientY: 100, button: 0, pointerType: 'touch' }
+
+  it('en el abanico, quieta MANTENER_MS: hace la seña (con un golpecito) y no se juega', () => {
+    vi.useFakeTimers()
+    const vibrar = vi.fn()
+    Object.defineProperty(navigator, 'vibrate', { value: vibrar, configurable: true })
+    const alTocar = vi.fn()
+    const alMantener = vi.fn()
+    render(<ManoOjeable cartas={MANO} ojeoActivado={false} jugable={() => true} alTocar={alTocar} alMantener={alMantener} />)
+    const c = envoltura('Jugar el 3 de copas')
+    fireEvent.pointerDown(c, toque)
+    expect(c.classList.contains('apretando')).toBe(true)
+    act(() => vi.advanceTimersByTime(MANTENER_MS))
+    expect(alMantener).toHaveBeenCalledExactlyOnceWith(MANO[2])
+    expect(vibrar).toHaveBeenCalled()
+    expect(c.classList.contains('mantenida')).toBe(true)
+    fireEvent.pointerUp(c, toque)
+    fireEvent.click(screen.getByLabelText('Jugar el 3 de copas'))
+    expect(alTocar).not.toHaveBeenCalled()
+    Reflect.deleteProperty(navigator, 'vibrate')
+  })
+
+  it('si se mueve antes (arrastre para jugar) no hace la seña', () => {
+    vi.useFakeTimers()
+    const alTocar = vi.fn()
+    const alMantener = vi.fn()
+    render(<ManoOjeable cartas={MANO} ojeoActivado={false} jugable={() => true} alTocar={alTocar} alMantener={alMantener} />)
+    const c = envoltura('Jugar el 7 de oros')
+    fireEvent.pointerDown(c, toque)
+    fireEvent.pointerMove(c, { ...toque, clientY: 100 - UMBRAL_JUGAR_PX - 10 })
+    act(() => vi.advanceTimersByTime(MANTENER_MS * 2))
+    fireEvent.pointerUp(c, { ...toque, clientY: 100 - UMBRAL_JUGAR_PX - 10 })
+    expect(alMantener).not.toHaveBeenCalled()
+    expect(alTocar).toHaveBeenCalledExactlyOnceWith(MANO[0])
+  })
+
+  it('con la mano apilada para ojear no aplica', () => {
+    vi.useFakeTimers()
+    const alMantener = vi.fn()
+    render(<ManoOjeable cartas={MANO} ojeoActivado alMantener={alMantener} />)
+    const a = envoltura('7 de oros')
+    fireEvent.pointerDown(a, toque)
+    act(() => vi.advanceTimersByTime(MANTENER_MS * 2))
+    fireEvent.pointerUp(a, toque)
+    expect(alMantener).not.toHaveBeenCalled()
+    expect(a.classList.contains('apretando')).toBe(false)
   })
 })

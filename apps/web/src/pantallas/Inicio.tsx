@@ -104,7 +104,11 @@ export function Inicio() {
         nivelBots: perfil.nivelBots,
         ayudas: perfil.ayudas,
         config: { picaPica: perfil.picaPica },
-        senias: { pescar: perfil.pescarSenias ? 'gesto' : 'nunca', momento: perfil.seniasAntesDeJugar ? 'antesDeJugar' : 'libre' },
+        senias: {
+          habilitadas: perfil.seniasHabilitadas,
+          pescar: perfil.pescarSenias ? 'gesto' : 'nunca',
+          momento: perfil.seniasAntesDeJugar ? 'antesDeJugar' : 'libre',
+        },
         ...(perfil.rapido ? { demoraBots: [350, 700] as [number, number], pausas: { vuelta: 500, mano: 2700 } } : {}),
       }),
     )
@@ -196,17 +200,27 @@ export function Inicio() {
             detalle="En 3 vs 3, mientras los dos equipos están en malas"
           />
           <Interruptor
-            activo={perfil.pescarSenias}
-            alCambiar={(v) => cambiar({ pescarSenias: v })}
-            titulo="Pescar señas"
-            detalle="A veces se ve que un rival le hace una seña a su compañero (y a vos también te pueden ver)"
+            activo={perfil.seniasHabilitadas}
+            alCambiar={(v) => cambiar({ seniasHabilitadas: v })}
+            titulo="Se juega con señas"
+            detalle="En parejas y tríos, con tu compañero (y los bots también se hacen)"
           />
-          <Interruptor
-            activo={perfil.seniasAntesDeJugar}
-            alCambiar={(v) => cambiar({ seniasAntesDeJugar: v })}
-            titulo="Señas antes de jugar"
-            detalle="Las señas se hacen solo hasta tirar tu primera carta de la mano"
-          />
+          {perfil.seniasHabilitadas && (
+            <>
+              <Interruptor
+                activo={perfil.pescarSenias}
+                alCambiar={(v) => cambiar({ pescarSenias: v })}
+                titulo="Pescar señas"
+                detalle="A veces se ve que un rival le hace una seña a su compañero (y a vos también te pueden ver)"
+              />
+              <Interruptor
+                activo={perfil.seniasAntesDeJugar}
+                alCambiar={(v) => cambiar({ seniasAntesDeJugar: v })}
+                titulo="Señas antes de jugar"
+                detalle="Las señas se hacen solo hasta tirar tu primera carta de la mano"
+              />
+            </>
+          )}
           <Interruptor
             activo={perfil.rapido}
             alCambiar={(v) => cambiar({ rapido: v })}

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import { mismaCarta, siguienteAleatorio, type Carta, type Formato, type VistaPartida } from '@truco/engine'
-import { MOTIVO_SENIA_TARDE, yaJugoEnLaMano } from '@truco/shared'
+import { MOTIVO_SENIA_TARDE, MOTIVO_SIN_SENIAS, yaJugoEnLaMano } from '@truco/shared'
 import { ConexionLocal, type OpcionesLocal } from '../src/conexion/local'
 import type { MensajeServidor } from '../src/conexion/tipos'
 
@@ -127,6 +127,27 @@ describe('conexión local', () => {
     })
     c.salir()
     expect(errores).toEqual([MOTIVO_SENIA_TARDE])
+  })
+
+  it('sin señas, los bots no hacen ni reciben ninguna y la de la persona se rechaza', async () => {
+    const senias = { habilitadas: false, pescar: 'gestoYCarta', probabilidadPescar: 1 } as const
+    const { mensajes } = await jugarPartida('2v2', 5, { senias })
+    expect(mensajes.some((m) => m.tipo === 'senia' || m.tipo === 'seniaPescada')).toBe(false)
+    const sala = mensajes.find((m) => m.tipo === 'sala')
+    expect(sala?.tipo === 'sala' && sala.datos.senias.habilitadas).toBe(false)
+
+    const c = new ConexionLocal({ apodo: 'Test', avatar: null, formato: '2v2', nivelBots: 'dificil', demoraBots: [0, 0], semilla: 8, senias })
+    // Lo que tiene cada bot para decidir: nada, en ninguna mano.
+    const recibidas = () => (c as unknown as { senias: Record<number, unknown>[] }).senias
+    const motivo = await new Promise<string>((resolve) => {
+      c.escuchar((m) => {
+        if (m.tipo === 'error') resolve(m.datos.motivo)
+        if (m.tipo === 'vista' && m.datos.esperandoA.includes(0)) c.enviar('senia', { senia: 'tres' })
+      })
+    })
+    expect(recibidas().every((s) => Object.keys(s).length === 0)).toBe(true)
+    c.salir()
+    expect(motivo).toBe(MOTIVO_SIN_SENIAS)
   })
 
   it('una jugada inválida devuelve el motivo', async () => {

@@ -46,6 +46,8 @@
   --cara-lengua: #e8707e;
   --cara-mejillas: rgb(226 104 92 / 0.42);
   --senia-pescada: #5b2b6e;
+  /* Anillo de mantener apretada una carta para hacer su seña. */
+  --senia-mantener: #8ec5ff;
   font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--texto-claro);
   background: var(--madera);

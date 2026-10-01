@@ -25,6 +25,9 @@ const RESISTENCIA_NO_JUGABLE = 0.25
 /** Abanico curvo: giro (grados) y caída (px) por cada lugar de distancia al centro. */
 const GIRO_ABANICO = 8
 const CAIDA_ABANICO = 7
+/** En el abanico: cuánto (ms) hay que mantener apretada una carta, sin moverla, para hacer su seña. */
+export const MANTENER_MS = 450
+const VIBRACION_MANTENER_MS = 25
 
 /** Arrastre en curso: ojeando la pila, o llevando una carta del abanico a la mesa. */
 interface Arrastre {
@@ -39,6 +42,8 @@ interface Arrastre {
   alto: number
   movio: boolean
   enTope: boolean
+  /** Se mantuvo apretada hasta hacer la seña: al soltarla no se juega. */
+  mantuvo: boolean
 }
 
 interface Props {
@@ -54,6 +59,8 @@ interface Props {
   resaltada?: (c: TCarta) => boolean
   /** Juega la carta: tocándola, o arrastrándola hacia la mesa con la mano abierta. */
   alTocar?: (c: TCarta) => void
+  /** Mantenerla apretada en el abanico (MANTENER_MS, sin moverla): hace su seña. Apilada no aplica. */
+  alMantener?: (c: TCarta) => void
   /** Animación de reparto al entrar (las cartas bajan escalonadas). */
   reparto?: boolean
   className?: string
@@ -77,7 +84,18 @@ function sinMovimiento(): boolean {
  * El ojeo es puramente visual: no manda nada ni cambia la partida.
  * Para empezar un ojeo nuevo en cada mano, montarla con `key` distinta.
  */
-export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugable, resaltada, alTocar, reparto, className }: Props) {
+export function ManoOjeable({
+  cartas,
+  ojeoActivado,
+  onAbrir,
+  abrirAlTocar,
+  jugable,
+  resaltada,
+  alTocar,
+  alMantener,
+  reparto,
+  className,
+}: Props) {
   const [abierta, setAbierta] = useState(() => !ojeoActivado || cartas.length !== CARTAS_OJEO)
   // Si se juega una carta (o cambia la mano) antes de terminar, se muestra el abanico normal.
   const apilada = !abierta && cartas.length === CARTAS_OJEO
@@ -92,6 +110,10 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
   // La carta que se toca o se arrastra en el abanico sube al frente.
   const [levantada, setLevantada] = useState<number | null>(null)
   const ultimoGesto = useRef(0)
+  const timerMantener = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // La carta que se está manteniendo apretada, y la que acaba de hacer su seña (un saltito).
+  const [apretada, setApretada] = useState<number | null>(null)
+  const [mantenida, setMantenida] = useState<number | null>(null)
   const rectsAntes = useRef<(DOMRect | null)[] | null>(null)
 
   const abrir = useCallback(() => {
@@ -132,6 +154,37 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
     return () => clearTimeout(t)
   }, [apilada, todas, abrir])
 
+  // Mantener apretada: la carta se marca "apretando" (el CSS dibuja el progreso) y al cumplirse
+  // el tiempo hace la seña, con un golpecito. Moverla o soltarla antes lo corta.
+  const cortarMantener = () => {
+    if (timerMantener.current) clearTimeout(timerMantener.current)
+    timerMantener.current = null
+    setApretada(null)
+  }
+  useEffect(() => () => clearTimeout(timerMantener.current ?? undefined), [])
+  useEffect(() => {
+    if (mantenida === null) return
+    const t = setTimeout(() => setMantenida(null), 600)
+    return () => clearTimeout(t)
+  }, [mantenida])
+
+  const empezarMantener = (i: number) => {
+    const c = cartas[i]
+    if (!c || !alMantener) return
+    cortarMantener()
+    setApretada(i)
+    timerMantener.current = setTimeout(() => {
+      timerMantener.current = null
+      setApretada(null)
+      const a = arrastre.current
+      if (!a || a.i !== i || a.movio) return
+      a.mantuvo = true
+      setMantenida(i)
+      navigator.vibrate?.(VIBRACION_MANTENER_MS)
+      alMantener(c)
+    }, MANTENER_MS)
+  }
+
   const aplicar = (pos: number[]) => {
     pos.forEach((y, i) => {
       const el = envolturas.current[i]
@@ -150,7 +203,7 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
   const alBajar = (i: number) => (e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return
     // Con la pila se arrastra para ojear; en el abanico, para jugar (si hay con qué).
-    if (!apilada && !alTocar) return
+    if (!apilada && !alTocar && !alMantener) return
     const alto = e.currentTarget.offsetHeight || e.currentTarget.getBoundingClientRect().height
     arrastre.current = {
       modo: apilada ? 'ojeo' : 'jugar',
@@ -164,10 +217,14 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
       alto,
       movio: false,
       enTope: false,
+      mantuvo: false,
     }
     // En el abanico la captura espera a que haya arrastre: un toque tiene que llegarle a la carta como click.
     if (apilada) capturar(e)
-    else setLevantada(i)
+    else {
+      setLevantada(i)
+      empezarMantener(i)
+    }
   }
 
   const moverOjeo = (a: Arrastre) => {
@@ -204,12 +261,16 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
 
   const alMover = (e: PointerEvent<HTMLDivElement>) => {
     const a = arrastre.current
-    if (!a || a.id !== e.pointerId) return
+    // Ya hizo la seña: se queda quieta hasta que la suelten.
+    if (!a || a.id !== e.pointerId || a.mantuvo) return
     a.dx = e.clientX - a.x0
     a.dy = e.clientY - a.y0
     if (!a.movio) {
       const lejos = a.modo === 'ojeo' ? Math.abs(a.dy) : Math.hypot(a.dx, a.dy)
       if (lejos < UMBRAL_ARRASTRE_PX) return
+      cortarMantener()
+      // Sin jugada posible (solo para señas), moverla no la arrastra.
+      if (a.modo === 'jugar' && !alTocar) return
       a.movio = true
       if (a.modo === 'jugar') capturar(e)
     }
@@ -241,7 +302,13 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
     if (!a || a.id !== e.pointerId) return
     arrastre.current = null
     if (a.modo === 'jugar') {
+      cortarMantener()
       setLevantada(null)
+      // Si hizo la seña, el click que sigue no juega la carta.
+      if (a.mantuvo) {
+        ultimoGesto.current = Date.now()
+        return
+      }
       // Solo se descarta el click que sigue a un arrastre: un toque juega la carta como siempre.
       if (a.movio) ultimoGesto.current = Date.now()
       soltarJugada(a, e)
@@ -272,7 +339,13 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
           ref={(el) => {
             envolturas.current[i] = el
           }}
-          className={['ojeo-carta', apilada && !ojeadas[i] && 'tapada', !apilada && levantada === i && 'levantada']
+          className={[
+            'ojeo-carta',
+            apilada && !ojeadas[i] && 'tapada',
+            !apilada && levantada === i && 'levantada',
+            !apilada && apretada === i && 'apretando',
+            !apilada && mantenida === i && 'mantenida',
+          ]
             .filter(Boolean)
             .join(' ')}
           style={apilada ? { zIndex: n - i } : lugarEnAbanico(i, n)}
@@ -280,6 +353,8 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
           onPointerMove={alMover}
           onPointerUp={alSoltar}
           onPointerCancel={alSoltar}
+          // Mantener apretado en el celular no abre el menú del navegador.
+          onContextMenu={alMantener && !apilada ? (e) => e.preventDefault() : undefined}
         >
           <motion.div
             className="mano-reparto"

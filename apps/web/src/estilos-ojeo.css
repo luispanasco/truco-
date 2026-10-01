@@ -50,6 +50,91 @@
     var(--sombra);
 }
 
+/*
+ * Mantener apretada una carta para hacer su seña: un anillo se va llenando alrededor (arranca
+ * un poquito después, así un toque normal no lo muestra) y la carta se hunde apenas.
+ * Al cumplirse, el anillo queda lleno y la carta da un saltito.
+ */
+@property --mantener {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.mano-abanico .ojeo-carta {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.mano-abanico .ojeo-carta::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  padding: 3px;
+  border-radius: calc(var(--carta-grande) * 0.08 + 5px);
+  background: conic-gradient(var(--senia-mantener) var(--mantener), rgb(255 255 255 / 0.22) 0);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s;
+}
+/* Sobre la carta, arriba al medio, un guiño: lo que va a pasar al cumplirse el tiempo. */
+.mano-abanico .ojeo-carta::before {
+  content: '😉';
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  left: 50%;
+  translate: -50% 0;
+  font-size: 1.2rem;
+  line-height: 1;
+  opacity: 0;
+  scale: 0.4;
+  pointer-events: none;
+  transition:
+    opacity 0.12s,
+    scale 0.12s;
+}
+.mano-abanico .ojeo-carta.apretando::before,
+.mano-abanico .ojeo-carta.mantenida::before {
+  opacity: 1;
+  scale: 1;
+  transition:
+    opacity 0.2s 0.12s,
+    scale 0.33s ease-out 0.12s;
+}
+.mano-abanico .ojeo-carta.apretando::after {
+  opacity: 1;
+  transition-delay: 0.12s;
+  animation: mantener-carta 0.33s linear 0.12s forwards;
+}
+.mano-abanico .ojeo-carta.apretando .carta {
+  scale: 0.95;
+  transition: scale 0.45s ease-out;
+}
+.mano-abanico .ojeo-carta.mantenida::after {
+  --mantener: 360deg;
+  opacity: 1;
+  transition: opacity 0.4s 0.2s;
+}
+.mano-abanico .ojeo-carta.mantenida .carta {
+  animation: carta-mantenida 0.35s ease-out;
+}
+@keyframes mantener-carta {
+  to {
+    --mantener: 360deg;
+  }
+}
+@keyframes carta-mantenida {
+  40% {
+    scale: 1.08;
+    box-shadow:
+      0 0 0 3px var(--senia-mantener),
+      0 0 18px 6px color-mix(in srgb, var(--senia-mantener) 55%, transparent);
+  }
+}
+
 /* Pila: una exactamente encima de la otra, arriba de todo; lugar para el escalonado completo. */
 .mano-apilada {
   height: calc(var(--ancho-mano) * 1.5 * (1 + (var(--n) - 1) * var(--franja)));
@@ -177,5 +262,8 @@
   .ojeo-carta,
   .mano-abanico .ojeo-carta {
     transition: none;
+  }
+  .mano-abanico .ojeo-carta.mantenida .carta {
+    animation: none;
   }
 }
