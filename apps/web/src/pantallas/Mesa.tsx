@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { AnimatePresence, motion } from 'motion/react'
 import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
 import type { Senia } from '@truco/bots'
 import { GESTO, SIGNIFICADO, esPiezaOMata } from '../senias'
 import { Acciones, BotonMazo } from '../componentes/Acciones'
 import { Asiento, Avatar, MarcaMano } from '../componentes/Asiento'
-import { Carta } from '../componentes/Carta'
+import { CartasEnMesa } from '../componentes/CartasEnMesa'
 import { BotonChat, PanelChat, useNoLeidos } from '../componentes/Chat'
 import { EstadoConexion } from '../componentes/EstadoConexion'
 import { Fosforos } from '../componentes/Fosforos'
@@ -20,26 +19,9 @@ import { useJuego } from '../estado'
 import { leerPerfil } from '../perfil'
 import '../estilos-mesa-online.css'
 
-/**
- * Hacia dónde queda cada jugador visto desde el centro (x a la derecha, y hacia abajo), por
- * cantidad de jugadores y posición relativa. Las cartas tiradas llegan desde ahí.
- */
-const DIRECCION: Record<number, [number, number][]> = {
-  2: [[0, 1], [0, -1]],
-  4: [[0, 1], [1, 0], [0, -1], [-1, 0]],
-  6: [[0, 1], [0.8, 0.6], [0.8, -0.6], [0, -1], [-0.8, -0.6], [-0.8, 0.6]],
-}
-/** Distancia (px) desde la que llega volando una carta tirada. */
-const VUELO = 170
-const DURACION = 0.3
-
-function direccion(n: number, pos: number): [number, number] {
-  return DIRECCION[n]?.[pos] ?? [0, 1]
-}
-
 export function Mesa() {
   const navegar = useNavigate()
-  const { sala, vista, mesa, globos, registro, chat, senias, error, turno, finDeMano, conexion, enviar, salir } = useJuego()
+  const { sala, vista, mesa, mostradas, globos, registro, chat, senias, error, turno, finDeMano, conexion, enviar, salir } = useJuego()
   const [aviso, setAviso] = useState<string | null>(null)
   const [confirmarSalida, setConfirmarSalida] = useState(false)
   // Paneles de la mesa: chat y señas (hojas desde abajo) y el menú sobre otro jugador.
@@ -95,13 +77,21 @@ export function Mesa() {
     !finDeMano &&
     vista.accionesValidas.some((x) => x.tipo === 'jugarCarta' && mismaCarta(x.carta, c))
   // En la pausa entre manos la vista todavía no trae la última jugada: no mostrar dos veces la carta.
+  // Las que di vuelta al terminar (flor o envido) también quedan en la mesa y no en la mano.
+  const misMostradas = mostradas.find((m) => m.asiento === yo)?.cartas ?? []
   const misCartas = vista.mano.misCartas.filter(
-    (c) => !mesa.jugadas.some((j) => j.asiento === yo && mismaCarta(j.carta, c)),
+    (c) => !mesa.jugadas.some((j) => j.asiento === yo && mismaCarta(j.carta, c)) && !misMostradas.some((x) => mismaCarta(x, c)),
   )
+  // Las de los demás: sin la última que tiraron (en la pausa) ni las que dieron vuelta.
+  const enManoDe = (a: number) => {
+    const enVista = e.vueltas.reduce((t, v) => t + v.jugadas.filter((j) => j.asiento === a).length, 0)
+    const sinVista = Math.max(0, mesa.jugadas.filter((j) => j.asiento === a).length - enVista)
+    const dadas = mostradas.find((m) => m.asiento === a)?.cartas.length ?? 0
+    return Math.max(0, vista.jugadores[a]!.cartasEnMano - sinVista - dadas)
+  }
   const nuestro = yo % 2
   const [pn, pe] = [vista.puntos[nuestro as 0 | 1], vista.puntos[(1 - nuestro) as 0 | 1]]
   const enEquipos = n > 2
-  const vueltas = e.vueltas.filter((v) => v.resultado !== null)
   const lugarYo = sala.lugares[yo]!
   const nombreNuestro = enEquipos ? 'Nosotros' : 'Vos'
   const nombreEllos = (enEquipos ? 'Ellos' : sala.lugares[1 - yo]?.apodo) ?? 'Ellos'
@@ -191,7 +181,7 @@ export function Mesa() {
               key={l.asiento}
               lugar={l}
               posicion={rel(l.asiento)}
-              cartasEnMano={vista.jugadores[l.asiento]!.cartasEnMano}
+              cartasEnMano={enManoDe(l.asiento)}
               esCompaniero={l.asiento % 2 === yo % 2}
               leToca={turno.asientos.includes(l.asiento) && participa(l.asiento)}
               esMano={e.mano === l.asiento}
@@ -205,38 +195,14 @@ export function Mesa() {
 
         <Mazo muestra={vista.mano.muestra} n={n} reparteRel={rel(vista.mano.reparte)} />
 
-        <div className="centro">
-          {/* Las jugadas se ubican con transform en CSS; lo animado va en un envoltorio adentro. */}
-          <AnimatePresence>
-            {mesa.jugadas.map((j) => {
-              const [dx, dy] = direccion(n, rel(j.asiento))
-              return (
-                <div key={`${j.asiento}-${j.carta.numero}-${j.carta.palo}`} className={`jugada pos-${rel(j.asiento)}`}>
-                  <motion.div
-                    className="jugada-vuelo"
-                    // Llega desde el lado de quien la tiró, un poco girada.
-                    initial={{ x: dx * VUELO, y: dy * VUELO, rotate: (dx || 1) * 14, opacity: 0 }}
-                    animate={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
-                    // Al levantar la mesa se achica y se va hacia el centro.
-                    exit={{ x: -dx * 30, y: -dy * 30, scale: 0.6, opacity: 0 }}
-                    transition={{ duration: DURACION, ease: 'easeOut' }}
-                  >
-                    <Carta carta={j.carta} tam="mesa" ganadora={mesa.cerrada && mesa.ganador === j.asiento} />
-                  </motion.div>
-                </div>
-              )
-            })}
-          </AnimatePresence>
-          {vueltas.length > 0 && (
-            <div className="vueltas" aria-label="Resultado de las vueltas">
-              {vueltas.map((v, i) => (
-                <span key={i} className={v.resultado === 'parda' ? 'parda' : v.resultado === nuestro ? 'ganada' : 'perdida'}>
-                  {v.resultado === 'parda' ? '=' : v.resultado === nuestro ? '✔' : '✘'}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+        <CartasEnMesa
+          n={n}
+          rel={rel}
+          mesa={mesa}
+          mostradas={mostradas}
+          apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
+          nuestro={nuestro}
+        />
       </main>
 
       <section className={`mi-lugar${meToca ? ' le-toca' : ''}${miReloj !== null ? ' con-reloj' : ''}${participa(yo) ? '' : ' fuera'}`}>

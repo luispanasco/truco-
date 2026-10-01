@@ -91,6 +91,17 @@ export interface ResultadoEnfrentamiento {
   revelados: TantoRevelado[]
   /** Equipos descubiertos mintiendo (solo modo sucio). */
   mentirosos: Equipo[]
+  /**
+   * Cartas sin jugar que se dan vuelta al terminar, para que se vea que el tanto era cierto:
+   * las de quien cantó flor y las de quien ganó el envido querido declarando su tanto.
+   * Quien no tenía cartas en la mano no figura.
+   */
+  mostradas: CartasMostradas[]
+}
+
+export interface CartasMostradas {
+  asiento: number
+  cartas: Carta[]
 }
 
 /**

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import type { Carta, Evento, ResultadoVuelta, VistaPartida } from '@truco/engine'
+import { mismaCarta } from '@truco/engine'
+import type { Carta, CartasMostradas, Evento, ResultadoEnfrentamiento, ResultadoVuelta, VistaPartida } from '@truco/engine'
 import type { Senia } from '@truco/bots'
 import { describirEvento, TEXTO_CANTO, type InfoSala, type MensajeChat, type MensajesCliente } from '@truco/shared'
 import type { Conexion, EstadoConexion, MensajeServidor } from './conexion/tipos'
@@ -7,15 +8,23 @@ import type { Conexion, EstadoConexion, MensajeServidor } from './conexion/tipos
 export interface Jugada {
   asiento: number
   carta: Carta
+  /** Vuelta en la que se tiró (0, 1 o 2). */
+  vuelta: number
 }
 
-/** Las cartas que se ven en el centro: la vuelta en curso, o la última cerrada hasta que alguien tire. */
+/**
+ * Las cartas que quedan en la mesa: todas las del enfrentamiento en curso, cada jugador
+ * las suyas frente a sí, una por vuelta. Se levantan al terminar la mano (o el duelo).
+ */
 export interface MesaVisible {
   jugadas: Jugada[]
-  cerrada: boolean
-  resultado: ResultadoVuelta | null
-  /** Asiento que ganó la vuelta cerrada. */
-  ganador: number | null
+  /** Las vueltas ya cerradas, en orden. */
+  vueltas: { resultado: ResultadoVuelta; ganador: number | null }[]
+}
+
+/** Cartas sin jugar que alguien da vuelta al terminar la mano, con su tanto ("Flor de 33"). */
+export interface Mostradas extends CartasMostradas {
+  etiqueta: string
 }
 
 export interface Globo {
@@ -46,13 +55,15 @@ interface EstadoJuego {
   ofrecerBot: boolean
   /** Resultado de la mano que acaba de terminar, mientras dura la pausa entre manos. */
   finDeMano: string | null
+  /** Cartas que se dieron vuelta al terminar (flor o envido ganado), mientras dura la pausa. */
+  mostradas: Mostradas[]
 
   conectar(conexion: Conexion): void
   enviar<K extends keyof MensajesCliente>(tipo: K, datos: MensajesCliente[K]): void
   salir(): void
 }
 
-const MESA_VACIA: MesaVisible = { jugadas: [], cerrada: false, resultado: null, ganador: null }
+const MESA_VACIA: MesaVisible = { jugadas: [], vueltas: [] }
 const DURACION_GLOBO = 2600
 /**
  * Al terminar una mano, las cartas quedan a la vista este tiempo con el resultado y después
@@ -99,17 +110,18 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     switch (ev.tipo) {
       case 'cartaJugada':
         set((s) => ({
-          mesa: s.mesa.cerrada
-            ? { ...MESA_VACIA, jugadas: [{ asiento: ev.asiento, carta: ev.carta }] }
-            : { ...s.mesa, jugadas: [...s.mesa.jugadas, { asiento: ev.asiento, carta: ev.carta }] },
+          mesa: { ...s.mesa, jugadas: [...s.mesa.jugadas, { asiento: ev.asiento, carta: ev.carta, vuelta: s.mesa.vueltas.length }] },
         }))
         break
       case 'vueltaTerminada':
-        set((s) => ({ mesa: { ...s.mesa, cerrada: true, resultado: ev.resultado, ganador: ev.ganador } }))
+        set((s) => ({ mesa: { ...s.mesa, vueltas: [...s.mesa.vueltas, { resultado: ev.resultado, ganador: ev.ganador }] } }))
         break
       case 'enfrentamientoIniciado':
-        // Arranca un duelo o una mano nueva: lo que quede en la mesa se levanta con la próxima carta.
-        set((s) => ({ mesa: { ...s.mesa, cerrada: true } }))
+        // Arranca un duelo o una mano nueva: lo del anterior se levanta.
+        set({ mesa: MESA_VACIA })
+        break
+      case 'enfrentamientoTerminado':
+        set({ mostradas: etiquetarMostradas(ev.resultado, get().vista) })
         break
       case 'cantoTruco':
       case 'cantoFlor':
@@ -137,7 +149,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     timerPausa = setTimeout(() => {
       timerPausa = null
       enPausa = false
-      set({ finDeMano: null, mesa: MESA_VACIA })
+      set({ finDeMano: null, mesa: MESA_VACIA, mostradas: [] })
       const pendientes = cola
       cola = []
       for (const m of pendientes) alMensaje(m)
@@ -171,7 +183,13 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         set({ sala: m.datos, ...(m.datos.fase !== 'esperando' ? { ofrecerBot: false } : {}) })
         break
       case 'vista':
-        set({ vista: m.datos })
+        // La vista manda: así la mesa queda bien también al volver tras recargar la página.
+        // Lo mostrado al terminar queda solo si terminó la partida (no hay pausa que lo limpie).
+        set((s) => ({
+          vista: m.datos,
+          mesa: mesaDesdeVista(m.datos, s.mesa),
+          ...(m.datos.ganador === null && s.mostradas.length > 0 ? { mostradas: [] } : {}),
+        }))
         break
       case 'eventos':
         alEventos(m.datos)
@@ -206,6 +224,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     turno: { asientos: [], venceEn: null },
     error: null,
     finDeMano: null,
+    mostradas: [],
     estadoConexion: 'conectada',
     ofrecerBot: false,
 
@@ -242,9 +261,38 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         turno: { asientos: [], venceEn: null },
         error: null,
         finDeMano: null,
+        mostradas: [],
         estadoConexion: 'conectada',
         ofrecerBot: false,
       })
     },
   }
 })
+
+/** Las cartas del enfrentamiento en curso según la vista; si no cambió nada, deja la mesa como está. */
+function mesaDesdeVista(v: VistaPartida, antes: MesaVisible): MesaVisible {
+  const e = v.mano.enfrentamientos[v.mano.actual]
+  if (!e) return MESA_VACIA
+  const jugadas = e.vueltas.flatMap((vu, i) => vu.jugadas.map((j) => ({ asiento: j.asiento, carta: j.carta, vuelta: i })))
+  const vueltas = e.vueltas.flatMap((vu) => (vu.resultado === null ? [] : [{ resultado: vu.resultado, ganador: vu.ganador }]))
+  const igual =
+    vueltas.length === antes.vueltas.length &&
+    jugadas.length === antes.jugadas.length &&
+    jugadas.every((j, i) => {
+      const a = antes.jugadas[i]!
+      return a.asiento === j.asiento && a.vuelta === j.vuelta && mismaCarta(a.carta, j.carta)
+    })
+  return igual ? antes : { jugadas, vueltas }
+}
+
+/** "Flor de 33" o "Envido 31": el tanto real de quien muestra, según por qué las muestra. */
+function etiquetarMostradas(r: ResultadoEnfrentamiento, v: VistaPartida | null): Mostradas[] {
+  // La vista todavía es la del enfrentamiento que terminó: ahí figura quién cantó flor.
+  const e = v?.mano.enfrentamientos[v.mano.actual]
+  return (r.mostradas ?? []).map((m) => {
+    const t = r.revelados.find((x) => x.asiento === m.asiento)
+    const cantoFlor = e ? e.flor.cantadas.some((f) => f.asiento === m.asiento) : t?.flor != null
+    const etiqueta = !t ? '' : cantoFlor && t.flor !== null ? `Flor de ${t.flor}` : `Envido ${t.envido}`
+    return { ...m, etiqueta }
+  })
+}
