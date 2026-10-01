@@ -3,18 +3,43 @@ import { motion } from 'motion/react'
 import type { Carta as TCarta } from '@truco/engine'
 import { Carta } from './Carta'
 import {
+  conTope,
+  enTope,
   ESPERA_ABRIR_MS,
   estaOjeada,
   moverCarta,
   posicionesIniciales,
   UMBRAL_ARRASTRE_PX,
   VIBRACION_MS,
+  VIBRACION_TOPE_MS,
   ZONA_INDICE,
 } from '../ojeo'
 import '../estilos-ojeo.css'
 
 /** Cuántas cartas tiene que tener la mano para ojearla (una mano recién repartida). */
 const CARTAS_OJEO = 3
+/** En el abanico: cuánto hay que subir una carta (px) arrastrándola para jugarla al soltar. */
+export const UMBRAL_JUGAR_PX = 60
+/** Una carta que no se puede jugar se deja arrastrar apenas (y vuelve sola). */
+const RESISTENCIA_NO_JUGABLE = 0.25
+/** Abanico curvo: giro (grados) y caída (px) por cada lugar de distancia al centro. */
+const GIRO_ABANICO = 8
+const CAIDA_ABANICO = 7
+
+/** Arrastre en curso: ojeando la pila, o llevando una carta del abanico a la mesa. */
+interface Arrastre {
+  modo: 'ojeo' | 'jugar'
+  i: number
+  id: number
+  x0: number
+  y0: number
+  dx: number
+  dy: number
+  desde: number
+  alto: number
+  movio: boolean
+  enTope: boolean
+}
 
 interface Props {
   /** De adelante hacia atrás: la primera es la que se ve entera en la pila. */
@@ -27,10 +52,17 @@ interface Props {
   abrirAlTocar?: boolean
   jugable?: (c: TCarta) => boolean
   resaltada?: (c: TCarta) => boolean
+  /** Juega la carta: tocándola, o arrastrándola hacia la mesa con la mano abierta. */
   alTocar?: (c: TCarta) => void
   /** Animación de reparto al entrar (las cartas bajan escalonadas). */
   reparto?: boolean
   className?: string
+}
+
+/** Lugar de cada carta en el abanico curvo: las de los costados giradas y un poco más abajo. */
+function lugarEnAbanico(i: number, n: number): CSSProperties {
+  const k = i - (n - 1) / 2
+  return { '--giro': `${k * GIRO_ABANICO}deg`, '--caida': `${k * k * CAIDA_ABANICO}px` } as CSSProperties
 }
 
 function sinMovimiento(): boolean {
@@ -40,7 +72,9 @@ function sinMovimiento(): boolean {
 /**
  * La mano del jugador. Si el ojeo está activado y la mano está entera, las cartas llegan
  * apiladas y se descubren arrastrando hacia abajo (ver `ojeo.ts`); cuando están todas ojeadas
- * se abre sola en abanico. Es puramente visual: no manda nada ni cambia la partida.
+ * se abre sola en abanico. Abierta, una carta jugable se juega tocándola o arrastrándola hacia
+ * arriba (hacia la mesa) más allá de UMBRAL_JUGAR_PX; si no llega, vuelve a su lugar.
+ * El ojeo es puramente visual: no manda nada ni cambia la partida.
  * Para empezar un ojeo nuevo en cada mano, montarla con `key` distinta.
  */
 export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugable, resaltada, alTocar, reparto, className }: Props) {
@@ -54,7 +88,9 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
   // El arrastre no pasa por React: posiciones en una ref y transform directo al elemento.
   const posiciones = useRef(posicionesIniciales(cartas.length))
   const envolturas = useRef<(HTMLDivElement | null)[]>([])
-  const arrastre = useRef<{ i: number; id: number; y0: number; desde: number; alto: number; movio: boolean } | null>(null)
+  const arrastre = useRef<Arrastre | null>(null)
+  // La carta que se toca o se arrastra en el abanico sube al frente.
+  const [levantada, setLevantada] = useState<number | null>(null)
   const ultimoGesto = useRef(0)
   const rectsAntes = useRef<(DOMRect | null)[] | null>(null)
 
@@ -103,10 +139,7 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
     })
   }
 
-  const alBajar = (i: number) => (e: PointerEvent<HTMLDivElement>) => {
-    if (!apilada || (e.pointerType === 'mouse' && e.button !== 0)) return
-    const alto = e.currentTarget.offsetHeight || e.currentTarget.getBoundingClientRect().height
-    arrastre.current = { i, id: e.pointerId, y0: e.clientY, desde: posiciones.current[i]!, alto, movio: false }
+  const capturar = (e: PointerEvent<HTMLDivElement>) => {
     try {
       e.currentTarget.setPointerCapture(e.pointerId)
     } catch {
@@ -114,29 +147,106 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
     }
   }
 
-  const alMover = (e: PointerEvent<HTMLDivElement>) => {
-    const a = arrastre.current
-    if (!a || a.id !== e.pointerId) return
-    const dy = e.clientY - a.y0
-    if (!a.movio && Math.abs(dy) < UMBRAL_ARRASTRE_PX) return
-    a.movio = true
-    // Sigue al dedo 1:1, solo en vertical, dentro de los límites.
-    const pos = moverCarta(a.i, a.desde + dy, posiciones.current, a.alto)
+  const alBajar = (i: number) => (e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    // Con la pila se arrastra para ojear; en el abanico, para jugar (si hay con qué).
+    if (!apilada && !alTocar) return
+    const alto = e.currentTarget.offsetHeight || e.currentTarget.getBoundingClientRect().height
+    arrastre.current = {
+      modo: apilada ? 'ojeo' : 'jugar',
+      i,
+      id: e.pointerId,
+      x0: e.clientX,
+      y0: e.clientY,
+      dx: 0,
+      dy: 0,
+      desde: posiciones.current[i] ?? 0,
+      alto,
+      movio: false,
+      enTope: false,
+    }
+    // En el abanico la captura espera a que haya arrastre: un toque tiene que llegarle a la carta como click.
+    if (apilada) capturar(e)
+    else setLevantada(i)
+  }
+
+  const moverOjeo = (a: Arrastre) => {
+    // Sigue al dedo 1:1, solo en vertical, dentro de los límites; salvo en el tope de los cortes.
+    const y = conTope(a.i, a.desde + a.dy, posiciones.current, a.alto)
+    const pos = moverCarta(a.i, y, posiciones.current, a.alto)
     posiciones.current = pos
     aplicar(pos)
     const antes = ojeadasRef.current
     const nuevas = antes.map((o, k) => o || estaOjeada(k, pos, a.alto))
+    const tope = enTope(a.i, pos, a.alto)
     if (nuevas.some((o, k) => o !== antes[k])) {
       ojeadasRef.current = nuevas
       setOjeadas(nuevas)
       navigator.vibrate?.(VIBRACION_MS)
+    } else if (tope && !a.enTope) {
+      // Un golpecito al llegar a ver solo el palo.
+      navigator.vibrate?.(VIBRACION_TOPE_MS)
     }
+    a.enTope = tope
+  }
+
+  const moverJugada = (a: Arrastre) => {
+    const el = envolturas.current[a.i]
+    const c = cartas[a.i]
+    if (!el || !c) return
+    const puede = !!jugable?.(c)
+    // La jugable sigue al dedo; la que no se puede jugar apenas se mueve, para que se note que no va.
+    const k = puede ? 1 : RESISTENCIA_NO_JUGABLE
+    el.classList.add('arrastrando')
+    el.classList.toggle('lista-para-jugar', puede && -a.dy >= UMBRAL_JUGAR_PX)
+    el.style.transform = `translate3d(${a.dx * k}px, ${a.dy * k}px, 0)`
+  }
+
+  const alMover = (e: PointerEvent<HTMLDivElement>) => {
+    const a = arrastre.current
+    if (!a || a.id !== e.pointerId) return
+    a.dx = e.clientX - a.x0
+    a.dy = e.clientY - a.y0
+    if (!a.movio) {
+      const lejos = a.modo === 'ojeo' ? Math.abs(a.dy) : Math.hypot(a.dx, a.dy)
+      if (lejos < UMBRAL_ARRASTRE_PX) return
+      a.movio = true
+      if (a.modo === 'jugar') capturar(e)
+    }
+    if (a.modo === 'ojeo') moverOjeo(a)
+    else moverJugada(a)
+  }
+
+  const soltarJugada = (a: Arrastre, e: PointerEvent<HTMLDivElement>) => {
+    const el = envolturas.current[a.i]
+    el?.classList.remove('arrastrando', 'lista-para-jugar')
+    if (!a.movio) return
+    const c = cartas[a.i]
+    if (c && e.type === 'pointerup' && jugable?.(c) && -a.dy >= UMBRAL_JUGAR_PX) {
+      // Se juega: queda donde se soltó hasta que la partida la saque de la mano.
+      // Si por algo sigue ahí (la jugada no se aceptó), al rato vuelve a su lugar.
+      alTocar?.(c)
+      if (el)
+        setTimeout(() => {
+          if (el.isConnected) el.style.transform = ''
+        }, 1500)
+      return
+    }
+    // No llegó (o no se puede jugar): vuelve a su lugar con la transición del CSS.
+    if (el) el.style.transform = ''
   }
 
   const alSoltar = (e: PointerEvent<HTMLDivElement>) => {
     const a = arrastre.current
     if (!a || a.id !== e.pointerId) return
     arrastre.current = null
+    if (a.modo === 'jugar') {
+      setLevantada(null)
+      // Solo se descarta el click que sigue a un arrastre: un toque juega la carta como siempre.
+      if (a.movio) ultimoGesto.current = Date.now()
+      soltarJugada(a, e)
+      return
+    }
     ultimoGesto.current = Date.now()
     // Un toque (sin arrastre) en su turno abre el abanico para poder jugar.
     if (!a.movio && e.type === 'pointerup' && abrirAlTocar) abrir()
@@ -148,7 +258,7 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
     <div
       className={['mano-ojeable', apilada ? 'mano-apilada' : 'mano-abanico', className].filter(Boolean).join(' ')}
       style={estilo}
-      // El click que sigue a un arrastre o a un toque sobre la pila no juega la carta.
+      // El click que sigue a un arrastre, o a un toque sobre la pila, no juega la carta.
       onClickCapture={(e) => {
         if (Date.now() - ultimoGesto.current < 400) {
           e.preventDefault()
@@ -162,8 +272,10 @@ export function ManoOjeable({ cartas, ojeoActivado, onAbrir, abrirAlTocar, jugab
           ref={(el) => {
             envolturas.current[i] = el
           }}
-          className={`ojeo-carta${apilada && !ojeadas[i] ? ' tapada' : ''}`}
-          style={apilada ? { zIndex: n - i } : undefined}
+          className={['ojeo-carta', apilada && !ojeadas[i] && 'tapada', !apilada && levantada === i && 'levantada']
+            .filter(Boolean)
+            .join(' ')}
+          style={apilada ? { zIndex: n - i } : lugarEnAbanico(i, n)}
           onPointerDown={alBajar(i)}
           onPointerMove={alMover}
           onPointerUp={alSoltar}

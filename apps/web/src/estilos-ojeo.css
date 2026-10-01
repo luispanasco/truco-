@@ -1,20 +1,53 @@
 /*
  * Ojeo de la mano (ManoOjeable). Las cartas apiladas se mueven con transform (translateY)
- * desde el código, sin cambiar el layout. --franja (0.25) y --n vienen del componente.
+ * desde el código, sin cambiar el layout. --franja (0.30) y --n vienen del componente.
  */
 .mano-ojeable {
-  --ancho-mano: min(21vw, 88px);
+  --ancho-mano: var(--carta-grande);
   position: relative;
 }
-/* Abierta: las tres en fila, como siempre. */
+/*
+ * Abierta: en abanico curvo, como en la mano. --giro y --caida (por carta) vienen del
+ * componente; van en `rotate` y `translate` para no pisar el transform del arrastre.
+ */
 .mano-abanico {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
+  padding-bottom: 8px;
 }
 .ojeo-carta {
   flex: none;
   transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.mano-abanico .ojeo-carta {
+  position: relative;
+  rotate: var(--giro, 0deg);
+  translate: 0 var(--caida, 0px);
+  transform-origin: 50% 100%;
+  touch-action: none;
+  transition:
+    transform 0.32s cubic-bezier(0.2, 0.8, 0.3, 1),
+    rotate 0.2s ease,
+    translate 0.2s ease;
+}
+/* La que se toca o se arrastra sube al frente; mientras se arrastra va derecha y sigue al dedo. */
+.mano-abanico .ojeo-carta.levantada {
+  z-index: 3;
+}
+.mano-abanico .ojeo-carta.arrastrando {
+  rotate: 0deg;
+  translate: 0 0;
+  transition: rotate 0.15s ease;
+  cursor: grabbing;
+}
+/* Pasó el umbral: al soltarla se juega. */
+.mano-abanico .lista-para-jugar .carta {
+  scale: 1.06;
+  box-shadow:
+    0 0 0 3px var(--acento),
+    0 0 18px 6px rgb(242 193 78 / 0.55),
+    var(--sombra);
 }
 
 /* Pila: una exactamente encima de la otra, arriba de todo; lugar para el escalonado completo. */
@@ -141,7 +174,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ojeo-carta {
+  .ojeo-carta,
+  .mano-abanico .ojeo-carta {
     transition: none;
   }
 }

@@ -5,7 +5,7 @@
  */
 import type { Numero, Palo } from '@truco/engine'
 import type { ReactNode } from 'react'
-import { ZONA_INDICE } from '../ojeo'
+import { ZONA_DIBUJO_DESDE, ZONA_INDICE } from '../ojeo'
 
 export const COLOR_PALO: Record<Palo, string> = {
   oro: '#b8860b',
@@ -94,62 +94,65 @@ export function Simbolo({ palo, x, y, tam, rot = 0 }: { palo: Palo; x: number; y
 // ── Distribución de los palos (1 al 7) ────────────────────────────────
 
 /*
- * Arriba de todo van los cortes del marco (el palo) y el número en las dos esquinas
- * (ZONA_CORTES y ZONA_INDICE, en ojeo.ts): así se ojea asomando solo la franja de arriba.
- * El dibujo empieza por debajo de esa franja y termina antes del número de abajo.
+ * Arriba de todo van los cortes del marco (el palo), después una franja vacía y recién ahí el
+ * número en las dos esquinas (ZONA_CORTES, ZONA_SEPARACION y ZONA_INDICE, en ojeo.ts): así al
+ * ojear se puede asomar solo el palo, y después el número. El dibujo empieza por debajo
+ * (ZONA_DIBUJO_DESDE) y termina antes del número de abajo.
  */
 const LIENZO_ALTO = 300
 /** Primera y última altura (del lienzo) que puede ocupar el dibujo. */
-export const DIBUJO_DESDE = ZONA_INDICE.hasta * LIENZO_ALTO + 3
-export const DIBUJO_HASTA = 264
+export const DIBUJO_DESDE = ZONA_DIBUJO_DESDE * LIENZO_ALTO
+export const DIBUJO_HASTA = 258
+/** Altura del medio del dibujo: de ahí para abajo espadas y bastos van invertidos. */
+const MEDIO = (DIBUJO_DESDE + DIBUJO_HASTA) / 2
 const COLS = [66, 134]
 export const DISPOSICION: Record<number, [number, number][]> = {
-  1: [[100, 170]],
+  1: [[100, MEDIO]],
   2: [
-    [100, 120],
-    [100, 222],
+    [100, 136],
+    [100, 218],
   ],
   3: [
-    [100, 110],
-    [100, 170],
+    [100, 124],
+    [100, MEDIO],
     [100, 230],
   ],
   4: [
-    [COLS[0]!, 118],
-    [COLS[1]!, 118],
-    [COLS[0]!, 222],
-    [COLS[1]!, 222],
+    [COLS[0]!, 128],
+    [COLS[1]!, 128],
+    [COLS[0]!, 226],
+    [COLS[1]!, 226],
   ],
   5: [
-    [COLS[0]!, 110],
-    [COLS[1]!, 110],
-    [100, 170],
+    [COLS[0]!, 124],
+    [COLS[1]!, 124],
+    [100, MEDIO],
     [COLS[0]!, 230],
     [COLS[1]!, 230],
   ],
   6: [
-    [COLS[0]!, 108],
-    [COLS[1]!, 108],
-    [COLS[0]!, 170],
-    [COLS[1]!, 170],
+    [COLS[0]!, 122],
+    [COLS[1]!, 122],
+    [COLS[0]!, MEDIO],
+    [COLS[1]!, MEDIO],
     [COLS[0]!, 232],
     [COLS[1]!, 232],
   ],
   7: [
-    [COLS[0]!, 104],
-    [COLS[1]!, 104],
-    [100, 142],
-    [COLS[0]!, 180],
-    [COLS[1]!, 180],
-    [COLS[0]!, 236],
-    [COLS[1]!, 236],
+    [COLS[0]!, 119],
+    [COLS[1]!, 119],
+    [100, 152],
+    [COLS[0]!, 185],
+    [COLS[1]!, 185],
+    [COLS[0]!, 235],
+    [COLS[1]!, 235],
   ],
 }
-const TAM_SIMBOLO: Record<number, number> = { 1: 118, 2: 74, 3: 56, 4: 60, 5: 54, 6: 50, 7: 46 }
+const TAM_SIMBOLO: Record<number, number> = { 1: 118, 2: 74, 3: 52, 4: 56, 5: 50, 6: 46, 7: 42 }
 
 /** Tamaño de cada palo según la carta. Los anchos (1 de espadas y de bastos) son finos: van más grandes. */
 export function tamSimbolo(palo: Palo, numero: number): number {
-  return numero === 1 && (palo === 'espada' || palo === 'basto') ? 150 : (TAM_SIMBOLO[numero] ?? 46)
+  return numero === 1 && (palo === 'espada' || palo === 'basto') ? 150 : (TAM_SIMBOLO[numero] ?? 42)
 }
 
 function Palos({ palo, numero }: { palo: Palo; numero: number }) {
@@ -160,7 +163,7 @@ function Palos({ palo, numero }: { palo: Palo; numero: number }) {
   return (
     <>
       {puntos.map(([x, y], i) => (
-        <Simbolo key={i} palo={palo} x={x} y={y} tam={tam} rot={invertir && numero > 1 && y > 170 ? 180 : 0} />
+        <Simbolo key={i} palo={palo} x={x} y={y} tam={tam} rot={invertir && numero > 1 && y > MEDIO ? 180 : 0} />
       ))}
     </>
   )
@@ -168,9 +171,12 @@ function Palos({ palo, numero }: { palo: Palo; numero: number }) {
 
 // ── Figuras (10 sota, 11 caballo, 12 rey), estilizadas ────────────────
 
-/** Las figuras se dibujaron en un recuadro de y=60 a 244: se achican para que entren en la zona del dibujo. */
+/**
+ * Las figuras se dibujaron en un recuadro de y=60 a 244: se achican para que entren en la zona
+ * del dibujo (abajo pueden bajar un poco más: el número de abajo queda a un costado).
+ */
 const FIGURA_ARRIBA = DIBUJO_DESDE + 2
-const FIGURA_ESCALA = (250 - FIGURA_ARRIBA) / 184
+const FIGURA_ESCALA = (DIBUJO_HASTA - FIGURA_ARRIBA) / 184
 
 function Figura({ palo, numero }: { palo: Palo; numero: 10 | 11 | 12 }) {
   const c = COLOR_PALO[palo]
@@ -256,8 +262,11 @@ function Marco({ palo }: { palo: Palo }) {
 
 // ── Carta completa y dorso ────────────────────────────────────────────
 
-/** Arriba del recuadro del número: apenas pasando la ZONA_CORTES (y el marco). */
-const NUMERO_Y = ZONA_INDICE.desde * LIENZO_ALTO + 3
+/** Recuadro del número de arriba: ocupa la ZONA_INDICE, con un margen de 1 para cada lado. */
+const NUMERO_Y = ZONA_INDICE.desde * LIENZO_ALTO + 1
+const NUMERO_ALTO = (ZONA_INDICE.hasta - ZONA_INDICE.desde) * LIENZO_ALTO - 2
+/** Columnas de los números de arriba: hacia adentro para que los de dos cifras no pisen el marco. */
+const NUMERO_X = [40, 160]
 
 export function Frente({ palo, numero }: { palo: Palo; numero: Numero }) {
   const c = COLOR_PALO[palo]
@@ -268,18 +277,18 @@ export function Frente({ palo, numero }: { palo: Palo; numero: Numero }) {
       <Marco palo={palo} />
       {esFigura ? <Figura palo={palo} numero={numero as 10 | 11 | 12} /> : <Palos palo={palo} numero={numero} />}
       <g fill={c} fontFamily="Georgia, 'Times New Roman', serif" fontWeight="700" textAnchor="middle">
-        {/* El número en las dos esquinas de arriba, justo debajo del marco (ZONA_INDICE). */}
-        {[36, 164].map((x) => (
+        {/* El número en las dos esquinas de arriba, separado de los cortes (ZONA_INDICE). */}
+        {NUMERO_X.map((x) => (
           <g key={x}>
-            <rect x={x - 19} y={NUMERO_Y} width="38" height="42" rx="6" fill="#fbf6ea" />
-            <text x={x} y={NUMERO_Y + 35} fontSize="38">
+            <rect x={x - 22} y={NUMERO_Y} width="44" height={NUMERO_ALTO} rx="6" fill="#fbf6ea" />
+            <text x={x} y={NUMERO_Y + 34} fontSize="44" letterSpacing={numero >= 10 ? -3 : 0}>
               {numero}
             </text>
           </g>
         ))}
         <g transform="rotate(180 164 266)">
-          <rect x="146" y="252" width="36" height="34" rx="6" fill="#fbf6ea" />
-          <text x="164" y="280" fontSize="34">
+          <rect x="146" y="250" width="36" height="34" rx="6" fill="#fbf6ea" />
+          <text x="164" y="278" fontSize="34" letterSpacing={numero >= 10 ? -2 : 0}>
             {numero}
           </text>
         </g>

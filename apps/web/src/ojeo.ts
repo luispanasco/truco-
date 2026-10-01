@@ -1,19 +1,37 @@
 /**
  * Ojeo de la mano: las tres cartas llegan apiladas y se descubren de a poco, deslizando la de
- * adelante hacia abajo para que la de atrás se asome por arriba (primero los cortes del marco,
- * que dicen el palo, y después el número). Acá está la lógica pura, sin DOM: zonas de la carta,
- * límites del arrastre y cuándo una carta cuenta como "ojeada". Las posiciones son el
- * desplazamiento hacia abajo (px) de cada carta desde la pila; el índice 0 es la de adelante.
+ * adelante hacia abajo para que la de atrás se asome por arriba: primero los cortes del marco,
+ * que dicen el palo, y recién después el número. Por eso entre las dos hay una franja vacía y,
+ * al llegar a ella, un tope suave: es fácil quedarse viendo solo el palo. Acá está la lógica
+ * pura, sin DOM: zonas de la carta, límites del arrastre, el tope y cuándo una carta cuenta como
+ * "ojeada". Las posiciones son el desplazamiento hacia abajo (px) de cada carta desde la pila;
+ * el índice 0 es la de adelante.
  */
 
 /** Zonas verticales de la carta, en fracción de su altura medida desde el borde superior. */
 export const ZONA_CORTES = { desde: 0, hasta: 0.08 } as const
-export const ZONA_INDICE = { desde: 0.08, hasta: 0.25 } as const
+/** Franja vacía entre los cortes y el número: mostrando hasta acá se ve el palo y nada más. */
+export const ZONA_SEPARACION = { desde: ZONA_CORTES.hasta, hasta: 0.15 } as const
+export const ZONA_INDICE = { desde: ZONA_SEPARACION.hasta, hasta: 0.3 } as const
+/** Donde empieza el dibujo (palos o figura), por debajo del número. */
+export const ZONA_DIBUJO_DESDE = 0.32
+/** El tope cae a mitad de la separación: los cortes enteros a la vista y ni un pelo del número. */
+export const TOPE_CORTES = (ZONA_SEPARACION.desde + ZONA_SEPARACION.hasta) / 2
+
+/**
+ * Alcance (px de dedo, para cada lado) del tope: adentro la carta casi no se mueve y hay que
+ * empujar un poco más para pasarlo; afuera el arrastre vuelve a ser 1:1 exacto.
+ */
+export const TOPE_RADIO_PX = 9
+/** A menos de esto (px) del tope, la carta "llegó" (para la vibración). */
+export const TOPE_LLEGADA_PX = 1.5
 
 /** Espera antes de abrir la mano en abanico cuando ya se ojearon todas. */
 export const ESPERA_ABRIR_MS = 600
 /** Vibración corta al ojear una carta (si el dispositivo la tiene). */
 export const VIBRACION_MS = 10
+/** Vibración más corta todavía al llegar al tope de los cortes. */
+export const VIBRACION_TOPE_MS = 6
 /** Movimiento mínimo para que un toque cuente como arrastre y no como toque. */
 export const UMBRAL_ARRASTRE_PX = 6
 
@@ -43,12 +61,50 @@ export function estaOjeada(i: number, pos: readonly number[], alto: number): boo
   return visibleArriba(i, pos) >= franja(alto) - EPS
 }
 
-/** Qué se alcanza a ver de la carta `i`: nada, los cortes (el palo), el número, o toda. */
-export function zonaVisible(i: number, pos: readonly number[], alto: number): 'nada' | 'cortes' | 'indice' | 'toda' {
+/**
+ * Qué se alcanza a ver de la carta `i`: nada, los cortes (el palo, aunque sea en parte), un
+ * pedazo del número (todavía no alcanza para leerlo), el número entero, o toda.
+ */
+export function zonaVisible(
+  i: number,
+  pos: readonly number[],
+  alto: number,
+): 'nada' | 'cortes' | 'parte-indice' | 'indice' | 'toda' {
   const v = visibleArriba(i, pos)
   if (v === Infinity) return 'toda'
   if (v >= franja(alto) - EPS) return 'indice'
+  if (v > ZONA_INDICE.desde * alto + EPS) return 'parte-indice'
   return v > EPS ? 'cortes' : 'nada'
+}
+
+/**
+ * Posición (px) de la carta `i` en la que la de atrás muestra justo los cortes. Solo hay tope
+ * si la carta `i` es la que destapa a la de atrás (ninguna de adelante está más arriba).
+ */
+export function posicionTope(i: number, pos: readonly number[], alto: number): number | null {
+  const atras = pos[i + 1]
+  if (atras === undefined) return null
+  if (i > 0 && Math.min(...pos.slice(0, i)) < pos[i]! - EPS) return null
+  return atras + TOPE_CORTES * alto
+}
+
+/**
+ * Aplica el tope a la posición que pide el dedo (`y`). Cerca del tope la carta se queda casi
+ * quieta (curva cúbica: plana en el centro) y al salir del radio vuelve a seguir al dedo 1:1,
+ * sin salto, porque en el borde del radio la curva vale exactamente lo mismo que el dedo.
+ */
+export function conTope(i: number, y: number, pos: readonly number[], alto: number, radio = TOPE_RADIO_PX): number {
+  const t = posicionTope(i, pos, alto)
+  if (t === null || radio <= 0) return y
+  const d = y - t
+  if (Math.abs(d) >= radio) return y
+  return t + radio * (d / radio) ** 3
+}
+
+/** Si la carta `i` está en el tope (la de atrás muestra solo los cortes). */
+export function enTope(i: number, pos: readonly number[], alto: number): boolean {
+  const t = posicionTope(i, pos, alto)
+  return t !== null && Math.abs(pos[i]! - t) <= TOPE_LLEGADA_PX
 }
 
 /**

@@ -31,6 +31,10 @@
   --accion-envido: var(--papel);
   --accion-flor: var(--papel);
   --fuente-titulo: 'Alfa Slab One', Georgia, serif;
+  /* Ancho de las cartas según dónde están: dorsos de los rivales, mesa (jugadas, muestra) y mano. */
+  --carta-chica: 26px;
+  --carta-mesa: 58px;
+  --carta-grande: min(21vw, 88px);
   /* Online: errores y quién está conectado. */
   --peligro-fondo: rgb(192 57 43 / 0.35);
   --en-linea: #5fd38d;
@@ -391,14 +395,14 @@ button {
   height: 100%;
 }
 .carta-chica {
-  --ancho: 26px;
+  --ancho: var(--carta-chica);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
 }
 .carta-mesa {
-  --ancho: 58px;
+  --ancho: var(--carta-mesa);
 }
 .carta-grande {
-  --ancho: min(21vw, 88px);
+  --ancho: var(--carta-grande);
 }
 .dorso-fondo {
   fill: var(--dorso);
@@ -1014,10 +1018,7 @@ button {
   align-content: center;
 }
 .mi-mano {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  min-height: calc(min(21vw, 86px) * 1.5);
+  min-height: calc(var(--carta-grande) * 1.5);
 }
 
 /* Botonera: respuestas arriba, cantos agrupados abajo. Máximo dos filas; si no entran, se deslizan. */
@@ -1424,6 +1425,12 @@ button {
 
 /* Escritorio: la mesa centrada como un tablero con marco, sin estirarse. */
 @media (min-width: 720px) and (min-height: 640px) {
+  /* Con pantalla grande las cartas dejan de ser de tamaño celular. */
+  :root {
+    --carta-chica: 32px;
+    --carta-mesa: 66px;
+    --carta-grande: 100px;
+  }
   .pantalla-mesa {
     max-width: 620px;
     height: calc(100dvh - 32px);
