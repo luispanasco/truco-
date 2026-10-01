@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { crearConfig, crearPartida, esperandoA, vistaPara } from '@truco/engine'
-import type { InfoSala, MensajesCliente } from '@truco/shared'
+import { SENIAS_DEFAULT, type InfoSala, type MensajesCliente } from '@truco/shared'
 import { ConexionLocal } from '../src/conexion/local'
 import type { Conexion, MensajeServidor } from '../src/conexion/tipos'
 import { useJuego } from '../src/estado'
@@ -74,6 +74,7 @@ function partidaOnline(otro: { conectado: boolean } = { conectado: true }) {
     botsEnVacios: false,
     nivelBots: 'medio',
     ayudas: true,
+    senias: SENIAS_DEFAULT,
     chatEquipo: false,
     lugares: [0, 1].map((a) => ({
       asiento: a,
@@ -123,16 +124,13 @@ describe('chat', () => {
 })
 
 describe('señas', () => {
-  it('en 2v2 se abre el panel con las 11 señas y se hace una', async () => {
+  it('en 2v2 se abre la cara de señas y se hace una (modo local)', async () => {
     await entrar(local('2v2'))
     fireEvent.click(screen.getByRole('button', { name: 'Hacer una seña' }))
     const panel = screen.getByRole('dialog', { name: 'Señas' })
-    const opciones = within(panel).getAllByRole('button').filter((b) => b.classList.contains('senia-opcion'))
-    expect(opciones).toHaveLength(11)
-    expect(opciones[3]!.textContent).toBe('Guiño derecho→perico')
-    fireEvent.click(opciones[3]!)
-    expect(screen.queryByRole('dialog', { name: 'Señas' })).toBeNull()
+    fireEvent.click(within(panel).getByRole('button', { name: 'Guiño derecho (perico)' }))
     expect(screen.getByText(/Le hiciste la seña: guiño derecho/)).toBeTruthy()
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Señas' })).toBeNull(), { timeout: 3000 })
   })
 
   it('en 1v1 no hay botón de señas', async () => {

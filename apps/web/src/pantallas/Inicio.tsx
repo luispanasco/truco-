@@ -104,6 +104,7 @@ export function Inicio() {
         nivelBots: perfil.nivelBots,
         ayudas: perfil.ayudas,
         config: { picaPica: perfil.picaPica },
+        senias: { pescar: perfil.pescarSenias ? 'gesto' : 'nunca', momento: perfil.seniasAntesDeJugar ? 'antesDeJugar' : 'libre' },
         ...(perfil.rapido ? { demoraBots: [350, 700] as [number, number], pausas: { vuelta: 500, mano: 2700 } } : {}),
       }),
     )
@@ -193,6 +194,18 @@ export function Inicio() {
             alCambiar={(v) => cambiar({ picaPica: v })}
             titulo="Pica-pica"
             detalle="En 3 vs 3, mientras los dos equipos están en malas"
+          />
+          <Interruptor
+            activo={perfil.pescarSenias}
+            alCambiar={(v) => cambiar({ pescarSenias: v })}
+            titulo="Pescar señas"
+            detalle="A veces se ve que un rival le hace una seña a su compañero (y a vos también te pueden ver)"
+          />
+          <Interruptor
+            activo={perfil.seniasAntesDeJugar}
+            alCambiar={(v) => cambiar({ seniasAntesDeJugar: v })}
+            titulo="Señas antes de jugar"
+            detalle="Las señas se hacen solo hasta tirar tu primera carta de la mano"
           />
           <Interruptor
             activo={perfil.rapido}

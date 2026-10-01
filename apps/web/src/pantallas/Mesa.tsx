@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
-import type { Senia } from '@truco/bots'
-import { GESTO, SIGNIFICADO, esPiezaOMata } from '../senias'
+import { seniasDeMano, type Senia } from '@truco/bots'
+import { MOTIVO_SENIA_TARDE, yaJugoEnLaMano } from '@truco/shared'
+import { esPiezaOMata } from '../senias'
 import { Acciones, BotonMazo } from '../componentes/Acciones'
 import { Asiento, Avatar, MarcaMano } from '../componentes/Asiento'
 import { CartasEnMesa } from '../componentes/CartasEnMesa'
@@ -13,7 +14,8 @@ import { ManoOjeable } from '../componentes/ManoOjeable'
 import { Mazo } from '../componentes/Mazo'
 import { MenuJugador, useSilenciados } from '../componentes/MenuJugador'
 import { AnilloReloj, RelojPropio } from '../componentes/Reloj'
-import { BotonSenias, PanelSenias } from '../componentes/Senias'
+import { useGestos } from '../componentes/Cara'
+import { AvisoSeniaHecha, BotonSenias, PanelSenias } from '../componentes/Senias'
 import type { ConexionOnline } from '../conexion/online'
 import { useJuego } from '../estado'
 import { leerPerfil } from '../perfil'
@@ -21,13 +23,17 @@ import '../estilos-mesa-online.css'
 
 export function Mesa() {
   const navegar = useNavigate()
-  const { sala, vista, mesa, mostradas, globos, registro, chat, senias, error, turno, finDeMano, conexion, enviar, salir } = useJuego()
+  const { sala, vista, mesa, mostradas, globos, registro, chat, senias, pescadas, error, turno, finDeMano, conexion, enviar, salir } =
+    useJuego()
   const [aviso, setAviso] = useState<string | null>(null)
   const [confirmarSalida, setConfirmarSalida] = useState(false)
   // Paneles de la mesa: chat y señas (hojas desde abajo) y el menú sobre otro jugador.
   const [panel, setPanel] = useState<'chat' | 'senias' | null>(null)
   const [menuDe, setMenuDe] = useState<number | null>(null)
-  const [seniaHecha, setSeniaHecha] = useState<{ texto: string; id: number } | null>(null)
+  const [seniaHecha, setSeniaHecha] = useState<{ senia: Senia; id: number } | null>(null)
+  // Las señas de compañeros y las pescadas a rivales se ven como gestos en sus avatares.
+  const llegadasSenias = useMemo(() => [...senias, ...pescadas].sort((x, y) => x.id - y.id), [senias, pescadas])
+  const gestos = useGestos(llegadasSenias)
   const online = conexion?.tipo === 'online'
   const { silenciados, cambiar: cambiarSilencio } = useSilenciados(online ? (conexion as ConexionOnline).roomId : null)
   const { noLeidos, marcarLeidos } = useNoLeidos(chat, sala?.yo ?? 0, silenciados, panel === 'chat')
@@ -37,27 +43,13 @@ export function Mesa() {
     if (!useJuego.getState().conexion) navegar('/')
   }, [navegar])
 
-  // Los errores y las señas se muestran un rato y se van.
+  // Los errores se muestran un rato y se van.
   useEffect(() => {
     if (!error) return
     setAviso(`⚠ ${error.motivo}`)
     const t = setTimeout(() => setAviso(null), 2500)
     return () => clearTimeout(t)
   }, [error])
-  const ultimaSenia = senias[senias.length - 1]
-  const [seniaVisible, setSeniaVisible] = useState<typeof ultimaSenia>(undefined)
-  useEffect(() => {
-    if (!ultimaSenia) return
-    setSeniaVisible(ultimaSenia)
-    const t = setTimeout(() => setSeniaVisible(undefined), 3500)
-    return () => clearTimeout(t)
-  }, [ultimaSenia])
-
-  useEffect(() => {
-    if (!seniaHecha) return
-    const t = setTimeout(() => setSeniaHecha(null), 2500)
-    return () => clearTimeout(t)
-  }, [seniaHecha])
 
   if (!sala || !vista) return <div className="cargando">Repartiendo…</div>
 
@@ -102,11 +94,12 @@ export function Mesa() {
   }
   // Señas: solo si en el duelo actual hay compañeros (en equipos y fuera del pica-pica).
   const hayCompanieros = enEquipos && !vista.mano.picaPica && vista.ganador === null
+  // La cara de señas se cierra sola después de mostrar el gesto.
   const hacerSenia = (s: Senia) => {
     enviar('senia', { senia: s })
-    setPanel(null)
-    setSeniaHecha({ texto: GESTO[s].toLowerCase(), id: Date.now() })
+    setSeniaHecha({ senia: s, id: Date.now() })
   }
+  const seniasCerradas = sala.senias.momento === 'antesDeJugar' && yaJugoEnLaMano(vista.mano, yo) ? MOTIVO_SENIA_TARDE : null
   // Menú de jugador: solo online y solo sobre otras personas.
   const menuPara = (a: number) => (online && a !== yo && sala.lugares[a]?.tipo === 'humano' ? () => setMenuDe(a) : undefined)
   const lugarMenu = menuDe !== null ? sala.lugares[menuDe] : undefined
@@ -161,17 +154,7 @@ export function Mesa() {
         </div>
         <div className="avisos">
           {aviso && <div className="aviso aviso-error">{aviso}</div>}
-          {seniaHecha && (
-            <div className="aviso aviso-senia" key={seniaHecha.id} role="status">
-              <span aria-hidden="true">😉</span> Le hiciste la seña: {seniaHecha.texto}
-            </div>
-          )}
-          {seniaVisible && (
-            <div className="aviso aviso-senia" key={seniaVisible.id}>
-              <span aria-hidden="true">👀</span> <b>{sala.lugares[seniaVisible.de]?.apodo}</b>: {GESTO[seniaVisible.senia].toLowerCase()}{' '}
-              <span className="aviso-detalle">({SIGNIFICADO[seniaVisible.senia]})</span>
-            </div>
-          )}
+          <AvisoSeniaHecha hecha={seniaHecha} />
         </div>
 
         {sala.lugares
@@ -190,6 +173,7 @@ export function Mesa() {
               venceEn={turno.venceEn}
               silenciado={silenciados.has(l.asiento)}
               alTocarNombre={menuPara(l.asiento)}
+              gesto={gestos[l.asiento]}
             />
           ))}
 
@@ -228,7 +212,7 @@ export function Mesa() {
           <span className="mi-estado">
             {meToca && (miReloj !== null ? <RelojPropio venceEn={miReloj} /> : <span className="te-toca">Te toca</span>)}
             {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
-            {hayCompanieros && <BotonSenias alTocar={() => setPanel('senias')} />}
+            {hayCompanieros && <BotonSenias alTocar={() => setPanel('senias')} cerrado={seniasCerradas} />}
             {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
           </span>
         </div>
@@ -305,7 +289,15 @@ export function Mesa() {
           }}
         />
       )}
-      {panel === 'senias' && hayCompanieros && <PanelSenias alElegir={hacerSenia} alCerrar={cerrarPanel} />}
+      {panel === 'senias' && hayCompanieros && (
+        <PanelSenias
+          alElegir={hacerSenia}
+          alCerrar={cerrarPanel}
+          sugeridas={sala.ayudas ? seniasDeMano(vista.mano.misCartas, vista.mano.muestra) : null}
+          config={sala.senias}
+          cerrado={seniasCerradas}
+        />
+      )}
       {lugarMenu && (
         <MenuJugador
           key={menuDe}

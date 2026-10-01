@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import type { Nivel } from '@truco/bots'
 import { CONFIG_DEFAULT, type ConfigSala, type Formato } from '@truco/engine'
-import type { InfoSala, MensajesCliente } from '@truco/shared'
+import { SENIAS_DEFAULT, type ConfigSenias, type InfoSala, type MensajesCliente, type PescarSenias } from '@truco/shared'
 import type { Perfil } from '../perfil'
 import { Interruptor } from './Interruptor'
+import '../estilos-senias.css'
 
 export const FORMATOS: [Formato, string, string][] = [
   ['1v1', 'Mano a mano', '1 vs 1'],
@@ -28,6 +29,8 @@ export interface OpcionesSala {
   botsEnVacios: boolean
   ayudas: boolean
   reglas: ReglasSala
+  /** Si los rivales pueden pescar señas y cuándo se hacen. */
+  senias: ConfigSenias
 }
 
 function reglasDe(c: ConfigSala): ReglasSala {
@@ -43,16 +46,30 @@ export function opcionesIniciales(p: Perfil): OpcionesSala {
     botsEnVacios: true,
     ayudas: p.ayudas,
     reglas: { ...reglasDe(CONFIG_DEFAULT), picaPica: p.picaPica },
+    senias: SENIAS_DEFAULT,
   }
 }
 
 export function opcionesDeSala(s: InfoSala): OpcionesSala {
-  return { formato: s.formato, nivelBots: s.nivelBots, botsEnVacios: s.botsEnVacios, ayudas: s.ayudas, reglas: reglasDe(s.config) }
+  return {
+    formato: s.formato,
+    nivelBots: s.nivelBots,
+    botsEnVacios: s.botsEnVacios,
+    ayudas: s.ayudas,
+    reglas: reglasDe(s.config),
+    senias: s.senias ?? SENIAS_DEFAULT,
+  }
 }
 
 /** Las opciones como las espera el servidor (al crear la sala y en `configurar`). */
 export function opcionesParaServidor(o: OpcionesSala): MensajesCliente['configurar'] {
-  return { config: { formato: o.formato, ...o.reglas }, botsEnVacios: o.botsEnVacios, nivelBots: o.nivelBots, ayudas: o.ayudas }
+  return {
+    config: { formato: o.formato, ...o.reglas },
+    botsEnVacios: o.botsEnVacios,
+    nivelBots: o.nivelBots,
+    ayudas: o.ayudas,
+    senias: o.senias,
+  }
 }
 
 const TEXTO_FALTA: Record<ReglasSala['faltaEnvidoEnMalas'], [string, string]> = {
@@ -66,6 +83,18 @@ const TEXTO_FLOR: Record<ReglasSala['florConPiezas'], [string, string]> = {
   ],
   piezaMayorMasNumero: ['Pieza + número', 'La pieza más alta vale completa; las demás cartas suman su número, como si fueran comunes.'],
 }
+
+const TEXTO_PESCAR: Record<PescarSenias, [string, string]> = {
+  nunca: ['Nunca', 'Las señas las ven solo los compañeros.'],
+  gesto: ['El gesto', 'A veces un rival ve que hiciste una seña, pero no cuál.'],
+  gestoYCarta: ['Gesto y carta', 'A veces un rival ve la seña entera: el gesto y qué carta anuncia.'],
+}
+const PROBABILIDADES = [0.1, 0.2, 0.35, 0.5]
+const TEXTO_MOMENTO: Record<ConfigSenias['momento'], [string, string]> = {
+  libre: ['Cuando quieras', 'Se pueden hacer señas en cualquier momento de la mano.'],
+  antesDeJugar: ['Antes de jugar', 'Solo hasta que tirás tu primera carta de la mano.'],
+}
+const porcentaje = (p: number) => `${Math.round(p * 100)} %`
 
 function Segmentado<T extends string | number>({
   titulo,
@@ -107,6 +136,8 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
   const cambiar = (p: Partial<OpcionesSala>) => alCambiar({ ...valor, ...p })
   const regla = (p: Partial<ReglasSala>) => alCambiar({ ...valor, reglas: { ...valor.reglas, ...p } })
   const r = valor.reglas
+  const se = valor.senias
+  const senia = (p: Partial<ConfigSenias>) => alCambiar({ ...valor, senias: { ...se, ...p } })
   return (
     <div className="formulario-sala">
       <Segmentado
@@ -192,6 +223,30 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
             alCambiar={(florConPiezas) => regla({ florConPiezas })}
             detalle={TEXTO_FLOR[r.florConPiezas][1]}
           />
+          <h3 className="reglas-subtitulo">Señas (en parejas y tríos)</h3>
+          <Segmentado
+            titulo="Los rivales pescan señas"
+            valor={se.pescar}
+            opciones={(['nunca', 'gesto', 'gestoYCarta'] as const).map((v) => [v, TEXTO_PESCAR[v][0]])}
+            alCambiar={(pescar) => senia({ pescar })}
+            detalle={TEXTO_PESCAR[se.pescar][1]}
+          />
+          {se.pescar !== 'nunca' && (
+            <Segmentado
+              titulo="Probabilidad de pescar"
+              valor={se.probabilidadPescar}
+              opciones={PROBABILIDADES.map((p) => [p, porcentaje(p)] as [number, string])}
+              alCambiar={(probabilidadPescar) => senia({ probabilidadPescar })}
+              detalle="Para cada rival y cada seña."
+            />
+          )}
+          <Segmentado
+            titulo="Momento de las señas"
+            valor={se.momento}
+            opciones={(['libre', 'antesDeJugar'] as const).map((v) => [v, TEXTO_MOMENTO[v][0]])}
+            alCambiar={(momento) => senia({ momento })}
+            detalle={TEXTO_MOMENTO[se.momento][1]}
+          />
         </div>
       </details>
     </div>
@@ -217,5 +272,14 @@ export function resumenSala(o: OpcionesSala): string[] {
     r.mazoCobraEnvidoPendiente ? 'Mazo con envido pendiente lo cobra el rival' : 'Mazo con envido pendiente no se cobra',
     `Flor con piezas: ${TEXTO_FLOR[r.florConPiezas][0].toLowerCase()}`,
   )
+  if (o.formato !== '1v1') {
+    const se = o.senias
+    partes.push(
+      se.pescar === 'nunca'
+        ? 'Los rivales no pescan señas'
+        : `Los rivales pescan ${se.pescar === 'gesto' ? 'el gesto' : 'gesto y carta'} (${porcentaje(se.probabilidadPescar)})`,
+      se.momento === 'libre' ? 'Señas en cualquier momento' : 'Señas solo antes de jugar',
+    )
+  }
   return partes
 }
