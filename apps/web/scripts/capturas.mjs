@@ -50,6 +50,9 @@ for (const [formato, etiqueta] of [
       await p.screenshot({ path: `${dir}/2-${etiqueta}-con-cartas.png` })
       conCartas = true
     }
+    // Con el ojeo activado la mano llega apilada: se abre con "Ver todas".
+    const verTodas = await p.$('button:text-is("Ver todas")')
+    if (verTodas) await verTodas.click().catch(() => {})
     const jugable = await p.$('.mi-mano .carta-jugable:not([disabled])')
     // Juega sin cantar nada; si le cantan, quiere; si tiene flor, la canta.
     const boton = (await p.$('.boton-accion:text-is("Flor")')) ?? (await p.$('.boton-accion:text-is("Quiero")')) ?? (await p.$('.boton-accion:text-matches("^Decir mi tanto|^Son buenas")'))
