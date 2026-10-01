@@ -1,6 +1,6 @@
 /**
  * Capturas de pantalla (por defecto tamaño celular, 390x844): inicio, y la mesa en 1v1, 2v2
- * y 3v3 con cartas en juego y durante la pausa de fin de mano.
+ * y 3v3 ojeando la mano, con la mano ya abierta, con cartas en juego y durante la pausa de fin de mano.
  * Uso, con la web levantada (pnpm web):
  *   node scripts/capturas.mjs [carpeta] [url] [ancho x alto]
  * Por ejemplo `node scripts/capturas.mjs capturas http://localhost:5173 1280x800` para escritorio.
@@ -36,7 +36,10 @@ for (const [formato, etiqueta] of [
   await p.click('text=' + formato)
   await p.click('button:text-is("Jugar")')
   await p.waitForSelector('.mi-mano .carta')
+  // Que termine el reparto: la mano apilada para ojear, con las cartas grandes.
+  await p.waitForTimeout(900)
   await p.screenshot({ path: `${dir}/2-${etiqueta}-inicio.png` })
+  let abiertaCapturada = false
   let jugadas = 0
   let finCapturado = false
   let conCartas = false
@@ -53,6 +56,12 @@ for (const [formato, etiqueta] of [
     // Con el ojeo activado la mano llega apilada: se abre con "Ver todas".
     const verTodas = await p.$('button:text-is("Ver todas")')
     if (verTodas) await verTodas.click().catch(() => {})
+    if (!abiertaCapturada && (await p.$('.mi-mano.mano-abanico'))) {
+      // Ya ojeada: la mano en abanico (en el celular, un poco más chica).
+      await p.waitForTimeout(500)
+      await p.screenshot({ path: `${dir}/2-${etiqueta}-abierta.png` })
+      abiertaCapturada = true
+    }
     const jugable = await p.$('.mi-mano .carta-jugable:not([disabled])')
     // Juega sin cantar nada; si le cantan, quiere; si tiene flor, la canta.
     const boton = (await p.$('.boton-accion:text-is("Flor")')) ?? (await p.$('.boton-accion:text-is("Quiero")')) ?? (await p.$('.boton-accion:text-matches("^Decir mi tanto|^Son buenas")'))

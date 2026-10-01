@@ -610,6 +610,15 @@
 .tira-senias.cerrada .senia-rapida {
   opacity: 0.45;
 }
+/* En el celular la tira es un poco más bajita: la zona de abajo no le come lugar a la mesa. */
+@media (max-width: 719px) {
+  .tira-senias {
+    min-height: 34px;
+  }
+  .senia-rapida {
+    height: 34px;
+  }
+}
 
 /* ── Aviso de la seña que hiciste (chico) ─────────────────────── */
 

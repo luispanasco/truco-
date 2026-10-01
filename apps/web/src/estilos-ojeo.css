@@ -11,10 +11,21 @@
  * componente; van en `rotate` y `translate` para no pisar el transform del arrastre.
  */
 .mano-abanico {
+  --ancho-mano: var(--carta-mano, var(--carta-grande));
   display: flex;
   justify-content: center;
   gap: 8px;
   padding-bottom: 8px;
+}
+/*
+ * Para ojear las cartas se ven grandes; ya abiertas en abanico se achican un poco (en el
+ * celular, --carta-mano) para dejarle lugar a la mesa. El cambio de tamaño es suave.
+ */
+.mano-abanico .carta-grande {
+  --ancho: var(--ancho-mano);
+  transition:
+    width 0.35s cubic-bezier(0.2, 0.8, 0.3, 1),
+    transform 0.15s ease;
 }
 .ojeo-carta {
   flex: none;
@@ -70,7 +81,7 @@
   position: absolute;
   inset: -5px;
   padding: 3px;
-  border-radius: calc(var(--carta-grande) * 0.08 + 5px);
+  border-radius: calc(var(--ancho-mano) * 0.08 + 5px);
   background: conic-gradient(var(--senia-mantener) var(--mantener), rgb(255 255 255 / 0.22) 0);
   mask:
     linear-gradient(#000 0 0) content-box exclude,
@@ -260,7 +271,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ojeo-carta,
-  .mano-abanico .ojeo-carta {
+  .mano-abanico .ojeo-carta,
+  .mano-abanico .carta-grande {
     transition: none;
   }
   .mano-abanico .ojeo-carta.mantenida .carta {

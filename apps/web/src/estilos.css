@@ -35,6 +35,8 @@
   --carta-chica: 26px;
   --carta-mesa: 58px;
   --carta-grande: min(21vw, 88px);
+  /* La mano ya ojeada (en abanico): en el celular un poco más chica, para dejarle lugar al paño. */
+  --carta-mano: calc(var(--carta-grande) * 0.75);
   /* Online: errores y quién está conectado. */
   --peligro-fondo: rgb(192 57 43 / 0.35);
   --en-linea: #5fd38d;
@@ -1030,6 +1032,10 @@ button {
 .mi-mano {
   min-height: calc(var(--carta-grande) * 1.5);
 }
+/* Ya ojeada, la mano ocupa menos (en el celular): el lugar que deja es para la mesa. */
+.mi-mano.mano-abanico {
+  min-height: calc(var(--carta-mano) * 1.5);
+}
 
 /* Botonera: respuestas arriba, cantos agrupados abajo. Máximo dos filas; si no entran, se deslizan. */
 .acciones {
@@ -1390,6 +1396,13 @@ button {
 
 /* ── Mesa: tamaños de pantalla ────────────────────────────────── */
 
+/* Celular: la zona de abajo (tira de señas, mano y botones) un poco más junta. */
+@media (max-width: 719px) {
+  .mi-lugar {
+    gap: 6px;
+  }
+}
+
 /* Celular chico (o bajito): todo un poco más apretado para que entre el paño. */
 @media (max-height: 760px) {
   .marcador {
@@ -1440,6 +1453,8 @@ button {
     --carta-chica: 32px;
     --carta-mesa: 66px;
     --carta-grande: 100px;
+    /* En pantalla grande sobra lugar: la mano no se achica después de ojear. */
+    --carta-mano: var(--carta-grande);
   }
   .pantalla-mesa {
     max-width: 620px;

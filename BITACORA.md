@@ -481,3 +481,18 @@ Los hicieron tres agentes en paralelo y se integraron sus ramas, con conflictos 
 - Con la tira, la zona de abajo crece unos 40 px.
 - A 360 px, con flor, la ficha del tanto se corta.
 - La baraja clásica todavía no queda guardada para jugar sin internet; eso va en el D4, con la PWA.
+
+### Mano más chica en el celular — 2026-10-01
+
+Pedido del usuario: en Android la mano ocupa mucho y la mesa queda chica. Mientras se ojea, las cartas tienen que verse grandes, y después achicarse un poco.
+
+- **Mano:**
+  - variable nueva `--carta-mano`, que en el celular es el 75 % de `--carta-grande`;
+  - apilada para ojear, la mano sigue grande;
+  - en abanico (ya ojeada, con el ojeo apagado o con menos de tres cartas) pasa a `--carta-mano`, con una transición suave de 0,35 s;
+  - quedan de unos 57 × 85 px en 360 de ancho y 65 × 97 px en 412: siguen cómodas para tocar y arrastrar;
+  - en escritorio `--carta-mano` es igual a `--carta-grande`, así que no cambia nada.
+- **Zona de abajo en el celular:** la tira de señas rápidas baja de 38 a 34 px, y el espacio entre las filas de `mi-lugar`, de 8 a 6 px. Los botones de cantos siguen en 44 px.
+- **Resultado:** con la mano abierta, la mesa gana entre 30 y 40 px en 360 × 780 y en 412 × 915.
+- **Script de capturas:** espera a que termine el reparto antes de capturar la mano apilada, y saca una captura más con la mano ya abierta (`2-<formato>-abierta.png`).
+- **Tests:** los 93 de la web y el typecheck, en verde.
