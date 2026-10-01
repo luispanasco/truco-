@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { Nivel } from '@truco/bots'
 import { CONFIG_DEFAULT, type ConfigSala, type Formato } from '@truco/engine'
 import { SENIAS_DEFAULT, type ConfigSenias, type InfoSala, type MensajesCliente, type PescarSenias } from '@truco/shared'
+import { normalizarTiempos, TIEMPOS_SALA_DEFAULT, type ConfigTiempos } from '@truco/shared'
 import type { Perfil } from '../perfil'
 import { Interruptor } from './Interruptor'
 import '../estilos-senias.css'
@@ -31,6 +32,8 @@ export interface OpcionesSala {
   reglas: ReglasSala
   /** Si los rivales pueden pescar señas y cuándo se hacen. */
   senias: ConfigSenias
+  /** Segundos por jugada y para la primera jugada del mano. */
+  tiempos: ConfigTiempos
 }
 
 function reglasDe(c: ConfigSala): ReglasSala {
@@ -47,6 +50,7 @@ export function opcionesIniciales(p: Perfil): OpcionesSala {
     ayudas: p.ayudas,
     reglas: { ...reglasDe(CONFIG_DEFAULT), picaPica: p.picaPica },
     senias: SENIAS_DEFAULT,
+    tiempos: normalizarTiempos(p.tiempos),
   }
 }
 
@@ -58,6 +62,7 @@ export function opcionesDeSala(s: InfoSala): OpcionesSala {
     ayudas: s.ayudas,
     reglas: reglasDe(s.config),
     senias: s.senias ?? SENIAS_DEFAULT,
+    tiempos: s.tiempos ?? TIEMPOS_SALA_DEFAULT,
   }
 }
 
@@ -69,6 +74,7 @@ export function opcionesParaServidor(o: OpcionesSala): MensajesCliente['configur
     nivelBots: o.nivelBots,
     ayudas: o.ayudas,
     senias: o.senias,
+    tiempos: o.tiempos,
   }
 }
 
@@ -95,6 +101,15 @@ const TEXTO_MOMENTO: Record<ConfigSenias['momento'], [string, string]> = {
   antesDeJugar: ['Antes de jugar', 'Solo hasta que tirás tu primera carta de la mano.'],
 }
 const porcentaje = (p: number) => `${Math.round(p * 100)} %`
+
+/** Segundos que se ofrecen para cada jugada y para la primera del mano. */
+export const SEGUNDOS_TURNO = [20, 30, 45, 60]
+export const SEGUNDOS_PRIMERA_JUGADA = [45, 60, 90, 120]
+/** Las opciones de segundos; si la sala tiene otro valor (vino de otro lado), también aparece. */
+function opcionesSegundos(lista: number[], actual: number): [number, string][] {
+  const todos = lista.includes(actual) ? lista : [...lista, actual].sort((x, y) => x - y)
+  return todos.map((n) => [n, `${n} s`])
+}
 
 function Segmentado<T extends string | number>({
   titulo,
@@ -181,6 +196,22 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
         />
       )}
 
+      <h3 className="reglas-subtitulo">Tiempos</h3>
+      <Segmentado
+        titulo="Tiempo por jugada"
+        valor={valor.tiempos.turnoS}
+        opciones={opcionesSegundos(SEGUNDOS_TURNO, valor.tiempos.turnoS)}
+        alCambiar={(turnoS) => cambiar({ tiempos: { ...valor.tiempos, turnoS } })}
+        detalle="También para contestar cantos. Si se acaba, juega un bot por vos."
+      />
+      <Segmentado
+        titulo="Primera jugada del mano"
+        valor={valor.tiempos.primeraJugadaS}
+        opciones={opcionesSegundos(SEGUNDOS_PRIMERA_JUGADA, valor.tiempos.primeraJugadaS)}
+        alCambiar={(primeraJugadaS) => cambiar({ tiempos: { ...valor.tiempos, primeraJugadaS } })}
+        detalle="Al empezar cada mano, para ojear las cartas y hacer señas con calma."
+      />
+
       <details className="mas-opciones reglas-mesa">
         <summary>Reglas de la mesa</summary>
         <div className="reglas-contenido">
@@ -264,6 +295,7 @@ export function resumenSala(o: OpcionesSala): string[] {
     o.ayudas ? 'Con ayudas' : 'Sin ayudas',
   ]
   if (o.formato === '3v3') partes.push(r.picaPica ? 'Con pica-pica' : 'Sin pica-pica')
+  partes.push(`${o.tiempos.turnoS} s por jugada; la primera del mano, ${o.tiempos.primeraJugadaS} s`)
   partes.push(
     r.florObligatoria ? 'Flor obligatoria' : 'Flor no obligatoria',
     r.envidoEnvido ? 'Envido envido' : 'Sin envido envido',

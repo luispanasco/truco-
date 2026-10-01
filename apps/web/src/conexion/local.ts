@@ -21,6 +21,7 @@ import {
   type MensajesCliente,
   type MensajesServidor,
 } from '@truco/shared'
+import { TIEMPOS_SALA_DEFAULT } from '@truco/shared'
 import type { Conexion, MensajeServidor } from './tipos'
 
 export interface OpcionesLocal {
@@ -153,6 +154,8 @@ export class ConexionLocal implements Conexion {
     return {
       codigo: null,
       publica: false,
+      // Contra bots no hay reloj: los tiempos no se usan.
+      tiempos: TIEMPOS_SALA_DEFAULT,
       fase: this.terminada ? 'terminada' : 'jugando',
       formato: this.config.formato,
       config: this.config,

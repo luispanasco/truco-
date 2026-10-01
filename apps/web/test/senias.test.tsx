@@ -66,6 +66,7 @@ function partida2v2({ senias = SENIAS_DEFAULT, ayudas = true, jugada = false }: 
   const sala: InfoSala = {
     codigo: 'SALA2',
     publica: false,
+    tiempos: { turnoS: 30, primeraJugadaS: 60 },
     fase: 'jugando',
     formato: '2v2',
     config,

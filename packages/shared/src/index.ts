@@ -48,6 +48,35 @@ export function normalizarSenias(op: Partial<ConfigSenias> | undefined, base: Co
   return { pescar, probabilidadPescar, momento }
 }
 
+/**
+ * Tiempos de la sala, en segundos. La primera jugada de cada mano (la del mano, antes de
+ * que pase nada) tiene más tiempo, para ojear las cartas y hacer señas con calma.
+ */
+export interface ConfigTiempos {
+  /** Tiempo para cada jugada, respuesta a un canto o declaración. */
+  turnoS: number
+  /** Tiempo del mano para su primera jugada de la mano (en pica-pica, la de cada duelo). */
+  primeraJugadaS: number
+}
+
+export const TIEMPOS_SALA_DEFAULT: ConfigTiempos = { turnoS: 30, primeraJugadaS: 60 }
+
+/** Límites que acepta el servidor (la web ofrece algunos valores dentro de estos). */
+export const LIMITES_TIEMPOS = {
+  turnoS: { min: 15, max: 120 },
+  primeraJugadaS: { min: 30, max: 180 },
+} as const
+
+/** Completa y valida los tiempos: lo que no es número queda como estaba y lo fuera de rango se lleva al límite. */
+export function normalizarTiempos(op: Partial<ConfigTiempos> | undefined, base: ConfigTiempos = TIEMPOS_SALA_DEFAULT): ConfigTiempos {
+  const ajustar = (x: unknown, b: number, { min, max }: { min: number; max: number }) =>
+    typeof x === 'number' && Number.isFinite(x) ? Math.min(max, Math.max(min, Math.round(x))) : b
+  return {
+    turnoS: ajustar(op?.turnoS, base.turnoS, LIMITES_TIEMPOS.turnoS),
+    primeraJugadaS: ajustar(op?.primeraJugadaS, base.primeraJugadaS, LIMITES_TIEMPOS.primeraJugadaS),
+  }
+}
+
 /** Si el asiento ya jugó alguna carta en la mano (sirve con el estado del motor y con la vista). */
 export function yaJugoEnLaMano(mano: { enfrentamientos: { vueltas: { jugadas: { asiento: number }[] }[] }[] }, asiento: number): boolean {
   return mano.enfrentamientos.some((e) => e.vueltas.some((v) => v.jugadas.some((j) => j.asiento === asiento)))
@@ -75,6 +104,8 @@ export interface OpcionesCrearSala extends OpcionesUnirse {
   /** Ayudas para principiantes. */
   ayudas?: boolean
   senias?: Partial<ConfigSenias>
+  /** Segundos por jugada y para la primera jugada del mano. */
+  tiempos?: Partial<ConfigTiempos>
 }
 
 export type CanalChat = 'general' | 'equipo'
@@ -123,6 +154,7 @@ export interface InfoSala {
   nivelBots: Nivel
   ayudas: boolean
   senias: ConfigSenias
+  tiempos: ConfigTiempos
   /** Si el chat de equipo está habilitado en esta sala. */
   chatEquipo: boolean
   lugares: LugarPublico[]

@@ -18,9 +18,12 @@ import {
   MOTIVO_SENIA_TARDE,
   SENIAS_DEFAULT,
   normalizarSenias,
+  normalizarTiempos,
+  TIEMPOS_SALA_DEFAULT,
   yaJugoEnLaMano,
   type CanalChat,
   type ConfigSenias,
+  type ConfigTiempos,
   type FaseSala,
   type InfoSala,
   type MensajeChat,
@@ -34,8 +37,20 @@ import { generarCodigoUnico } from './codigos'
 import { Archivo, type RegistroPartida } from './registro'
 
 export interface Tiempos {
-  /** Tiempo para jugar; al vencer juega un bot por el jugador. */
-  turnoMs: number
+  /**
+   * Tiempo para jugar fijo para todas las salas (tests y `TRUCO_TURNO_MS`); al vencer juega
+   * un bot por el jugador. Con null (lo normal) vale el de cada sala (`ConfigTiempos`).
+   * Fijado, pisa también la primera jugada del mano, salvo que se fije `primeraJugadaMs`:
+   * así los tests que ya fijaban el turno siguen midiendo lo mismo.
+   */
+  turnoMs: number | null
+  /** Tiempo fijo para la primera jugada del mano; null: el de la sala (o `turnoMs` si está fijado). */
+  primeraJugadaMs: number | null
+  /**
+   * Cuántos ms dura cada segundo de los tiempos de la sala: 1000 de verdad; en los tests,
+   * menos, para medir la configuración de la sala sin esperar minutos.
+   */
+  msPorSegundo: number
   /** Demora al azar antes de que juegue un bot. */
   botMinMs: number
   botMaxMs: number
@@ -51,7 +66,9 @@ export interface Tiempos {
 }
 
 export const TIEMPOS_DEFAULT: Tiempos = {
-  turnoMs: 30_000,
+  turnoMs: null,
+  primeraJugadaMs: null,
+  msPorSegundo: 1_000,
   botMinMs: 1_000,
   botMaxMs: 1_800,
   cierreSinHumanosMs: 120_000,
@@ -121,6 +138,7 @@ export class SalaTruco extends Room {
   private nivelBots: Nivel = 'medio'
   private ayudas = true
   private configSenias: ConfigSenias = SENIAS_DEFAULT
+  private configTiempos: ConfigTiempos = TIEMPOS_SALA_DEFAULT
   private lugares: Lugar[] = []
   private anfitrion: string | null = null
 
@@ -373,6 +391,7 @@ export class SalaTruco extends Room {
     if (op.nivelBots && NIVELES.includes(op.nivelBots)) this.nivelBots = op.nivelBots
     if (typeof op.ayudas === 'boolean') this.ayudas = op.ayudas
     if (op.senias && typeof op.senias === 'object') this.configSenias = normalizarSenias(op.senias, this.configSenias)
+    if (op.tiempos && typeof op.tiempos === 'object') this.configTiempos = normalizarTiempos(op.tiempos, this.configTiempos)
   }
 
   private cambiarCantidadDeLugares() {
@@ -523,11 +542,43 @@ export class SalaTruco extends Room {
       this.timerJuego = setTimeout(() => this.jugarBot(a, version), demora)
       this.broadcast('turno', { asientos: esperando, venceEn: null })
     } else {
-      const espera = extra + this.tiempos.turnoMs
+      const espera = extra + this.tiempoDeTurno(esperando)
       const venceEn = Date.now() + espera
       this.timerJuego = setTimeout(() => this.jugarBot(humanos[0]!, version), espera)
       this.broadcast('turno', { asientos: esperando, venceEn })
     }
+  }
+
+  /**
+   * Tiempo de la jugada que se espera: la primera jugada de la mano (el turno del mano
+   * cuando en el enfrentamiento todavía no pasó nada: ni cartas, ni cantos, ni flor) tiene
+   * el tiempo largo; todo lo demás (jugadas, respuestas, declaraciones), el normal.
+   * En pica-pica cada duelo es un enfrentamiento, así que el mano de cada uno tiene el largo.
+   */
+  private tiempoDeTurno(esperando: number[]): number {
+    const { turnoMs, primeraJugadaMs, msPorSegundo } = this.tiempos
+    const normal = turnoMs ?? this.configTiempos.turnoS * msPorSegundo
+    if (!this.esPrimeraJugada(esperando)) return normal
+    return primeraJugadaMs ?? turnoMs ?? this.configTiempos.primeraJugadaS * msPorSegundo
+  }
+
+  private esPrimeraJugada(esperando: number[]): boolean {
+    const m = this.estado!.mano
+    const e = m.enfrentamientos[m.actual]
+    if (!e || m.verificacion) return false
+    return (
+      esperando.length === 1 &&
+      esperando[0] === e.mano &&
+      e.turno === e.mano &&
+      e.vueltas.length === 1 &&
+      e.vueltas[0]!.jugadas.length === 0 &&
+      e.truco.valor === 1 &&
+      e.truco.pendiente === null &&
+      e.envido.estado === 'libre' &&
+      e.envido.cantos.length === 0 &&
+      e.flor.estado === 'libre' &&
+      e.flor.cantadas.length === 0
+    )
   }
 
   private jugarBot(asiento: number, version: number) {
@@ -636,6 +687,7 @@ export class SalaTruco extends Room {
       nivelBots: this.nivelBots,
       ayudas: this.ayudas,
       senias: this.configSenias,
+      tiempos: this.configTiempos,
       chatEquipo: this.chatEquipo(),
       lugares: this.lugares.map((l) => ({
         asiento: l.asiento,

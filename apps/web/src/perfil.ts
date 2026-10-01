@@ -1,5 +1,6 @@
 import type { Nivel } from '@truco/bots'
 import type { Formato } from '@truco/engine'
+import { TIEMPOS_SALA_DEFAULT, type ConfigTiempos } from '@truco/shared'
 
 /** Datos que se recuerdan en este navegador. Si el almacenamiento falla, se usan los valores por defecto. */
 export interface Perfil {
@@ -18,6 +19,8 @@ export interface Perfil {
   pescarSenias: boolean
   /** Contra bots: señas solo antes de jugar la primera carta de la mano. */
   seniasAntesDeJugar: boolean
+  /** Tiempos de la última sala que armó (por jugada y primera jugada del mano). */
+  tiempos: ConfigTiempos
 }
 
 export const AVATARES = ['🧉', '🐴', '🦉', '🐂', '🦊', '🐸', '🐶', '🐱', '🌞', '⭐']
@@ -31,7 +34,7 @@ function nuevoId(): string {
 }
 
 export function leerPerfil(): Perfil {
-  const porDefecto: Perfil = { invitadoId: nuevoId(), apodo: '', avatar: AVATARES[0]!, formato: '1v1', nivelBots: 'medio', ayudas: true, picaPica: true, rapido: false, ojear: true, pescarSenias: true, seniasAntesDeJugar: false }
+  const porDefecto: Perfil = { invitadoId: nuevoId(), apodo: '', avatar: AVATARES[0]!, formato: '1v1', nivelBots: 'medio', ayudas: true, picaPica: true, rapido: false, ojear: true, pescarSenias: true, seniasAntesDeJugar: false, tiempos: TIEMPOS_SALA_DEFAULT }
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as Partial<Perfil> | null
     return { ...porDefecto, ...(guardado ?? {}) }

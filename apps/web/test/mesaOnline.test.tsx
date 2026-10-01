@@ -68,6 +68,7 @@ function partidaOnline(otro: { conectado: boolean } = { conectado: true }) {
   const sala: InfoSala = {
     codigo: 'SALA1',
     publica: false,
+    tiempos: { turnoS: 30, primeraJugadaS: 60 },
     fase: 'jugando',
     formato: '1v1',
     config,
