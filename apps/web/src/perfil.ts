@@ -1,5 +1,6 @@
 import type { Nivel } from '@truco/bots'
 import type { Formato } from '@truco/engine'
+import type { Baraja } from './baraja'
 
 /** Datos que se recuerdan en este navegador. Si el almacenamiento falla, se usan los valores por defecto. */
 export interface Perfil {
@@ -18,6 +19,8 @@ export interface Perfil {
   pescarSenias: boolean
   /** Contra bots: señas solo antes de jugar la primera carta de la mano. */
   seniasAntesDeJugar: boolean
+  /** Dibujo de las cartas (cosmético): la baraja propia en SVG o la clásica de Fournier (1878). */
+  baraja: Baraja
 }
 
 export const AVATARES = ['🧉', '🐴', '🦉', '🐂', '🦊', '🐸', '🐶', '🐱', '🌞', '⭐']
@@ -31,10 +34,13 @@ function nuevoId(): string {
 }
 
 export function leerPerfil(): Perfil {
-  const porDefecto: Perfil = { invitadoId: nuevoId(), apodo: '', avatar: AVATARES[0]!, formato: '1v1', nivelBots: 'medio', ayudas: true, picaPica: true, rapido: false, ojear: true, pescarSenias: true, seniasAntesDeJugar: false }
+  const porDefecto: Perfil = { invitadoId: nuevoId(), apodo: '', avatar: AVATARES[0]!, formato: '1v1', nivelBots: 'medio', ayudas: true, picaPica: true, rapido: false, ojear: true, pescarSenias: true, seniasAntesDeJugar: false, baraja: 'propia' }
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as Partial<Perfil> | null
-    return { ...porDefecto, ...(guardado ?? {}) }
+    const perfil = { ...porDefecto, ...(guardado ?? {}) }
+    // Una baraja que ya no existe (o un valor roto) vuelve a la propia.
+    if (perfil.baraja !== 'propia' && perfil.baraja !== 'fournier1878') perfil.baraja = 'propia'
+    return perfil
   } catch {
     return porDefecto
   }

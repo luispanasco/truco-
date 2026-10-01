@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AVATARES, guardarPerfil, leerPerfil, type Perfil } from '../perfil'
+import { SelectorBaraja } from './SelectorBaraja'
 
 /** El perfil de este navegador; se guarda mientras se edita, así sobrevive a recargar la página. */
 export function usePerfil(): [Perfil, (p: Partial<Perfil>) => void] {
@@ -13,7 +14,7 @@ export function usePerfil(): [Perfil, (p: Partial<Perfil>) => void] {
   return [perfil, cambiar]
 }
 
-/** Avatar y apodo: lo que ven los demás en la mesa. */
+/** Avatar y apodo (lo que ven los demás en la mesa) y la baraja con la que ves las cartas. */
 export function TarjetaPerfil({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Partial<Perfil>) => void }) {
   const [eligiendoAvatar, setEligiendoAvatar] = useState(false)
   return (
@@ -51,6 +52,7 @@ export function TarjetaPerfil({ perfil, cambiar }: { perfil: Perfil; cambiar: (p
           ))}
         </div>
       )}
+      <SelectorBaraja baraja={perfil.baraja} alElegir={(b) => cambiar({ baraja: b })} />
     </section>
   )
 }
