@@ -416,3 +416,35 @@ La base la hice yo: conexión online, estado de la conexión, `pnpm dev` y prueb
 - El botón "Enviar" del chat desactivado queda de un color oliva apagado.
 - El ojeo no se midió en un Android real.
 - Con teclado o lector de pantalla, activar una carta desde la pila la juega directo, sin abrir el abanico.
+
+### Pulido de la mesa: cartas, ojeo y señas — 2026-10-01
+
+Pedido del usuario antes de seguir con lo online: corregir el ojeo, mostrar los tantos al terminar la mano y pulir las cartas y las señas, con todas las opciones propuestas. Lo trabajaron tres agentes en paralelo (mano, mesa y señas), y después se integraron sus ramas; hubo un solo conflicto, de una línea.
+
+- **Ojeo por pasos:** zonas de 0–8 % para los cortes, 8–15 % vacío, 15–30 % para el número y el dibujo desde el 32 %, con un "tope" suave en el que se ven solo los cortes (unos 14 px de dedo). Las cartas SVG se reacomodaron a esas zonas.
+- **Mostrar las cartas al terminar la mano** (regla nueva, en el motor): quien cantó flor o ganó un envido querido (también con "son buenas") muestra sus cartas sin jugar al cerrar el enfrentamiento (`resultado.mostradas`). En la mesa aparecen boca arriba con la etiqueta "Flor de X" o "Envido X". Las propiedades de "ninguna vista con cartas ajenas" excluyen solo esas cartas.
+- **Las cartas quedan en la mesa:** cada jugador deja sus cartas escalonadas por vuelta frente a sí, con la ganadora resaltada y las vueltas viejas atenuadas (`CartasEnMesa`).
+- **Mano:**
+  - arrastrar hacia arriba para jugar, con un umbral de 60 px;
+  - abanico curvo de −8°, 0° y +8°;
+  - en escritorio, cartas más grandes, con las variables `--carta-chica`, `--carta-mesa` y `--carta-grande`.
+- **Señas:**
+  - cara SVG para tocar: cejas, ojos, nariz, boca con un menú de cinco señas, pera y cachetes;
+  - el gesto animado aparece en el avatar del compañero;
+  - el rival puede "pescar" la seña: opción de sala `pescar` ('nunca', 'gesto' o 'gestoYCarta') con su probabilidad, 20 % por defecto; el sorteo lo hacen el servidor y la conexión local, y el bot difícil usa lo que pesca;
+  - ayuda que marca las señas de tus cartas;
+  - momento 'libre' o 'antesDeJugar'.
+
+  Las opciones están en Crear sala y en Más opciones.
+- **Tests:** 242 en total (motor 130, bots 14, servidor 28, web 70), más la prueba de humo y 2 de punta a punta. Un agente vio fallar una vez el test de revancha mientras corrían otros tests en paralelo, probablemente por un choque de puertos; después pasó 28/28 en las corridas siguientes.
+
+**Mazo clásico, opciones investigadas:**
+- El mazo **Fournier de 1878** (diseño de Ignacio Díaz de Olano y Emilio Soubrier) está en Wikimedia Commons como **dominio público**. Está completo (40 cartas y el dorso), en PNG de 2434 × 3846, escaneado del Museo Fournier de Naipes de Álava.
+- El diseño Fournier moderno se descarta por marca registrada.
+- Pendiente de que el usuario elija: Fournier 1878, mixta, propia mejorada, o las dos como cosmético (la recomendada).
+
+**Pendientes:**
+- Durante el gesto, el avatar agrandado tapa el nombre en el celular.
+- El globito de la seña puede rozar el mazo.
+- En escritorio, durante la pausa, las cartas de la mesa quedan chicas en 2v2.
+- El tope del ojeo y el arrastre conviene probarlos con el dedo en un celular real.
