@@ -29,7 +29,8 @@ export default defineConfig({
     {
       command: `npx vite --port ${PUERTO_WEB} --strictPort`,
       port: PUERTO_WEB,
-      env: { VITE_SERVIDOR: `ws://localhost:${PUERTO_SERVIDOR}` },
+      // Sin VITE_SERVIDOR: la web llega al servidor por /juego, como con pnpm compartir.
+      env: { PUERTO_SERVIDOR: String(PUERTO_SERVIDOR) },
       reuseExistingServer: false,
       timeout: 60_000,
     },

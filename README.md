@@ -17,6 +17,7 @@ pnpm install
 | Comando | Qué hace |
 | --- | --- |
 | `pnpm dev` | Levanta el servidor y la web juntos (lo más cómodo para probar). |
+| `pnpm compartir` | Igual que `pnpm dev`, y además abre un túnel de Cloudflare con un link `https://…trycloudflare.com` para que entren desde afuera de tu red (sin tocar el router). Necesita `winget install Cloudflare.cloudflared`. El link cambia cada vez. |
 | `pnpm test` | Corre todos los tests (motor, bots, servidor y web) y la prueba de humo del servidor. |
 | `pnpm cli [semilla]` | Juega una mano en la terminal contra un rival al azar, sin servidor. |
 | `pnpm simular --a dificil --b medio --n 200 --formato 2v2` | Partidas bot contra bot y porcentaje de victorias. |

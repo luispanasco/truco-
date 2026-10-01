@@ -10,6 +10,7 @@
     "jugar": "pnpm --filter @truco/terminal jugar",
     "servidor": "pnpm --filter @truco/server start",
     "web": "pnpm --filter @truco/web dev",
+    "compartir": "node scripts/compartir.mjs",
     "dev": "pnpm --parallel --filter @truco/server --filter @truco/web dev"
   }
 }

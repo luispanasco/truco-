@@ -3,16 +3,16 @@ import { SALAS, type MensajesCliente, type MensajesServidor, type OpcionesCrearS
 import type { Conexion, EstadoConexion, MensajeServidor } from './tipos'
 
 /**
- * Dirección del servidor de juego. Por defecto, el mismo host de la página en el
- * puerto 2567: así, si el celular abre la web con la IP de la compu, encuentra
- * también el servidor. Se puede fijar con VITE_SERVIDOR (por ejemplo, al publicar).
+ * Dirección del servidor de juego. Por defecto, la misma de la página bajo /juego:
+ * Vite lo reenvía al puerto 2567, así que anda igual con la IP de la compu en la red
+ * de casa o con el link de un túnel (`pnpm compartir`). Se puede fijar con
+ * VITE_SERVIDOR (por ejemplo, al publicar).
  */
 export function direccionServidor(): string {
   const fija = import.meta.env.VITE_SERVIDOR as string | undefined
   if (fija) return fija
-  const seguro = typeof location !== 'undefined' && location.protocol === 'https:'
-  const host = typeof location !== 'undefined' ? location.hostname : 'localhost'
-  return `${seguro ? 'wss' : 'ws'}://${host}:2567`
+  if (typeof location === 'undefined') return 'ws://localhost:2567'
+  return `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/juego`
 }
 
 /** La partida online en curso, para poder volver después de recargar o cerrar la app. */
