@@ -14,6 +14,7 @@ import {
 import { crearBot, type Bot, type Nivel, type Senia, type SeniasRecibidas } from '@truco/bots'
 import {
   MOTIVO_SENIA_TARDE,
+  MOTIVO_SIN_SENIAS,
   normalizarSenias,
   yaJugoEnLaMano,
   type ConfigSenias,
@@ -108,7 +109,9 @@ export class ConexionLocal implements Conexion {
       }
       case 'senia': {
         const n = this.estado.jugadores.length
-        if (this.terminada || n <= 2 || this.estado.mano.picaPica) {
+        if (!this.configSenias.habilitadas) {
+          this.emitir('error', { motivo: MOTIVO_SIN_SENIAS })
+        } else if (this.terminada || n <= 2 || this.estado.mano.picaPica) {
           this.emitir('error', { motivo: 'Ahora no hay compañeros a quien hacerle señas' })
         } else if (this.configSenias.momento === 'antesDeJugar' && yaJugoEnLaMano(this.estado.mano, 0)) {
           this.emitir('error', { motivo: MOTIVO_SENIA_TARDE })
@@ -228,7 +231,7 @@ export class ConexionLocal implements Conexion {
     this.numeroMano = this.estado.mano.numero
     const n = this.estado.jugadores.length
     this.senias = Array.from({ length: n }, () => ({}))
-    if (n <= 2 || this.estado.mano.picaPica) return
+    if (n <= 2 || this.estado.mano.picaPica || !this.configSenias.habilitadas) return
     for (let a = 1; a < n; a++) {
       const senias = this.bots[a]!.hacerSenias(vistaPara(this.estado, id(a)))
       this.entregarSenias(a, senias)

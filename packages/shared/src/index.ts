@@ -31,21 +31,24 @@ export type PescarSenias = 'nunca' | 'gesto' | 'gestoYCarta'
 export type MomentoSenias = 'libre' | 'antesDeJugar'
 
 export interface ConfigSenias {
+  /** false: en esta mesa no se hacen señas (ni las personas ni los bots). */
+  habilitadas: boolean
   pescar: PescarSenias
   /** Probabilidad (de 0 a 1) de que cada rival vea cada seña. */
   probabilidadPescar: number
   momento: MomentoSenias
 }
 
-export const SENIAS_DEFAULT: ConfigSenias = { pescar: 'gesto', probabilidadPescar: 0.2, momento: 'libre' }
+export const SENIAS_DEFAULT: ConfigSenias = { habilitadas: true, pescar: 'gesto', probabilidadPescar: 0.2, momento: 'libre' }
 
 /** Completa y valida la configuración de señas (lo que no sirve queda como estaba). */
 export function normalizarSenias(op: Partial<ConfigSenias> | undefined, base: ConfigSenias = SENIAS_DEFAULT): ConfigSenias {
+  const habilitadas = typeof op?.habilitadas === 'boolean' ? op.habilitadas : base.habilitadas
   const pescar = op?.pescar && ['nunca', 'gesto', 'gestoYCarta'].includes(op.pescar) ? op.pescar : base.pescar
   const momento = op?.momento && ['libre', 'antesDeJugar'].includes(op.momento) ? op.momento : base.momento
   const p = op?.probabilidadPescar
   const probabilidadPescar = typeof p === 'number' && Number.isFinite(p) ? Math.min(1, Math.max(0, p)) : base.probabilidadPescar
-  return { pescar, probabilidadPescar, momento }
+  return { habilitadas, pescar, probabilidadPescar, momento }
 }
 
 /**
@@ -84,6 +87,9 @@ export function yaJugoEnLaMano(mano: { enfrentamientos: { vueltas: { jugadas: { 
 
 /** Texto del rechazo cuando ya pasó el momento de hacer señas. */
 export const MOTIVO_SENIA_TARDE = 'En esta sala las señas se hacen antes de jugar tu primera carta'
+
+/** Texto del rechazo cuando la mesa se juega sin señas. */
+export const MOTIVO_SIN_SENIAS = 'En esta mesa no se hacen señas'
 
 // ── Cliente → servidor ──────────────────────────────────────────────
 

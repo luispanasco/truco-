@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
-import { apply, crearConfig, crearPartida, esperandoA, vistaPara, type EstadoPartida } from '@truco/engine'
-import { GESTO, SIGNIFICADO, seniasDeMano, type Senia } from '@truco/bots'
+import { apply, crearConfig, crearPartida, esperandoA, nombreCarta, vistaPara, type Carta, type EstadoPartida, type VistaPartida } from '@truco/engine'
+import { GESTO, SIGNIFICADO, seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
 import { MOTIVO_SENIA_TARDE, SENIAS_DEFAULT, type ConfigSenias, type InfoSala, type MensajesCliente } from '@truco/shared'
 import type { Conexion, MensajeServidor } from '../src/conexion/tipos'
 import { DURACION_GESTO } from '../src/componentes/Cara'
+import { MANTENER_MS } from '../src/componentes/ManoOjeable'
+import { seniasRapidas } from '../src/componentes/Senias'
 import { useJuego } from '../src/estado'
 import { Mesa } from '../src/pantallas/Mesa'
 
@@ -46,7 +48,18 @@ function conexionFalsa() {
 const APODOS = ['Luis', 'Ana', 'Pepe', 'Rita']
 
 /** Un 2v2 entre personas, visto desde el asiento al que le toca (o desde quien acaba de jugar). */
-function partida2v2({ senias = SENIAS_DEFAULT, ayudas = true, jugada = false }: { senias?: ConfigSenias; ayudas?: boolean; jugada?: boolean } = {}) {
+function partida2v2({
+  senias = SENIAS_DEFAULT,
+  ayudas = true,
+  jugada = false,
+  requisito,
+}: {
+  senias?: ConfigSenias
+  ayudas?: boolean
+  jugada?: boolean
+  /** Condición extra para la mano de quien empieza (por ejemplo, que tenga cartas con seña). */
+  requisito?: (v: VistaPartida) => boolean
+} = {}) {
   const config = crearConfig({ formato: '2v2' })
   let estado: EstadoPartida | null = null
   let yo = 0
@@ -56,7 +69,7 @@ function partida2v2({ senias = SENIAS_DEFAULT, ayudas = true, jugada = false }: 
     yo = esperandoA(e)[0]!
     const v = vistaPara(e, `j${yo}`)
     const carta = v.accionesValidas.find((a) => a.tipo === 'jugarCarta')
-    if (!carta) continue
+    if (!carta || (requisito && !requisito(v))) continue
     if (!jugada) estado = e
     else {
       const r = apply(e, carta)
@@ -222,5 +235,115 @@ describe('gestos en los avatares', () => {
     const globo = avatarDe(APODOS[rival]!).closest('.asiento')!.querySelector('.globo-senia')!
     expect(globo.classList.contains('pescada')).toBe(true)
     expect(globo.textContent).toContain('perica')
+  })
+})
+
+describe('señas rápidas', () => {
+  // Una mano con dos cartas con seña y una sin, sin flor (así la tira es la de las cartas).
+  const conSenias = (v: VistaPartida) => {
+    const con = v.mano.misCartas.filter((c) => seniaDeCarta(c, v.mano.muestra) !== null)
+    return con.length === 2 && !seniasDeMano(v.mano.misCartas, v.mano.muestra).includes('flor')
+  }
+  /** La mano llega apilada para ojear: hasta abrirla no se ve la tira (no delata las cartas). */
+  const abrirMano = () => {
+    expect(screen.queryByRole('group', { name: 'Señas rápidas' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Ver todas' }))
+  }
+  const botonCarta = (c: Carta) => screen.getByRole('button', { name: `Jugar el ${nombreCarta(c)}` })
+  const toque = { pointerId: 1, clientX: 100, clientY: 100, button: 0, pointerType: 'touch' }
+
+  it('la tira muestra las señas de tus cartas y un toque manda la que corresponde', async () => {
+    const datos = partida2v2({ requisito: conSenias })
+    const { enviados } = await entrar(datos)
+    abrirMano()
+    const { misCartas, muestra } = datos.vista.mano
+    const esperadas = seniasRapidas(misCartas, muestra)
+    const tira = screen.getByRole('group', { name: 'Señas rápidas' })
+    const botones = within(tira).getAllByRole('button')
+    expect(botones).toHaveLength(esperadas.length)
+    esperadas.forEach((r, i) => expect(botones[i]!.getAttribute('aria-label')).toContain(GESTO[r.senia].toLowerCase()))
+
+    const ultima = esperadas.at(-1)!.senia
+    fireEvent.click(botones.at(-1)!)
+    expect(seniasEnviadas(enviados)).toEqual([ultima])
+    expect(screen.getByText(new RegExp(`Le hiciste la seña: ${GESTO[ultima].toLowerCase()}`))).toBeTruthy()
+    // Queda marcada, y se puede repetir.
+    expect(botones.at(-1)!.classList.contains('hecha')).toBe(true)
+    fireEvent.click(botones.at(-1)!)
+    expect(seniasEnviadas(enviados)).toEqual([ultima, ultima])
+    expect(enviados.some((e) => e.tipo === 'accion')).toBe(false)
+  })
+
+  it('mantener apretada una carta hace su seña; un toque normal sigue jugando', async () => {
+    const datos = partida2v2({ requisito: conSenias })
+    const { enviados } = await entrar(datos)
+    abrirMano()
+    const { misCartas, muestra } = datos.vista.mano
+    const conSenia = misCartas.find((c) => seniaDeCarta(c, muestra) !== null)!
+    const el = botonCarta(conSenia).closest('.ojeo-carta') as HTMLElement
+
+    fireEvent.pointerDown(el, toque)
+    expect(el.classList.contains('apretando')).toBe(true)
+    await act(() => new Promise((r) => setTimeout(r, MANTENER_MS + 50)))
+    fireEvent.pointerUp(el, toque)
+    fireEvent.click(botonCarta(conSenia))
+    expect(seniasEnviadas(enviados)).toEqual([seniaDeCarta(conSenia, muestra)])
+    // Mantenerla no la jugó, y en la tira quedó marcada.
+    expect(enviados.some((e) => e.tipo === 'accion')).toBe(false)
+    const tira = screen.getByRole('group', { name: 'Señas rápidas' })
+    expect(within(tira).getAllByRole('button').some((b) => b.classList.contains('hecha'))).toBe(true)
+
+    // Un toque corto (sin esperar) juega la carta como siempre y no hace seña.
+    await act(() => new Promise((r) => setTimeout(r, 450)))
+    fireEvent.pointerDown(el, toque)
+    fireEvent.pointerUp(el, toque)
+    fireEvent.click(botonCarta(conSenia))
+    expect(enviados.filter((e) => e.tipo === 'accion')).toHaveLength(1)
+    expect(seniasEnviadas(enviados)).toHaveLength(1)
+  })
+
+  it('con "antesDeJugar", ya jugada tu carta, la tira queda apagada y dice por qué', async () => {
+    const datos = partida2v2({
+      senias: { ...SENIAS_DEFAULT, momento: 'antesDeJugar' },
+      jugada: true,
+      requisito: (v) => v.mano.misCartas.some((c) => seniaDeCarta(c, v.mano.muestra) !== null),
+    })
+    const { enviados } = await entrar(datos)
+    // Con una carta jugada la mano ya llega abierta.
+    const tira = screen.getByRole('group', { name: 'Señas rápidas' })
+    expect(tira.classList.contains('cerrada')).toBe(true)
+    const boton = within(tira).queryAllByRole('button')[0]
+    if (boton) {
+      fireEvent.click(boton)
+      expect(seniasEnviadas(enviados)).toEqual([])
+      expect(screen.getByText(new RegExp(MOTIVO_SENIA_TARDE))).toBeTruthy()
+    }
+  })
+})
+
+describe('mesa sin señas', () => {
+  it('no hay botón, ni tira, ni mantener apretado, ni gestos', async () => {
+    const datos = partida2v2({
+      senias: { ...SENIAS_DEFAULT, habilitadas: false },
+      requisito: (v) => v.mano.misCartas.some((c) => seniaDeCarta(c, v.mano.muestra) !== null),
+    })
+    const { enviados, llegar } = await entrar(datos)
+    fireEvent.click(screen.getByRole('button', { name: 'Ver todas' }))
+    expect(screen.queryByRole('button', { name: 'Hacer una seña' })).toBeNull()
+    expect(document.querySelector('.tira-senias')).toBeNull()
+
+    const { misCartas, muestra } = datos.vista.mano
+    const conSenia = misCartas.find((c) => seniaDeCarta(c, muestra) !== null)!
+    const el = screen.getByRole('button', { name: `Jugar el ${nombreCarta(conSenia)}` }).closest('.ojeo-carta') as HTMLElement
+    const toque = { pointerId: 1, clientX: 100, clientY: 100, button: 0, pointerType: 'touch' }
+    fireEvent.pointerDown(el, toque)
+    expect(el.classList.contains('apretando')).toBe(false)
+    await act(() => new Promise((r) => setTimeout(r, MANTENER_MS + 50)))
+    fireEvent.pointerUp(el, toque)
+    expect(seniasEnviadas(enviados)).toEqual([])
+
+    // Aunque llegara una seña (no debería), no se ve como gesto.
+    llegar({ tipo: 'senia', datos: { de: (datos.yo + 2) % 4, senia: 'pieza2' } })
+    expect(document.querySelector('.avatar-gesto')).toBeNull()
   })
 })

@@ -49,7 +49,8 @@ export function opcionesIniciales(p: Perfil): OpcionesSala {
     botsEnVacios: true,
     ayudas: p.ayudas,
     reglas: { ...reglasDe(CONFIG_DEFAULT), picaPica: p.picaPica },
-    senias: SENIAS_DEFAULT,
+    // Con o sin señas, lo último que eligió; lo demás de las señas, como siempre.
+    senias: { ...SENIAS_DEFAULT, habilitadas: p.seniasHabilitadas },
     tiempos: normalizarTiempos(p.tiempos),
   }
 }
@@ -255,29 +256,39 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
             detalle={TEXTO_FLOR[r.florConPiezas][1]}
           />
           <h3 className="reglas-subtitulo">Señas (en parejas y tríos)</h3>
-          <Segmentado
-            titulo="Los rivales pescan señas"
-            valor={se.pescar}
-            opciones={(['nunca', 'gesto', 'gestoYCarta'] as const).map((v) => [v, TEXTO_PESCAR[v][0]])}
-            alCambiar={(pescar) => senia({ pescar })}
-            detalle={TEXTO_PESCAR[se.pescar][1]}
+          <Interruptor
+            activo={se.habilitadas}
+            alCambiar={(habilitadas) => senia({ habilitadas })}
+            titulo="Se juega con señas"
+            detalle="Apagado, nadie hace señas: ni las personas ni los bots"
           />
-          {se.pescar !== 'nunca' && (
-            <Segmentado
-              titulo="Probabilidad de pescar"
-              valor={se.probabilidadPescar}
-              opciones={PROBABILIDADES.map((p) => [p, porcentaje(p)] as [number, string])}
-              alCambiar={(probabilidadPescar) => senia({ probabilidadPescar })}
-              detalle="Para cada rival y cada seña."
-            />
+          {se.habilitadas && (
+            <>
+              <Segmentado
+                titulo="Los rivales pescan señas"
+                valor={se.pescar}
+                opciones={(['nunca', 'gesto', 'gestoYCarta'] as const).map((v) => [v, TEXTO_PESCAR[v][0]])}
+                alCambiar={(pescar) => senia({ pescar })}
+                detalle={TEXTO_PESCAR[se.pescar][1]}
+              />
+              {se.pescar !== 'nunca' && (
+                <Segmentado
+                  titulo="Probabilidad de pescar"
+                  valor={se.probabilidadPescar}
+                  opciones={PROBABILIDADES.map((p) => [p, porcentaje(p)] as [number, string])}
+                  alCambiar={(probabilidadPescar) => senia({ probabilidadPescar })}
+                  detalle="Para cada rival y cada seña."
+                />
+              )}
+              <Segmentado
+                titulo="Momento de las señas"
+                valor={se.momento}
+                opciones={(['libre', 'antesDeJugar'] as const).map((v) => [v, TEXTO_MOMENTO[v][0]])}
+                alCambiar={(momento) => senia({ momento })}
+                detalle={TEXTO_MOMENTO[se.momento][1]}
+              />
+            </>
           )}
-          <Segmentado
-            titulo="Momento de las señas"
-            valor={se.momento}
-            opciones={(['libre', 'antesDeJugar'] as const).map((v) => [v, TEXTO_MOMENTO[v][0]])}
-            alCambiar={(momento) => senia({ momento })}
-            detalle={TEXTO_MOMENTO[se.momento][1]}
-          />
         </div>
       </details>
     </div>
@@ -306,12 +317,16 @@ export function resumenSala(o: OpcionesSala): string[] {
   )
   if (o.formato !== '1v1') {
     const se = o.senias
-    partes.push(
-      se.pescar === 'nunca'
-        ? 'Los rivales no pescan señas'
-        : `Los rivales pescan ${se.pescar === 'gesto' ? 'el gesto' : 'gesto y carta'} (${porcentaje(se.probabilidadPescar)})`,
-      se.momento === 'libre' ? 'Señas en cualquier momento' : 'Señas solo antes de jugar',
-    )
+    if (!se.habilitadas) {
+      partes.push('Sin señas')
+    } else {
+      partes.push(
+        se.pescar === 'nunca'
+          ? 'Los rivales no pescan señas'
+          : `Los rivales pescan ${se.pescar === 'gesto' ? 'el gesto' : 'gesto y carta'} (${porcentaje(se.probabilidadPescar)})`,
+        se.momento === 'libre' ? 'Señas en cualquier momento' : 'Señas solo antes de jugar',
+      )
+    }
   }
   return partes
 }

@@ -31,7 +31,7 @@ async function mesa(senias: Partial<ConfigSenias>) {
 describe('señas pescadas', () => {
   it('la configuración de señas llega en la sala', async () => {
     const { a } = await mesa({ pescar: 'gestoYCarta', probabilidadPescar: 0.35, momento: 'antesDeJugar' })
-    expect(a.sala!.senias).toEqual({ pescar: 'gestoYCarta', probabilidadPescar: 0.35, momento: 'antesDeJugar' })
+    expect(a.sala!.senias).toEqual({ habilitadas: true, pescar: 'gestoYCarta', probabilidadPescar: 0.35, momento: 'antesDeJugar' })
   })
 
   it('con probabilidad 1 y "gestoYCarta", el rival ve la seña entera y el bot rival la anota', async () => {

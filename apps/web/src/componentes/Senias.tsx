@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
-import type { Senia } from '@truco/bots'
+import { nombreCarta, piezaDe, type Carta as TCarta } from '@truco/engine'
+import { seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
 import type { ConfigSenias } from '@truco/shared'
 import { GESTO, SIGNIFICADO } from '../senias'
 import { Cara, type GestoCara } from './Cara'
@@ -189,6 +190,101 @@ export function PanelSenias({
         )}
       </div>
     </Hoja>
+  )
+}
+
+/** Ícono y nombre corto de cada gesto, para los botones de la tira rápida. */
+const CORTO: Record<Senia, { icono: string; nombre: string; espejo?: boolean }> = {
+  pieza2: { icono: '🤨', nombre: 'Cejas' },
+  pieza4: { icono: '💋', nombre: 'Beso' },
+  pieza5: { icono: '😤', nombre: 'Nariz' },
+  perico: { icono: '😉', nombre: 'Guiño der.' },
+  perica: { icono: '😉', nombre: 'Guiño izq.', espejo: true },
+  unoBravo: { icono: '😏', nombre: 'Pera der.' },
+  sieteBravo: { icono: '😏', nombre: 'Pera izq.', espejo: true },
+  tres: { icono: '😬', nombre: 'Labio' },
+  dosComun: { icono: '😮', nombre: 'Boca' },
+  unoFalso: { icono: '😛', nombre: 'Lengua' },
+  flor: { icono: '🐸', nombre: 'Sapo' },
+}
+
+export interface SeniaRapida {
+  senia: Senia
+  /** La carta (o cartas) que la seña anuncia, en palabras cortas. */
+  carta: string
+}
+
+/**
+ * Las señas de tus cartas, en el orden de la mano, y al final la flor si la tenés.
+ * Dos cartas con la misma seña (dos 3) van en un solo botón.
+ */
+export function seniasRapidas(cartas: readonly TCarta[], muestra: TCarta): SeniaRapida[] {
+  const rapidas: SeniaRapida[] = []
+  for (const c of cartas) {
+    const senia = seniaDeCarta(c, muestra)
+    if (!senia) continue
+    const ya = rapidas.find((r) => r.senia === senia)
+    if (ya) ya.carta = SIGNIFICADO[senia]
+    else rapidas.push({ senia, carta: piezaDe(c, muestra) !== null ? SIGNIFICADO[senia] : nombreCarta(c) })
+  }
+  if (seniasDeMano(cartas, muestra).includes('flor')) rapidas.push({ senia: 'flor', carta: 'flor' })
+  return rapidas
+}
+
+/**
+ * Señas rápidas: un botón por cada seña de tus cartas, arriba de la mano. Un toque la
+ * hace (se puede repetir); la que ya hiciste queda marcada. Para mentir o hacer otra,
+ * sigue la cara. Si ya pasó el momento, los botones quedan apagados y dicen por qué.
+ */
+export function TiraSenias({
+  rapidas,
+  hechas,
+  cerrado = null,
+  alHacer,
+  alRechazar,
+}: {
+  rapidas: readonly SeniaRapida[]
+  hechas: readonly Senia[]
+  cerrado?: string | null
+  alHacer: (s: Senia) => void
+  /** Se tocó una seña cuando ya no se puede: muestra el motivo. */
+  alRechazar: (motivo: string) => void
+}) {
+  if (rapidas.length === 0) {
+    return (
+      <div className="tira-senias vacia" role="note">
+        Tus cartas no tienen seña
+      </div>
+    )
+  }
+  return (
+    <div className={`tira-senias${cerrado ? ' cerrada' : ''}`} role="group" aria-label="Señas rápidas" title={cerrado ?? undefined}>
+      {rapidas.map(({ senia, carta }) => {
+        const g = CORTO[senia]
+        const hecha = hechas.includes(senia)
+        return (
+          <button
+            key={senia}
+            type="button"
+            className={`senia-rapida${hecha ? ' hecha' : ''}`}
+            aria-disabled={cerrado ? true : undefined}
+            aria-label={`Hacer la seña: ${GESTO[senia].toLowerCase()} (${carta})${hecha ? ', ya la hiciste' : ''}`}
+            onClick={() => (cerrado ? alRechazar(cerrado) : alHacer(senia))}
+          >
+            <span className={`senia-rapida-icono${g.espejo ? ' espejo' : ''}`} aria-hidden="true">
+              {g.icono}
+            </span>
+            <span className="senia-rapida-texto" aria-hidden="true">
+              <b>
+                {g.nombre}
+                {hecha && <span className="senia-rapida-hecha"> ✓</span>}
+              </b>
+              <small>{carta}</small>
+            </span>
+          </button>
+        )
+      })}
+    </div>
   )
 }
 

@@ -535,6 +535,82 @@
   cursor: default;
 }
 
+/* ── Señas rápidas (arriba de la mano) ────────────────────────── */
+
+/* Una fila: si no entran (raro, son a lo sumo cuatro), se deslizan. */
+.tira-senias {
+  display: flex;
+  justify-content: safe center;
+  gap: 6px;
+  min-height: 38px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tira-senias::-webkit-scrollbar {
+  display: none;
+}
+.tira-senias.vacia {
+  align-items: center;
+  font-size: 0.74rem;
+  opacity: 0.6;
+}
+.senia-rapida {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 10px 0 6px;
+  border: 1px solid color-mix(in srgb, var(--acento) 45%, transparent);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.22);
+  color: var(--texto-claro);
+  text-align: left;
+}
+.senia-rapida:active {
+  scale: 0.96;
+}
+.senia-rapida-icono {
+  display: inline-block;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+/* El guiño y la mueca de la izquierda: el mismo dibujo, dado vuelta. */
+.senia-rapida-icono.espejo {
+  scale: -1 1;
+}
+.senia-rapida-texto {
+  display: grid;
+  min-width: 0;
+  line-height: 1.15;
+}
+.senia-rapida-texto b {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--acento);
+  white-space: nowrap;
+}
+.senia-rapida-texto small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.66rem;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+/* Ya la hiciste (se puede repetir): queda llena. */
+.senia-rapida.hecha {
+  border-color: var(--acento);
+  background: color-mix(in srgb, var(--acento) 22%, rgb(0 0 0 / 0.3));
+}
+.senia-rapida-hecha {
+  color: var(--texto-claro);
+}
+.tira-senias.cerrada .senia-rapida {
+  opacity: 0.45;
+}
+
 /* ── Aviso de la seña que hiciste (chico) ─────────────────────── */
 
 .avisos .aviso-senia {
