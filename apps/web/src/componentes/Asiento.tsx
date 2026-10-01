@@ -4,6 +4,7 @@ import { Cara, type GestoActivo } from './Cara'
 import { Carta } from './Carta'
 import { AnilloReloj } from './Reloj'
 import type { Globo } from '../estado'
+import { GloboDeChat, type GloboChat } from './GlobosChat'
 
 interface Props {
   lugar: LugarPublico
@@ -23,6 +24,10 @@ interface Props {
   alTocarNombre?: () => void
   /** Seña que está haciendo (un compañero, o un rival al que se la pescaste). */
   gesto?: GestoActivo
+  /** Último mensaje de chat que mandó, mientras se ve. */
+  chat?: GloboChat
+  /** El asiento de enfrente, arriba de todo: el chat le sale al costado del avatar. */
+  arriba?: boolean
 }
 
 /**
@@ -67,7 +72,22 @@ export function MarcaMano() {
   )
 }
 
-export function Asiento({ lugar, posicion, cartasEnMano, esCompaniero, leToca, esMano, participa, globo, venceEn, silenciado, alTocarNombre, gesto }: Props) {
+export function Asiento({
+  lugar,
+  posicion,
+  cartasEnMano,
+  esCompaniero,
+  leToca,
+  esMano,
+  participa,
+  globo,
+  venceEn,
+  silenciado,
+  alTocarNombre,
+  gesto,
+  chat,
+  arriba = false,
+}: Props) {
   // Una persona que se desconectó conserva el lugar; mientras tanto juega un bot por ella.
   const desconectado = lugar.tipo === 'humano' && !lugar.conectado
   const conReloj = leToca && venceEn != null
@@ -81,16 +101,33 @@ export function Asiento({ lugar, posicion, cartasEnMano, esCompaniero, leToca, e
       )}
     </>
   )
+  const globoCanto = globo ? (
+    <div key={globo.id} className="globo">
+      {globo.texto}
+    </div>
+  ) : null
+  const globoSenia = gesto ? <GloboSenia key={gesto.id} gesto={gesto} esCompaniero={esCompaniero} /> : null
   return (
     <div
-      className={`asiento pos-${posicion}${leToca ? ' le-toca' : ''}${conReloj ? ' con-reloj' : ''}${esCompaniero ? ' companiero' : ' rival'}${participa ? '' : ' fuera'}${desconectado ? ' desconectado' : ''}`}
+      className={`asiento pos-${posicion}${leToca ? ' le-toca' : ''}${conReloj ? ' con-reloj' : ''}${esCompaniero ? ' companiero' : ' rival'}${participa ? '' : ' fuera'}${desconectado ? ' desconectado' : ''}${globo || chat ? ' con-globo' : ''}`}
     >
-      {globo ? (
-        <div key={globo.id} className="globo">
-          {globo.texto}
-        </div>
+      {arriba ? (
+        // Arriba de todo, el canto cuelga debajo de sus cartas y el chat sale al costado del avatar.
+        <>
+          {globoCanto ?? globoSenia}
+          {chat && <GloboDeChat key={chat.id} globo={chat} lateral />}
+        </>
       ) : (
-        gesto && <GloboSenia key={gesto.id} gesto={gesto} esCompaniero={esCompaniero} />
+        <>
+          {/* A los costados, canto y chat se apilan arriba del avatar: el canto, pegado a la persona. */}
+          {(globoCanto || chat) && (
+            <div className="asiento-globos">
+              {globoCanto}
+              {chat && <GloboDeChat key={chat.id} globo={chat} apilado={!!globoCanto} />}
+            </div>
+          )}
+          {!globoCanto && globoSenia}
+        </>
       )}
       <div className="asiento-avatar">
         <Avatar lugar={lugar} gesto={gesto} />

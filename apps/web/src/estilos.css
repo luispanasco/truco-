@@ -1019,10 +1019,6 @@ button {
 .boton-mazo:hover {
   background: rgb(255 255 255 / 0.08);
 }
-.globo-yo {
-  bottom: 100%;
-  left: 50%;
-}
 /* Botonera o resultado de la mano: el lugar queda reservado para que la mesa no salte. */
 .mi-lugar-pie {
   min-height: 44px;

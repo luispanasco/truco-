@@ -496,3 +496,161 @@ button.asiento-nombre:focus-visible {
     animation: none;
   }
 }
+
+/* ── Globos apilados y globitos de chat ───────────────────────── */
+
+/*
+ * Canto y chat de un mismo jugador, apilados: el canto pegado a la persona y el chat más
+ * afuera. A los costados van arriba del avatar, alineados hacia adentro de la mesa.
+ */
+.asiento-globos {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  z-index: 5;
+  pointer-events: none;
+}
+.asiento .asiento-globos > .globo,
+.mi-lugar .asiento-globos > .globo {
+  position: relative;
+  inset: auto;
+  transform: none;
+  margin: 0;
+}
+.n-4 .pos-1 .asiento-globos,
+.n-6 .pos-1 .asiento-globos,
+.n-6 .pos-2 .asiento-globos {
+  left: auto;
+  right: 0;
+  transform: none;
+  align-items: flex-end;
+}
+.n-4 .pos-3 .asiento-globos,
+.n-6 .pos-4 .asiento-globos,
+.n-6 .pos-5 .asiento-globos {
+  left: 0;
+  transform: none;
+  align-items: flex-start;
+}
+/* Los míos salen de mi avatar, en la punta izquierda de mi lugar. */
+.mis-globos {
+  left: 6px;
+  transform: none;
+  margin-bottom: 6px;
+  align-items: flex-start;
+}
+.mis-globos > .globo {
+  --cola: 22px;
+}
+
+/* El globito de chat: texto normal (no grito de canto), hasta tres líneas. */
+.globo.globo-chat {
+  max-width: min(165px, 46cqw);
+  padding: 5px 10px;
+  border-radius: 13px;
+  font-size: 0.74rem;
+  font-weight: 650;
+  line-height: 1.25;
+  white-space: normal;
+  text-align: left;
+  pointer-events: none;
+}
+/* En 3v3, los de los costados de arriba quedan cerca del de enfrente: más angostos, no le tapan el nombre. */
+.n-6 :is(.pos-2, .pos-4) .globo.globo-chat {
+  max-width: min(165px, 36cqw);
+}
+.mis-globos > .globo.globo-chat {
+  max-width: min(200px, 56vw);
+}
+.globo-chat-texto {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+/* Del canal del equipo: con el borde del color de tu equipo. */
+.globo.globo-chat.equipo {
+  box-shadow:
+    inset 0 0 0 2px var(--equipo-nuestro),
+    0 3px 10px rgb(0 0 0 / 0.4);
+}
+/* Apilado sobre un canto: la colita la tiene el canto. */
+.globo.globo-chat.apilado::after {
+  display: none;
+}
+/*
+ * El de enfrente, arriba de todo: el chat le sale al costado derecho del avatar.
+ * (Doble .asiento: estilos.css se carga después y sus reglas del asiento de arriba pesan igual.)
+ */
+.asiento.asiento .globo.globo-chat.lateral {
+  width: max-content;
+  top: -2px;
+  bottom: auto;
+  left: calc(50% + 30px);
+  right: auto;
+  transform: none;
+  transform-origin: 0 20px;
+  margin: 0;
+  max-width: min(165px, calc(50cqw - 44px));
+}
+.asiento.asiento .globo.globo-chat.lateral::after {
+  top: 14px;
+  bottom: auto;
+  left: auto;
+  right: 100%;
+  margin: 0;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  border-right-color: var(--papel);
+}
+.globo.globo-chat.saliendo {
+  animation: globo-sale 0.35s ease-in forwards;
+}
+@keyframes globo-sale {
+  to {
+    opacity: 0;
+    scale: 0.85;
+    translate: 0 -4px;
+  }
+}
+@keyframes globo-funde {
+  to {
+    opacity: 0;
+  }
+}
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .globo.globo-chat {
+    animation: none;
+  }
+  .globo.globo-chat.saliendo {
+    animation: globo-funde 0.2s linear forwards;
+  }
+}
+/* Mientras habla, su asiento pasa adelante: el globo no queda debajo de otro asiento. */
+.asiento.con-globo {
+  z-index: 3;
+}
+/* Fuera del duelo (pica-pica) el asiento se atenúa, pero lo que dice se lee igual. */
+.asiento.fuera.con-globo {
+  opacity: 1;
+}
+.asiento.fuera.con-globo > :not(.asiento-globos, .globo-chat) {
+  opacity: 0.4;
+}

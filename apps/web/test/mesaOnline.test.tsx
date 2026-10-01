@@ -118,9 +118,59 @@ describe('chat', () => {
     llegar({ tipo: 'chat', datos: { de: 1 - yo, apodo: 'Ana', texto: 'Hola', canal: 'general', hora: 1000 } })
     llegar({ tipo: 'chat', datos: { de: 1 - yo, apodo: 'Ana', texto: '¿Todo bien?', canal: 'general', hora: 2000 } })
     fireEvent.click(screen.getByRole('button', { name: 'Chat, 2 sin leer' }))
-    expect(screen.getByText('¿Todo bien?')).toBeTruthy()
+    expect(within(screen.getByRole('dialog', { name: 'Chat' })).getByText('¿Todo bien?')).toBeTruthy()
     fireEvent.click(within(screen.getByRole('dialog', { name: 'Chat' })).getByRole('button', { name: 'Cerrar' }))
     expect(screen.getByRole('button', { name: 'Chat' })).toBeTruthy()
+  })
+})
+
+describe('globitos de chat', () => {
+  it('el mensaje sale como globo de quien lo mandó, y el mío de mi lugar', () => {
+    const { c, llegar } = conexionFalsa()
+    const { sala, vista, yo } = partidaOnline()
+    act(() => useJuego.getState().conectar(c))
+    const { container } = render(<App />)
+    llegar({ tipo: 'sala', datos: sala })
+    llegar({ tipo: 'vista', datos: vista })
+    llegar({ tipo: 'chat', datos: { de: 1 - yo, apodo: 'Ana', texto: 'Hola', canal: 'general', hora: 1000 } })
+    const deAna = container.querySelector('.asiento .globo-chat')!
+    expect(deAna.textContent).toBe('Ana: Hola')
+    // Ana está enfrente (arriba de todo): el globo le sale al costado del avatar.
+    expect(deAna.classList.contains('lateral')).toBe(true)
+    // Otro mensaje de la misma persona reemplaza al anterior.
+    llegar({ tipo: 'chat', datos: { de: 1 - yo, apodo: 'Ana', texto: '¿Todo bien?', canal: 'general', hora: 2000 } })
+    expect(container.querySelectorAll('.asiento .globo-chat')).toHaveLength(1)
+    expect(container.querySelector('.asiento .globo-chat')!.textContent).toBe('Ana: ¿Todo bien?')
+    // El mío sale de mi lugar, abajo.
+    llegar({ tipo: 'chat', datos: { de: yo, apodo: 'Luis', texto: 'Joya', canal: 'general', hora: 3000 } })
+    expect(container.querySelector('.mi-lugar .mis-globos .globo-chat')!.textContent).toBe('Luis: Joya')
+  })
+
+  it('con un canto en el mismo lugar se apilan: el canto, pegado a la persona', () => {
+    const { c, llegar } = conexionFalsa()
+    const { sala, vista, yo } = partidaOnline()
+    act(() => useJuego.getState().conectar(c))
+    const { container } = render(<App />)
+    llegar({ tipo: 'sala', datos: sala })
+    llegar({ tipo: 'vista', datos: vista })
+    llegar({ tipo: 'chat', datos: { de: yo, apodo: 'Luis', texto: 'Ahí va', canal: 'general', hora: 1000 } })
+    llegar({ tipo: 'eventos', datos: [{ tipo: 'alMazo', asiento: yo, equipo: (yo % 2) as 0 | 1 }] })
+    const pila = container.querySelector('.mis-globos')!
+    expect([...pila.children].map((g) => g.textContent)).toEqual(['Me voy al mazo', 'Luis: Ahí va'])
+    expect(pila.querySelector('.globo-chat')!.classList.contains('apilado')).toBe(true)
+  })
+
+  it('no muestra los de alguien silenciado', () => {
+    const { c, llegar } = conexionFalsa()
+    const { sala, vista, yo } = partidaOnline()
+    act(() => useJuego.getState().conectar(c))
+    const { container } = render(<App />)
+    llegar({ tipo: 'sala', datos: sala })
+    llegar({ tipo: 'vista', datos: vista })
+    fireEvent.click(screen.getByRole('button', { name: 'Opciones para Ana' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Silenciar' }))
+    llegar({ tipo: 'chat', datos: { de: 1 - yo, apodo: 'Ana', texto: 'Hola', canal: 'general', hora: 1000 } })
+    expect(container.querySelector('.globo-chat')).toBeNull()
   })
 })
 
