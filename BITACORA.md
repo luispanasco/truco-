@@ -448,3 +448,36 @@ Pedido del usuario antes de seguir con lo online: corregir el ojeo, mostrar los 
 - El globito de la seña puede rozar el mazo.
 - En escritorio, durante la pausa, las cartas de la mesa quedan chicas en 2v2.
 - El tope del ojeo y el arrastre conviene probarlos con el dedo en un celular real.
+
+### Señas rápidas, tiempos, sin señas y baraja clásica — 2026-10-01
+
+Pedidos del usuario:
+- las señas tienen que ser más rápidas, porque con 30 s no alcanza;
+- 1 minuto para la primera jugada del mano, con los tiempos configurables;
+- la baraja con la opción 4 (las dos, como cosmético);
+- la opción de jugar sin señas.
+
+Los hicieron tres agentes en paralelo y se integraron sus ramas, con conflictos chicos en `perfil.ts`, `FormularioSala.tsx` y `Crear.tsx`: había que sumar los campos de las dos ramas.
+
+- **Señas rápidas:**
+  - arriba de tu mano, una tira con las señas de tus cartas, de un toque ("🤨 Cejas · 2 de la muestra"); se marca la hecha y se puede repetir;
+  - mantener apretada una carta 450 ms hace su seña, con vibración y un anillo de progreso, sin jugarla;
+  - no aparece mientras la mano está apilada para ojear;
+  - la cara completa sigue disponible.
+- **Sin señas:** `ConfigSenias.habilitadas` (por defecto true). Apagado: el servidor y la conexión local rechazan con "En esta mesa no se hacen señas", los bots no hacen ni reciben señas, y la web oculta todo lo de señas. Está en Crear sala y en Más opciones. "No poder ver las señas" se interpretó como jugar sin señas; que el rival no las vea es "Pescar: Nunca".
+- **Tiempos por sala:** `tiempos { turnoS, primeraJugadaS }`, por defecto 30/60 y con límites de 15–120 y 30–180.
+  - La primera jugada de cada mano, y en pica-pica la de cada duelo, usa el tiempo largo. Cantar no renueva el minuto.
+  - Se configura en Crear sala ("Tiempos") y aparece en el resumen.
+  - `TRUCO_TURNO_MS` sigue pisando todo, para pruebas.
+- **Baraja clásica Fournier 1878** (cosmético, opción 4):
+  - 41 WebP de 400 × 600 (unos 1,5 MB) en `apps/web/public/barajas/fournier-1878/`, con `CREDITOS.md`;
+  - script reproducible `scripts/baraja-fournier.py` (Python + Pillow, que verifica la licencia de cada archivo);
+  - selector en el perfil (Propia / Clásica 1878) y en `/baraja`;
+  - zonas de ojeo por baraja: en Fournier el número está pegado al marco, así que el tope en los cortes es mínimo, como con el naipe real;
+  - la precarga baja las imágenes la primera vez que se usa.
+- **Tests:** 273 en total (motor 130, bots 14, servidor 36, web 93), más la prueba de humo y los 2 de punta a punta.
+
+**Pendientes:**
+- Con la tira, la zona de abajo crece unos 40 px.
+- A 360 px, con flor, la ficha del tanto se corta.
+- La baraja clásica todavía no queda guardada para jugar sin internet; eso va en el D4, con la PWA.
