@@ -1,6 +1,9 @@
+import { useEffect } from 'react'
 import { motion } from 'motion/react'
 import type { Carta as TCarta, Palo } from '@truco/engine'
+import { imagenFournier, precargarBaraja, useBaraja, type Baraja } from '../baraja'
 import { Dorso, Frente } from './dibujo'
+import '../estilos-baraja.css'
 
 const NOMBRE_PALO: Record<Palo, string> = { espada: 'espadas', basto: 'bastos', oro: 'oros', copa: 'copas' }
 
@@ -12,10 +15,27 @@ interface Props {
   resaltada?: boolean
   ganadora?: boolean
   alTocar?: () => void
+  /** Para mostrar una baraja distinta de la elegida (la comparación en /baraja). */
+  baraja?: Baraja
 }
 
-export function Carta({ carta, oculta, tam = 'normal', jugable, resaltada, ganadora, alTocar }: Props) {
+/**
+ * Imagen de la baraja clásica. Es decorativa (alt vacío): el nombre de la carta lo lleva el
+ * elemento de afuera (aria-label), igual que con el SVG.
+ */
+function Imagen({ src }: { src: string }) {
+  return <img className="carta-img" src={src} alt="" draggable={false} decoding="async" />
+}
+
+export function Carta({ carta, oculta, tam = 'normal', jugable, resaltada, ganadora, alTocar, baraja: forzada }: Props) {
+  const elegida = useBaraja((e) => e.baraja)
+  const baraja = forzada ?? elegida
+  // La primera carta que se dibuja con la baraja elegida baja todas (una sola vez): sin parpadeos.
+  // Las miniaturas de otra baraja (el selector) no disparan la descarga.
+  useEffect(() => precargarBaraja(elegida), [elegida])
+  const clasica = baraja === 'fournier1878'
   const clases = ['carta', `carta-${tam}`]
+  if (clasica) clases.push('carta-clasica')
   if (oculta || !carta) clases.push('carta-dorso')
   if (jugable) clases.push('carta-jugable')
   if (resaltada) clases.push('carta-resaltada')
@@ -23,12 +43,12 @@ export function Carta({ carta, oculta, tam = 'normal', jugable, resaltada, ganad
   if (oculta || !carta) {
     return (
       <div className={clases.join(' ')} aria-label="carta boca abajo">
-        <Dorso />
+        {clasica ? <Imagen src={imagenFournier()} /> : <Dorso />}
       </div>
     )
   }
   const etiqueta = `${carta.numero} de ${NOMBRE_PALO[carta.palo]}`
-  const frente = <Frente palo={carta.palo} numero={carta.numero} />
+  const frente = clasica ? <Imagen src={imagenFournier(carta)} /> : <Frente palo={carta.palo} numero={carta.numero} />
   return alTocar ? (
     <button type="button" className={clases.join(' ')} onClick={alTocar} disabled={!jugable} aria-label={`Jugar el ${etiqueta}`}>
       {frente}

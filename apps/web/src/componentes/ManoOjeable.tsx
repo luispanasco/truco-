@@ -12,8 +12,9 @@ import {
   UMBRAL_ARRASTRE_PX,
   VIBRACION_MS,
   VIBRACION_TOPE_MS,
-  ZONA_INDICE,
+  ZONAS_OJEO,
 } from '../ojeo'
+import { useBaraja } from '../baraja'
 import '../estilos-ojeo.css'
 
 /** Cuántas cartas tiene que tener la mano para ojearla (una mano recién repartida). */
@@ -97,6 +98,8 @@ export function ManoOjeable({
   className,
 }: Props) {
   const [abierta, setAbierta] = useState(() => !ojeoActivado || cartas.length !== CARTAS_OJEO)
+  // Dónde están los cortes y el número depende de la baraja elegida.
+  const zonas = ZONAS_OJEO[useBaraja((e) => e.baraja)]
   // Si se juega una carta (o cambia la mano) antes de terminar, se muestra el abanico normal.
   const apilada = !abierta && cartas.length === CARTAS_OJEO
   // Una vez ojeada, queda ojeada (aunque después se la vuelva a tapar). La de adelante se ve entera.
@@ -229,13 +232,13 @@ export function ManoOjeable({
 
   const moverOjeo = (a: Arrastre) => {
     // Sigue al dedo 1:1, solo en vertical, dentro de los límites; salvo en el tope de los cortes.
-    const y = conTope(a.i, a.desde + a.dy, posiciones.current, a.alto)
-    const pos = moverCarta(a.i, y, posiciones.current, a.alto)
+    const y = conTope(a.i, a.desde + a.dy, posiciones.current, a.alto, zonas)
+    const pos = moverCarta(a.i, y, posiciones.current, a.alto, zonas)
     posiciones.current = pos
     aplicar(pos)
     const antes = ojeadasRef.current
-    const nuevas = antes.map((o, k) => o || estaOjeada(k, pos, a.alto))
-    const tope = enTope(a.i, pos, a.alto)
+    const nuevas = antes.map((o, k) => o || estaOjeada(k, pos, a.alto, zonas))
+    const tope = enTope(a.i, pos, a.alto, zonas)
     if (nuevas.some((o, k) => o !== antes[k])) {
       ojeadasRef.current = nuevas
       setOjeadas(nuevas)
@@ -320,7 +323,7 @@ export function ManoOjeable({
   }
 
   const n = cartas.length
-  const estilo = { '--franja': ZONA_INDICE.hasta, '--n': n } as CSSProperties
+  const estilo = { '--franja': zonas.indice.hasta, '--n': n } as CSSProperties
   return (
     <div
       className={['mano-ojeable', apilada ? 'mano-apilada' : 'mano-abanico', className].filter(Boolean).join(' ')}

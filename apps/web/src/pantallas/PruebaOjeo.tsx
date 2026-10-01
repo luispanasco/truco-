@@ -3,6 +3,7 @@ import type { Carta as TCarta } from '@truco/engine'
 import { Carta } from '../componentes/Carta'
 import { ManoOjeable } from '../componentes/ManoOjeable'
 import { guardarPerfil, leerPerfil } from '../perfil'
+import { elegirBaraja, useBaraja } from '../baraja'
 
 /** Manos de ejemplo, de adelante hacia atrás: una de cada palo y una mezclada. */
 const MANOS: { nombre: string; cartas: TCarta[] }[] = [
@@ -21,6 +22,7 @@ export function PruebaOjeo() {
   const [ojear, setOjear] = useState(() => leerPerfil().ojear)
   const [turno, setTurno] = useState(false)
   const [registro, setRegistro] = useState('')
+  const baraja = useBaraja((e) => e.baraja)
   const mano = MANOS[cual]!
 
   const repartir = (i: number) => {
@@ -53,6 +55,18 @@ export function PruebaOjeo() {
         <label>
           <input type="checkbox" checked={turno} onChange={(e) => setTurno(e.target.checked)} />
           Es mi turno
+        </label>
+        <label>
+          {/* Las zonas del ojeo cambian con la baraja (ojeo.ts): se reparte de nuevo. */}
+          <input
+            type="checkbox"
+            checked={baraja === 'fournier1878'}
+            onChange={(e) => {
+              elegirBaraja(e.target.checked ? 'fournier1878' : 'propia')
+              setVuelta((x) => x + 1)
+            }}
+          />
+          Baraja clásica
         </label>
       </div>
       <div className="ojeo-escenario">

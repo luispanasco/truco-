@@ -1,6 +1,7 @@
 import type { Nivel } from '@truco/bots'
 import type { Formato } from '@truco/engine'
 import { TIEMPOS_SALA_DEFAULT, type ConfigTiempos } from '@truco/shared'
+import type { Baraja } from './baraja'
 
 /** Datos que se recuerdan en este navegador. Si el almacenamiento falla, se usan los valores por defecto. */
 export interface Perfil {
@@ -23,6 +24,8 @@ export interface Perfil {
   seniasAntesDeJugar: boolean
   /** Tiempos de la última sala que armó (por jugada y primera jugada del mano). */
   tiempos: ConfigTiempos
+  /** Dibujo de las cartas (cosmético): la baraja propia en SVG o la clásica de Fournier (1878). */
+  baraja: Baraja
 }
 
 export const AVATARES = ['🧉', '🐴', '🦉', '🐂', '🦊', '🐸', '🐶', '🐱', '🌞', '⭐']
@@ -50,10 +53,14 @@ export function leerPerfil(): Perfil {
     seniasAntesDeJugar: false,
     seniasHabilitadas: true,
     tiempos: TIEMPOS_SALA_DEFAULT,
+    baraja: 'propia',
   }
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as Partial<Perfil> | null
-    return { ...porDefecto, ...(guardado ?? {}) }
+    const perfil = { ...porDefecto, ...(guardado ?? {}) }
+    // Una baraja que ya no existe (o un valor roto) vuelve a la propia.
+    if (perfil.baraja !== 'propia' && perfil.baraja !== 'fournier1878') perfil.baraja = 'propia'
+    return perfil
   } catch {
     return porDefecto
   }
