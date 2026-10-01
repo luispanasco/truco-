@@ -1,12 +1,17 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import { mismaCarta, siguienteAleatorio, type Carta, type Formato, type VistaPartida } from '@truco/engine'
-import { ConexionLocal } from '../src/conexion/local'
+import { MOTIVO_SENIA_TARDE, yaJugoEnLaMano } from '@truco/shared'
+import { ConexionLocal, type OpcionesLocal } from '../src/conexion/local'
 import type { MensajeServidor } from '../src/conexion/tipos'
 
 /** Juega una partida entera contra bots, eligiendo al azar cuando le toca. */
-function jugarPartida(formato: Formato, semilla: number): Promise<{ vista: VistaPartida; mensajes: MensajeServidor[] }> {
-  const c = new ConexionLocal({ apodo: 'Test', avatar: null, formato, nivelBots: 'medio', demoraBots: [0, 0], semilla })
+function jugarPartida(
+  formato: Formato,
+  semilla: number,
+  extra: Partial<OpcionesLocal> = {},
+): Promise<{ vista: VistaPartida; mensajes: MensajeServidor[] }> {
+  const c = new ConexionLocal({ apodo: 'Test', avatar: null, formato, nivelBots: 'medio', demoraBots: [0, 0], semilla, ...extra })
   const mensajes: MensajeServidor[] = []
   let rng = semilla
   return new Promise((resolve, reject) => {
@@ -67,6 +72,60 @@ describe('conexión local', () => {
     expect(senias.length).toBeGreaterThan(0)
     expect(senias.every((m) => m.tipo === 'senia' && m.datos.de === 2)).toBe(true)
   }, 30_000)
+
+  it('con "gestoYCarta" y probabilidad 1, la persona pesca todas las señas de los bots rivales', async () => {
+    const { mensajes } = await jugarPartida('2v2', 5, { senias: { pescar: 'gestoYCarta', probabilidadPescar: 1 } })
+    const pescadas = mensajes.flatMap((m) => (m.tipo === 'seniaPescada' ? [m.datos] : []))
+    expect(pescadas.length).toBeGreaterThan(0)
+    expect(pescadas.every((p) => p.de % 2 === 1 && p.senia !== null)).toBe(true)
+  }, 30_000)
+
+  it('con "gesto" se pesca sin saber la seña, y con probabilidad 0 no se pesca nada', async () => {
+    const gesto = await jugarPartida('2v2', 5, { senias: { pescar: 'gesto', probabilidadPescar: 1 } })
+    const pescadas = gesto.mensajes.flatMap((m) => (m.tipo === 'seniaPescada' ? [m.datos] : []))
+    expect(pescadas.length).toBeGreaterThan(0)
+    expect(pescadas.every((p) => p.senia === null)).toBe(true)
+    const nada = await jugarPartida('2v2', 5, { senias: { pescar: 'gestoYCarta', probabilidadPescar: 0 } })
+    expect(nada.mensajes.some((m) => m.tipo === 'seniaPescada')).toBe(false)
+  }, 60_000)
+
+  it('con "antesDeJugar", después de tirar la primera carta la seña se rechaza', async () => {
+    const c = new ConexionLocal({
+      apodo: 'Test',
+      avatar: null,
+      formato: '2v2',
+      nivelBots: 'facil',
+      demoraBots: [0, 0],
+      semilla: 8,
+      senias: { pescar: 'nunca', momento: 'antesDeJugar' },
+    })
+    const errores: string[] = []
+    let jugue = false
+    await new Promise<void>((resolve, reject) => {
+      const limite = setTimeout(() => reject(new Error('No se llegó a jugar')), 10_000)
+      c.escuchar((m) => {
+        if (m.tipo === 'error') {
+          errores.push(m.datos.motivo)
+          clearTimeout(limite)
+          resolve()
+        }
+        if (m.tipo !== 'vista' || jugue) return
+        const v = m.datos
+        if (yaJugoEnLaMano(v.mano, 0)) {
+          jugue = true
+          c.enviar('senia', { senia: 'tres' })
+          return
+        }
+        if (!v.esperandoA.includes(0)) return
+        // Antes de jugar, la seña pasa sin error.
+        c.enviar('senia', { senia: 'pieza2' })
+        const accion = v.accionesValidas.find((a) => a.tipo === 'jugarCarta') ?? v.accionesValidas.find((a) => a.tipo !== 'irseAlMazo')!
+        c.enviar('accion', { accion })
+      })
+    })
+    c.salir()
+    expect(errores).toEqual([MOTIVO_SENIA_TARDE])
+  })
 
   it('una jugada inválida devuelve el motivo', async () => {
     const c = new ConexionLocal({ apodo: 'Test', avatar: null, formato: '1v1', nivelBots: 'facil', demoraBots: [0, 0], semilla: 3 })

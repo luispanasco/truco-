@@ -15,7 +15,12 @@ import {
 import { crearBot, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibidas } from '@truco/bots'
 import {
   LIMITES,
+  MOTIVO_SENIA_TARDE,
+  SENIAS_DEFAULT,
+  normalizarSenias,
+  yaJugoEnLaMano,
   type CanalChat,
+  type ConfigSenias,
   type FaseSala,
   type InfoSala,
   type MensajeChat,
@@ -115,6 +120,7 @@ export class SalaTruco extends Room {
   private botsEnVacios = true
   private nivelBots: Nivel = 'medio'
   private ayudas = true
+  private configSenias: ConfigSenias = SENIAS_DEFAULT
   private lugares: Lugar[] = []
   private anfitrion: string | null = null
 
@@ -290,6 +296,9 @@ export class SalaTruco extends Room {
       if (!this.limite(this.limitesAccion, client, 10, 1000)) throw new Rechazo('Demasiadas acciones seguidas')
       if (!(SENIAS as readonly string[]).includes(senia)) throw new Rechazo('Seña inválida')
       if (!this.hayCompanieros()) throw new Rechazo('Ahora no hay compañeros a quien hacerle señas')
+      if (this.configSenias.momento === 'antesDeJugar' && yaJugoEnLaMano(this.estado!.mano, asiento)) {
+        throw new Rechazo(MOTIVO_SENIA_TARDE)
+      }
       this.entregarSenias(asiento, [senia])
     })
 
@@ -363,6 +372,7 @@ export class SalaTruco extends Room {
     if (typeof op.botsEnVacios === 'boolean') this.botsEnVacios = op.botsEnVacios
     if (op.nivelBots && NIVELES.includes(op.nivelBots)) this.nivelBots = op.nivelBots
     if (typeof op.ayudas === 'boolean') this.ayudas = op.ayudas
+    if (op.senias && typeof op.senias === 'object') this.configSenias = normalizarSenias(op.senias, this.configSenias)
   }
 
   private cambiarCantidadDeLugares() {
@@ -556,12 +566,30 @@ export class SalaTruco extends Room {
     }
   }
 
-  /** Las señas llegan solo a los compañeros: nunca al equipo rival. */
+  /**
+   * Las señas se les hacen a los compañeros. Cada rival, según la sala, puede pescar
+   * cada una con cierta probabilidad: la sortea el servidor, nunca el cliente.
+   */
   private entregarSenias(de: number, senias: Senia[]) {
     for (const b of this.companierosDe(de)) {
       this.senias[b]![de] = [...(this.senias[b]![de] ?? []), ...senias]
       if (this.humanoConectado(b)) for (const senia of senias) this.enviarA(b, 'senia', { de, senia })
     }
+    const { pescar, probabilidadPescar } = this.configSenias
+    if (pescar === 'nunca') return
+    for (const r of this.rivalesDe(de)) {
+      for (const senia of senias) {
+        if (!(Math.random() < probabilidadPescar)) continue
+        const vista = pescar === 'gestoYCarta' ? senia : null
+        if (this.humanoConectado(r)) this.enviarA(r, 'seniaPescada', { de, senia: vista })
+        // Los bots (y los reemplazos) usan lo que pescaron para imaginar la mano del rival.
+        else if (vista) this.senias[r]![de] = [...(this.senias[r]![de] ?? []), vista]
+      }
+    }
+  }
+
+  private rivalesDe(asiento: number): number[] {
+    return this.lugares.filter((l) => l.asiento % 2 !== asiento % 2).map((l) => l.asiento)
   }
 
   private companierosDe(asiento: number): number[] {
@@ -607,6 +635,7 @@ export class SalaTruco extends Room {
       botsEnVacios: this.botsEnVacios,
       nivelBots: this.nivelBots,
       ayudas: this.ayudas,
+      senias: this.configSenias,
       chatEquipo: this.chatEquipo(),
       lugares: this.lugares.map((l) => ({
         asiento: l.asiento,
@@ -676,5 +705,10 @@ export class SalaTruco extends Room {
   /** Solo para tests: el estado completo de la partida. */
   estadoParaTests(): EstadoPartida | null {
     return this.estado
+  }
+
+  /** Solo para tests: las señas que conoce cada asiento en la mano (propias del equipo y pescadas). */
+  seniasParaTests(): SeniasRecibidas[] {
+    return this.senias
   }
 }

@@ -12,7 +12,15 @@ import {
   type Formato,
 } from '@truco/engine'
 import { crearBot, type Bot, type Nivel, type Senia, type SeniasRecibidas } from '@truco/bots'
-import type { InfoSala, MensajesCliente, MensajesServidor } from '@truco/shared'
+import {
+  MOTIVO_SENIA_TARDE,
+  normalizarSenias,
+  yaJugoEnLaMano,
+  type ConfigSenias,
+  type InfoSala,
+  type MensajesCliente,
+  type MensajesServidor,
+} from '@truco/shared'
 import type { Conexion, MensajeServidor } from './tipos'
 
 export interface OpcionesLocal {
@@ -22,6 +30,10 @@ export interface OpcionesLocal {
   nivelBots: Nivel
   config?: Partial<ConfigSala>
   ayudas?: boolean
+  /** Si los rivales pescan señas y cuándo se pueden hacer (como en la sala online). */
+  senias?: Partial<ConfigSenias>
+  /** Para los tests: el sorteo de las señas pescadas (por defecto, Math.random). */
+  azar?: () => number
   /** Demora de los bots en ms [mínimo, máximo]. En los tests, [0, 0]. */
   demoraBots?: [number, number]
   /** Espera extra al cerrar una vuelta y al terminar una mano, para que se vea el resultado. */
@@ -52,10 +64,12 @@ export class ConexionLocal implements Conexion {
   private version = 0
   private semilla: number
   private terminada = false
+  private configSenias: ConfigSenias
 
   constructor(private readonly op: OpcionesLocal) {
     this.config = crearConfig({ ...op.config, formato: op.formato, modoSucio: false })
     this.semilla = op.semilla ?? Math.floor(Math.random() * 2 ** 31)
+    this.configSenias = normalizarSenias(op.senias)
   }
 
   escuchar(oyente: (m: MensajeServidor) => void) {
@@ -91,9 +105,17 @@ export class ConexionLocal implements Conexion {
         if (limpio) this.emitir('chat', { de: 0, apodo: this.op.apodo, texto: limpio, canal, hora: Date.now() })
         return
       }
-      case 'senia':
-        this.entregarSenias(0, [(datos as MensajesCliente['senia']).senia])
+      case 'senia': {
+        const n = this.estado.jugadores.length
+        if (this.terminada || n <= 2 || this.estado.mano.picaPica) {
+          this.emitir('error', { motivo: 'Ahora no hay compañeros a quien hacerle señas' })
+        } else if (this.configSenias.momento === 'antesDeJugar' && yaJugoEnLaMano(this.estado.mano, 0)) {
+          this.emitir('error', { motivo: MOTIVO_SENIA_TARDE })
+        } else {
+          this.entregarSenias(0, [(datos as MensajesCliente['senia']).senia])
+        }
         return
+      }
       case 'revancha':
         if (this.terminada) {
           this.semilla = (this.semilla * 1103515245 + 12345) >>> 0
@@ -137,6 +159,7 @@ export class ConexionLocal implements Conexion {
       botsEnVacios: true,
       nivelBots: this.op.nivelBots,
       ayudas: this.op.ayudas ?? true,
+      senias: this.configSenias,
       chatEquipo: n > 2,
       lugares: Array.from({ length: n }, (_, a) => ({
         asiento: a,
@@ -209,13 +232,24 @@ export class ConexionLocal implements Conexion {
     }
   }
 
-  /** Las señas llegan solo a los compañeros. */
+  /** Las señas llegan a los compañeros; cada rival puede pescar cada una, como en el servidor. */
   private entregarSenias(de: number, senias: Senia[]) {
     const n = this.estado.jugadores.length
     for (let b = de % 2; b < n; b += 2) {
       if (b === de) continue
       this.senias[b]![de] = [...(this.senias[b]![de] ?? []), ...senias]
       if (b === 0) for (const senia of senias) this.emitir('senia', { de, senia })
+    }
+    const { pescar, probabilidadPescar } = this.configSenias
+    if (pescar === 'nunca') return
+    const azar = this.op.azar ?? Math.random
+    for (let r = 1 - (de % 2); r < n; r += 2) {
+      for (const senia of senias) {
+        if (!(azar() < probabilidadPescar)) continue
+        const vista = pescar === 'gestoYCarta' ? senia : null
+        if (r === 0) this.emitir('seniaPescada', { de, senia: vista })
+        else if (vista) this.senias[r]![de] = [...(this.senias[r]![de] ?? []), vista]
+      }
     }
   }
 

@@ -76,5 +76,9 @@ export function mismasSenias(a: readonly Senia[], b: readonly Senia[]): boolean 
   return x.every((s, i) => s === y[i])
 }
 
-/** Señas que recibió un jugador en la mano actual, por asiento del compañero que las hizo. */
+/**
+ * Señas que conoce un jugador en la mano actual, por asiento de quien las hizo: las de
+ * sus compañeros y, si la sala lo permite, las que les pescó a los rivales (solo esas,
+ * no todas las que hicieron).
+ */
 export type SeniasRecibidas = Record<number, Senia[]>

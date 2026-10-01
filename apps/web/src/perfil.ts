@@ -14,6 +14,10 @@ export interface Perfil {
   rapido: boolean
   /** Ojear las cartas al empezar cada mano (si no, llegan directo en abanico). */
   ojear: boolean
+  /** Contra bots: si los rivales pueden pescar señas (el gesto, 20 %). */
+  pescarSenias: boolean
+  /** Contra bots: señas solo antes de jugar la primera carta de la mano. */
+  seniasAntesDeJugar: boolean
 }
 
 export const AVATARES = ['🧉', '🐴', '🦉', '🐂', '🦊', '🐸', '🐶', '🐱', '🌞', '⭐']
@@ -27,7 +31,7 @@ function nuevoId(): string {
 }
 
 export function leerPerfil(): Perfil {
-  const porDefecto: Perfil = { invitadoId: nuevoId(), apodo: '', avatar: AVATARES[0]!, formato: '1v1', nivelBots: 'medio', ayudas: true, picaPica: true, rapido: false, ojear: true }
+  const porDefecto: Perfil = { invitadoId: nuevoId(), apodo: '', avatar: AVATARES[0]!, formato: '1v1', nivelBots: 'medio', ayudas: true, picaPica: true, rapido: false, ojear: true, pescarSenias: true, seniasAntesDeJugar: false }
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as Partial<Perfil> | null
     return { ...porDefecto, ...(guardado ?? {}) }

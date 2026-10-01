@@ -142,6 +142,18 @@ describe('bots', () => {
     }
   })
 
+  it('el difícil usa la seña que le pescó a un rival (sin suponer que es la única)', () => {
+    // Muestra 6 de oros. b le pescó a c (asiento 2, rival) la seña de un 3.
+    let estado = partidaCon(['7c 12e 10c', '3e 4b 6c', '12b 11e 4e', '1e 5c 6b'], '6o')
+    estado = aplicar(estado, { tipo: 'jugarCarta', jugador: 'a', carta: c('7c') })
+    const ctx = crearContexto(vistaPara(estado, 'b'), { 2: ['tres'] }, new Aleatorio(1))
+    const muestras = muestrear(ctx, 60, { declarado: true, pesos: true, senias: true })
+    expect(muestras.length).toBeGreaterThan(40)
+    for (const m of muestras) expect(seniasDeMano(m.completas.get(2)!, c('6o'))).toContain('tres')
+    // Puede tener otras señas además de la pescada.
+    expect(muestras.some((m) => seniasDeMano(m.completas.get(2)!, c('6o')).length > 1)).toBe(true)
+  })
+
   it('el medio le deja la vuelta al compañero que le señó que puede matar', () => {
     // Muestra 6 de oros. a tira el 7 de copas; b (el bot) le gana con el 3 de espadas.
     let estado = partidaCon(['7c 12e 10c', '3e 4b 6c', '12b 11e 4e', '1e 5c 6b'], '6o')

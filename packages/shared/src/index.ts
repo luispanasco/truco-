@@ -22,6 +22,40 @@ export const LIMITES = {
   largoApodo: 20,
 } as const
 
+/**
+ * Si un rival puede "pescar" una seña: nunca, solo ver que se hizo una (sin saber cuál),
+ * o ver el gesto y lo que significa.
+ */
+export type PescarSenias = 'nunca' | 'gesto' | 'gestoYCarta'
+/** Cuándo se pueden hacer señas: en cualquier momento o solo antes de jugar la primera carta. */
+export type MomentoSenias = 'libre' | 'antesDeJugar'
+
+export interface ConfigSenias {
+  pescar: PescarSenias
+  /** Probabilidad (de 0 a 1) de que cada rival vea cada seña. */
+  probabilidadPescar: number
+  momento: MomentoSenias
+}
+
+export const SENIAS_DEFAULT: ConfigSenias = { pescar: 'gesto', probabilidadPescar: 0.2, momento: 'libre' }
+
+/** Completa y valida la configuración de señas (lo que no sirve queda como estaba). */
+export function normalizarSenias(op: Partial<ConfigSenias> | undefined, base: ConfigSenias = SENIAS_DEFAULT): ConfigSenias {
+  const pescar = op?.pescar && ['nunca', 'gesto', 'gestoYCarta'].includes(op.pescar) ? op.pescar : base.pescar
+  const momento = op?.momento && ['libre', 'antesDeJugar'].includes(op.momento) ? op.momento : base.momento
+  const p = op?.probabilidadPescar
+  const probabilidadPescar = typeof p === 'number' && Number.isFinite(p) ? Math.min(1, Math.max(0, p)) : base.probabilidadPescar
+  return { pescar, probabilidadPescar, momento }
+}
+
+/** Si el asiento ya jugó alguna carta en la mano (sirve con el estado del motor y con la vista). */
+export function yaJugoEnLaMano(mano: { enfrentamientos: { vueltas: { jugadas: { asiento: number }[] }[] }[] }, asiento: number): boolean {
+  return mano.enfrentamientos.some((e) => e.vueltas.some((v) => v.jugadas.some((j) => j.asiento === asiento)))
+}
+
+/** Texto del rechazo cuando ya pasó el momento de hacer señas. */
+export const MOTIVO_SENIA_TARDE = 'En esta sala las señas se hacen antes de jugar tu primera carta'
+
 // ── Cliente → servidor ──────────────────────────────────────────────
 
 /** Opciones al entrar a cualquier sala. */
@@ -40,6 +74,7 @@ export interface OpcionesCrearSala extends OpcionesUnirse {
   nivelBots?: Nivel
   /** Ayudas para principiantes. */
   ayudas?: boolean
+  senias?: Partial<ConfigSenias>
 }
 
 export type CanalChat = 'general' | 'equipo'
@@ -87,6 +122,7 @@ export interface InfoSala {
   botsEnVacios: boolean
   nivelBots: Nivel
   ayudas: boolean
+  senias: ConfigSenias
   /** Si el chat de equipo está habilitado en esta sala. */
   chatEquipo: boolean
   lugares: LugarPublico[]
@@ -115,6 +151,11 @@ export interface MensajesServidor {
   chat: MensajeChat
   /** Seña de un compañero. */
   senia: { de: number; senia: Senia }
+  /**
+   * Seña de un rival a su compañero que este jugador alcanzó a ver. `senia` es null
+   * si la sala solo deja ver que se hizo una (no cuál).
+   */
+  seniaPescada: { de: number; senia: Senia | null }
   error: { motivo: string }
   /** Cola pública: hace rato que no aparece nadie. */
   ofrecerBot: Record<string, never>

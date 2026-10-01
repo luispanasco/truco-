@@ -34,6 +34,14 @@
   /* Online: errores y quién está conectado. */
   --peligro-fondo: rgb(192 57 43 / 0.35);
   --en-linea: #5fd38d;
+  /* Cara de las señas (y gestos en los avatares). */
+  --cara-piel: #f2c38f;
+  --cara-trazo: #3a2416;
+  --cara-pelo: #4a2c18;
+  --cara-labios: #b8473a;
+  --cara-lengua: #e8707e;
+  --cara-mejillas: rgb(226 104 92 / 0.42);
+  --senia-pescada: #5b2b6e;
   font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--texto-claro);
   background: var(--madera);

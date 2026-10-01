@@ -1,6 +1,6 @@
 import { calcularEnvido, equipoDe, fuerza, tieneFlor, type Carta } from '@truco/engine'
 import { jugoEnPrimera, memo, type Contexto } from './contexto'
-import { mismasSenias, seniasDeMano } from './senias'
+import { mismasSenias, seniasDeMano, type Senia } from './senias'
 
 /** Qué información usa el bot para imaginar las manos ajenas. */
 export interface OpcionesMuestreo {
@@ -54,6 +54,14 @@ function potencia(ctx: Contexto, cartas: readonly Carta[]): number {
   return (0.65 * fs[0]!) / 19 + (0.35 * (fs[1] ?? 0)) / 19
 }
 
+/**
+ * Las señas del compañero son todas las que tiene (salvo que mienta). De un rival solo
+ * se conocen las que se le pescaron: alcanza con que la mano las incluya.
+ */
+function cuadranSenias(deLaMano: Senia[], conocidas: Senia[], esRival: boolean): boolean {
+  return esRival ? conocidas.every((s) => deLaMano.includes(s)) : mismasSenias(deLaMano, conocidas)
+}
+
 function filtroYPeso(ctx: Contexto, asiento: number, op: OpcionesMuestreo) {
   const { e, config, muestra } = ctx
   const normal = !config.modoSucio
@@ -80,7 +88,7 @@ function filtroYPeso(ctx: Contexto, asiento: number, op: OpcionesMuestreo) {
   const filtro = (completa: Carta[]): boolean => {
     if (normal && cantoFlor && !tieneFlor(completa, muestra)) return false
     if (noTieneFlor && tieneFlor(completa, muestra)) return false
-    if (op.senias && senias && !mismasSenias(seniasDeMano(completa, muestra), senias)) return false
+    if (op.senias && senias && !cuadranSenias(seniasDeMano(completa, muestra), senias, esRival)) return false
     if (op.declarado && normal && declaro && declaro.tanto !== null && calcularEnvido(completa, muestra) !== declaro.tanto) {
       return false
     }

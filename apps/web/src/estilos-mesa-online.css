@@ -245,48 +245,6 @@
   font-size: 0.8rem;
   opacity: 0.75;
 }
-.senias-lista {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 5px;
-  overflow-y: auto;
-  min-height: 0;
-}
-.senia-opcion {
-  width: 100%;
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 5px 12px;
-  border: 0;
-  border-radius: var(--radio);
-  background: var(--papel);
-  color: var(--tinta);
-  text-align: left;
-  font-size: 0.84rem;
-  line-height: 1.2;
-  box-shadow: var(--sombra);
-}
-.senia-opcion:active {
-  filter: brightness(0.92);
-  transform: translateY(1px);
-}
-.senia-gesto {
-  font-weight: 800;
-}
-.senia-flecha {
-  color: var(--dorso);
-  font-weight: 900;
-}
-.senia-significado {
-  color: var(--madera);
-  font-weight: 700;
-}
-
 /* ── Menú de jugador ──────────────────────────────────────────── */
 
 .menu-jugador-fondo {

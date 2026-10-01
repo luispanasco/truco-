@@ -38,6 +38,8 @@ interface EstadoJuego {
   registro: LineaRegistro[]
   chat: MensajeChat[]
   senias: { de: number; senia: Senia; id: number }[]
+  /** Señas de los rivales que alcanzaste a ver (sin la carta si la sala no la deja ver). */
+  pescadas: { de: number; senia: Senia | null; id: number }[]
   turno: { asientos: number[]; venceEn: number | null }
   error: { motivo: string; id: number } | null
   /** Solo online: si hay conexión con el servidor. */
@@ -185,6 +187,9 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       case 'senia':
         set((s) => ({ senias: [...s.senias.slice(-20), { ...m.datos, id: ++contador }] }))
         break
+      case 'seniaPescada':
+        set((s) => ({ pescadas: [...s.pescadas.slice(-20), { ...m.datos, id: ++contador }] }))
+        break
       case 'error':
         set({ error: { motivo: m.datos.motivo, id: ++contador } })
         break
@@ -203,6 +208,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     registro: [],
     chat: [],
     senias: [],
+    pescadas: [],
     turno: { asientos: [], venceEn: null },
     error: null,
     finDeMano: null,
@@ -239,6 +245,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         registro: [],
         chat: [],
         senias: [],
+        pescadas: [],
         turno: { asientos: [], venceEn: null },
         error: null,
         finDeMano: null,
