@@ -22,6 +22,7 @@ import {
 import type {
   Accion,
   CantoTruco,
+  CartasMostradas,
   Enfrentamiento,
   Equipo,
   EstadoPartida,
@@ -506,7 +507,7 @@ function cerrarEnfrentamiento(estado: EstadoPartida, piden: Equipo[], eventos: E
     .filter((a) => declararon.has(a) || e.flor.cantadas.some((f) => f.asiento === a))
     .map((a) => ({ asiento: a, envido: mano.tantos[a]!.envidoReal, flor: mano.tantos[a]!.florReal }))
 
-  e.resultado = { ...fin, puntosTanto, revelados, mentirosos }
+  e.resultado = { ...fin, puntosTanto, revelados, mentirosos, mostradas: cartasMostradas(estado, e) }
   mano.verificacion = null
   eventos.push({ tipo: 'enfrentamientoTerminado', indice: mano.actual, resultado: e.resultado })
 
@@ -547,6 +548,23 @@ function cerrarEnfrentamiento(estado: EstadoPartida, piden: Equipo[], eventos: E
     picaPica: nueva.mano.picaPica,
   })
   eventos.push({ tipo: 'enfrentamientoIniciado', indice: 0, participantes: e0.participantes, mano: e0.mano })
+}
+
+/**
+ * Quién da vuelta sus cartas sin jugar al terminar: todos los que cantaron flor y el que ganó
+ * el envido querido con su tanto (aunque el rival haya dicho "son buenas"). Con envido no
+ * querido no se muestra nada. En pica-pica las cartas del duelo son las de su mano.
+ */
+function cartasMostradas(estado: EstadoPartida, e: Enfrentamiento): CartasMostradas[] {
+  const asientos = new Set(e.flor.cantadas.map((f) => f.asiento))
+  if (e.envido.estado === 'resuelto') {
+    const mejor = mejorDeclaracion(e)
+    if (mejor) asientos.add(mejor.asiento)
+  }
+  return e.participantes
+    .filter((a) => asientos.has(a))
+    .map((a) => ({ asiento: a, cartas: [...(estado.mano.cartas[a] ?? [])] }))
+    .filter((m) => m.cartas.length > 0)
 }
 
 function sumarPuntos(estado: EstadoPartida, puntos: [number, number]) {

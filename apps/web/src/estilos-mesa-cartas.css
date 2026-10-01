@@ -1,0 +1,166 @@
+/*
+ * Cartas en la mesa: cada jugador deja las suyas frente a sí, una por vuelta, escalonadas
+ * (la de la primera abajo de todo). Todo se mide en anchos de carta (--w), que salen del
+ * tamaño del paño (unidades cq del contenedor "mesa"): así entran las tres pilas de cada
+ * uno sin pisar asientos, mazo ni registro, en celular o en escritorio.
+ *
+ * Cada pila tiene un punto de anclaje (--ax, --ay, desde el centro del paño) y cada vuelta
+ * se corre un paso (--paso-x, --paso-y). --base es la vuelta que cae en el anclaje: con 1
+ * la pila queda centrada; con 0 crece hacia un solo lado.
+ */
+.cartas-en-mesa {
+  /*
+   * Lo que ocupan arriba el asiento de enfrente (~120px) y abajo el registro (~90px): el resto
+   * es para las pilas. Como arriba se ocupa más, las pilas se centran un poco más abajo.
+   */
+  --libre-alto: calc(100cqh - 228px);
+  --centro-y: 14px;
+}
+.n-2 .cartas-en-mesa {
+  --w: clamp(34px, min(16cqw, var(--libre-alto) / 3), 58px);
+}
+.n-4 .cartas-en-mesa {
+  --w: clamp(32px, min((50cqw - 70px) / 1.9, var(--libre-alto) / 3.3), 54px);
+}
+.n-6 .cartas-en-mesa {
+  --w: clamp(30px, min((50cqw - 70px) / 1.8, var(--libre-alto) / 4.65), 50px);
+}
+
+.tapete .cartas-en-mesa .jugada.jugada {
+  --ax: 0px;
+  --ay: 0px;
+  --paso-x: calc(var(--w) * 0.3);
+  --paso-y: 0px;
+  --base: 1;
+  left: calc(50% + var(--ax));
+  top: calc(50% + var(--centro-y) + var(--ay));
+  transform: translate(-50%, -50%);
+  translate: calc((var(--vuelta) - var(--base)) * var(--paso-x)) calc((var(--vuelta) - var(--base)) * var(--paso-y));
+}
+.cartas-en-mesa .carta {
+  --ancho: var(--w);
+}
+
+/* 1 contra 1: uno abajo y otro arriba, pilas acostadas. */
+.n-2 .cartas-en-mesa .jugada.pos-0 {
+  --ay: calc(var(--w) * 0.75 + 5px);
+}
+.n-2 .cartas-en-mesa .jugada.pos-1 {
+  --ay: calc(var(--w) * -0.75 - 5px);
+}
+
+/* 2 contra 2: los de los costados apilan hacia abajo, así les queda el número a la vista. */
+.n-4 .cartas-en-mesa .jugada.pos-0 {
+  --ay: calc(var(--w) * 0.9);
+}
+.n-4 .cartas-en-mesa .jugada.pos-2 {
+  --ay: calc(var(--w) * -0.9);
+}
+.n-4 .cartas-en-mesa .jugada.pos-1,
+.n-4 .cartas-en-mesa .jugada.pos-3 {
+  --paso-x: 0px;
+  --paso-y: calc(var(--w) * 0.375);
+}
+.n-4 .cartas-en-mesa .jugada.pos-1 {
+  --ax: calc(var(--w) * 1.4);
+}
+.n-4 .cartas-en-mesa .jugada.pos-3 {
+  --ax: calc(var(--w) * -1.4);
+}
+
+/* 3 contra 3: los de los costados en dos columnas, apilando hacia abajo como en 2 contra 2. */
+.n-6 .cartas-en-mesa .jugada.pos-0 {
+  --ay: var(--w);
+}
+.n-6 .cartas-en-mesa .jugada.pos-3 {
+  --ay: calc(var(--w) * -1);
+}
+.n-6 .cartas-en-mesa .jugada:is(.pos-1, .pos-2, .pos-4, .pos-5) {
+  --paso-x: 0px;
+  --paso-y: calc(var(--w) * 0.375);
+  --ax: calc(var(--w) * 1.3);
+  --ay: calc(var(--w) * 1.2);
+}
+.n-6 .cartas-en-mesa .jugada:is(.pos-4, .pos-5) {
+  --ax: calc(var(--w) * -1.3);
+}
+.n-6 .cartas-en-mesa .jugada:is(.pos-2, .pos-4) {
+  --ay: calc(var(--w) * -1.2);
+}
+
+/*
+ * 3 contra 3 en un paño bajito y ancho (escritorio o celular acostado): sobra ancho y falta
+ * alto, así que los de los costados apilan hacia su asiento, de costado.
+ */
+@container mesa (max-height: 480px) and (min-width: 480px) {
+  .n-6 .cartas-en-mesa {
+    --w: clamp(30px, min((50cqw - 90px) / 2.45, var(--libre-alto) / 3.2), 50px);
+  }
+  .n-6 .cartas-en-mesa .jugada.pos-0 {
+    --ay: calc(var(--w) * 0.85);
+  }
+  .n-6 .cartas-en-mesa .jugada.pos-3 {
+    --ay: calc(var(--w) * -0.85);
+  }
+  .n-6 .cartas-en-mesa .jugada:is(.pos-1, .pos-2, .pos-4, .pos-5) {
+    --base: 0;
+    --paso-y: 0px;
+    --paso-x: calc(var(--w) * 0.3);
+    --ax: calc(var(--w) * 1.35);
+    --ay: calc(var(--w) * 0.8);
+  }
+  .n-6 .cartas-en-mesa .jugada:is(.pos-4, .pos-5) {
+    --paso-x: calc(var(--w) * -0.3);
+    --ax: calc(var(--w) * -1.35);
+  }
+  .n-6 .cartas-en-mesa .jugada:is(.pos-2, .pos-4) {
+    --ay: calc(var(--w) * -0.8);
+  }
+}
+
+/* Si el paño cambia de tamaño (la pausa de fin de mano lo achica), las pilas se acomodan suave. */
+.tapete .cartas-en-mesa .jugada.jugada {
+  transition:
+    left 0.3s,
+    top 0.3s,
+    translate 0.3s;
+}
+
+/* Las de vueltas ya cerradas quedan un poco apagadas; la ganadora igual se distingue. */
+.cartas-en-mesa .jugada .carta {
+  transition:
+    filter 0.3s,
+    width 0.3s;
+}
+.cartas-en-mesa .jugada.pasada .carta {
+  filter: brightness(0.74) saturate(0.8);
+}
+
+/* ── Cartas mostradas al terminar (flor o envido ganado) ── */
+
+.cartas-en-mesa .jugada.mostrada {
+  perspective: 400px;
+}
+.cartas-en-mesa .jugada-vuelo {
+  position: relative;
+}
+.cartas-en-mesa .mostrada .carta {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--acento) 70%, transparent),
+    var(--sombra);
+}
+.mostradas-etiqueta {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  translate: -50% 0;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--acento);
+  color: var(--tinta);
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1.35;
+  white-space: nowrap;
+  box-shadow: var(--sombra);
+}

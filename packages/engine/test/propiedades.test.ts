@@ -112,7 +112,13 @@ describe('propiedades', () => {
             const vista = vistaPara(estado, j.id)
             expect(vista).not.toHaveProperty('rng')
             expect(vista).not.toHaveProperty('semilla')
-            const ocultas = estado.mano.cartas.flatMap((cs, asiento) => (asiento === j.asiento ? [] : cs))
+            // Las que se dieron vuelta al terminar un enfrentamiento (flor o envido ganado) son públicas.
+            const mostradas = estado.mano.enfrentamientos.flatMap((e) => e.resultado?.mostradas ?? [])
+            const ocultas = estado.mano.cartas.flatMap((cs, asiento) =>
+              asiento === j.asiento
+                ? []
+                : cs.filter((c) => !mostradas.some((m) => m.asiento === asiento && m.cartas.some((x) => mismaCarta(x, c)))),
+            )
             for (const vista_c of cartasDentro(vista)) {
               if (ocultas.some((o) => mismaCarta(o, vista_c))) {
                 throw new Error(`La vista de ${j.id} contiene una carta ajena: ${vista_c.numero} de ${vista_c.palo}`)

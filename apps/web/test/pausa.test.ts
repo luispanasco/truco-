@@ -39,7 +39,7 @@ describe('pausa entre manos', () => {
       {
         tipo: 'enfrentamientoTerminado',
         indice: 0,
-        resultado: { motivo: 'vueltas', ganador: 0, puntosTruco: 2, puntosTanto: [0, 0], revelados: [], mentirosos: [] },
+        resultado: { motivo: 'vueltas', ganador: 0, puntosTruco: 2, puntosTanto: [0, 0], revelados: [], mentirosos: [], mostradas: [] },
       },
       { tipo: 'puntos', puntos: [2, 0] },
       { tipo: 'manoRepartida', numero: 2, reparte: 0, mano: 1, muestra: carta(4, 'oro'), picaPica: false },
@@ -72,11 +72,65 @@ describe('pausa entre manos', () => {
         {
           tipo: 'enfrentamientoTerminado',
           indice: 0,
-          resultado: { motivo: 'mazo', ganador: 1, puntosTruco: 1, puntosTanto: [0, 0], revelados: [], mentirosos: [] },
+          resultado: { motivo: 'mazo', ganador: 1, puntosTruco: 1, puntosTanto: [0, 0], revelados: [], mentirosos: [], mostradas: [] },
         },
         { tipo: 'partidaTerminada', ganador: 1, puntos: [20, 30] },
       ],
     })
     expect(useJuego.getState().finDeMano).toBeNull()
+  })
+
+  it('las cartas de todas las vueltas quedan en la mesa, cada una con su vuelta', () => {
+    const { c, llegar } = conexionFalsa()
+    useJuego.getState().conectar(c)
+    llegar({
+      tipo: 'eventos',
+      datos: [
+        { tipo: 'cartaJugada', asiento: 0, carta: carta(1, 'espada') },
+        { tipo: 'cartaJugada', asiento: 1, carta: carta(4, 'oro') },
+        { tipo: 'vueltaTerminada', indice: 0, resultado: 0, ganador: 0 },
+        { tipo: 'cartaJugada', asiento: 0, carta: carta(4, 'espada') },
+      ],
+    })
+    const { mesa } = useJuego.getState()
+    expect(mesa.jugadas.map((j) => j.vuelta)).toEqual([0, 0, 1])
+    expect(mesa.vueltas).toEqual([{ resultado: 0, ganador: 0 }])
+  })
+
+  it('en la pausa se ven las cartas que dio vuelta quien cantó flor o ganó el envido', () => {
+    vi.useFakeTimers()
+    const { c, llegar } = conexionFalsa()
+    useJuego.getState().conectar(c)
+    llegar({
+      tipo: 'eventos',
+      datos: [
+        {
+          tipo: 'enfrentamientoTerminado',
+          indice: 0,
+          resultado: {
+            motivo: 'mazo',
+            ganador: 1,
+            puntosTruco: 1,
+            puntosTanto: [0, 5],
+            revelados: [
+              { asiento: 1, envido: 33, flor: 38 },
+              { asiento: 2, envido: 31, flor: null },
+            ],
+            mentirosos: [],
+            mostradas: [
+              { asiento: 1, cartas: [carta(1, 'oro'), carta(4, 'oro')] },
+              { asiento: 2, cartas: [carta(4, 'espada')] },
+            ],
+          },
+        },
+        { tipo: 'puntos', puntos: [0, 5] },
+      ],
+    })
+    expect(useJuego.getState().mostradas.map((m) => [m.asiento, m.etiqueta, m.cartas.length])).toEqual([
+      [1, 'Flor de 38', 2],
+      [2, 'Envido 31', 1],
+    ])
+    vi.advanceTimersByTime(PAUSA_ENTRE_MANOS + 10)
+    expect(useJuego.getState().mostradas).toEqual([])
   })
 })
