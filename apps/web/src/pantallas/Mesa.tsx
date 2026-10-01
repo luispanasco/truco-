@@ -9,6 +9,7 @@ import { Asiento, Avatar, MarcaMano } from '../componentes/Asiento'
 import { CartasEnMesa } from '../componentes/CartasEnMesa'
 import { BotonChat, PanelChat, useNoLeidos } from '../componentes/Chat'
 import { EstadoConexion } from '../componentes/EstadoConexion'
+import { GloboDeChat, useGlobosChat } from '../componentes/GlobosChat'
 import { Fosforos } from '../componentes/Fosforos'
 import { ManoOjeable } from '../componentes/ManoOjeable'
 import { Mazo } from '../componentes/Mazo'
@@ -42,6 +43,8 @@ export function Mesa() {
   const { silenciados, cambiar: cambiarSilencio } = useSilenciados(online ? (conexion as ConexionOnline).roomId : null)
   const { noLeidos, marcarLeidos } = useNoLeidos(chat, sala?.yo ?? 0, silenciados, panel === 'chat')
   const cerrarPanel = useCallback(() => setPanel(null), [])
+  // Cada mensaje nuevo del chat sale, unos segundos, como globito de quien lo mandó.
+  const globosChat = useGlobosChat(chat, silenciados)
 
   useEffect(() => {
     if (!useJuego.getState().conexion) navegar('/')
@@ -196,6 +199,8 @@ export function Mesa() {
               silenciado={silenciados.has(l.asiento)}
               alTocarNombre={menuPara(l.asiento)}
               gesto={conSenias ? gestos[l.asiento] : undefined}
+              chat={globosChat[l.asiento]}
+              arriba={rel(l.asiento) * 2 === n}
             />
           ))}
 
@@ -212,9 +217,15 @@ export function Mesa() {
       </main>
 
       <section className={`mi-lugar${meToca ? ' le-toca' : ''}${miReloj !== null ? ' con-reloj' : ''}${participa(yo) ? '' : ' fuera'}`}>
-        {globos[yo] && (
-          <div key={globos[yo]!.id} className="globo globo-yo">
-            {globos[yo]!.texto}
+        {/* Mis globos (canto y chat) salen de mi avatar, apilados como los de los demás. */}
+        {(globos[yo] || globosChat[yo]) && (
+          <div className="asiento-globos mis-globos">
+            {globos[yo] && (
+              <div key={globos[yo]!.id} className="globo globo-yo">
+                {globos[yo]!.texto}
+              </div>
+            )}
+            {globosChat[yo] && <GloboDeChat key={globosChat[yo]!.id} globo={globosChat[yo]!} apilado={!!globos[yo]} />}
           </div>
         )}
         <div className="mi-info">

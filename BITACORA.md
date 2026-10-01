@@ -481,3 +481,28 @@ Los hicieron tres agentes en paralelo y se integraron sus ramas, con conflictos 
 - Con la tira, la zona de abajo crece unos 40 px.
 - A 360 px, con flor, la ficha del tanto se corta.
 - La baraja clásica todavía no queda guardada para jugar sin internet; eso va en el D4, con la PWA.
+
+### Globitos de chat en la mesa — 2026-10-01
+
+Pedido del usuario: "El texto del chat debería verse saliendo de la persona".
+
+- **Globito por mensaje** (`componentes/GlobosChat.tsx`): cada mensaje nuevo, del chat escrito o de las frases rápidas, aparece al lado del avatar de quien lo mandó, con la colita hacia esa persona.
+  - Dura unos 4 s, y más si es largo (hasta 8 s). Se va con un fundido corto.
+  - Si la misma persona manda otro, reemplaza al anterior.
+  - Corta en 3 líneas con puntos suspensivos; el texto entero queda en el `title` y en el historial.
+  - Los mensajes de silenciados no aparecen. Los que ya estaban al entrar a la mesa tampoco.
+  - Los del canal del equipo llevan un borde del color del equipo.
+  - Tiene `role="status"` y el apodo para lectores de pantalla.
+- **Dónde sale:**
+  - a los costados, arriba del avatar, alineado hacia adentro;
+  - el de enfrente, al costado derecho del avatar, para no tapar las cartas jugadas del centro;
+  - el tuyo, arriba de tu avatar, abajo a la izquierda.
+- **Con un canto a la vez:** se apilan. El canto queda pegado a la persona y el chat va más afuera, sin colita. Tus cantos ahora también salen de tu avatar, y ya no del centro.
+- En 3v3, los costados de arriba usan globos más angostos para no tapar el nombre del de enfrente. En pica-pica, quien está fuera del duelo se ve atenuado, pero su globo se lee entero. El asiento que habla pasa adelante de los demás.
+- **Protocolo:** no cambió; todo sale del `chat` del store.
+- **Script de capturas** `scripts/capturas-chat.mjs`: tres navegadores (Ana, Beto y Caro) en una sala online con bots, en 1v1, 2v2 y 3v3, con canto y chat a la vez. Necesita el servidor y la web levantados.
+- **Tests:** web 101 (8 nuevos: el hook con timers falsos, el componente y la mesa), y los 2 de punta a punta en verde.
+
+**Pendientes:**
+- Si el de enfrente y el del costado de arriba escriben a la vez en 3v3, sus globos pueden encimarse.
+- Tu globo tapa el mazo un momento cuando el mazo está abajo a la izquierda.
