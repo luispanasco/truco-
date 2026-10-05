@@ -4,6 +4,7 @@ import type { Carta, CartasMostradas, Evento, ResultadoEnfrentamiento, Resultado
 import type { Senia } from '@truco/bots'
 import { describirEvento, TEXTO_CANTO, type InfoSala, type MensajeChat, type MensajesCliente } from '@truco/shared'
 import type { Conexion, EstadoConexion, MensajeServidor } from './conexion/tipos'
+import { sonarEvento } from './sonido'
 
 export interface Jugada {
   asiento: number
@@ -109,6 +110,9 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       const linea = texto.trim().split('\n')[0]!.trim()
       set((s) => ({ registro: [...s.registro.slice(-40), { id: ++contador, texto: linea }] }))
     }
+    // Suena junto con lo que se ve (el globo del canto, la carta): la vista todavía es la de
+    // antes del evento, así se sabe cuántos fósforos se suman.
+    sonarEvento(ev, get().vista?.puntos)
     switch (ev.tipo) {
       case 'cartaJugada':
         set((s) => ({
