@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AjustesSonido } from '../componentes/AjustesSonido'
 import { Carta } from '../componentes/Carta'
 import { FORMATOS, NIVELES } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
+import { SelectorMesa } from '../componentes/SelectorMesa'
 import { SelectorVistaMesa } from '../componentes/SelectorVistaMesa'
 import { InstalarApp } from '../componentes/Pwa'
 import { datosUnirse, destinoAlEntrar, MensajeError } from '../componentes/Online'
@@ -12,6 +13,7 @@ import { ConexionLocal } from '../conexion/local'
 import { ConexionOnline, descartarPartidaGuardada, leerPartidaGuardada, motivoError } from '../conexion/online'
 import { useEnLinea } from '../enLinea'
 import { useJuego } from '../estado'
+import { aplicarMesa } from '../temaMesa'
 
 /** Una opción del menú online: ícono, título y una línea que explica. */
 function OpcionOnline({
@@ -107,6 +109,8 @@ export function Inicio() {
   const [perfil, cambiar] = usePerfil()
   const apodo = perfil.apodo.trim()
   const enLinea = useEnLinea()
+  // Al elegir otra mesa, toda la app cambia de color en el momento.
+  useEffect(() => aplicarMesa(perfil.mesa), [perfil.mesa])
 
   const jugarContraBots = () => {
     useJuego.getState().conectar(
@@ -202,6 +206,7 @@ export function Inicio() {
             detalle="Al repartir, descubrís tus cartas de a poco, como en la mesa (también online)"
           />
           <SelectorVistaMesa valor={perfil.mesaBustos} alCambiar={(mesaBustos) => cambiar({ mesaBustos })} />
+          <SelectorMesa valor={perfil.mesa} alCambiar={(mesa) => cambiar({ mesa })} />
           <Interruptor
             activo={perfil.ayudas}
             alCambiar={(v) => cambiar({ ayudas: v })}

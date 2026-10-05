@@ -204,3 +204,4 @@ export type TipoMensajeServidor = keyof MensajesServidor
 
 export { describirAccion, describirEvento, TEXTO_CANTO } from './textos'
 export * from './avatar'
+export * from './mesas'
