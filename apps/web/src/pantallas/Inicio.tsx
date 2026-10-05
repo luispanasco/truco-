@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router'
 import { Carta } from '../componentes/Carta'
 import { FORMATOS, NIVELES } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
+import { InstalarApp } from '../componentes/Pwa'
 import { datosUnirse, destinoAlEntrar, MensajeError } from '../componentes/Online'
 import { TarjetaPerfil, usePerfil } from '../componentes/TarjetaPerfil'
 import { ConexionLocal } from '../conexion/local'
 import { ConexionOnline, descartarPartidaGuardada, leerPartidaGuardada, motivoError } from '../conexion/online'
+import { useEnLinea } from '../enLinea'
 import { useJuego } from '../estado'
 
 /** Una opción del menú online: ícono, título y una línea que explica. */
@@ -40,7 +42,15 @@ function OpcionOnline({
 }
 
 /** Si quedó una partida online a medias (se recargó o se cerró la app), se ofrece volver. */
-function PartidaEnCurso({ apodo, alVolver }: { apodo: boolean; alVolver: () => Promise<string | null> }) {
+function PartidaEnCurso({
+  apodo,
+  enLinea,
+  alVolver,
+}: {
+  apodo: boolean
+  enLinea: boolean
+  alVolver: () => Promise<string | null>
+}) {
   const [partida, setPartida] = useState(leerPartidaGuardada)
   const [volviendo, setVolviendo] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -67,8 +77,8 @@ function PartidaEnCurso({ apodo, alVolver }: { apodo: boolean; alVolver: () => P
           </p>
           {error && <MensajeError>{error}</MensajeError>}
           <div className="botones-fila botones-volver">
-            <button type="button" className="boton" disabled={!apodo || volviendo} onClick={volver}>
-              {volviendo ? 'Volviendo…' : 'Volver a la partida'}
+            <button type="button" className="boton" disabled={!apodo || volviendo || !enLinea} onClick={volver}>
+              {volviendo ? 'Volviendo…' : enLinea ? 'Volver a la partida' : 'Volver a la partida · Sin conexión'}
             </button>
             <button
               type="button"
@@ -94,6 +104,7 @@ export function Inicio() {
   const navegar = useNavigate()
   const [perfil, cambiar] = usePerfil()
   const apodo = perfil.apodo.trim()
+  const enLinea = useEnLinea()
 
   const jugarContraBots = () => {
     useJuego.getState().conectar(
@@ -147,7 +158,7 @@ export function Inicio() {
         <p className="subtitulo">uruguayo · con muestra, piezas y flor</p>
       </header>
 
-      <PartidaEnCurso apodo={apodo.length > 0} alVolver={volverALaPartida} />
+      <PartidaEnCurso apodo={apodo.length > 0} enLinea={enLinea} alVolver={volverALaPartida} />
 
       <TarjetaPerfil perfil={perfil} cambiar={cambiar} />
 
@@ -241,27 +252,35 @@ export function Inicio() {
           <OpcionOnline
             icono="👥"
             titulo="Crear sala"
-            detalle="Armá la mesa y pasale el código a tus amigos"
-            deshabilitada={!apodo}
+            detalle={enLinea ? 'Armá la mesa y pasale el código a tus amigos' : 'Sin conexión'}
+            deshabilitada={!apodo || !enLinea}
             alTocar={() => navegar('/crear')}
           />
           <OpcionOnline
             icono="🔑"
             titulo="Unirme con código"
-            detalle="Entrá a la sala que armó otro"
-            deshabilitada={!apodo}
+            detalle={enLinea ? 'Entrá a la sala que armó otro' : 'Sin conexión'}
+            deshabilitada={!apodo || !enLinea}
             alTocar={() => navegar('/unirme')}
           />
           <OpcionOnline
             icono="🌎"
             titulo="Buscar partida"
-            detalle="Mano a mano con desconocidos"
-            deshabilitada={!apodo}
+            detalle={enLinea ? 'Mano a mano con desconocidos' : 'Sin conexión'}
+            deshabilitada={!apodo || !enLinea}
             alTocar={() => navegar('/buscar')}
           />
         </div>
-        {!apodo && <p className="nota">Poné tu apodo para jugar online.</p>}
+        {!enLinea ? (
+          <p className="sin-conexion" role="status">
+            <span aria-hidden="true">📵</span> Sin conexión: lo online vuelve cuando haya internet. Contra la compu se juega igual.
+          </p>
+        ) : (
+          !apodo && <p className="nota">Poné tu apodo para jugar online.</p>
+        )}
       </section>
+
+      <InstalarApp />
 
       <footer className="inicio-pie">Truco uruguayo · versión de prueba</footer>
     </div>
