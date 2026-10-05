@@ -1,9 +1,11 @@
-import type { LugarPublico } from '@truco/shared'
+import { avatarAlAzar, codificarAvatar, leerAvatar, type LugarPublico } from '@truco/shared'
 import { GESTO, SIGNIFICADO } from '../senias'
-import { Cara, type GestoActivo } from './Cara'
+import type { GestoActivo } from '../gestos'
+import { Avatar as Dibujo } from './Avatar'
 import { Carta } from './Carta'
 import { AnilloReloj } from './Reloj'
 import type { Globo } from '../estado'
+import '../estilos-senias.css'
 import { GloboDeChat, type GloboChat } from './GlobosChat'
 
 interface Props {
@@ -38,19 +40,22 @@ interface Props {
 }
 
 /**
- * El ícono del jugador. Mientras hace una seña, el ícono le deja lugar a una cara que
- * hace el gesto (cejas que suben, guiño…) y después vuelve.
+ * El código del avatar de un lugar. Los bots (y quien todavía tiene un emoji de los de
+ * antes) no traen uno: se les arma uno con el apodo, siempre el mismo para el mismo apodo.
+ */
+export function avatarDeLugar(lugar: Pick<LugarPublico, 'avatar' | 'apodo'>): string {
+  return lugar.avatar && leerAvatar(lugar.avatar) ? lugar.avatar : codificarAvatar(avatarAlAzar(lugar.apodo))
+}
+
+/**
+ * El avatar del jugador, acercado a la cara. Mientras hace una seña, el mismo avatar se
+ * agranda, se acerca más a la cara y hace el gesto; después vuelve.
  */
 export function Avatar({ lugar, tam = 'normal', gesto }: { lugar: LugarPublico; tam?: 'normal' | 'chico'; gesto?: GestoActivo }) {
-  const contenido = lugar.avatar ?? (lugar.tipo === 'bot' ? '🤖' : lugar.apodo.slice(0, 1).toUpperCase())
   return (
-    <div className={`avatar avatar-${tam}${gesto ? ' con-gesto' : ''}`}>
-      {contenido}
-      {gesto && (
-        <span key={gesto.id} className="avatar-gesto" data-gesto={gesto.gesto}>
-          <Cara gesto={gesto.gesto} />
-        </span>
-      )}
+    <div className={`avatar avatar-${tam}${gesto ? ' con-gesto' : ''}`} data-gesto={gesto?.gesto}>
+      {/* La clave reinicia la animación con cada gesto (aunque se repita el mismo). */}
+      <Dibujo key={gesto?.id ?? 'quieto'} codigo={avatarDeLugar(lugar)} apodo={lugar.apodo} gesto={gesto?.gesto} encuadre="cara" />
     </div>
   )
 }

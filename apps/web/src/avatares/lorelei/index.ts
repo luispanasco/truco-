@@ -59,6 +59,7 @@ function componer(plantilla: string, a: Avatar): string {
 export const LORELEI: EstiloAvatar = {
   nombre: 'Lorelei',
   viewBox: '0 0 980 980',
+  cara: { x: 320, y: 270, ancho: 450, alto: 520 },
   dibujar(a) {
     const piel = PIELES[a.piel] ?? PIELES[0]
     return [

@@ -5,7 +5,7 @@ import { apply, crearConfig, crearPartida, esperandoA, nombreCarta, vistaPara, t
 import { GESTO, SIGNIFICADO, seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
 import { MOTIVO_SENIA_TARDE, SENIAS_DEFAULT, type ConfigSenias, type InfoSala, type MensajesCliente } from '@truco/shared'
 import type { Conexion, MensajeServidor } from '../src/conexion/tipos'
-import { DURACION_GESTO } from '../src/componentes/Cara'
+import { DURACION_GESTO } from '../src/gestos'
 import { MANTENER_MS } from '../src/componentes/ManoOjeable'
 import { seniasRapidas } from '../src/componentes/Senias'
 import { useJuego } from '../src/estado'
@@ -189,18 +189,20 @@ describe('gestos en los avatares', () => {
   const avatarDe = (apodo: string) =>
     screen.getAllByText(apodo).find((el) => el.closest('.asiento'))!.closest('.asiento')!.querySelector('.avatar')!
 
-  it('la seña de un compañero se ve como gesto en su avatar y después vuelve el ícono', async () => {
+  it('la seña de un compañero la hace su avatar y después vuelve a estar quieto', async () => {
     const datos = partida2v2()
     const { llegar } = await entrar(datos)
     const companiero = (datos.yo + 2) % 4
     llegar({ tipo: 'senia', datos: { de: companiero, senia: 'pieza2' } })
     const avatar = avatarDe(APODOS[companiero]!)
-    expect(avatar.querySelector('.avatar-gesto')!.getAttribute('data-gesto')).toBe('pieza2')
-    expect(avatar.querySelector('svg.cara')!.getAttribute('data-gesto')).toBe('pieza2')
+    expect(avatar.getAttribute('data-gesto')).toBe('pieza2')
+    // Lo hace el dibujo del mismo avatar (cuando termina de cargar el estilo).
+    await waitFor(() => expect(avatar.querySelector('svg.avatar-dibujo')!.getAttribute('data-gesto')).toBe('pieza2'))
+    expect(avatar.querySelector('.gesto-cejas')).not.toBeNull()
     // El texto queda como apoyo, en un globito al lado del avatar.
     expect(avatar.closest('.asiento')!.querySelector('.globo-senia')!.textContent).toContain('2 de la muestra')
-    await waitFor(() => expect(avatar.querySelector('.avatar-gesto')).toBeNull(), { timeout: DURACION_GESTO + 1500 })
-    expect(avatar.textContent).toContain('🧉')
+    await waitFor(() => expect(avatar.getAttribute('data-gesto')).toBeNull(), { timeout: DURACION_GESTO + 1500 })
+    expect(avatar.querySelector('svg.avatar-dibujo')!.hasAttribute('data-gesto')).toBe(false)
   })
 
   it('varias señas seguidas se hacen de a una', async () => {
@@ -209,7 +211,7 @@ describe('gestos en los avatares', () => {
     const companiero = (datos.yo + 2) % 4
     llegar({ tipo: 'senia', datos: { de: companiero, senia: 'perico' } })
     llegar({ tipo: 'senia', datos: { de: companiero, senia: 'tres' } })
-    const gesto = () => avatarDe(APODOS[companiero]!).querySelector('.avatar-gesto')?.getAttribute('data-gesto')
+    const gesto = () => avatarDe(APODOS[companiero]!).getAttribute('data-gesto')
     expect(gesto()).toBe('perico')
     await waitFor(() => expect(gesto()).toBe('tres'), { timeout: DURACION_GESTO + 1000 })
   })
@@ -219,7 +221,7 @@ describe('gestos en los avatares', () => {
     const { llegar } = await entrar(datos)
     const rival = (datos.yo + 1) % 4
     llegar({ tipo: 'seniaPescada', datos: { de: rival, senia: null } })
-    expect(avatarDe(APODOS[rival]!).querySelector('.avatar-gesto')!.getAttribute('data-gesto')).toBe('disimulo')
+    expect(avatarDe(APODOS[rival]!).getAttribute('data-gesto')).toBe('disimulo')
     const globo = screen.getByText(/le hizo una seña a su compañero/).closest('.globo')!
     expect(globo.classList.contains('pescada')).toBe(true)
     expect(globo.closest('.asiento')!.textContent).toContain(APODOS[rival])
@@ -231,7 +233,7 @@ describe('gestos en los avatares', () => {
     const { llegar } = await entrar(datos)
     const rival = (datos.yo + 3) % 4
     llegar({ tipo: 'seniaPescada', datos: { de: rival, senia: 'perica' } })
-    expect(avatarDe(APODOS[rival]!).querySelector('.avatar-gesto')!.getAttribute('data-gesto')).toBe('perica')
+    expect(avatarDe(APODOS[rival]!).getAttribute('data-gesto')).toBe('perica')
     const globo = avatarDe(APODOS[rival]!).closest('.asiento')!.querySelector('.globo-senia')!
     expect(globo.classList.contains('pescada')).toBe(true)
     expect(globo.textContent).toContain('perica')
@@ -344,6 +346,6 @@ describe('mesa sin señas', () => {
 
     // Aunque llegara una seña (no debería), no se ve como gesto.
     llegar({ tipo: 'senia', datos: { de: (datos.yo + 2) % 4, senia: 'pieza2' } })
-    expect(document.querySelector('.avatar-gesto')).toBeNull()
+    expect(document.querySelector('.avatar[data-gesto]')).toBeNull()
   })
 })

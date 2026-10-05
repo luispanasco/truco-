@@ -700,7 +700,7 @@ button.asiento-nombre:focus-visible {
  * arriba se corre para dejarle lugar.
  */
 .asiento.con-gesto .asiento-globos {
-  margin-bottom: 32px;
+  margin-bottom: 40px;
 }
 /* Mientras habla, su asiento pasa adelante: el globo no queda debajo de otro asiento. */
 .asiento.con-globo {

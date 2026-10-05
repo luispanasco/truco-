@@ -14,6 +14,11 @@ export interface EstiloAvatar {
   viewBox: string
   /** El contenido del SVG del avatar. */
   dibujar(a: Avatar): string
+  /**
+   * Dónde queda la cara (de las cejas a la pera), en unidades del viewBox. Sirve para
+   * acercarse a la cara (en la mesa y en la cara de señas) y de medida para las señas.
+   */
+  cara: { x: number; y: number; ancho: number; alto: number }
 }
 
 let cargando: Promise<EstiloAvatar> | null = null

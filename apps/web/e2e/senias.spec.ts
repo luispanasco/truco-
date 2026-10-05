@@ -52,6 +52,10 @@ test('una seña le llega al compañero y no al rival', async ({ browser }) => {
   // Beto ve el gesto en el avatar de Ana, con lo que anuncia.
   const anaParaBeto = asientoDe(beto, 'Ana')
   await expect(anaParaBeto.locator('[data-gesto="pieza2"]').first()).toBeVisible()
+  // Lo hace el dibujo del avatar de Ana (no una cara aparte), con sus piezas de las señas.
+  const dibujo = anaParaBeto.locator('svg.avatar-dibujo[data-gesto="pieza2"]')
+  await expect(dibujo).toBeVisible()
+  await expect(dibujo.locator('.gesto-cejas')).toHaveCount(1)
   await expect(anaParaBeto.getByRole('status')).toContainText('2 de la muestra')
   // A Caro no le llega nada: ni el gesto ni el aviso de que hubo una seña.
   await caro.waitForTimeout(300)

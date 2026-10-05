@@ -1,304 +1,44 @@
 /*
  * Señas: la cara que se toca para hacerlas, los gestos sobre los avatares y los avisos.
- * Los colores de la cara son variables de :root (estilos.css).
+ * Cómo se mueve cada capa de la cara en cada seña está en avatares/gestos.css.
  */
 
-/* ── La cara (SVG por capas) ──────────────────────────────────── */
+/* ── El avatar en la mesa ──────────────────────────────────────── */
 
-.cara {
-  display: block;
+/* El dibujo llena el círculo, acercado a la cabeza; mientras carga, la inicial. */
+.avatar > .avatar-dibujo {
   width: 100%;
   height: 100%;
-  overflow: visible;
-  /* Lo que dura el gesto entero: entra, se sostiene y vuelve. */
-  --dur: 1.7s;
+  border-radius: 50%;
+  clip-path: circle(50%);
+  --zoom: calc(var(--zoom-cara) * 0.72);
 }
-.cara * {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-.cara-piel,
-.cara-oreja {
-  fill: var(--cara-piel);
-  stroke: var(--cara-trazo);
-  stroke-width: 3;
-}
-.cara-pelo {
-  fill: var(--cara-pelo);
-}
-.cara-mejillas circle {
-  fill: var(--cara-mejillas);
-}
-.cara-cejas path {
-  fill: none;
-  stroke: var(--cara-pelo);
-  stroke-width: 6;
-  stroke-linecap: round;
-}
-.cara-blanco {
-  fill: #fff;
-  stroke: var(--cara-trazo);
-  stroke-width: 2;
-}
-.cara-pupila {
-  fill: var(--cara-trazo);
-}
-.cara-brillo {
-  fill: #fff;
-}
-.cara-trazo,
-.cara-trazo-fino,
-.cara-arrugas path {
-  fill: none;
-  stroke: var(--cara-trazo);
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.cara-trazo-fino,
-.cara-arrugas path {
-  stroke-width: 2.6;
-}
-.cara-labios {
-  fill: var(--cara-labios);
-  stroke: var(--cara-trazo);
-  stroke-width: 2;
-}
-.cara-oscuro {
-  fill: #4a1d1d;
-  stroke: var(--cara-trazo);
-  stroke-width: 2.5;
-}
-.cara-lengua {
-  fill: var(--cara-lengua);
-  stroke: var(--cara-trazo);
-  stroke-width: 2;
-}
-.cara-diente {
-  fill: #fff;
-  stroke: var(--cara-trazo);
-  stroke-width: 1.5;
-}
-.cara-corazon {
-  fill: var(--copa);
-}
-.cara-cachete {
-  fill: color-mix(in srgb, var(--cara-piel) 78%, var(--cara-labios));
-}
-.cara-pera {
-  opacity: 0.55;
+.avatar:has(> .avatar-dibujo) {
+  background: radial-gradient(circle at 50% 35%, #f6eedc, #d8c7a4);
 }
 
-/* Lo que aparece con el gesto y lo que se esconde mientras tanto. */
-.cara-entra {
-  animation: cara-entra var(--dur) ease both;
-}
-.cara-sale {
-  animation: cara-sale var(--dur) ease both;
-}
-@keyframes cara-entra {
-  0% {
-    opacity: 0;
-    scale: 0.5;
-  }
-  14%,
-  82% {
-    opacity: 1;
-    scale: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes cara-sale {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  12%,
-  84% {
-    opacity: 0;
-  }
-}
-
-/* 2 de la muestra: las cejas suben (y los ojos se abren). */
-.cara[data-gesto='pieza2'] .cara-cejas {
-  animation: cejas-suben var(--dur) ease both;
-}
-.cara[data-gesto='pieza2'] .cara-ojo {
-  animation: ojos-abiertos var(--dur) ease both;
-}
-@keyframes cejas-suben {
-  14%,
-  82% {
-    translate: 0 -11px;
-  }
-}
-@keyframes ojos-abiertos {
-  14%,
-  82% {
-    scale: 1.08 1.2;
-  }
-}
-
-/* 5 de la muestra: se frunce la nariz y se achican los ojos. */
-.cara[data-gesto='pieza5'] .cara-nariz > path {
-  animation: nariz-fruncida var(--dur) ease both;
-}
-.cara[data-gesto='pieza5'] .cara-ojo {
-  animation: ojos-chicos var(--dur) ease both;
-}
-.cara[data-gesto='pieza5'] .cara-cejas {
-  animation: cejas-bajan var(--dur) ease both;
-}
-@keyframes nariz-fruncida {
-  14%,
-  82% {
-    scale: 1.12 0.8;
-    translate: 0 -4px;
-  }
-}
-@keyframes ojos-chicos {
-  14%,
-  82% {
-    scale: 1 0.55;
-  }
-}
-@keyframes cejas-bajan {
-  14%,
-  82% {
-    translate: 0 5px;
-  }
-}
-
-/* Guiños: el ojo se cierra (lo dibuja Cara) y el cachete de ese lado sube un poco. */
-.cara[data-gesto='perico'] .cara-mejillas circle:last-child,
-.cara[data-gesto='perica'] .cara-mejillas circle:first-child {
-  animation: cachete-sube var(--dur) ease both;
-}
-@keyframes cachete-sube {
-  14%,
-  82% {
-    translate: 0 -6px;
-    scale: 1.2;
-  }
-}
-
-/* Muecas con la pera: boca y pera se van para un lado. */
-.cara[data-gesto='unoBravo'] :is(.cara-boca, .cara-pera) {
-  animation: pera-derecha var(--dur) ease both;
-}
-.cara[data-gesto='sieteBravo'] :is(.cara-boca, .cara-pera) {
-  animation: pera-izquierda var(--dur) ease both;
-}
-@keyframes pera-derecha {
-  14%,
-  82% {
-    translate: 10px 2px;
-    rotate: -5deg;
-  }
-}
-@keyframes pera-izquierda {
-  14%,
-  82% {
-    translate: -10px 2px;
-    rotate: 5deg;
-  }
-}
-
-/* Beso: un corazoncito que sube. */
-.cara-corazon {
-  animation: corazon var(--dur) ease-out both;
-}
-@keyframes corazon {
-  0%,
-  20% {
-    opacity: 0;
-    translate: 0 6px;
-  }
-  45% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    translate: 10px -34px;
-  }
-}
-
-/* Lengua afuera: sale desde la boca. */
-.cara-lengua-afuera {
-  transform-origin: top center;
-  animation: lengua var(--dur) ease both;
-}
-@keyframes lengua {
-  0% {
-    scale: 1 0.2;
-  }
-  20%,
-  82% {
-    scale: 1 1;
-  }
-  100% {
-    scale: 1 0.3;
-  }
-}
-
-/* Flor: se inflan los cachetes como un sapo (y la cara se ensancha). */
-.cara[data-gesto='flor'] .cara-cabeza {
-  animation: inflar var(--dur) ease both;
-}
-.cara[data-gesto='flor'] .cara-mejillas {
-  animation: cara-sale var(--dur) ease both;
-}
-@keyframes inflar {
-  14%,
-  82% {
-    scale: 1.07 1;
-  }
-}
-
-/* Disimulo (seña pescada sin saber cuál): mira de reojo a un lado y al otro. */
-.cara[data-gesto='disimulo'] :is(.cara-pupila, .cara-brillo) {
-  animation: de-reojo var(--dur) ease-in-out both;
-}
-.cara[data-gesto='disimulo'] .cara-cejas path:first-child {
-  animation: cejas-suben var(--dur) ease both;
-}
-@keyframes de-reojo {
-  15%,
-  40% {
-    translate: -4px 0;
-  }
-  55%,
-  82% {
-    translate: 4px 0;
-  }
-}
-
-/* ── Gesto sobre el avatar ────────────────────────────────────── */
-
+/*
+ * Gesto: el mismo avatar crece hacia arriba (el nombre, que está abajo, se sigue leyendo),
+ * se acerca a la cara y la cara hace la seña, que empieza cuando ya creció.
+ */
 .avatar.con-gesto {
   position: relative;
-}
-/* La cara tapa el ícono mientras dura el gesto, y se agranda para que se vea. */
-.avatar-gesto {
-  position: absolute;
-  inset: -2px;
   z-index: 3;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid;
-  border-color: inherit;
-  background: radial-gradient(circle at 50% 45%, var(--tapete), var(--tapete-oscuro));
-  box-shadow: 0 4px 14px rgb(0 0 0 / 0.5);
-  /* Crece hacia arriba: el nombre, que está abajo, se sigue leyendo. */
   transform-origin: 50% 100%;
   animation: avatar-gesto 2.3s ease both;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.5);
 }
-.avatar-gesto .cara {
-  width: 118%;
-  height: 118%;
-  margin: -6% 0 0 -9%;
+.avatar.con-gesto > .avatar-dibujo {
+  --retraso: 0.2s;
+  --zoom-quieto: calc(var(--zoom-cara) * 0.72);
+  --zoom-gesto: calc(var(--zoom-cara) * 1.02);
+}
+.avatar.con-gesto > .avatar-dibujo .avatar-todo {
+  animation: avatar-acercar 2.3s ease both;
+}
+/* Los de arriba de todo crecen hacia abajo: arriba está el marcador. */
+:is(.n-2 .pos-1, .n-4 .pos-2, .n-6 .pos-3) .avatar.con-gesto {
+  transform-origin: 50% 10%;
 }
 @keyframes avatar-gesto {
   0% {
@@ -306,10 +46,20 @@
   }
   9%,
   88% {
-    scale: 1.55;
+    scale: 1.85;
   }
   100% {
     scale: 1;
+  }
+}
+@keyframes avatar-acercar {
+  0%,
+  100% {
+    scale: var(--zoom-quieto);
+  }
+  9%,
+  88% {
+    scale: var(--zoom-gesto);
   }
 }
 
@@ -403,12 +153,31 @@
 .hoja-senias {
   overflow-y: auto;
 }
+/* Tu avatar, grande y acercado a la cara, con las zonas que se tocan encima. */
 .cara-senias {
   position: relative;
   flex: none;
-  width: min(260px, 72vw, 36dvh);
-  aspect-ratio: 200 / 240;
-  margin: -12px auto 0;
+  width: min(270px, 74vw, 38dvh);
+  aspect-ratio: 1;
+  margin: -6px auto 4px;
+}
+.cara-senias > .avatar-dibujo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  clip-path: circle(50%);
+  background: radial-gradient(circle at 50% 35%, #f6eedc, #d8c7a4);
+  --zoom: calc(var(--zoom-cara) * 0.82);
+}
+.cara-senias > .avatar-inicial {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.25);
+  font-size: 4rem;
+  font-weight: 800;
 }
 .zona-cara {
   position: absolute;
@@ -778,9 +547,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .avatar-gesto {
+  .avatar.con-gesto {
     animation: none;
-    scale: 1.3;
+    scale: 1.85;
+  }
+  .avatar.con-gesto > .avatar-dibujo .avatar-todo {
+    animation: none;
+    scale: var(--zoom-gesto);
   }
   .zona-cara.sugerida {
     animation: none;

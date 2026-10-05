@@ -1,9 +1,10 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { nombreCarta, piezaDe, type Carta as TCarta } from '@truco/engine'
 import { seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
 import type { ConfigSenias } from '@truco/shared'
 import { GESTO, SIGNIFICADO } from '../senias'
-import { Cara, type GestoCara } from './Cara'
+import type { ParteCara, ZonaCara, ZonasCara } from '../avatares/gestos'
+import { Avatar } from './Avatar'
 import { Hoja } from './Hoja'
 import '../estilos-senias.css'
 
@@ -49,30 +50,43 @@ const BOCA: { senia: Senia; icono: string; nombre: string }[] = [
 ]
 
 /**
- * Partes de la cara que se tocan, en % del dibujo (viewBox 200×240). La cara se ve como
- * en un espejo: el ojo de la derecha de la pantalla es tu ojo derecho.
+ * Partes de la cara que se tocan. Se ubican sobre las capas de tu avatar (medidas al
+ * dibujarlo); la cara se ve como en un espejo: el ojo de la derecha de la pantalla es tu
+ * ojo derecho.
  */
 interface Zona {
   clase: string
   senia: Senia | 'boca'
-  x: number
-  y: number
-  ancho: number
-  alto: number
+  parte: ParteCara
+  arriba: number
   /** Repetida (el otro cachete): no se anuncia dos veces al lector de pantalla. */
   repetida?: boolean
 }
+// En el orden de lectura. `arriba`: si dos se pisan, cuál queda encima (los ojos, sobre todo).
 const ZONAS: Zona[] = [
-  { clase: 'cejas', senia: 'pieza2', x: 25, y: 26, ancho: 50, alto: 10 },
-  { clase: 'ojo izq', senia: 'perica', x: 26, y: 36, ancho: 20, alto: 9.5 },
-  { clase: 'ojo der', senia: 'perico', x: 54, y: 36, ancho: 20, alto: 9.5 },
-  { clase: 'nariz', senia: 'pieza5', x: 43, y: 45.5, ancho: 14, alto: 10 },
-  { clase: 'cachete izq', senia: 'flor', x: 16, y: 51, ancho: 23, alto: 12 },
-  { clase: 'cachete der', senia: 'flor', x: 61, y: 51, ancho: 23, alto: 12, repetida: true },
-  { clase: 'boca', senia: 'boca', x: 37, y: 61.5, ancho: 26, alto: 13 },
-  { clase: 'pera izq', senia: 'sieteBravo', x: 30, y: 76, ancho: 20, alto: 11 },
-  { clase: 'pera der', senia: 'unoBravo', x: 50, y: 76, ancho: 20, alto: 11 },
+  { clase: 'cejas', senia: 'pieza2', parte: 'cejas', arriba: 3 },
+  { clase: 'ojo izq', senia: 'perica', parte: 'ojoIzq', arriba: 4 },
+  { clase: 'ojo der', senia: 'perico', parte: 'ojoDer', arriba: 4 },
+  { clase: 'nariz', senia: 'pieza5', parte: 'nariz', arriba: 3 },
+  { clase: 'cachete izq', senia: 'flor', parte: 'cacheteIzq', arriba: 1 },
+  { clase: 'cachete der', senia: 'flor', parte: 'cacheteDer', arriba: 1, repetida: true },
+  { clase: 'boca', senia: 'boca', parte: 'boca', arriba: 2 },
+  { clase: 'pera izq', senia: 'sieteBravo', parte: 'peraIzq', arriba: 1 },
+  { clase: 'pera der', senia: 'unoBravo', parte: 'peraDer', arriba: 1 },
 ]
+/** Dónde van las zonas hasta poder medir el avatar (o si no se puede: jsdom). En %. */
+const en = (x: number, y: number, ancho: number, alto: number): ZonaCara => ({ x, y, ancho, alto })
+const ZONAS_REPUESTO: ZonasCara = {
+  cejas: en(18, 12, 64, 14),
+  ojoIzq: en(18, 27, 31, 15),
+  ojoDer: en(51, 27, 31, 15),
+  nariz: en(50, 43, 16, 13),
+  cacheteIzq: en(10, 48, 22, 16),
+  cacheteDer: en(70, 48, 22, 16),
+  boca: en(38, 58, 28, 12),
+  peraIzq: en(30, 72, 22, 13),
+  peraDer: en(52, 72, 22, 13),
+}
 
 const etiqueta = (s: Senia) => `${GESTO[s]} (${SIGNIFICADO[s]})`
 /** Cuánto se ve el gesto en la cara grande antes de que se cierre la hoja. */
@@ -84,12 +98,17 @@ const ESPERA_CIERRE = 1100
  * de tus cartas; igual se puede hacer cualquier otra (para mentir).
  */
 export function PanelSenias({
+  avatar,
+  apodo = '',
   alElegir,
   alCerrar,
   sugeridas = null,
   config,
   cerrado = null,
 }: {
+  /** Tu avatar (el código, como viaja en tu lugar de la mesa). */
+  avatar: string
+  apodo?: string
   alElegir: (s: Senia) => void
   alCerrar: () => void
   /** Señas de tus cartas (solo con ayudas); null para no marcar nada. */
@@ -100,6 +119,12 @@ export function PanelSenias({
 }) {
   const [boca, setBoca] = useState(false)
   const [hecha, setHecha] = useState<{ senia: Senia; id: number } | null>(null)
+  const [zonas, setZonas] = useState<ZonasCara | null>(null)
+  // Se guarda solo si cambió: medir de nuevo da lo mismo y no hace falta volver a dibujar.
+  const alMedir = useCallback(
+    (z: ZonasCara | null) => setZonas((antes) => (z && JSON.stringify(z) !== JSON.stringify(antes) ? z : antes)),
+    [],
+  )
 
   useEffect(() => {
     if (!hecha) return
@@ -115,7 +140,6 @@ export function PanelSenias({
   }
   const sugerida = (z: Senia | 'boca') =>
     !!sugeridas && (z === 'boca' ? BOCA.some((b) => sugeridas.includes(b.senia)) : sugeridas.includes(z))
-  const gesto: GestoCara | null = hecha?.senia ?? null
   const pesca =
     config && config.pescar !== 'nunca' && config.probabilidadPescar > 0
       ? ` Ojo: un rival la puede pescar (${Math.round(config.probabilidadPescar * 100)} %).`
@@ -127,9 +151,10 @@ export function PanelSenias({
         {cerrado ?? <>Tocá una parte de la cara: tus compañeros ven la seña.{pesca}</>}
       </p>
       <div className={`cara-senias${cerrado ? ' cerrada' : ''}${hecha ? ' haciendo' : ''}`}>
-        <Cara key={hecha?.id ?? 0} gesto={gesto} clase="cara-grande" />
+        <Avatar key={hecha?.id ?? 0} codigo={avatar} apodo={apodo} gesto={hecha?.senia} encuadre="cara" clase="cara-grande" alMedir={alMedir} />
         {ZONAS.map((z) => {
-          const estilo = { left: `${z.x}%`, top: `${z.y}%`, width: `${z.ancho}%`, height: `${z.alto}%` } as CSSProperties
+          const lugar = (zonas ?? ZONAS_REPUESTO)[z.parte]
+          const estilo = { left: `${lugar.x}%`, top: `${lugar.y}%`, width: `${lugar.ancho}%`, height: `${lugar.alto}%`, zIndex: z.arriba } as CSSProperties
           const esBoca = z.senia === 'boca'
           return (
             <button
