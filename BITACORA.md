@@ -660,3 +660,20 @@ Pedidos del usuario: elegir la combinación de colores de la mesa (como cosméti
 - La arpillera puede hacer moiré en pantallas de densidad 1.
 - Con jugadores sentados en 1280, el globito de chat del de abajo a la derecha queda tapado por su busto.
 
+---
+
+## Tienda de prueba y cosméticos del anfitrión — 2026-10-05
+
+Pedidos del usuario: poder desbloquear la tienda desde el inicio para probar, y que la mesa y la baraja sean las del anfitrión de la sala, así todos ven lo mismo y se lucen los cosméticos buenos. Plan aprobado; lo hizo un agente.
+
+- **Tienda de prueba:** Inicio → Más opciones → "Desbloquear la tienda (prueba)" (`perfil.tiendaDesbloqueada`). Prendido, se elige todo lo pago en el editor de avatar y en las mesas (candado abierto); apagado, lo pago vuelve a lo gratis. El servidor lo acepta solo con la variable `TRUCO_TIENDA_DE_PRUEBA` prendida (lo está por defecto en la fase 1; `'0'` la apaga) y el aviso `tiendaDesbloqueada` del cliente. **En la fase 2 se apaga y solo vale lo comprado.**
+- **Mesa y baraja de la sala:** en salas privadas son las del anfitrión (validadas por el servidor como el avatar) y viajan en `InfoSala` (`mesa`, `baraja`). Si se va el anfitrión, pasan a ser las del nuevo. Cola pública: Boliche y baraja propia. Mensaje nuevo `mesaYBaraja` para cambiarlas en la espera (después de empezar se rechaza). En la web se aplican mientras estás en la sala y al salir vuelve lo tuyo; contra la compu, lo tuyo.
+- **Sala de espera:** línea "Mesa Bordó · Baraja clásica, de Ana" (el anfitrión ve "las tuyas") con un botón "Cambiar" para el anfitrión, que abre los selectores de mesa y baraja.
+- **Barajas:** catálogo en `packages/shared/src/barajas.ts` con precio (las dos gratis por ahora), por el mismo camino que las mesas.
+- **Tests:** 419 (motor 136, bots 14, servidor 49, web 220), 9 de punta a punta (nuevo: Ana con Bordó y baraja clásica, Beto con Azul ve lo de Ana y al salir vuelve a Azul) y el de sin conexión.
+
+**Pendientes:**
+- `ojeo.spec.ts` falla de vez en cuando con la máquina muy cargada (mide la separación del abanico).
+- La mesa y la baraja quedan fijas desde que empieza la partida (también en la revancha).
+- El circulito de la línea de la sala casi no se ve sobre Bordó.
+
