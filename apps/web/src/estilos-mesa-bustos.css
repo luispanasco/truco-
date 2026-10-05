@@ -1,0 +1,271 @@
+/*
+ * Mesa de bustos (prueba, se prende con `mesa-bustos`): los demás se ven de medio cuerpo,
+ * asomando detrás del paño, con el borde de madera tapándoles el pecho. El de enfrente
+ * asoma arriba del paño (que baja un poco) y los de los costados, en un hueco del borde;
+ * sus cartas y su nombre quedan sobre el paño. Vos seguís con el circulito de abajo.
+ *
+ * El borde de madera de verdad es el del paño (.tapete). Como el busto se dibuja encima de
+ * ese borde, cada asiento le pone adelante su propio pedazo de borde (::after), del mismo
+ * color y en el mismo lugar: se ve como uno solo y el busto queda "detrás".
+ *
+ * (Todo va con .pantalla-mesa.mesa-bustos: estilos.css se carga después y pesa igual.)
+ */
+.pantalla-mesa.mesa-bustos {
+  /* Caja del busto (cuadrada, como el dibujo) y cuánto asoma arriba del borde. */
+  --busto: 60px;
+  --busto-lado: 50px;
+  /* Cuánto crece durante una seña. */
+  --busto-crece: 1.5;
+  /* Lo que se corre el paño para dejar lugar al de enfrente. */
+  --franja-arriba: 46px;
+  /* El grosor del borde de madera (el mismo que el del paño en cada tamaño). */
+  --borde: 6px;
+  --margen: 8px;
+  --margen-lado: 8px;
+  /* Cuánto se inclinan hacia el centro los de los costados (sin 3D: se pixela al crecer). */
+  --giro-lado: 6deg;
+  --busto-sombra: rgb(0 0 0 / 0.45);
+  /* El fondo del hueco de los costados: lo de afuera de la mesa. */
+  --busto-hueco: color-mix(in srgb, var(--madera) 80%, #000);
+}
+
+/* ── El paño, corrido para abajo para dejar lugar al de enfrente ── */
+
+.pantalla-mesa.mesa-bustos .tapete {
+  margin: calc(var(--margen) + var(--franja-arriba)) var(--margen-lado) var(--margen);
+}
+
+/* Los mismos tamaños que el paño de estilos.css: celular bajito y escritorio. */
+@media (max-height: 760px) {
+  .pantalla-mesa.mesa-bustos {
+    --borde: 5px;
+    --margen: 6px;
+    --margen-lado: 6px;
+  }
+}
+@media (min-width: 720px) and (min-height: 640px) {
+  .pantalla-mesa.mesa-bustos {
+    --busto: 74px;
+    --busto-lado: 62px;
+    --franja-arriba: 58px;
+    --margen: 12px;
+    --margen-lado: 14px;
+  }
+}
+
+/* ── El busto ─────────────────────────────────────────────────── */
+
+.pantalla-mesa.mesa-bustos .asiento .avatar-busto {
+  width: var(--busto);
+  height: var(--busto);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  /* Se recorta solo abajo (lo tapa el borde): la cabeza puede crecer para arriba y los costados. */
+  clip-path: inset(-80% -80% 0 -80%);
+}
+.pantalla-mesa.mesa-bustos .avatar-busto > .avatar-dibujo {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  border-radius: 0;
+  clip-path: none;
+  filter: drop-shadow(0 2px 3px var(--busto-sombra));
+}
+/* Mientras se carga el dibujo, la inicial en un círculo, apoyada en el borde. */
+.pantalla-mesa.mesa-bustos .avatar-busto > .avatar-inicial {
+  width: 70%;
+  aspect-ratio: 1;
+  margin: auto auto 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.35);
+}
+/* El pedazo de borde que le tapa el pecho. */
+.pantalla-mesa.mesa-bustos .asiento .asiento-avatar::after {
+  content: '';
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  bottom: 0;
+  height: var(--borde);
+  background: var(--madera-clara);
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* Anillo de turno (y reloj): alrededor de la cabeza, no de la caja. */
+.pantalla-mesa.mesa-bustos .asiento .asiento-avatar::before,
+.pantalla-mesa.mesa-bustos .asiento .anillo-reloj {
+  inset: auto;
+  left: 50%;
+  top: -4%;
+  width: 92%;
+  height: auto;
+  aspect-ratio: 1;
+  translate: -50% 0;
+}
+.pantalla-mesa.mesa-bustos .asiento .anillo-reloj {
+  rotate: -90deg;
+}
+.pantalla-mesa.mesa-bustos .le-toca .avatar-busto {
+  box-shadow: none;
+}
+.pantalla-mesa.mesa-bustos .le-toca .avatar-busto > .avatar-dibujo {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--turno) 70%, transparent));
+}
+/* La M de mano: una ficha apoyada sobre el borde, a un costado del busto. */
+.pantalla-mesa.mesa-bustos .asiento .marca-mano {
+  right: -8px;
+  bottom: -6px;
+  z-index: 5;
+}
+
+/* ── El de enfrente: arriba, con el pecho detrás del borde de arriba ── */
+
+.pantalla-mesa.mesa-bustos :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) {
+  top: calc(-1 * var(--busto));
+}
+
+/*
+ * Paño bajito y ancho: el de enfrente ya no va acostado (el busto queda afuera del paño);
+ * su nombre y sus cartas, uno al lado del otro, debajo del borde.
+ */
+@container mesa (max-height: 480px) and (min-width: 480px) {
+  .pantalla-mesa.mesa-bustos :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) {
+    grid-template-areas:
+      'avatar avatar'
+      'nombre cartas';
+    row-gap: 3px;
+  }
+}
+
+/* ── Los de los costados: en un hueco del borde, inclinados hacia el centro ── */
+
+/*
+ * El borde del costado se abre en un hueco y la persona asoma ahí, con el pecho detrás del
+ * borde de abajo del hueco (como el de enfrente). Ocupa el mismo lugar que el círculo de
+ * antes: el paño no se achica de costado. Su nombre y sus cartas quedan abajo, en el paño.
+ */
+.pantalla-mesa.mesa-bustos :is(.n-4 .asiento.pos-1, .n-6 .asiento.pos-1, .n-6 .asiento.pos-2) {
+  right: 0;
+  justify-items: end;
+}
+.pantalla-mesa.mesa-bustos :is(.n-4 .asiento.pos-3, .n-6 .asiento.pos-4, .n-6 .asiento.pos-5) {
+  left: 0;
+  justify-items: start;
+}
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-1, .n-4 .pos-3, .n-6 .pos-1, .n-6 .pos-2, .n-6 .pos-4, .n-6 .pos-5) .asiento-avatar {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  width: calc(var(--busto-lado) + 8px);
+  height: var(--busto-lado);
+  /* El hueco: lo de afuera de la mesa, con el borde alrededor (salvo del lado de afuera). */
+  background: var(--busto-hueco);
+  box-shadow: inset 0 3px 8px var(--busto-sombra);
+  border: var(--borde) solid var(--madera-clara);
+}
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-1, .n-6 .pos-1, .n-6 .pos-2) .asiento-avatar {
+  border-right: 0;
+  border-radius: 18px 0 0 18px;
+}
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-3, .n-6 .pos-4, .n-6 .pos-5) .asiento-avatar {
+  border-left: 0;
+  border-radius: 0 18px 18px 0;
+}
+/* El borde de abajo del hueco ya le tapa el pecho: no hace falta el pedazo de más. */
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-1, .n-4 .pos-3, .n-6 .pos-1, .n-6 .pos-2, .n-6 .pos-4, .n-6 .pos-5) .asiento-avatar::after {
+  content: none;
+}
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-1, .n-4 .pos-3, .n-6 .pos-1, .n-6 .pos-2, .n-6 .pos-4, .n-6 .pos-5) .avatar-busto {
+  flex: none;
+  width: var(--busto-lado);
+  height: var(--busto-lado);
+}
+/* Girados e inclinados hacia el centro (una ilusión: el dibujo es de frente). */
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-1, .n-6 .pos-1, .n-6 .pos-2) .avatar-busto > .avatar-dibujo {
+  transform-origin: 50% 100%;
+  rotate: calc(-1 * var(--giro-lado));
+}
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-3, .n-6 .pos-4, .n-6 .pos-5) .avatar-busto > .avatar-dibujo {
+  transform-origin: 50% 100%;
+  rotate: var(--giro-lado);
+}
+/* La M, sobre la esquina de adentro del hueco. */
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-1, .n-6 .pos-1, .n-6 .pos-2) .marca-mano {
+  left: -10px;
+  right: auto;
+  bottom: -10px;
+}
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-3, .n-6 .pos-4, .n-6 .pos-5) .marca-mano {
+  right: -10px;
+  bottom: -10px;
+}
+/* Anillo de turno y reloj, sobre la cabeza del que está en el hueco. */
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-1, .n-4 .pos-3, .n-6 .pos-1, .n-6 .pos-2, .n-6 .pos-4, .n-6 .pos-5) .asiento-avatar::before,
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-1, .n-4 .pos-3, .n-6 .pos-1, .n-6 .pos-2, .n-6 .pos-4, .n-6 .pos-5) .anillo-reloj {
+  width: calc(var(--busto-lado) * 0.92);
+  top: -4px;
+}
+
+/* Pica-pica: el que no juega el duelo se atenúa, pero el hueco del borde sigue siendo de madera. */
+.pantalla-mesa.mesa-bustos .asiento.fuera {
+  opacity: 1;
+}
+.pantalla-mesa.mesa-bustos .asiento.fuera > :is(.asiento-nombre, .asiento-cartas, .asiento-bot),
+.pantalla-mesa.mesa-bustos .asiento.fuera .avatar-busto {
+  opacity: 0.4;
+}
+.pantalla-mesa.mesa-bustos .asiento.fuera > .asiento-avatar {
+  opacity: 1;
+}
+
+/* ── La seña: el busto se inclina sobre la mesa y se acerca a la cara ── */
+
+.pantalla-mesa.mesa-bustos .avatar-busto.con-gesto {
+  animation-name: busto-gesto;
+  box-shadow: none;
+  -webkit-mask: linear-gradient(to bottom, #000 78%, transparent);
+  mask: linear-gradient(to bottom, #000 78%, transparent);
+  clip-path: none;
+}
+.pantalla-mesa.mesa-bustos .avatar-busto.con-gesto > .avatar-dibujo {
+  --zoom-quieto: 1;
+  --zoom-gesto: 1.4;
+}
+/* Mientras se inclina, pasa por encima del borde. */
+.pantalla-mesa.mesa-bustos .asiento.con-gesto .asiento-avatar::after {
+  opacity: 0;
+}
+/* El de enfrente crece para abajo (arriba está el marcador); los de los costados, hacia el centro. */
+.pantalla-mesa.mesa-bustos :is(.n-2 .pos-1, .n-4 .pos-2, .n-6 .pos-3) .avatar-busto.con-gesto {
+  transform-origin: 50% 15%;
+}
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-1, .n-6 .pos-1, .n-6 .pos-2) .avatar-busto.con-gesto {
+  transform-origin: 90% 100%;
+}
+.pantalla-mesa.mesa-bustos :is(.n-4 .pos-3, .n-6 .pos-4, .n-6 .pos-5) .avatar-busto.con-gesto {
+  transform-origin: 10% 100%;
+}
+@keyframes busto-gesto {
+  0% {
+    scale: 1;
+  }
+  9%,
+  88% {
+    scale: var(--busto-crece);
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pantalla-mesa.mesa-bustos .avatar-busto.con-gesto {
+    animation: none;
+    scale: var(--busto-crece);
+  }
+}

@@ -24,6 +24,7 @@ import type { ConexionOnline } from '../conexion/online'
 import { useJuego } from '../estado'
 import { leerPerfil } from '../perfil'
 import '../estilos-mesa-online.css'
+import '../estilos-mesa-bustos.css'
 
 export function Mesa() {
   const navegar = useNavigate()
@@ -134,7 +135,7 @@ export function Mesa() {
     else if (!s) mostrarAviso('Esa carta no tiene seña')
     else hacerSenia(s)
   }
-  const ojear = leerPerfil().ojear
+  const { ojear, mesaBustos } = leerPerfil()
   const manoAbierta = !ojear || misCartas.length !== 3 || abiertaEn === vista.mano.numero
   const conTira = hayCompanieros && !finDeMano && misCartas.length > 0 && manoAbierta
   // Menú de jugador: solo online y solo sobre otras personas.
@@ -149,7 +150,7 @@ export function Mesa() {
     !online || humanos <= 1 ? 'Revancha' : pediRevancha ? 'Esperando a los demás…' : `Revancha ${sala.revancha.length}/${humanos}`
 
   return (
-    <div className={`pantalla-mesa n-${n}`}>
+    <div className={`pantalla-mesa n-${n}${mesaBustos ? ' mesa-bustos' : ''}`}>
       <header className="marcador">
         <div className="marcador-filas">
           <div className="marcador-fila nosotros">
@@ -217,6 +218,7 @@ export function Mesa() {
               ladoChat={ladoChatArriba}
               // Y los de los costados de arriba hablan debajo de sus cartas: arriba está el de enfrente.
               chatAbajo={n === 6 && (rel(l.asiento) === 2 || rel(l.asiento) === 4)}
+              busto={mesaBustos}
             />
           ))}
 

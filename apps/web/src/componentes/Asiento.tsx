@@ -37,6 +37,8 @@ interface Props {
   ladoChat?: 'derecha' | 'izquierda' | 'abajo'
   /** El chat va debajo de sus cartas (arriba se toparía con el de enfrente y el marcador). */
   chatAbajo?: boolean
+  /** Mesa de bustos: se lo ve de medio cuerpo, asomando detrás del paño. */
+  busto?: boolean
 }
 
 /**
@@ -48,14 +50,31 @@ export function avatarDeLugar(lugar: Pick<LugarPublico, 'avatar' | 'apodo'>): st
 }
 
 /**
- * El avatar del jugador, acercado a la cara. Mientras hace una seña, el mismo avatar se
- * agranda, se acerca más a la cara y hace el gesto; después vuelve.
+ * El avatar del jugador, acercado a la cara (o de medio cuerpo, en la mesa de bustos).
+ * Mientras hace una seña, el mismo avatar se agranda, se acerca más a la cara y hace el
+ * gesto; después vuelve.
  */
-export function Avatar({ lugar, tam = 'normal', gesto }: { lugar: LugarPublico; tam?: 'normal' | 'chico'; gesto?: GestoActivo }) {
+export function Avatar({
+  lugar,
+  tam = 'normal',
+  gesto,
+  busto = false,
+}: {
+  lugar: LugarPublico
+  tam?: 'normal' | 'chico'
+  gesto?: GestoActivo
+  busto?: boolean
+}) {
   return (
-    <div className={`avatar avatar-${tam}${gesto ? ' con-gesto' : ''}`} data-gesto={gesto?.gesto}>
+    <div className={`avatar avatar-${busto ? 'busto' : tam}${gesto ? ' con-gesto' : ''}`} data-gesto={gesto?.gesto}>
       {/* La clave reinicia la animación con cada gesto (aunque se repita el mismo). */}
-      <Dibujo key={gesto?.id ?? 'quieto'} codigo={avatarDeLugar(lugar)} apodo={lugar.apodo} gesto={gesto?.gesto} encuadre="cara" />
+      <Dibujo
+        key={gesto?.id ?? 'quieto'}
+        codigo={avatarDeLugar(lugar)}
+        apodo={lugar.apodo}
+        gesto={gesto?.gesto}
+        encuadre={busto ? 'busto' : 'cara'}
+      />
     </div>
   )
 }
@@ -101,6 +120,7 @@ export function Asiento({
   arriba = false,
   ladoChat = 'derecha',
   chatAbajo = false,
+  busto = false,
 }: Props) {
   // Una persona que se desconectó conserva el lugar; mientras tanto juega un bot por ella.
   const desconectado = lugar.tipo === 'humano' && !lugar.conectado
@@ -164,7 +184,7 @@ export function Asiento({
         </>
       )}
       <div className="asiento-avatar">
-        <Avatar lugar={lugar} gesto={gesto} />
+        <Avatar lugar={lugar} gesto={gesto} busto={busto} />
         {conReloj && <AnilloReloj venceEn={venceEn} />}
         {esMano && <MarcaMano />}
       </div>
