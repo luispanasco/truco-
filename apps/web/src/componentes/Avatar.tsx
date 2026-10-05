@@ -6,6 +6,7 @@ import { useEstiloAvatar } from '../avatares/estilo'
  * se está cargando), se ve la inicial del apodo.
  *
  * `gesto` va como `data-gesto` en el SVG: las señas animan las capas de la cara con CSS.
+ * `data-avatar` lleva el código, para saber qué avatar se ve (los tests de punta a punta).
  */
 export function Avatar({
   codigo,
@@ -32,6 +33,7 @@ export function Avatar({
       className={`avatar-dibujo ${clase}`}
       viewBox={estilo.viewBox}
       data-gesto={gesto ?? undefined}
+      data-avatar={codigo ?? undefined}
       aria-hidden="true"
       focusable="false"
       dangerouslySetInnerHTML={{ __html: estilo.dibujar(avatar) }}

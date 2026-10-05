@@ -1,5 +1,8 @@
-import { useState } from 'react'
-import { AVATARES, guardarPerfil, leerPerfil, type Perfil } from '../perfil'
+import { useCallback, useState } from 'react'
+import { guardarPerfil, leerPerfil, type Perfil } from '../perfil'
+import { Avatar } from './Avatar'
+import { EditorAvatar } from './EditorAvatar'
+import { Hoja } from './Hoja'
 import { SelectorBaraja } from './SelectorBaraja'
 
 /** El perfil de este navegador; se guarda mientras se edita, así sobrevive a recargar la página. */
@@ -16,41 +19,33 @@ export function usePerfil(): [Perfil, (p: Partial<Perfil>) => void] {
 
 /** Avatar y apodo (lo que ven los demás en la mesa) y la baraja con la que ves las cartas. */
 export function TarjetaPerfil({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Partial<Perfil>) => void }) {
-  const [eligiendoAvatar, setEligiendoAvatar] = useState(false)
+  const [editando, setEditando] = useState(false)
+  const cerrar = useCallback(() => setEditando(false), [])
   return (
     <section className="tarjeta perfil">
       <button
         type="button"
         className="perfil-avatar"
-        aria-label="Elegir avatar"
-        aria-expanded={eligiendoAvatar}
-        onClick={() => setEligiendoAvatar((v) => !v)}
+        aria-label="Cambiar tu avatar"
+        aria-haspopup="dialog"
+        onClick={() => setEditando(true)}
       >
-        {perfil.avatar}
-        <span className="perfil-editar">✎</span>
+        <Avatar codigo={perfil.avatar} apodo={perfil.apodo} />
+        <span className="perfil-editar" aria-hidden="true">
+          ✎
+        </span>
       </button>
       <label className="perfil-apodo">
         <span>Tu apodo</span>
         <input value={perfil.apodo} maxLength={20} placeholder="¿Cómo te dicen?" onChange={(e) => cambiar({ apodo: e.target.value })} />
       </label>
-      {eligiendoAvatar && (
-        <div className="avatares" role="radiogroup" aria-label="Avatar">
-          {AVATARES.map((a) => (
-            <button
-              key={a}
-              type="button"
-              role="radio"
-              aria-checked={perfil.avatar === a}
-              className={`avatar-opcion${perfil.avatar === a ? ' elegido' : ''}`}
-              onClick={() => {
-                cambiar({ avatar: a })
-                setEligiendoAvatar(false)
-              }}
-            >
-              {a}
-            </button>
-          ))}
-        </div>
+      {editando && (
+        <Hoja titulo="Tu avatar" alCerrar={cerrar} clase="hoja-avatar" claseFondo="hoja-fija">
+          <EditorAvatar codigo={perfil.avatar} apodo={perfil.apodo} alCambiar={(avatar) => cambiar({ avatar })} />
+          <button type="button" className="boton" onClick={cerrar}>
+            Listo
+          </button>
+        </Hoja>
       )}
       <SelectorBaraja baraja={perfil.baraja} alElegir={(b) => cambiar({ baraja: b })} />
     </section>
