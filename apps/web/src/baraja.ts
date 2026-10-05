@@ -27,6 +27,22 @@ export function imagenFournier(carta?: Pick<Carta, 'numero' | 'palo'>): string {
   return carpeta() + (carta ? `${carta.numero}-${carta.palo}.webp` : 'dorso.webp')
 }
 
+/** Las 41 imágenes de una baraja (las 40 cartas y el dorso); ninguna si es la propia, en SVG. */
+export function imagenesBaraja(b: Baraja): string[] {
+  if (b === 'propia') return []
+  return [imagenFournier(), ...PALOS.flatMap((palo) => NUMEROS.map((numero) => imagenFournier({ numero, palo })))]
+}
+
+/**
+ * Para jugar sin internet: pide las imágenes de la baraja elegida pasando por el service worker,
+ * que las guarda (vite.config.ts). Hace falta cuando se eligió la baraja antes de que el service
+ * worker controlara la página (la primera visita): esa precarga no quedó guardada. Lo que ya está
+ * guardado sale de la caché, sin red.
+ */
+export async function guardarBarajaSinConexion() {
+  await Promise.all(imagenesBaraja(useBaraja.getState().baraja).map((url) => fetch(url).catch(() => null)))
+}
+
 const precargadas = new Set<Baraja>()
 /** Guarda las imágenes vivas para que el navegador no las suelte antes de usarlas. */
 const imagenes: HTMLImageElement[] = []
@@ -38,8 +54,7 @@ const imagenes: HTMLImageElement[] = []
 export function precargarBaraja(b: Baraja) {
   if (b === 'propia' || precargadas.has(b) || typeof Image === 'undefined') return
   precargadas.add(b)
-  const urls = [imagenFournier(), ...PALOS.flatMap((palo) => NUMEROS.map((numero) => imagenFournier({ numero, palo })))]
-  for (const src of urls) {
+  for (const src of imagenesBaraja(b)) {
     const img = new Image()
     img.decoding = 'async'
     img.src = src

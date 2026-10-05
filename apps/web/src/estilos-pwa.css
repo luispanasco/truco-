@@ -1,0 +1,98 @@
+/*
+ * App instalable: aviso de versión nueva, instalar y sin conexión.
+ */
+
+/* Arriba, centrado y por encima de todo (también del fin de partida). */
+.aviso-version {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 24px);
+  padding: 6px 6px 6px 14px;
+  border: 1px solid var(--panel-borde);
+  border-radius: 999px;
+  background: var(--tapete-oscuro);
+  box-shadow: var(--sombra);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  animation: aviso-version-entra 0.3s ease-out;
+}
+.aviso-version-boton {
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: var(--acento);
+  color: var(--tinta);
+  font-weight: 800;
+}
+@keyframes aviso-version-entra {
+  from {
+    opacity: 0;
+    translate: -50% -12px;
+  }
+}
+
+.boton-instalar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ayuda-instalar {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--panel-borde);
+  border-radius: var(--radio);
+  background: var(--panel);
+  font-size: 0.85rem;
+}
+.ayuda-instalar p {
+  flex: 1;
+  margin: 0;
+}
+.icono-compartir {
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -0.15em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ayuda-instalar-cerrar {
+  border: 0;
+  padding: 0 4px;
+  background: none;
+  color: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+/* Online sin conexión: el aviso en la tarjeta. */
+.sin-conexion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radio);
+  background: var(--peligro-fondo);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aviso-version {
+    animation: none;
+  }
+}
