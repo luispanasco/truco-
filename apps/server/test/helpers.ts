@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { boot, type ColyseusTestServer } from '@colyseus/testing'
 import { mismaCarta, siguienteAleatorio, type Carta, type VistaPartida } from '@truco/engine'
-import type { InfoSala, MensajesCliente, MensajesServidor, OpcionesCrearSala } from '@truco/shared'
+import type { InfoSala, MensajesCliente, MensajesServidor, OpcionesCrearSala, OpcionesUnirse } from '@truco/shared'
 import { crearServidor, type OpcionesServidor } from '../src/servidor'
 import type { SalaTruco } from '../src/SalaTruco'
 
@@ -60,14 +60,20 @@ export class Jugador {
     return new Jugador(room, invitadoId)
   }
 
-  static async unirse(colyseus: ColyseusTestServer, roomId: string, invitadoId = Jugador.nuevoId(), apodo = 'Invitado') {
-    const room = await colyseus.sdk.joinById(roomId, { invitadoId, apodo })
+  static async unirse(
+    colyseus: ColyseusTestServer,
+    roomId: string,
+    invitadoId = Jugador.nuevoId(),
+    apodo = 'Invitado',
+    opciones: Partial<OpcionesUnirse> = {},
+  ) {
+    const room = await colyseus.sdk.joinById(roomId, { invitadoId, apodo, ...opciones })
     return new Jugador(room, invitadoId)
   }
 
-  static async cola(colyseus: ColyseusTestServer) {
+  static async cola(colyseus: ColyseusTestServer, opciones: Partial<OpcionesUnirse> = {}) {
     const invitadoId = Jugador.nuevoId()
-    const room = await colyseus.sdk.joinOrCreate('publica', { invitadoId, apodo: 'Desconocido' })
+    const room = await colyseus.sdk.joinOrCreate('publica', { invitadoId, apodo: 'Desconocido', ...opciones })
     return new Jugador(room, invitadoId)
   }
 

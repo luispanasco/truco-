@@ -6,6 +6,7 @@ const desarrollo = process.env.NODE_ENV !== 'production'
 // TRUCO_TURNO_MS pisa los tiempos que elige cada sala, también el de la primera jugada del mano.
 const botMs = process.env.TRUCO_BOT_MS ? Number(process.env.TRUCO_BOT_MS) : undefined
 const turnoMs = process.env.TRUCO_TURNO_MS ? Number(process.env.TRUCO_TURNO_MS) : undefined
+// TRUCO_TIENDA_DE_PRUEBA=0 deja de aceptar lo pago a quien desbloqueó la tienda de prueba (ver servidor.ts).
 const servidor = crearServidor({
   playground: desarrollo,
   tiempos: {

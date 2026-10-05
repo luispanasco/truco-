@@ -4,6 +4,8 @@
  */
 import type { Accion, ConfigSala, Evento, Formato, VistaPartida } from '@truco/engine'
 import type { Nivel, Senia } from '@truco/bots'
+import type { IdBaraja } from './barajas'
+import type { IdMesa } from './mesas'
 
 /** Nombres de las salas registradas en el servidor. */
 export const SALAS = {
@@ -113,7 +115,19 @@ export interface OpcionesUnirse {
   invitadoId: string
   apodo: string
   avatar?: string
+  /**
+   * Prueba de la tienda (fase 1): el cliente avisa que tiene la tienda desbloqueada y el
+   * servidor, si lo permite (`TRUCO_TIENDA_DE_PRUEBA`), le acepta las piezas, mesas y barajas
+   * pagas. En la fase 2 se apaga y solo vale lo comprado.
+   */
+  tiendaDesbloqueada?: boolean
+  /** La mesa y la baraja que tiene elegidas: si es el anfitrión, son las de toda la sala. */
+  mesa?: string
+  baraja?: string
 }
+
+/** Un `puedeUsar` que deja todo: lo que se acepta con la tienda de prueba desbloqueada. */
+export const TODO_PERMITIDO = (): boolean => true
 
 /** Opciones al crear una sala privada. */
 export interface OpcionesCrearSala extends OpcionesUnirse {
@@ -143,6 +157,11 @@ export interface MensajesCliente {
   elegirAsiento: { asiento: number }
   /** En la espera, solo el anfitrión: cambiar la configuración. */
   configurar: Omit<OpcionesCrearSala, keyof OpcionesUnirse>
+  /**
+   * En la espera: la mesa y la baraja que tiene elegidas quien lo manda. Cualquiera lo puede
+   * mandar, pero solo las del anfitrión se ven en la sala.
+   */
+  mesaYBaraja: { mesa?: string; baraja?: string }
   /** Solo el anfitrión: empezar la partida. */
   iniciar: Record<string, never>
   /** Cola pública: aceptar jugar contra un bot en vez de esperar. */
@@ -178,6 +197,12 @@ export interface InfoSala {
   senias: ConfigSenias
   tiempos: ConfigTiempos
   cartasJugadas: CartasJugadas
+  /**
+   * La mesa y la baraja con las que todos ven la partida: las del anfitrión (en la cola
+   * pública, que no tiene, las de siempre).
+   */
+  mesa: IdMesa
+  baraja: IdBaraja
   /** Si el chat de equipo está habilitado en esta sala. */
   chatEquipo: boolean
   lugares: LugarPublico[]
@@ -222,3 +247,4 @@ export type TipoMensajeServidor = keyof MensajesServidor
 export { describirAccion, describirEvento, TEXTO_CANTO } from './textos'
 export * from './avatar'
 export * from './mesas'
+export * from './barajas'
