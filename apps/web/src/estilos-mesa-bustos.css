@@ -17,8 +17,13 @@
    */
   --busto: clamp(56px, 4vw + 5vh, 120px);
   --busto-lado: clamp(46px, 3vw + 4vh, 96px);
-  /* Cuánto crece durante una seña. */
-  --busto-crece: 1.5;
+  /*
+   * Durante una seña el asiento se recuadra. En el celular, además, el busto crece un poco y
+   * se acerca a la cara para que el gesto se lea; en pantallas grandes ya se ve bien sin zoom.
+   */
+  --busto-crece: 1.2;
+  --busto-zoom-gesto: 1.15;
+  --senia-recuadro: var(--acento);
   /* Lo que se corre el paño para dejar lugar al de enfrente: crece con el busto. */
   --franja-arriba: calc(var(--busto) * 0.77);
   /* El grosor del borde de madera (el mismo que el del paño en cada tamaño). */
@@ -48,6 +53,8 @@
 }
 @media (min-width: 720px) and (min-height: 640px) {
   .pantalla-mesa.mesa-bustos {
+    --busto-crece: 1;
+    --busto-zoom-gesto: 1;
     --margen: 12px;
     --margen-lado: 14px;
   }
@@ -211,6 +218,27 @@
   top: -4px;
 }
 
+/*
+ * En 3v3, los de los costados de arriba llevan el nombre arriba del busto: abajo chocaba con
+ * el busto del que está debajo.
+ */
+.pantalla-mesa.mesa-bustos :is(.n-6 .pos-2, .n-6 .pos-4) .asiento-nombre {
+  order: -1;
+}
+/* En el paño bajito (escritorio) los de los costados van acostados: el nombre, arriba igual. */
+@container mesa (max-height: 480px) and (min-width: 480px) {
+  .pantalla-mesa.mesa-bustos.n-6 .asiento.pos-2 {
+    grid-template-areas:
+      'cartas nombre'
+      'cartas avatar';
+  }
+  .pantalla-mesa.mesa-bustos.n-6 .asiento.pos-4 {
+    grid-template-areas:
+      'nombre cartas'
+      'avatar cartas';
+  }
+}
+
 /* Pica-pica: el que no juega el duelo se atenúa, pero el hueco del borde sigue siendo de madera. */
 .pantalla-mesa.mesa-bustos .asiento.fuera {
   opacity: 1;
@@ -234,7 +262,18 @@
 }
 .pantalla-mesa.mesa-bustos .avatar-busto.con-gesto > .avatar-dibujo {
   --zoom-quieto: 1;
-  --zoom-gesto: 1.4;
+  --zoom-gesto: var(--busto-zoom-gesto);
+}
+/* El recuadro: alcanza para ver que tu compañero te está haciendo una seña. */
+.pantalla-mesa.mesa-bustos .asiento.con-gesto .asiento-avatar {
+  box-shadow:
+    0 0 0 3px var(--senia-recuadro),
+    0 0 14px 2px color-mix(in srgb, var(--senia-recuadro) 70%, transparent);
+  transition: box-shadow 0.2s;
+}
+/* El de enfrente no está en un hueco: el recuadro va redondeado alrededor del busto. */
+.pantalla-mesa.mesa-bustos :is(.n-2 .pos-1, .n-4 .pos-2, .n-6 .pos-3).con-gesto .asiento-avatar {
+  border-radius: 14px;
 }
 /* Mientras se inclina, pasa por encima del borde. */
 .pantalla-mesa.mesa-bustos .asiento.con-gesto .asiento-avatar::after {

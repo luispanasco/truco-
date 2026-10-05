@@ -635,5 +635,9 @@ Pedido del usuario: ver a los jugadores en la mesa. Lorelei solo tiene vista de 
 - **Tamaño según la pantalla:** el de enfrente va de 56 px (celular chico) a 120 px; los de los costados, de 46 a 96 px (`clamp` con vw y vh).
 - **Tests:** web 194, e2e 8.
 
+- **Ajustes pedidos al verlo en PC:**
+  - en 3v3, los de los costados de arriba (jugadores 3 y 5, contando desde vos en sentido antihorario) llevan el nombre arriba del busto: abajo chocaba con el busto del jugador de abajo;
+  - la seña ya no hace zoom grande: el asiento se recuadra con el color de acento. En pantallas grandes el busto no crece; en el celular crece apenas (1,2) y se acerca un poco a la cara (1,15) para que el gesto se lea.
+
 **Pendientes:** durante la seña, el busto de arriba tapa un momento su nombre; las pastillas de seña de los costados pisan las pilas del centro (como en círculos); no se probó con celulares de menos de 700 px de alto.
 
