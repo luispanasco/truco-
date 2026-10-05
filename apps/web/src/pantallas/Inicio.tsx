@@ -201,6 +201,12 @@ export function Inicio() {
             detalle="Al repartir, descubrís tus cartas de a poco, como en la mesa (también online)"
           />
           <Interruptor
+            activo={perfil.mesaBustos}
+            alCambiar={(v) => cambiar({ mesaBustos: v })}
+            titulo="Jugadores sentados (prueba)"
+            detalle="En la mesa, los demás se ven de medio cuerpo detrás del paño"
+          />
+          <Interruptor
             activo={perfil.ayudas}
             alCambiar={(v) => cambiar({ ayudas: v })}
             titulo="Ayudas"

@@ -11,7 +11,8 @@ import '../avatares/gestos.css'
  * `gesto` va como `data-gesto` en el SVG: las señas animan las capas de la cara con CSS
  * (avatares/gestos.css), con piezas que se agregan al montarlo (avatares/gestos.ts).
  * Con `encuadre="cara"` el dibujo se acerca a la cara (cuánto, lo dice el CSS de afuera
- * con `--zoom`). `alMedir` recibe dónde quedó cada parte de la cara (para tocarla).
+ * con `--zoom`); con `encuadre="busto"` se ve de medio cuerpo y, en una seña, se acerca
+ * a la cara sin recortar la cabeza. `alMedir` recibe dónde quedó cada parte de la cara (para tocarla).
  * `data-avatar` lleva el código, para saber qué avatar se ve (los tests de punta a punta).
  */
 export function Avatar({
@@ -26,7 +27,7 @@ export function Avatar({
   apodo?: string
   gesto?: string | null
   clase?: string
-  encuadre?: 'entero' | 'cara'
+  encuadre?: 'entero' | 'cara' | 'busto'
   alMedir?: (zonas: ZonasCara | null) => void
 }) {
   const estilo = useEstiloAvatar()

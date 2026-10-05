@@ -27,6 +27,8 @@ export interface Perfil {
   tiempos: ConfigTiempos
   /** Dibujo de las cartas (cosmético): la baraja propia en SVG o la clásica de Fournier (1878). */
   baraja: Baraja
+  /** Prueba: en la mesa, los demás sentados de medio cuerpo detrás del paño (en vez del círculo). */
+  mesaBustos: boolean
 }
 
 const CLAVE = 'truco.perfil'
@@ -57,6 +59,7 @@ export function leerPerfil(): Perfil {
     seniasHabilitadas: true,
     tiempos: TIEMPOS_SALA_DEFAULT,
     baraja: 'propia',
+    mesaBustos: false,
   }
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as Partial<Perfil> | null
@@ -82,4 +85,14 @@ export function guardarPerfil(p: Perfil) {
   } catch {
     // Sin almacenamiento (modo privado): no se recuerda, pero la app sigue funcionando.
   }
+}
+
+/**
+ * La mesa de bustos todavía es una prueba: se prende y se apaga desde Más opciones o con
+ * `?bustos=1` / `?bustos=0` en la dirección (queda guardado, así sobrevive al ir a la mesa).
+ */
+export function bustosDesdeUrl(busqueda: string) {
+  const valor = new URLSearchParams(busqueda).get('bustos')
+  if (valor !== '1' && valor !== '0') return
+  guardarPerfil({ ...leerPerfil(), mesaBustos: valor === '1' })
 }
