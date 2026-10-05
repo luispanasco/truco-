@@ -4,6 +4,7 @@ import type { Carta, CartasMostradas, Evento, ResultadoEnfrentamiento, Resultado
 import type { Senia } from '@truco/bots'
 import { describirEvento, TEXTO_CANTO, type InfoSala, type MensajeChat, type MensajesCliente } from '@truco/shared'
 import type { Conexion, EstadoConexion, MensajeServidor } from './conexion/tipos'
+import { sonarEfecto, sonarEvento } from './sonido'
 
 export interface Jugada {
   asiento: number
@@ -109,6 +110,9 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       const linea = texto.trim().split('\n')[0]!.trim()
       set((s) => ({ registro: [...s.registro.slice(-40), { id: ++contador, texto: linea }] }))
     }
+    // Suena junto con lo que se ve (el globo del canto, la carta): la vista todavía es la de
+    // antes del evento, así se sabe cuántos fósforos se suman.
+    sonarEvento(ev, get().vista?.puntos)
     switch (ev.tipo) {
       case 'cartaJugada':
         set((s) => ({
@@ -185,6 +189,8 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         set({ sala: m.datos, ...(m.datos.fase !== 'esperando' ? { ofrecerBot: false } : {}) })
         break
       case 'vista':
+        // El primer reparto no llega como evento: la partida arranca con la primera vista.
+        if (!get().vista) sonarEfecto('repartir')
         // La vista manda: así la mesa queda bien también al volver tras recargar la página.
         // Lo mostrado al terminar queda solo si terminó la partida (no hay pausa que lo limpie).
         set((s) => ({

@@ -49,9 +49,11 @@ const pwa = VitePWA({
   includeManifestIcons: false,
   workbox: {
     // Solo woff2 (todos los navegadores que tienen service worker lo leen; los .woff sobran).
-    globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+    // Los efectos de sonido (public/sonidos, unos 50 KiB) van de entrada: sin red también suenan.
+    globPatterns: ['**/*.{js,css,html,svg,woff2}', 'sonidos/*.ogg'],
     // La baraja clásica (1,5 MB) no se baja a todos: se guarda al elegirla (runtimeCaching).
-    globIgnores: ['barajas/**'],
+    // Las voces, tampoco: cada pack se guarda la primera vez que suena.
+    globIgnores: ['barajas/**', 'voces/**'],
     navigateFallback: 'index.html',
     // El servidor de juego (Colyseus) va por /juego: no se guarda nunca ni cae en el index.html.
     // Los websockets no pasan por el service worker, y los pedidos HTTP de /juego no tienen ruta.
@@ -66,6 +68,15 @@ const pwa = VitePWA({
         options: {
           cacheName: 'barajas',
           expiration: { maxEntries: 100 },
+          cacheableResponse: { statuses: [0, 200] },
+        },
+      },
+      {
+        urlPattern: ({ sameOrigin, url }) => sameOrigin && url.pathname.startsWith('/voces/'),
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'voces',
+          expiration: { maxEntries: 120 },
           cacheableResponse: { statuses: [0, 200] },
         },
       },

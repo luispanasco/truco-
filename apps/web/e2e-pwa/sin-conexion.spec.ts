@@ -22,6 +22,16 @@ async function jugarSiMeToca(page: Page): Promise<boolean> {
 }
 
 test('sin conexión carga, avisa en lo online y se juega contra la compu con la baraja clásica', async ({ page, context }) => {
+  // Cuenta los sonidos que arrancan (Web Audio), para ver que los efectos suenan sin red.
+  await page.addInitScript(() => {
+    const w = window as unknown as { sonidos: number }
+    w.sonidos = 0
+    const original = AudioBufferSourceNode.prototype.start
+    AudioBufferSourceNode.prototype.start = function (...args: Parameters<typeof original>) {
+      w.sonidos++
+      return original.apply(this, args)
+    }
+  })
   await page.goto('/')
   await page.getByPlaceholder('¿Cómo te dicen?').fill('Luis')
 
@@ -54,6 +64,12 @@ test('sin conexión carga, avisa en lo online y se juega contra la compu con la 
   }
   await expect(page.getByText('Contra la compu se juega igual', { exact: false })).toBeVisible()
 
+  // Los efectos de sonido están guardados de entrada.
+  const efectos = await page.evaluate(() =>
+    Promise.all(['repartir', 'carta-1', 'carta-2', 'vuelta', 'punto'].map(async (n) => (await fetch(`/sonidos/${n}.ogg`)).ok)),
+  )
+  expect(efectos).toEqual([true, true, true, true, true])
+
   // Contra la compu se juega.
   await page.getByRole('button', { name: 'Jugar', exact: true }).click()
   await expect(page).toHaveURL(/\/mesa$/)
@@ -78,4 +94,6 @@ test('sin conexión carga, avisa en lo online y se juega contra la compu con la 
       { timeout: 60_000, intervals: [250] },
     )
     .toBeLessThan(3)
+  // Sonaron el reparto y la carta: el toque en "Jugar" habilitó el audio y los .ogg salieron de la caché.
+  await expect.poll(() => page.evaluate(() => (window as unknown as { sonidos: number }).sonidos)).toBeGreaterThanOrEqual(2)
 })
