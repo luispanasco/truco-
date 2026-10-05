@@ -15,7 +15,12 @@ import {
 import { crearBot, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibidas } from '@truco/bots'
 import {
   avatarAlAzar,
+  BARAJA_DEFAULT,
   codificarAvatar,
+  MESA_DEFAULT,
+  normalizarBaraja,
+  normalizarMesa,
+  TODO_PERMITIDO,
   LIMITES,
   normalizarAvatar,
   MOTIVO_SENIA_TARDE,
@@ -32,6 +37,8 @@ import {
   type ConfigTiempos,
   type CartasJugadas,
   type FaseSala,
+  type IdBaraja,
+  type IdMesa,
   type InfoSala,
   type MensajeChat,
   type MensajesCliente,
@@ -97,6 +104,11 @@ interface Lugar {
   avatar: string | null
   sessionId: string | null
   conectado: boolean
+  /** La mesa y la baraja que tiene elegidas (ya validadas): las del anfitrión son las de la sala. */
+  mesa: IdMesa
+  baraja: IdBaraja
+  /** Si se le aceptan cosas pagas (tienda de prueba prendida y desbloqueada en su navegador). */
+  tienda: boolean
 }
 
 interface DatosCliente {
@@ -114,7 +126,18 @@ const idJugador = (asiento: number) => `j${asiento}`
 const margenConexiones = (lugares: number) => lugares * 2
 
 function lugarLibre(asiento: number): Lugar {
-  return { asiento, tipo: 'libre', invitadoId: null, apodo: '', avatar: null, sessionId: null, conectado: false }
+  return {
+    asiento,
+    tipo: 'libre',
+    invitadoId: null,
+    apodo: '',
+    avatar: null,
+    sessionId: null,
+    conectado: false,
+    mesa: MESA_DEFAULT,
+    baraja: BARAJA_DEFAULT,
+    tienda: false,
+  }
 }
 
 function texto(x: unknown, max: number): string | null {
@@ -135,6 +158,11 @@ export class SalaTruco extends Room {
   tiempos: Tiempos = TIEMPOS_DEFAULT
   archivo: Archivo | null = null
   publica = false
+  /**
+   * Fase 1, para probar: si el cliente avisa que desbloqueó la tienda, se le acepta todo lo pago
+   * (`TRUCO_TIENDA_DE_PRUEBA`). En la fase 2 se apaga y solo vale lo que compró cada uno.
+   */
+  tiendaDePrueba = false
 
   override maxMessagesPerSecond = 30
 
@@ -212,8 +240,11 @@ export class SalaTruco extends Room {
       lugar.invitadoId = invitadoId
     }
     lugar.apodo = filtrarTexto(apodo)
+    lugar.tienda = this.tiendaDePrueba && opciones?.tiendaDesbloqueada === true
     // Un avatar inválido o con piezas que no tiene se reemplaza por uno armado desde el apodo.
-    lugar.avatar = normalizarAvatar(opciones?.avatar) ?? codificarAvatar(avatarAlAzar(lugar.apodo))
+    lugar.avatar =
+      normalizarAvatar(opciones?.avatar, lugar.tienda ? TODO_PERMITIDO : undefined) ?? codificarAvatar(avatarAlAzar(lugar.apodo))
+    this.elegirMesaYBaraja(lugar, opciones ?? {})
     lugar.sessionId = client.sessionId
     lugar.conectado = true
     client.userData = { asiento: lugar.asiento } satisfies DatosCliente
@@ -372,6 +403,12 @@ export class SalaTruco extends Room {
       this.enviarSala()
     })
 
+    manejar('mesaYBaraja', (_client, asiento, datos) => {
+      if (this.fase !== 'esperando') throw new Rechazo('La partida ya empezó')
+      this.elegirMesaYBaraja(this.lugares[asiento]!, datos)
+      this.enviarSala()
+    })
+
     manejar('iniciar', (_client, asiento) => {
       this.exigirAnfitrion(asiento)
       if (this.fase !== 'esperando') throw new Rechazo('La partida ya empezó')
@@ -403,6 +440,22 @@ export class SalaTruco extends Room {
     if (op.senias && typeof op.senias === 'object') this.configSenias = normalizarSenias(op.senias, this.configSenias)
     if (op.tiempos && typeof op.tiempos === 'object') this.configTiempos = normalizarTiempos(op.tiempos, this.configTiempos)
     this.cartasJugadas = normalizarCartasJugadas(op.cartasJugadas, this.cartasJugadas)
+  }
+
+  /**
+   * Lo que no existe o no puede usar vuelve a lo de siempre (boliche y la baraja propia); lo que
+   * no manda queda como estaba.
+   */
+  private elegirMesaYBaraja(lugar: Lugar, op: { mesa?: unknown; baraja?: unknown }) {
+    const puede = lugar.tienda ? TODO_PERMITIDO : undefined
+    if (op.mesa !== undefined) lugar.mesa = normalizarMesa(op.mesa, puede)
+    if (op.baraja !== undefined) lugar.baraja = normalizarBaraja(op.baraja, puede)
+  }
+
+  /** El anfitrión pone la mesa y la baraja; la cola pública no tiene, así que van las de siempre. */
+  private delAnfitrion(): Lugar | undefined {
+    if (this.publica) return undefined
+    return this.lugares.find((l) => l.invitadoId !== null && l.invitadoId === this.anfitrion)
   }
 
   private cambiarCantidadDeLugares() {
@@ -703,6 +756,8 @@ export class SalaTruco extends Room {
       senias: this.configSenias,
       tiempos: this.configTiempos,
       cartasJugadas: this.cartasJugadas,
+      mesa: this.delAnfitrion()?.mesa ?? MESA_DEFAULT,
+      baraja: this.delAnfitrion()?.baraja ?? BARAJA_DEFAULT,
       chatEquipo: this.chatEquipo(),
       lugares: this.lugares.map((l) => ({
         asiento: l.asiento,

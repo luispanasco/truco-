@@ -1,12 +1,15 @@
 import type { Nivel } from '@truco/bots'
 import type { Formato } from '@truco/engine'
 import {
+  BARAJA_DEFAULT,
   CARTAS_JUGADAS_DEFAULT,
   MESA_DEFAULT,
+  TODO_PERMITIDO,
   TIEMPOS_SALA_DEFAULT,
   avatarAlAzar,
   codificarAvatar,
   normalizarAvatar,
+  normalizarBaraja,
   normalizarCartasJugadas,
   normalizarMesa,
   type CartasJugadas,
@@ -45,6 +48,11 @@ export interface Perfil {
   mesaBustos: boolean
   /** La mesa (paño y madera) con la que se ve la partida y el fondo de la app (cosmético). */
   mesa: IdMesa
+  /**
+   * Prueba de la tienda (fase 1, todavía sin monedas): todo lo pago se puede elegir. El servidor
+   * lo acepta mientras tenga prendida la tienda de prueba. En la fase 2 se va: vale lo comprado.
+   */
+  tiendaDesbloqueada: boolean
 }
 
 const CLAVE = 'truco.perfil'
@@ -74,30 +82,40 @@ export function leerPerfil(): Perfil {
     seniasAntesDeJugar: false,
     seniasHabilitadas: true,
     tiempos: TIEMPOS_SALA_DEFAULT,
-    baraja: 'propia',
+    baraja: BARAJA_DEFAULT,
     mesaBustos: false,
     cartasJugadas: CARTAS_JUGADAS_DEFAULT,
     mesa: MESA_DEFAULT,
+    tiendaDesbloqueada: false,
   }
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as Partial<Perfil> | null
     const perfil = { ...porDefecto, ...(guardado ?? {}) }
-    // Una baraja que ya no existe (o un valor roto) vuelve a la propia.
-    if (perfil.baraja !== 'propia' && perfil.baraja !== 'fournier1878') perfil.baraja = 'propia'
+    perfil.tiendaDesbloqueada = perfil.tiendaDesbloqueada === true
     perfil.cartasJugadas = normalizarCartasJugadas(perfil.cartasJugadas)
-    // Los emojis de antes (o un código roto) pasan a un avatar armado desde el apodo; las piezas
-    // de la tienda vuelven a las gratis, como hace el servidor, así se ve lo mismo que ven los demás.
-    const avatar = normalizarAvatar(perfil.avatar) ?? avatarDe(perfil.apodo || perfil.invitadoId)
-    // Una mesa que no existe, o una de la tienda (todavía no se pueden comprar), vuelve a la de boliche.
-    const mesa = normalizarMesa(perfil.mesa)
-    const cambio = avatar !== perfil.avatar || mesa !== perfil.mesa
-    perfil.avatar = avatar
-    perfil.mesa = mesa
+    const cosmeticos = cosmeticosPermitidos(perfil)
+    const cambio = (['avatar', 'mesa', 'baraja'] as const).some((k) => cosmeticos[k] !== perfil[k])
+    Object.assign(perfil, cosmeticos)
     // Se guarda enseguida: el perfil nuevo o migrado tiene que ser el mismo en todas las pantallas.
     if (!guardado || cambio) guardarPerfil(perfil)
     return perfil
   } catch {
     return porDefecto
+  }
+}
+
+/**
+ * El avatar, la mesa y la baraja que se pueden usar. Los emojis de antes (o un código roto) pasan
+ * a un avatar armado desde el apodo; lo que no existe vuelve a lo de siempre; y lo de la tienda
+ * vuelve a lo gratis, como hace el servidor (así se ve lo mismo que ven los demás), salvo con la
+ * tienda de prueba desbloqueada.
+ */
+export function cosmeticosPermitidos(p: Perfil): Pick<Perfil, 'avatar' | 'mesa' | 'baraja'> {
+  const puede = p.tiendaDesbloqueada ? TODO_PERMITIDO : undefined
+  return {
+    avatar: normalizarAvatar(p.avatar, puede) ?? avatarDe(p.apodo || p.invitadoId),
+    mesa: normalizarMesa(p.mesa, puede),
+    baraja: normalizarBaraja(p.baraja, puede),
   }
 }
 

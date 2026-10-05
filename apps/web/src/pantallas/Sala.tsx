@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import type { InfoSala, LugarPublico } from '@truco/shared'
+import { buscarMesa, type InfoSala, type LugarPublico } from '@truco/shared'
+import { BARAJAS } from '../baraja'
 import { FormularioSala, opcionesDeSala, opcionesParaServidor, resumenSala, type OpcionesSala } from '../componentes/FormularioSala'
 import { avatarDeLugar } from '../componentes/Asiento'
 import { Avatar } from '../componentes/Avatar'
 import { AvisoConexion, CabeceraOnline, ErrorServidor, useIrALaMesa, useSalirAlDesmontar } from '../componentes/Online'
+import { SelectorBaraja } from '../componentes/SelectorBaraja'
+import { SelectorMesa } from '../componentes/SelectorMesa'
+import { usePerfil } from '../componentes/TarjetaPerfil'
 import { useJuego } from '../estado'
 import '../estilos-avatar.css'
 
@@ -188,6 +192,61 @@ function Configuracion({ sala, esAnfitrion }: { sala: InfoSala; esAnfitrion: boo
   )
 }
 
+/** "Mesa Bordó · Baraja clásica, de Ana": con qué se ve la partida (lo pone el anfitrión). */
+export function textoMesaYBaraja(sala: Pick<InfoSala, 'mesa' | 'baraja' | 'lugares' | 'yo'>): string {
+  const mesa = buscarMesa(sala.mesa)?.nombre ?? sala.mesa
+  const baraja = BARAJAS.find((b) => b.id === sala.baraja)?.corto ?? sala.baraja
+  const anfitrion = sala.lugares.find((l) => l.anfitrion)
+  const de = !anfitrion ? '' : anfitrion.asiento === sala.yo ? ', las tuyas' : `, de ${anfitrion.apodo}`
+  return `Mesa ${mesa} · Baraja ${baraja}${de}`
+}
+
+/**
+ * La mesa y la baraja de la sala, en una línea. El anfitrión las puede cambiar acá mismo: quedan
+ * en su perfil y el servidor se las pasa a todos.
+ */
+function MesaYBaraja({ sala, esAnfitrion }: { sala: InfoSala; esAnfitrion: boolean }) {
+  const enviar = useJuego((s) => s.enviar)
+  const [perfil, cambiar] = usePerfil()
+  const [abierto, setAbierto] = useState(false)
+  return (
+    <>
+      <p className="linea-mesa-sala">
+        <span className="muestra-mesa-sala" aria-hidden="true" />
+        <span>{textoMesaYBaraja(sala)}</span>
+        {esAnfitrion && !abierto && (
+          <button type="button" className="boton-texto" aria-label="Cambiar la mesa y la baraja" onClick={() => setAbierto(true)}>
+            Cambiar
+          </button>
+        )}
+      </p>
+      {esAnfitrion && abierto && (
+        <section className="tarjeta">
+          <h2>Mesa y baraja</h2>
+          <SelectorMesa
+            valor={sala.mesa}
+            tiendaDesbloqueada={perfil.tiendaDesbloqueada}
+            alCambiar={(mesa) => {
+              cambiar({ mesa })
+              enviar('mesaYBaraja', { mesa, baraja: sala.baraja })
+            }}
+          />
+          <SelectorBaraja
+            baraja={sala.baraja}
+            alElegir={(baraja) => {
+              cambiar({ baraja })
+              enviar('mesaYBaraja', { mesa: sala.mesa, baraja })
+            }}
+          />
+          <button type="button" className="boton boton-secundario" onClick={() => setAbierto(false)}>
+            Listo
+          </button>
+        </section>
+      )}
+    </>
+  )
+}
+
 /** Sala de espera de una partida privada, hasta que el anfitrión la empieza. */
 export function Sala() {
   const navegar = useNavigate()
@@ -226,6 +285,7 @@ export function Sala() {
       <AvisoConexion />
       {sala.codigo && <Invitar codigo={sala.codigo} />}
       <Lugares sala={sala} />
+      <MesaYBaraja sala={sala} esAnfitrion={esAnfitrion} />
       <Configuracion sala={sala} esAnfitrion={esAnfitrion} />
       <ErrorServidor />
       {esAnfitrion ? (

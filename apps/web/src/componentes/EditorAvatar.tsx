@@ -61,15 +61,19 @@ const COLORES: Partial<Record<CapaAvatar, readonly string[]>> = { piel: PIELES, 
 /** Las piezas chicas de la cara se ven mejor con la miniatura acercada a la cara. */
 const CERCA: readonly CapaAvatar[] = ['ojos', 'cejas', 'nariz', 'boca', 'pecas', 'lentes', 'aros', 'barba', 'cabeza']
 
-/** El código con otra pieza en una capa, o null si la pieza es de la tienda (todavía no se puede usar). */
-export function conPieza(codigo: string, capa: CapaAvatar, pieza: number): string | null {
+/**
+ * El código con otra pieza en una capa, o null si la pieza es de la tienda (todavía no se puede
+ * usar, salvo con la tienda de prueba desbloqueada).
+ */
+export function conPieza(codigo: string, capa: CapaAvatar, pieza: number, tiendaDesbloqueada = false): string | null {
   const a = leerAvatar(codigo)
-  if (!a || !esGratis(capa, pieza)) return null
+  if (!a || !(tiendaDesbloqueada || esGratis(capa, pieza))) return null
   return codificarAvatar({ ...a, [capa]: pieza })
 }
 
-/** Un avatar nuevo al azar, solo con piezas gratis. */
-export const avatarNuevoAlAzar = () => codificarAvatar(avatarAlAzar(`${Date.now()}-${Math.random()}`, true))
+/** Un avatar nuevo al azar, solo con piezas gratis (con la tienda de prueba, con cualquiera). */
+export const avatarNuevoAlAzar = (tiendaDesbloqueada = false) =>
+  codificarAvatar(avatarAlAzar(`${Date.now()}-${Math.random()}`, !tiendaDesbloqueada))
 
 export function Candado() {
   return (
@@ -77,6 +81,18 @@ export function Candado() {
       <path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" strokeWidth="1.8" />
       <rect x="2.5" y="7" width="11" height="8" rx="2" fill="currentColor" />
     </svg>
+  )
+}
+
+/** Lo de la tienda con la tienda de prueba desbloqueada: un candado abierto, chico, sin precio. */
+export function CandadoAbierto() {
+  return (
+    <span className="pieza-precio pieza-abierta" aria-hidden="true">
+      <svg className="candado" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path d="M4.5 7V5a3.5 3.5 0 0 1 6.6-1.6" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <rect x="2.5" y="7" width="11" height="8" rx="2" fill="currentColor" />
+      </svg>
+    </span>
   )
 }
 
@@ -96,12 +112,14 @@ function Opciones({
   apodo,
   alElegir,
   alTocarPaga,
+  tiendaDesbloqueada,
 }: {
   capa: CapaAvatar
   avatar: TAvatar
   apodo: string
   alElegir: (pieza: number) => void
   alTocarPaga: (nombre: string, precio: number) => void
+  tiendaDesbloqueada: boolean
 }) {
   const colores = COLORES[capa]
   return (
@@ -113,7 +131,8 @@ function Opciones({
       {/* Primero las gratis: en los peinados, la mayoría son de la tienda. */}
       {ordenGratisPrimero(capa).map(([pieza, i]) => {
         const elegida = avatar[capa] === i
-        const paga = pieza.precio > 0
+        const deTienda = pieza.precio > 0
+        const paga = deTienda && !tiendaDesbloqueada
         const etiqueta = paga ? `${pieza.nombre}: ${pieza.precio} monedas, pronto en la tienda` : pieza.nombre
         return (
           <button
@@ -136,6 +155,7 @@ function Opciones({
               </span>
             )}
             {paga && <Precio monedas={pieza.precio} />}
+            {deTienda && !paga && <CandadoAbierto />}
           </button>
         )
       })}
@@ -146,9 +166,20 @@ function Opciones({
 /**
  * Editor del avatar por capas: el avatar grande, una pestaña por parte y, en cada una, las
  * piezas con su miniatura. Las de la tienda se ven con candado y precio, pero todavía no se
- * pueden elegir. Cada cambio llama a `alCambiar` con el código nuevo (el perfil lo guarda).
+ * pueden elegir (con la tienda de prueba desbloqueada sí). Cada cambio llama a `alCambiar` con
+ * el código nuevo (el perfil lo guarda).
  */
-export function EditorAvatar({ codigo, apodo, alCambiar }: { codigo: string; apodo: string; alCambiar: (codigo: string) => void }) {
+export function EditorAvatar({
+  codigo,
+  apodo,
+  alCambiar,
+  tiendaDesbloqueada = false,
+}: {
+  codigo: string
+  apodo: string
+  alCambiar: (codigo: string) => void
+  tiendaDesbloqueada?: boolean
+}) {
   const avatar = leerAvatar(codigo) ?? avatarAlAzar(apodo)
   const [pestania, setPestania] = useState(PESTANIAS_AVATAR[0]!.id)
   const [aviso, setAviso] = useState<string | null>(null)
@@ -166,7 +197,7 @@ export function EditorAvatar({ codigo, apodo, alCambiar }: { codigo: string; apo
   const hayPagas = actual.capas.some((c) => CATALOGO_AVATAR[c].some((p) => p.precio > 0))
 
   const elegir = (capa: CapaAvatar, pieza: number) => {
-    const nuevo = conPieza(codificarAvatar(avatar), capa, pieza)
+    const nuevo = conPieza(codificarAvatar(avatar), capa, pieza, tiendaDesbloqueada)
     setAviso(null)
     if (nuevo) alCambiar(nuevo)
   }
@@ -190,7 +221,7 @@ export function EditorAvatar({ codigo, apodo, alCambiar }: { codigo: string; apo
             className="boton boton-secundario"
             onClick={() => {
               setAviso(null)
-              alCambiar(avatarNuevoAlAzar())
+              alCambiar(avatarNuevoAlAzar(tiendaDesbloqueada))
             }}
           >
             Al azar
@@ -232,10 +263,17 @@ export function EditorAvatar({ codigo, apodo, alCambiar }: { codigo: string; apo
                 apodo={apodo}
                 alElegir={(i) => elegir(capa, i)}
                 alTocarPaga={(nombre, precio) => setAviso(`${nombre} cuesta ${precio} monedas. Pronto en la tienda.`)}
+                tiendaDesbloqueada={tiendaDesbloqueada}
               />
             </section>
           ))}
-          {hayPagas && <p className="editor-tienda">Las que tienen candado se compran con monedas. Pronto en la tienda.</p>}
+          {hayPagas && (
+            <p className="editor-tienda">
+              {tiendaDesbloqueada
+                ? 'Tienda de prueba desbloqueada: las del candado abierto son de la tienda.'
+                : 'Las que tienen candado se compran con monedas. Pronto en la tienda.'}
+            </p>
+          )}
         </div>
         <p className="editor-aviso" role="status">
           {aviso}
