@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { InfoSala, LugarPublico } from '@truco/shared'
 import { FormularioSala, opcionesDeSala, opcionesParaServidor, resumenSala, type OpcionesSala } from '../componentes/FormularioSala'
+import { avatarDeLugar } from '../componentes/Asiento'
 import { Avatar } from '../componentes/Avatar'
 import { AvisoConexion, CabeceraOnline, ErrorServidor, useIrALaMesa, useSalirAlDesmontar } from '../componentes/Online'
 import { useJuego } from '../estado'
@@ -86,7 +87,7 @@ function Lugar({ lugar, yo, alSentarse }: { lugar: LugarPublico; yo: number | nu
   return (
     <div className={`lugar ${lugar.tipo}${esYo ? ' yo' : ''}${lugar.tipo === 'humano' && !lugar.conectado ? ' desconectado' : ''}`}>
       <span className="lugar-avatar">
-        <Avatar codigo={lugar.avatar} apodo={lugar.apodo} />
+        <Avatar codigo={avatarDeLugar(lugar)} apodo={lugar.apodo} encuadre="cara" />
       </span>
       <span className="lugar-texto">
         <strong>

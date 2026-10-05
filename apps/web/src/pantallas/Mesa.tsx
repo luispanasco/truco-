@@ -8,7 +8,7 @@ import { esPiezaOMata } from '../senias'
 import { explicarCarta, explicarTanto } from '../ayudas'
 import { GloboExplicacion, useExplicacion } from '../componentes/Ayudas'
 import { Acciones, BotonMazo } from '../componentes/Acciones'
-import { Asiento, Avatar, MarcaMano } from '../componentes/Asiento'
+import { Asiento, Avatar, avatarDeLugar, MarcaMano } from '../componentes/Asiento'
 import { CartasEnMesa } from '../componentes/CartasEnMesa'
 import { BotonChat, PanelChat, useNoLeidos } from '../componentes/Chat'
 import { EstadoConexion } from '../componentes/EstadoConexion'
@@ -18,7 +18,7 @@ import { ManoOjeable } from '../componentes/ManoOjeable'
 import { Mazo } from '../componentes/Mazo'
 import { MenuJugador, useSilenciados } from '../componentes/MenuJugador'
 import { AnilloReloj, RelojPropio } from '../componentes/Reloj'
-import { useGestos } from '../componentes/Cara'
+import { useGestos } from '../gestos'
 import { AvisoSeniaHecha, BotonSenias, PanelSenias, seniasRapidas, TiraSenias } from '../componentes/Senias'
 import type { ConexionOnline } from '../conexion/online'
 import { useJuego } from '../estado'
@@ -364,6 +364,8 @@ export function Mesa() {
       )}
       {panel === 'senias' && hayCompanieros && (
         <PanelSenias
+          avatar={avatarDeLugar(lugarYo)}
+          apodo={lugarYo.apodo}
           alElegir={hacerSenia}
           alCerrar={cerrarPanel}
           sugeridas={sala.ayudas ? seniasDeMano(vista.mano.misCartas, vista.mano.muestra) : null}

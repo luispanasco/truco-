@@ -73,6 +73,7 @@ function recortado(contenido: string, sombrero: number, recorte: string): string
 export const LORELEI: EstiloAvatar = {
   nombre: 'Lorelei',
   viewBox: '0 0 980 980',
+  cara: { x: 320, y: 270, ancho: 450, alto: 520 },
   dibujar(a) {
     const piel = PIELES[a.piel] ?? PIELES[0]
     // La ropa va encima del cuello de Lorelei (que termina en un pecho sin contorno) y debajo

@@ -1,0 +1,263 @@
+/*
+ * Señas sobre la cara del avatar. Cada capa (y cada pieza nuestra, de gestos.ts) se mueve
+ * sobre su propia caja según `data-gesto`. Todas usan la misma animación (`gesto-pose`): va
+ * de quieta a la pose del gesto y vuelve. Cada gesto solo dice la pose, con variables:
+ *   --t (translate), --s (scale), --r (rotate), --o (opacity); y de dónde sale (--s0, --o0).
+ * Las medidas van en `--u` (un centésimo del ancho de la cara), así sirven con cualquier pieza.
+ * Con movimiento reducido no hay animación: se ve la pose quieta mientras dura el gesto.
+ */
+
+.avatar-dibujo {
+  display: block;
+  /* Lo que dura el gesto (entra, se sostiene y vuelve) y cuánto espera para empezar. */
+  --dur: 1.7s;
+  --retraso: 0s;
+}
+.avatar-todo {
+  transform-box: view-box;
+  transform-origin: var(--cara-cx) var(--cara-cy);
+}
+/* Acercado a la cara: el centro de la cara al centro del dibujo. */
+.avatar-dibujo.encuadre-cara .avatar-todo {
+  translate: var(--centrar);
+  scale: var(--zoom, var(--zoom-cara));
+}
+.avatar-dibujo :is(.capa, .ojo-mitad, .gesto-pieza) {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* ── Piezas nuestras ──────────────────────────────────────────── */
+
+.gesto-pieza {
+  --o0: 0;
+  --o: 0;
+  --s0: 0.4;
+  opacity: 0;
+}
+.gesto-trazo {
+  fill: none;
+  stroke: #1d1a16;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.gesto-labios {
+  fill: #c9473d;
+  stroke: #1d1a16;
+}
+.gesto-oscuro {
+  fill: #4a1d1d;
+  stroke: #1d1a16;
+}
+.gesto-lengua-dibujo {
+  fill: #e8707e;
+  stroke: #1d1a16;
+}
+.gesto-diente {
+  fill: #fff;
+  stroke: #1d1a16;
+}
+.gesto-corazon-dibujo {
+  fill: #d6334a;
+  stroke: #1d1a16;
+}
+.gesto-cachete {
+  fill: color-mix(in srgb, var(--avatar-piel, #efc19a) 88%, #c0392b);
+  stroke: #1d1a16;
+}
+.gesto-rubor {
+  fill: rgb(226 104 92 / 0.45);
+}
+
+/* ── La animación ─────────────────────────────────────────────── */
+
+.avatar-dibujo[data-gesto] :is(.capa-cejas, .capa-nariz, .capa-boca, .capa-barba, .ojo-mitad, .gesto-pieza) {
+  animation: gesto-pose var(--dur) cubic-bezier(0.3, 0.7, 0.3, 1) var(--retraso) both;
+}
+@keyframes gesto-pose {
+  0%,
+  100% {
+    translate: var(--t0, 0 0);
+    scale: var(--s0, 1);
+    rotate: 0deg;
+    opacity: var(--o0, 1);
+  }
+  16%,
+  80% {
+    translate: var(--t, 0 0);
+    scale: var(--s, 1);
+    rotate: var(--r, 0deg);
+    opacity: var(--o, 1);
+  }
+}
+
+/* 2 de la muestra: las cejas suben (la copia, que va encima del pelo) y los ojos se abren. */
+.avatar-dibujo[data-gesto='pieza2'] .capa-cejas {
+  --o: 0;
+}
+.avatar-dibujo[data-gesto='pieza2'] .gesto-cejas {
+  --o: 1;
+  --s0: 1;
+  --t: 0 calc(var(--u) * -11px);
+}
+/* Encima del pelo, con un borde del color de la piel para que se lean. */
+.gesto-cejas * {
+  stroke: var(--avatar-piel, #efc19a);
+  stroke-width: calc(var(--u) * 4.5px);
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+.avatar-dibujo[data-gesto='pieza2'] .ojo-mitad {
+  --s: 1.1 1.35;
+}
+
+/* 4 de la muestra: beso (la boca se achica, sale el piquito y un corazón que sube). */
+.avatar-dibujo[data-gesto='pieza4'] .capa-boca {
+  --s: 0.3;
+  --o: 0;
+}
+.avatar-dibujo[data-gesto='pieza4'] .gesto-beso {
+  --o: 1;
+}
+.avatar-dibujo[data-gesto='pieza4'] .gesto-corazon {
+  animation-name: gesto-corazon;
+}
+@keyframes gesto-corazon {
+  0%,
+  22% {
+    opacity: 0;
+    translate: 0 0;
+    scale: 0.5;
+  }
+  45% {
+    opacity: 1;
+    scale: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: calc(var(--u) * 5px) calc(var(--u) * -16px);
+    scale: 1.3;
+  }
+}
+
+/* 5 de la muestra: se frunce la nariz, bajan las cejas y se achican los ojos. */
+.avatar-dibujo[data-gesto='pieza5'] .capa-nariz {
+  --t: 0 calc(var(--u) * -3px);
+  --s: 1.3 0.7;
+}
+.avatar-dibujo[data-gesto='pieza5'] .capa-cejas {
+  --t: 0 calc(var(--u) * 5px);
+}
+.avatar-dibujo[data-gesto='pieza5'] .ojo-mitad {
+  --s: 1 0.55;
+}
+.avatar-dibujo[data-gesto='pieza5'] .gesto-arrugas {
+  --o: 1;
+  --s0: 1;
+}
+
+/* Guiños (como en un espejo: el derecho es el de la derecha de la pantalla). */
+.avatar-dibujo[data-gesto='perico'] .gesto-ojo-der,
+.avatar-dibujo[data-gesto='perica'] .gesto-ojo-izq {
+  --s: 1 0.1;
+  --o: 0;
+}
+.avatar-dibujo[data-gesto='perico'] .gesto-guinio-der,
+.avatar-dibujo[data-gesto='perica'] .gesto-guinio-izq {
+  --o: 1;
+  --s0: 1 0.2;
+}
+
+/* Pera a un lado: la boca (y la barba) se van para ese lado, en mueca. */
+.avatar-dibujo[data-gesto='unoBravo'] :is(.capa-boca, .capa-barba) {
+  --t: calc(var(--u) * 16px) calc(var(--u) * 1px);
+  --r: -14deg;
+}
+.avatar-dibujo[data-gesto='sieteBravo'] :is(.capa-boca, .capa-barba) {
+  --t: calc(var(--u) * -16px) calc(var(--u) * 1px);
+  --r: 14deg;
+}
+.avatar-dibujo:is([data-gesto='unoBravo'], [data-gesto='sieteBravo']) .capa-boca {
+  --s: 1.3 1.1;
+}
+
+/* Un 3: se muerde el labio (la boca se aprieta y asoman los dientes). */
+.avatar-dibujo[data-gesto='tres'] .capa-boca {
+  --s: 1 0.6;
+  --t: 0 calc(var(--u) * 0.8px);
+}
+.avatar-dibujo[data-gesto='tres'] .gesto-dientes {
+  --o: 1;
+  --s0: 1 0.3;
+}
+
+/* Un 2: abre la boca. */
+.avatar-dibujo[data-gesto='dosComun'] .capa-boca {
+  --s: 0.5;
+  --o: 0;
+}
+.avatar-dibujo[data-gesto='dosComun'] .gesto-boca-abierta {
+  --o: 1;
+  --s0: 0.3;
+}
+
+/* 1 de copas u oros: saca la lengua (sale desde la boca, para abajo). */
+.avatar-dibujo .gesto-lengua {
+  transform-origin: 50% 0;
+}
+.avatar-dibujo[data-gesto='unoFalso'] .gesto-lengua {
+  --o: 1;
+  --s0: 1 0.1;
+}
+
+/* Flor: infla los cachetes como un sapo (y la boca se cierra en un puntito). */
+.avatar-dibujo[data-gesto='flor'] :is(.gesto-cachete-izq, .gesto-cachete-der) {
+  --o: 1;
+  --s0: 0.3;
+}
+.avatar-dibujo[data-gesto='flor'] .capa-boca {
+  --s: 0.45 0.7;
+}
+
+/* Disimulo (seña pescada sin saber cuál): mira de reojo a un lado y al otro. */
+.avatar-dibujo[data-gesto='disimulo'] .ojo-mitad {
+  animation-name: gesto-reojo;
+}
+.avatar-dibujo[data-gesto='disimulo'] .capa-cejas {
+  --t: 0 calc(var(--u) * -3px);
+  --r: -3deg;
+}
+@keyframes gesto-reojo {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  15%,
+  42% {
+    translate: calc(var(--u) * -5px) 0;
+  }
+  56%,
+  82% {
+    translate: calc(var(--u) * 5px) 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-dibujo[data-gesto] :is(.capa-cejas, .capa-nariz, .capa-boca, .capa-barba, .ojo-mitad, .gesto-pieza) {
+    animation: none;
+    translate: var(--t, 0 0);
+    scale: var(--s, 1);
+    rotate: var(--r, 0deg);
+    opacity: var(--o, 1);
+  }
+  .avatar-dibujo[data-gesto='pieza4'] .gesto-corazon {
+    opacity: 1;
+    translate: calc(var(--u) * 2px) calc(var(--u) * -5px);
+  }
+  .avatar-dibujo[data-gesto='disimulo'] .ojo-mitad {
+    translate: calc(var(--u) * -5px) 0;
+  }
+}

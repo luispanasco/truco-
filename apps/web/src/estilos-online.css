@@ -370,6 +370,15 @@
   background: rgb(255 255 255 / 0.14);
   font-size: 1.35rem;
 }
+/* El avatar dibujado, acercado a la cabeza como en la mesa. */
+.lugar-avatar > .avatar-dibujo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  clip-path: circle(50%);
+  background: radial-gradient(circle at 50% 35%, #f6eedc, #d8c7a4);
+  --zoom: calc(var(--zoom-cara) * 0.72);
+}
 .lugar.libre .lugar-avatar {
   background: none;
   border: 1.5px dashed rgb(255 255 255 / 0.35);
