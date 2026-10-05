@@ -4,6 +4,8 @@ import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
 import { seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
 import { MOTIVO_SENIA_TARDE, yaJugoEnLaMano } from '@truco/shared'
 import { esPiezaOMata } from '../senias'
+import { explicarCarta, explicarTanto } from '../ayudas'
+import { GloboExplicacion, useExplicacion } from '../componentes/Ayudas'
 import { Acciones, BotonMazo } from '../componentes/Acciones'
 import { Asiento, Avatar, MarcaMano } from '../componentes/Asiento'
 import { CartasEnMesa } from '../componentes/CartasEnMesa'
@@ -45,6 +47,8 @@ export function Mesa() {
   const cerrarPanel = useCallback(() => setPanel(null), [])
   // Cada mensaje nuevo del chat sale, unos segundos, como globito de quien lo mandó.
   const globosChat = useGlobosChat(chat, silenciados)
+  // Ayudas: la explicación de una estrella o de la ficha del tanto, arriba de tu lugar.
+  const { explicacion, explicar, cerrar: cerrarExplicacion } = useExplicacion()
 
   useEffect(() => {
     if (!useJuego.getState().conexion) navegar('/')
@@ -92,6 +96,13 @@ export function Mesa() {
     const dadas = mostradas.find((m) => m.asiento === a)?.cartas.length ?? 0
     return Math.max(0, vista.jugadores[a]!.cartasEnMano - sinVista - dadas)
   }
+  // En 3 contra 3, el chat del de enfrente sale hacia el costado donde no canta nadie: los
+  // cantos de los costados de arriba llegan hasta su altura.
+  const hablaEn = (pos: number) => !!globos[(yo + pos) % n]
+  const ladoChatArriba: 'derecha' | 'izquierda' | 'abajo' =
+    n !== 6 || !hablaEn(2) ? 'derecha' : !hablaEn(4) ? 'izquierda' : 'abajo'
+  // El mazo en la esquina de abajo a la izquierda (repartió el de tu derecha): tus globos se corren.
+  const mazoAbajoIzq = (n === 4 && rel(vista.mano.reparte) === 3) || (n === 6 && rel(vista.mano.reparte) === 5)
   const nuestro = yo % 2
   const [pn, pe] = [vista.puntos[nuestro as 0 | 1], vista.puntos[(1 - nuestro) as 0 | 1]]
   const enEquipos = n > 2
@@ -201,6 +212,9 @@ export function Mesa() {
               gesto={conSenias ? gestos[l.asiento] : undefined}
               chat={globosChat[l.asiento]}
               arriba={rel(l.asiento) * 2 === n}
+              ladoChat={ladoChatArriba}
+              // Y los de los costados de arriba hablan debajo de sus cartas: arriba está el de enfrente.
+              chatAbajo={n === 6 && (rel(l.asiento) === 2 || rel(l.asiento) === 4)}
             />
           ))}
 
@@ -219,7 +233,7 @@ export function Mesa() {
       <section className={`mi-lugar${meToca ? ' le-toca' : ''}${miReloj !== null ? ' con-reloj' : ''}${participa(yo) ? '' : ' fuera'}`}>
         {/* Mis globos (canto y chat) salen de mi avatar, apilados como los de los demás. */}
         {(globos[yo] || globosChat[yo]) && (
-          <div className="asiento-globos mis-globos">
+          <div className={`asiento-globos mis-globos${mazoAbajoIzq ? ' corridos' : ''}`}>
             {globos[yo] && (
               <div key={globos[yo]!.id} className="globo globo-yo">
                 {globos[yo]!.texto}
@@ -234,14 +248,22 @@ export function Mesa() {
             {miReloj !== null && <AnilloReloj venceEn={miReloj} />}
             {e.mano === yo && <MarcaMano />}
           </div>
-          <span className="mi-nombre">{lugarYo.apodo}</span>
-          {sala.ayudas && (
-            <span className="mi-tanto">
-              <span className="mi-tanto-etiqueta">envido </span>
-              <b>{vista.mano.miTanto.envido}</b>
-              {vista.mano.miTanto.flor !== null && <strong className="mi-flor">flor {vista.mano.miTanto.flor}</strong>}
-            </span>
-          )}
+          {/* El nombre y, abajo, la ficha del tanto: así entra todo en un celular angosto. */}
+          <div className="mi-quien">
+            <span className="mi-nombre">{lugarYo.apodo}</span>
+            {sala.ayudas && (
+              // Con flor, el envido no se juega: la ficha muestra la flor (el envido, en la explicación).
+              <button type="button" className="mi-tanto" onClick={(ev) => explicar(explicarTanto(vista), ev.currentTarget)}>
+                {vista.mano.miTanto.flor !== null ? (
+                  <strong className="mi-flor">flor {vista.mano.miTanto.flor}</strong>
+                ) : (
+                  <>
+                    <span className="mi-tanto-etiqueta">envido</span> <b>{vista.mano.miTanto.envido}</b>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
           <span className="mi-estado">
             {meToca && (miReloj !== null ? <RelojPropio venceEn={miReloj} /> : <span className="te-toca">Te toca</span>)}
             {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
@@ -249,32 +271,36 @@ export function Mesa() {
             {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
           </span>
         </div>
-        {conTira && (
-          <TiraSenias
-            rapidas={seniasRapidas(misCartas, vista.mano.muestra)}
-            hechas={hechas.mano === vista.mano.numero ? hechas.senias : []}
-            cerrado={seniasCerradas}
-            alHacer={hacerSenia}
-            alRechazar={(motivo) => mostrarAviso(`⚠ ${motivo}`)}
+        {/* La tira de señas va a los costados de la mano (no en una fila aparte): la mesa no se achica. */}
+        <div className="mi-mano-zona">
+          {conTira && (
+            <TiraSenias
+              rapidas={seniasRapidas(misCartas, vista.mano.muestra)}
+              hechas={hechas.mano === vista.mano.numero ? hechas.senias : []}
+              cerrado={seniasCerradas}
+              alHacer={hacerSenia}
+              alRechazar={(motivo) => mostrarAviso(`⚠ ${motivo}`)}
+            />
+          )}
+          {/* La clave es el número de mano: en cada reparto las cartas entran de nuevo y se vuelven a ojear. */}
+          <ManoOjeable
+            key={vista.mano.numero}
+            className="mi-mano"
+            cartas={misCartas}
+            ojeoActivado={ojear}
+            onAbrir={() => setAbiertaEn(vista.mano.numero)}
+            abrirAlTocar={meToca}
+            reparto
+            jugable={puedeJugar}
+            resaltada={(c) => sala.ayudas && esPiezaOMata(c, vista.mano.muestra)}
+            alTocarEstrella={(c, estrella) => explicar(explicarCarta(c, vista.mano.muestra) ?? '', estrella)}
+            alTocar={jugarCarta}
+            alMantener={hayCompanieros && !finDeMano ? seniaDeMiCarta : undefined}
           />
-        )}
-        {/* La clave es el número de mano: en cada reparto las cartas entran de nuevo y se vuelven a ojear. */}
-        <ManoOjeable
-          key={vista.mano.numero}
-          className="mi-mano"
-          cartas={misCartas}
-          ojeoActivado={ojear}
-          onAbrir={() => setAbiertaEn(vista.mano.numero)}
-          abrirAlTocar={meToca}
-          reparto
-          jugable={puedeJugar}
-          resaltada={(c) => sala.ayudas && esPiezaOMata(c, vista.mano.muestra)}
-          alTocar={jugarCarta}
-          alMantener={hayCompanieros && !finDeMano ? seniaDeMiCarta : undefined}
-        />
+        </div>
         <div className="mi-lugar-pie">
           {finDeMano ? (
-            // Durante la pausa entre manos, el resultado va donde estaban los botones: no tapa la mesa.
+            // Durante la pausa entre manos, el resultado va donde estaban los botones (y crece sobre la mano): no tapa la mesa.
             <div className="fin-de-mano" role="status">
               {finDeMano.split('\n').map((l, i) => (
                 <div key={i}>{l.trim().replace(/^✔\s*/, '')}</div>
@@ -284,6 +310,7 @@ export function Mesa() {
             <Acciones vista={vista} alElegir={jugar} />
           )}
         </div>
+        {explicacion && <GloboExplicacion key={explicacion.id} explicacion={explicacion} alCerrar={cerrarExplicacion} />}
       </section>
 
       {vista.ganador !== null && (

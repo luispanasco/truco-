@@ -76,10 +76,12 @@ export function CartasEnMesa({ n, rel, mesa, mostradas, apodo, nuestro }: Props)
           const ganadora = !c.mostrada && mesa.vueltas[c.lugar]?.ganador === c.asiento
           const pasada = !c.mostrada && c.lugar < viva
           return (
-            <div
+            <motion.div
               key={`${c.asiento}-${c.carta.numero}-${c.carta.palo}`}
               className={`jugada pos-${pos}${pasada ? ' pasada' : ''}${c.mostrada ? ' mostrada' : ''}`}
               style={{ '--vuelta': c.lugar, zIndex: c.lugar + 1 } as CSSProperties}
+              // La que se va queda debajo de todas, también de la que llega a su lugar.
+              exit={{ zIndex: 0, transition: { duration: 0 } }}
             >
               <motion.div
                 className="jugada-vuelo"
@@ -91,8 +93,15 @@ export function CartasEnMesa({ n, rel, mesa, mostradas, apodo, nuestro }: Props)
                     : { x: dx * VUELO, y: dy * VUELO, rotate: (dx || 1) * 14, opacity: 0 }
                 }
                 animate={c.mostrada ? { rotateY: 0, opacity: 1 } : { x: 0, y: 0, rotate: 0, opacity: 1 }}
-                // Al levantar la mesa se achica y se va hacia el centro.
-                exit={{ x: -dx * 30, y: -dy * 30, scale: 0.6, opacity: 0, transition: { duration: DURACION, ease: 'easeOut' } }}
+                // Al levantar la mesa se achica y se va hacia el centro. Se apaga enseguida: si
+                // en ese lugar ya cae una carta nueva, la vieja no se ve asomando por debajo.
+                exit={{
+                  x: -dx * 30,
+                  y: -dy * 30,
+                  scale: 0.6,
+                  opacity: 0,
+                  transition: { duration: DURACION, ease: 'easeOut', opacity: { duration: DURACION / 3, ease: 'easeIn' } },
+                }}
                 transition={{ duration: DURACION, ease: 'easeOut', delay: c.mostrada ? 0.1 + c.mostrada.orden * 0.12 : 0 }}
               >
                 <Carta carta={c.carta} tam="mesa" ganadora={ganadora} />
@@ -102,7 +111,7 @@ export function CartasEnMesa({ n, rel, mesa, mostradas, apodo, nuestro }: Props)
                   </span>
                 )}
               </motion.div>
-            </div>
+            </motion.div>
           )
         })}
       </AnimatePresence>

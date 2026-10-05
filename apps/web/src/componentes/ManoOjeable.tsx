@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import { motion } from 'motion/react'
-import type { Carta as TCarta } from '@truco/engine'
+import { nombreCarta, type Carta as TCarta } from '@truco/engine'
 import { Carta } from './Carta'
 import {
   conTope,
@@ -58,6 +58,8 @@ interface Props {
   abrirAlTocar?: boolean
   jugable?: (c: TCarta) => boolean
   resaltada?: (c: TCarta) => boolean
+  /** Con ayudas: la estrella de las resaltadas se puede tocar (explica por qué está marcada). */
+  alTocarEstrella?: (c: TCarta, estrella: HTMLElement) => void
   /** Juega la carta: tocándola, o arrastrándola hacia la mesa con la mano abierta. */
   alTocar?: (c: TCarta) => void
   /** Mantenerla apretada en el abanico (MANTENER_MS, sin moverla): hace su seña. Apilada no aplica. */
@@ -92,6 +94,7 @@ export function ManoOjeable({
   abrirAlTocar,
   jugable,
   resaltada,
+  alTocarEstrella,
   alTocar,
   alMantener,
   reparto,
@@ -369,9 +372,25 @@ export function ManoOjeable({
               carta={c}
               tam="grande"
               jugable={jugable?.(c)}
-              resaltada={resaltada?.(c)}
+              // Si la estrella se puede tocar, la dibuja el botón de abajo y no la carta.
+              resaltada={!alTocarEstrella && resaltada?.(c)}
               alTocar={alTocar ? () => alTocar(c) : undefined}
             />
+            {alTocarEstrella && resaltada?.(c) && (
+              <button
+                type="button"
+                className="estrella-ayuda"
+                aria-label={`Por qué está marcado el ${nombreCarta(c)}`}
+                // Tocar la estrella no arrastra, no ojea ni hace la seña de la carta.
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  alTocarEstrella(c, e.currentTarget)
+                }}
+              >
+                ★
+              </button>
+            )}
           </motion.div>
         </div>
       ))}

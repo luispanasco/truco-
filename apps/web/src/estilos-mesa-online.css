@@ -549,6 +549,16 @@ button.asiento-nombre:focus-visible {
 .mis-globos > .globo {
   --cola: 22px;
 }
+/*
+ * Con el mazo en la esquina de abajo a la izquierda, mis globos arrancan pasando el mazo:
+ * está al 16 % del paño y la muestra acostada llega hasta 1,25 cartas a su derecha.
+ */
+.mis-globos.corridos {
+  left: calc(16% + var(--carta-mesa) * 1.25 + 4px);
+}
+.mis-globos.corridos > .globo {
+  --cola: 14px;
+}
 
 /* El globito de chat: texto normal (no grito de canto), hasta tres líneas. */
 .globo.globo-chat {
@@ -562,7 +572,7 @@ button.asiento-nombre:focus-visible {
   text-align: left;
   pointer-events: none;
 }
-/* En 3v3, los de los costados de arriba quedan cerca del de enfrente: más angostos, no le tapan el nombre. */
+/* En 3v3, los de los costados de arriba hablan debajo de sus cartas: más angostos, no llegan al centro. */
 .n-6 :is(.pos-2, .pos-4) .globo.globo-chat {
   max-width: min(165px, 36cqw);
 }
@@ -612,6 +622,48 @@ button.asiento-nombre:focus-visible {
   border-bottom-color: transparent;
   border-right-color: var(--papel);
 }
+/* En 3v3, si ya habla el costado de arriba a la derecha, sale para la izquierda. */
+.asiento.asiento .globo.globo-chat.lateral.izquierda {
+  left: auto;
+  right: calc(50% + 30px);
+  transform-origin: 100% 20px;
+}
+.asiento.asiento .globo.globo-chat.lateral.izquierda::after {
+  right: auto;
+  left: 100%;
+  border-right-color: transparent;
+  border-left-color: var(--papel);
+}
+/* Y si hablan los dos costados: abajo, debajo de sus cartas y del canto. */
+.asiento-globos.abajo {
+  top: 100%;
+  bottom: auto;
+  margin: 8px 0 0;
+  flex-direction: column;
+}
+.asiento-globos.abajo > .globo:first-child {
+  transform-origin: 50% 0;
+}
+.asiento.asiento .asiento-globos.abajo > .globo:first-child::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--papel);
+}
+.asiento.asiento .asiento-globos.abajo > .globo-senia:first-child::after {
+  border-bottom-color: var(--fondo-senia);
+}
+/* Paño bajito: el de enfrente está acostado (cartas al costado), el chat sale pasando las cartas. */
+@container mesa (max-height: 480px) and (min-width: 480px) {
+  .asiento.asiento .globo.globo-chat.lateral {
+    left: calc(100% + 8px);
+    max-width: min(200px, calc(50cqw - 50% - 20px));
+  }
+  .asiento.asiento .globo.globo-chat.lateral.izquierda {
+    left: auto;
+    right: calc(100% + 8px);
+  }
+}
 .globo.globo-chat.saliendo {
   animation: globo-sale 0.35s ease-in forwards;
 }
@@ -642,6 +694,13 @@ button.asiento-nombre:focus-visible {
   .globo.globo-chat.saliendo {
     animation: globo-funde 0.2s linear forwards;
   }
+}
+/*
+ * Mientras hace una seña, el avatar crece hacia arriba (no le tapa el nombre): lo que tiene
+ * arriba se corre para dejarle lugar.
+ */
+.asiento.con-gesto .asiento-globos {
+  margin-bottom: 32px;
 }
 /* Mientras habla, su asiento pasa adelante: el globo no queda debajo de otro asiento. */
 .asiento.con-globo {

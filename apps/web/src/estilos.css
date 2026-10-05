@@ -26,6 +26,7 @@
   --turno: var(--acento);
   --exito: #2e8b57;
   --panel: rgb(0 0 0 / 0.32);
+  --panel-fuerte: rgb(30 20 12 / 0.92);
   --panel-borde: rgb(255 255 255 / 0.1);
   --accion-truco: var(--acento);
   --accion-envido: var(--papel);
@@ -956,31 +957,51 @@ button {
 .mi-info .asiento-avatar::before {
   inset: -4px;
 }
-.mi-nombre {
-  min-width: 2.5em;
-  font-weight: 800;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 0 0 auto;
-  max-width: 34%;
-}
-.mi-tanto {
+.mi-quien {
   flex: 0 1 auto;
   min-width: 0;
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+}
+.mi-nombre {
+  max-width: 100%;
+  min-width: 2.5em;
+  font-weight: 800;
+  line-height: 1.15;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.1);
-  font-size: 0.76rem;
   white-space: nowrap;
+}
+/* La ficha del tanto (con ayudas): debajo del nombre, y se toca para ver de dónde sale. */
+.mi-tanto {
+  position: relative;
+  max-width: 100%;
+  padding: 1px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.12);
+  color: var(--texto-claro);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Zona de toque más grande que la ficha. */
+.mi-tanto::before {
+  content: '';
+  position: absolute;
+  inset: -8px -4px;
+}
+.mi-tanto:focus-visible {
+  outline: 2px solid var(--texto-claro);
+  outline-offset: 2px;
 }
 .mi-tanto b {
   font-weight: 800;
 }
 .mi-flor {
-  margin-left: 6px;
   color: var(--acento);
 }
 .mi-estado {
@@ -1021,6 +1042,7 @@ button {
 }
 /* Botonera o resultado de la mano: el lugar queda reservado para que la mesa no salte. */
 .mi-lugar-pie {
+  position: relative;
   min-height: 44px;
   display: grid;
   align-content: center;
@@ -1346,13 +1368,21 @@ button {
     var(--sombra);
 }
 
-/* Resultado de la mano, durante la pausa antes de repartir de nuevo. */
+/*
+ * Resultado de la mano, durante la pausa antes de repartir de nuevo. Crece hacia arriba,
+ * sobre la mano (que en la pausa casi siempre está vacía): así la mesa no cambia de tamaño.
+ */
 .fin-de-mano {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  translate: -50% 0;
   width: min(100%, 420px);
-  margin: 0 auto;
+  z-index: 4;
+  backdrop-filter: blur(2px);
   padding: 8px 14px;
   border-radius: 14px;
-  background: rgb(0 0 0 / 0.35);
+  background: var(--panel-fuerte);
   border: 1.5px solid var(--acento);
   text-align: center;
   font-size: 0.8rem;
@@ -1531,10 +1561,111 @@ button {
   }
 }
 
+/*
+ * Paño bajito y ancho (escritorio): el de enfrente también va acostado, con sus cartas al
+ * costado del avatar. Así ocupa menos alto y las cartas de la mesa no quedan de celular.
+ */
+@container mesa (max-height: 480px) and (min-width: 480px) {
+  :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) {
+    grid-template-areas:
+      'avatar cartas'
+      'nombre cartas';
+    align-items: center;
+    column-gap: 10px;
+  }
+  :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .asiento-avatar {
+    grid-area: avatar;
+  }
+  :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .asiento-nombre {
+    grid-area: nombre;
+  }
+  :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .asiento-cartas {
+    grid-area: cartas;
+  }
+}
+
 /* Paño muy bajito en 3 contra 3: el mazo se achica un poco más para no pisar asientos. */
 @container mesa (max-height: 440px) {
   .mazo-chico {
     scale: 0.68;
+  }
+}
+
+/* ── Ayudas: estrella de piezas y matas, y su explicación ─────── */
+
+/* La estrella de la carta, tocable: la misma que dibujaba la carta, con zona de toque de 36 px. */
+.mano-ojeable .mano-reparto {
+  position: relative;
+}
+.estrella-ayuda {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--acento);
+  color: var(--tinta);
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: var(--sombra);
+  touch-action: manipulation;
+}
+.estrella-ayuda::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+.estrella-ayuda:focus-visible {
+  outline: 2px solid var(--texto-claro);
+  outline-offset: 2px;
+}
+/* Mientras está apilada para ojear, la estrella no delata a una carta que todavía no se vio. */
+.mano-apilada .tapada .estrella-ayuda {
+  display: none;
+}
+/*
+ * La explicación sale arriba de tu lugar, sobre el borde de abajo del paño: no tapa los
+ * botones de canto ni la mano. La colita apunta a lo que se tocó (--flecha).
+ */
+.explicacion-ayuda {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  /* Centrada sin transform, así se puede medir dónde va la colita. */
+  left: 10px;
+  right: 10px;
+  max-width: 340px;
+  margin: 0 auto;
+  padding: 9px 13px;
+  border-radius: 14px;
+  background: var(--papel);
+  color: var(--tinta);
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1.35;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.45);
+  z-index: 22;
+  cursor: pointer;
+  animation: globo-entra 0.2s ease-out;
+}
+.explicacion-ayuda::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: var(--flecha, 50%);
+  margin-left: -7px;
+  border: 7px solid transparent;
+  border-top-color: var(--papel);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explicacion-ayuda {
+    animation: none;
   }
 }
 

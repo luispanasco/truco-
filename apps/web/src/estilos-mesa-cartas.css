@@ -89,10 +89,15 @@
 }
 
 /*
- * 3 contra 3 en un paño bajito y ancho (escritorio o celular acostado): sobra ancho y falta
- * alto, así que los de los costados apilan hacia su asiento, de costado.
+ * Paño bajito y ancho (escritorio o celular acostado): sobra ancho y falta alto. El de
+ * enfrente va acostado y ocupa menos alto (ver estilos.css), y en 3 contra 3 los de los
+ * costados apilan hacia su asiento, de costado.
  */
 @container mesa (max-height: 480px) and (min-width: 480px) {
+  .cartas-en-mesa {
+    --libre-alto: calc(100cqh - 176px);
+    --centro-y: 4px;
+  }
   .n-6 .cartas-en-mesa {
     --w: clamp(30px, min((50cqw - 90px) / 2.45, var(--libre-alto) / 3.2), 50px);
   }

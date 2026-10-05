@@ -291,6 +291,8 @@
   border-color: inherit;
   background: radial-gradient(circle at 50% 45%, var(--tapete), var(--tapete-oscuro));
   box-shadow: 0 4px 14px rgb(0 0 0 / 0.5);
+  /* Crece hacia arriba: el nombre, que está abajo, se sigue leyendo. */
+  transform-origin: 50% 100%;
   animation: avatar-gesto 2.3s ease both;
 }
 .avatar-gesto .cara {
@@ -346,6 +348,54 @@
   bottom: 100%;
   border-top-color: transparent;
   border-bottom-color: var(--fondo-senia);
+}
+/*
+ * Los de los costados (en 3v3, los de abajo) pueden tener el mazo debajo de sus cartas, y
+ * arriba lo que dicen ellos o el costado de arriba: la seña sale al costado del avatar,
+ * hacia el centro de la mesa (al empezar la mano, cuando se seña, ahí no hay cartas).
+ */
+.asiento.asiento:is(.n-4 .pos-1, .n-4 .pos-3, .n-6 .pos-1, .n-6 .pos-5) > .globo.globo-senia {
+  top: 4px;
+  bottom: auto;
+  left: calc(50% + 30px);
+  right: auto;
+  margin: 0;
+  max-width: min(150px, 34cqw);
+  transform: none;
+  transform-origin: 0 50%;
+}
+.asiento.asiento.pos-1:is(.n-4 *, .n-6 *) > .globo.globo-senia {
+  left: auto;
+  right: calc(50% + 30px);
+  transform-origin: 100% 50%;
+}
+.asiento.asiento:is(.n-4 .pos-1, .n-4 .pos-3, .n-6 .pos-1, .n-6 .pos-5) > .globo.globo-senia::after {
+  top: 50%;
+  bottom: auto;
+  left: auto;
+  right: 100%;
+  margin: -6px 0 0;
+  border-color: transparent;
+  border-right-color: var(--fondo-senia);
+}
+.asiento.asiento.pos-1:is(.n-4 *, .n-6 *) > .globo.globo-senia::after {
+  right: auto;
+  left: 100%;
+  border-right-color: transparent;
+  border-left-color: var(--fondo-senia);
+}
+/* Paño bajito (asientos acostados, con las cartas hacia el centro): la seña, pasando las cartas. */
+@container mesa (max-height: 480px) and (min-width: 480px) {
+  .asiento.asiento.pos-5:is(.n-6 *) > .globo.globo-senia {
+    left: calc(100% + 8px);
+  }
+  .asiento.asiento.pos-1:is(.n-6 *) > .globo.globo-senia {
+    right: calc(100% + 8px);
+  }
+  /* Hasta la mitad del paño (100% es el ancho del asiento): la del otro costado no se pisa. */
+  .asiento.asiento:is(.n-6 .pos-1, .n-6 .pos-5) > .globo.globo-senia {
+    max-width: calc(50cqw - 100% - 24px);
+  }
 }
 
 /* ── La cara de señas (hoja) ──────────────────────────────────── */
@@ -617,6 +667,93 @@
   }
   .senia-rapida {
     height: 34px;
+  }
+}
+
+/*
+ * La tira va a los costados de la mano abierta, no en una fila aparte: la zona de abajo no
+ * crece y la mesa no se achica. Una seña a cada lado, alternando (a lo sumo dos por lado).
+ */
+.mi-mano-zona {
+  position: relative;
+}
+.mi-mano-zona > .tira-senias {
+  position: absolute;
+  inset: 0 0 8px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(var(--carta-mano) * 3 + 40px) minmax(0, 1fr);
+  grid-auto-rows: min-content;
+  align-content: center;
+  gap: 6px 2px;
+  min-height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.mi-mano-zona > .tira-senias > * {
+  pointer-events: auto;
+}
+.mi-mano-zona > .tira-senias > :nth-child(odd) {
+  grid-column: 1;
+  justify-self: center;
+}
+.mi-mano-zona > .tira-senias > :nth-child(even) {
+  grid-column: 3;
+  justify-self: center;
+}
+.mi-mano-zona > .tira-senias.vacia {
+  font-size: 0.66rem;
+  line-height: 1.25;
+  text-align: center;
+}
+/* En el celular cada seña es un botoncito con el gesto y el rótulo corto. */
+.mi-mano-zona .senia-rapida {
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  width: 100%;
+  max-width: 78px;
+  height: auto;
+  min-height: 40px;
+  padding: 4px 4px 5px;
+  border-radius: 12px;
+}
+.mi-mano-zona .senia-rapida-texto {
+  display: none;
+}
+.senia-rapida-rotulo {
+  display: none;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.64rem;
+  font-weight: 800;
+  line-height: 1.15;
+  white-space: nowrap;
+  color: var(--acento);
+}
+.senia-rapida.hecha .senia-rapida-rotulo {
+  color: var(--texto-claro);
+}
+.mi-mano-zona .senia-rapida-rotulo {
+  display: block;
+}
+/* En pantalla grande sobra lugar a los costados: el botón entero, con el gesto y la carta. */
+@media (min-width: 720px) and (min-height: 640px) {
+  .mi-mano-zona .senia-rapida {
+    flex-direction: row;
+    gap: 5px;
+    width: auto;
+    max-width: 100%;
+    min-height: 38px;
+    padding: 0 10px 0 6px;
+    border-radius: 999px;
+  }
+  .mi-mano-zona .senia-rapida-texto {
+    display: grid;
+  }
+  .mi-mano-zona .senia-rapida-rotulo {
+    display: none;
   }
 }
 

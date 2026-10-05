@@ -232,7 +232,7 @@ export function seniasRapidas(cartas: readonly TCarta[], muestra: TCarta): Senia
 }
 
 /**
- * Señas rápidas: un botón por cada seña de tus cartas, arriba de la mano. Un toque la
+ * Señas rápidas: un botón por cada seña de tus cartas, a los costados de la mano. Un toque la
  * hace (se puede repetir); la que ya hiciste queda marcada. Para mentir o hacer otra,
  * sigue la cara. Si ya pasó el momento, los botones quedan apagados y dicen por qué.
  */
@@ -280,6 +280,11 @@ export function TiraSenias({
                 {hecha && <span className="senia-rapida-hecha"> ✓</span>}
               </b>
               <small>{carta}</small>
+            </span>
+            {/* En el celular, al costado de la mano, va solo el rótulo corto. */}
+            <span className="senia-rapida-rotulo" aria-hidden="true">
+              {ROTULO[senia]}
+              {hecha && ' ✓'}
             </span>
           </button>
         )
