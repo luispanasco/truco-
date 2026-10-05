@@ -80,6 +80,7 @@ function partida2v2({
     codigo: 'SALA2',
     publica: false,
     tiempos: { turnoS: 30, primeraJugadaS: 60 },
+    cartasJugadas: 'quedan',
     fase: 'jugando',
     formato: '2v2',
     config,

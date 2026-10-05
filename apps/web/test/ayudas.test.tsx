@@ -171,6 +171,7 @@ async function entrar(estado: EstadoPartida, yo: number, ayudas = true) {
     codigo: 'AYUDA',
     publica: false,
     tiempos: { turnoS: 30, primeraJugadaS: 60 },
+    cartasJugadas: 'quedan',
     fase: 'jugando',
     formato: '3v3',
     config,

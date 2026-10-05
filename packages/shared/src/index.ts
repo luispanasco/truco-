@@ -80,6 +80,20 @@ export function normalizarTiempos(op: Partial<ConfigTiempos> | undefined, base: 
   }
 }
 
+/**
+ * Qué pasa con las cartas jugadas: quedan en la mesa toda la mano (como en la vida real) o
+ * se levantan al cerrar cada vuelta, para que la mesa no quede tan cargada. Es solo visual,
+ * pero la elige la sala para que todos vean lo mismo.
+ */
+export type CartasJugadas = 'quedan' | 'seLevantan'
+
+export const CARTAS_JUGADAS_DEFAULT: CartasJugadas = 'quedan'
+
+/** Valida la opción de las cartas jugadas (lo que no sirve queda como estaba). */
+export function normalizarCartasJugadas(op: unknown, base: CartasJugadas = CARTAS_JUGADAS_DEFAULT): CartasJugadas {
+  return op === 'quedan' || op === 'seLevantan' ? op : base
+}
+
 /** Si el asiento ya jugó alguna carta en la mano (sirve con el estado del motor y con la vista). */
 export function yaJugoEnLaMano(mano: { enfrentamientos: { vueltas: { jugadas: { asiento: number }[] }[] }[] }, asiento: number): boolean {
   return mano.enfrentamientos.some((e) => e.vueltas.some((v) => v.jugadas.some((j) => j.asiento === asiento)))
@@ -112,6 +126,8 @@ export interface OpcionesCrearSala extends OpcionesUnirse {
   senias?: Partial<ConfigSenias>
   /** Segundos por jugada y para la primera jugada del mano. */
   tiempos?: Partial<ConfigTiempos>
+  /** Si las cartas jugadas quedan en la mesa o se levantan en cada vuelta. */
+  cartasJugadas?: CartasJugadas
 }
 
 export type CanalChat = 'general' | 'equipo'
@@ -161,6 +177,7 @@ export interface InfoSala {
   ayudas: boolean
   senias: ConfigSenias
   tiempos: ConfigTiempos
+  cartasJugadas: CartasJugadas
   /** Si el chat de equipo está habilitado en esta sala. */
   chatEquipo: boolean
   lugares: LugarPublico[]
