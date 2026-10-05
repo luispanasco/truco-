@@ -15,7 +15,8 @@ const POSICIONES: Record<number, [number, number][]> = {
     [85, 86],
     [84, 24],
     [17, 15],
-    [16, 76],
+    // Bien abajo: más arriba pisa las cartas del de la izquierda (en escritorio el paño es bajito).
+    [16, 83],
   ],
   // En 3 contra 3 va a las esquinas: el medio de arriba y de abajo es de los asientos y del registro.
   6: [

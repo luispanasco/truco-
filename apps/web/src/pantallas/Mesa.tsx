@@ -92,6 +92,13 @@ export function Mesa() {
     const dadas = mostradas.find((m) => m.asiento === a)?.cartas.length ?? 0
     return Math.max(0, vista.jugadores[a]!.cartasEnMano - sinVista - dadas)
   }
+  // En 3 contra 3, el chat del de enfrente sale hacia el costado donde no canta nadie: los
+  // cantos de los costados de arriba llegan hasta su altura.
+  const hablaEn = (pos: number) => !!globos[(yo + pos) % n]
+  const ladoChatArriba: 'derecha' | 'izquierda' | 'abajo' =
+    n !== 6 || !hablaEn(2) ? 'derecha' : !hablaEn(4) ? 'izquierda' : 'abajo'
+  // El mazo en la esquina de abajo a la izquierda (repartió el de tu derecha): tus globos se corren.
+  const mazoAbajoIzq = (n === 4 && rel(vista.mano.reparte) === 3) || (n === 6 && rel(vista.mano.reparte) === 5)
   const nuestro = yo % 2
   const [pn, pe] = [vista.puntos[nuestro as 0 | 1], vista.puntos[(1 - nuestro) as 0 | 1]]
   const enEquipos = n > 2
@@ -201,6 +208,9 @@ export function Mesa() {
               gesto={conSenias ? gestos[l.asiento] : undefined}
               chat={globosChat[l.asiento]}
               arriba={rel(l.asiento) * 2 === n}
+              ladoChat={ladoChatArriba}
+              // Y los de los costados de arriba hablan debajo de sus cartas: arriba está el de enfrente.
+              chatAbajo={n === 6 && (rel(l.asiento) === 2 || rel(l.asiento) === 4)}
             />
           ))}
 
@@ -219,7 +229,7 @@ export function Mesa() {
       <section className={`mi-lugar${meToca ? ' le-toca' : ''}${miReloj !== null ? ' con-reloj' : ''}${participa(yo) ? '' : ' fuera'}`}>
         {/* Mis globos (canto y chat) salen de mi avatar, apilados como los de los demás. */}
         {(globos[yo] || globosChat[yo]) && (
-          <div className="asiento-globos mis-globos">
+          <div className={`asiento-globos mis-globos${mazoAbajoIzq ? ' corridos' : ''}`}>
             {globos[yo] && (
               <div key={globos[yo]!.id} className="globo globo-yo">
                 {globos[yo]!.texto}

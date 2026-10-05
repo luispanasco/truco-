@@ -81,10 +81,19 @@ export function useGlobosChat(chat: MensajeChat[], silenciados: ReadonlySet<numb
  * El globito: texto cortado a tres líneas, con la colita hacia quien habla.
  * `apilado`: hay un canto en el mismo lugar (el canto va pegado a la persona y este, más afuera, sin colita).
  */
-export function GloboDeChat({ globo, apilado = false, lateral = false }: { globo: GloboChat; apilado?: boolean; lateral?: boolean }) {
+export function GloboDeChat({
+  globo,
+  apilado = false,
+  lateral = false,
+}: {
+  globo: GloboChat
+  apilado?: boolean
+  /** Al costado del avatar (el de enfrente): a la derecha, salvo que se pida la izquierda. */
+  lateral?: boolean | 'derecha' | 'izquierda'
+}) {
   return (
     <div
-      className={`globo globo-chat${globo.canal === 'equipo' ? ' equipo' : ''}${apilado ? ' apilado' : ''}${lateral ? ' lateral' : ''}${globo.saliendo ? ' saliendo' : ''}`}
+      className={`globo globo-chat${globo.canal === 'equipo' ? ' equipo' : ''}${apilado ? ' apilado' : ''}${lateral ? ' lateral' : ''}${lateral === 'izquierda' ? ' izquierda' : ''}${globo.saliendo ? ' saliendo' : ''}`}
       role="status"
       title={globo.texto}
     >

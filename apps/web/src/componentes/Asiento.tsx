@@ -28,6 +28,13 @@ interface Props {
   chat?: GloboChat
   /** El asiento de enfrente, arriba de todo: el chat le sale al costado del avatar. */
   arriba?: boolean
+  /**
+   * Arriba de todo: hacia dónde sale el chat. Al costado derecho, salvo que ahí hable otro
+   * (en 3v3); si hablan los dos costados, abajo, debajo del canto.
+   */
+  ladoChat?: 'derecha' | 'izquierda' | 'abajo'
+  /** El chat va debajo de sus cartas (arriba se toparía con el de enfrente y el marcador). */
+  chatAbajo?: boolean
 }
 
 /**
@@ -87,6 +94,8 @@ export function Asiento({
   gesto,
   chat,
   arriba = false,
+  ladoChat = 'derecha',
+  chatAbajo = false,
 }: Props) {
   // Una persona que se desconectó conserva el lugar; mientras tanto juega un bot por ella.
   const desconectado = lugar.tipo === 'humano' && !lugar.conectado
@@ -107,26 +116,46 @@ export function Asiento({
     </div>
   ) : null
   const globoSenia = gesto ? <GloboSenia key={gesto.id} gesto={gesto} esCompaniero={esCompaniero} /> : null
+  // A los costados: qué va arriba del avatar y qué debajo de las cartas (en orden, de la persona hacia afuera).
+  const cercaArriba = globoCanto
+  const cercaAbajo = globoCanto ? null : globoSenia
+  const globoChat = (apilado: boolean) => (chat ? <GloboDeChat key={chat.id} globo={chat} apilado={apilado} /> : null)
+  const pilaArriba = [cercaArriba, chatAbajo ? null : globoChat(!!cercaArriba)]
+  const pilaAbajo = [cercaAbajo, chatAbajo ? globoChat(!!cercaAbajo) : null]
   return (
     <div
-      className={`asiento pos-${posicion}${leToca ? ' le-toca' : ''}${conReloj ? ' con-reloj' : ''}${esCompaniero ? ' companiero' : ' rival'}${participa ? '' : ' fuera'}${desconectado ? ' desconectado' : ''}${globo || chat ? ' con-globo' : ''}`}
+      className={`asiento pos-${posicion}${leToca ? ' le-toca' : ''}${conReloj ? ' con-reloj' : ''}${esCompaniero ? ' companiero' : ' rival'}${participa ? '' : ' fuera'}${desconectado ? ' desconectado' : ''}${globo || chat || gesto ? ' con-globo' : ''}${gesto ? ' con-gesto' : ''}`}
     >
-      {arriba ? (
+      {arriba && ladoChat === 'abajo' && chat ? (
+        // Hablan también los dos costados de arriba: el chat cuelga debajo del canto.
+        <div className="asiento-globos abajo">
+          {globoCanto ?? globoSenia}
+          <GloboDeChat key={chat.id} globo={chat} apilado={!!(globoCanto ?? globoSenia)} />
+        </div>
+      ) : arriba ? (
         // Arriba de todo, el canto cuelga debajo de sus cartas y el chat sale al costado del avatar.
         <>
           {globoCanto ?? globoSenia}
-          {chat && <GloboDeChat key={chat.id} globo={chat} lateral />}
+          {chat && <GloboDeChat key={chat.id} globo={chat} lateral={ladoChat === 'izquierda' ? 'izquierda' : 'derecha'} />}
         </>
       ) : (
         <>
           {/* A los costados, canto y chat se apilan arriba del avatar: el canto, pegado a la persona. */}
-          {(globoCanto || chat) && (
+          {(pilaArriba[0] || pilaArriba[1]) && (
             <div className="asiento-globos">
-              {globoCanto}
-              {chat && <GloboDeChat key={chat.id} globo={chat} apilado={!!globoCanto} />}
+              {pilaArriba[0]}
+              {pilaArriba[1]}
             </div>
           )}
-          {!globoCanto && globoSenia}
+          {/* Debajo de sus cartas: la seña y, en los costados de arriba del 3v3, el chat. */}
+          {pilaAbajo[1] ? (
+            <div className="asiento-globos abajo">
+              {pilaAbajo[0]}
+              {pilaAbajo[1]}
+            </div>
+          ) : (
+            pilaAbajo[0]
+          )}
         </>
       )}
       <div className="asiento-avatar">
