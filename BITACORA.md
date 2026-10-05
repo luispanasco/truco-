@@ -626,3 +626,14 @@ Plan aprobado el 2026-10-05. Pedidos del usuario: sacar los emojis, sumar efecto
 - Algunas piezas de Lorelei traen ojos cerrados o lengua afuera, y la barba grande tapa la boca.
 - Precios de la tienda: provisorios hasta la fase 2.
 
+### Jugadores sentados en la mesa — 2026-10-05
+
+Pedido del usuario: ver a los jugadores en la mesa. Lorelei solo tiene vista de frente (no hay espaldas), así que se armó una variante con los demás de medio cuerpo detrás del paño; vos seguís con el circulito abajo. La hizo un agente como maqueta; el usuario pidió integrarla, que se elija desde el menú y que el tamaño acompañe a la pantalla.
+
+- **Inicio → Más opciones → "Jugadores en la mesa": Círculos o Sentados** (`perfil.mesaBustos`; por defecto, círculos). También `?bustos=1` / `?bustos=0` en la dirección.
+- **Sentados** (`estilos-mesa-bustos.css`): el de enfrente asoma arriba del borde de madera y los de los costados en un hueco del borde, inclinados 6° hacia el centro; el paño no pierde ancho. En una seña el busto crece 1,5 veces y se inclina sobre la mesa.
+- **Tamaño según la pantalla:** el de enfrente va de 56 px (celular chico) a 120 px; los de los costados, de 46 a 96 px (`clamp` con vw y vh).
+- **Tests:** web 194, e2e 8.
+
+**Pendientes:** durante la seña, el busto de arriba tapa un momento su nombre; las pastillas de seña de los costados pisan las pilas del centro (como en círculos); no se probó con celulares de menos de 700 px de alto.
+

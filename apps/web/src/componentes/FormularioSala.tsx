@@ -116,7 +116,7 @@ function opcionesSegundos(lista: number[], actual: number): [number, string][] {
   return todos.map((n) => [n, `${n} s`])
 }
 
-function Segmentado<T extends string | number>({
+export function Segmentado<T extends string | number>({
   titulo,
   valor,
   opciones,

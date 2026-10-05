@@ -11,13 +11,16 @@
  * (Todo va con .pantalla-mesa.mesa-bustos: estilos.css se carga después y pesa igual.)
  */
 .pantalla-mesa.mesa-bustos {
-  /* Caja del busto (cuadrada, como el dibujo) y cuánto asoma arriba del borde. */
-  --busto: 60px;
-  --busto-lado: 50px;
+  /*
+   * Caja del busto (cuadrada, como el dibujo): crece con la pantalla, de 56 px en un celular
+   * chico a 120 px en un monitor grande (los de los costados, de 46 a 96 px).
+   */
+  --busto: clamp(56px, 4vw + 5vh, 120px);
+  --busto-lado: clamp(46px, 3vw + 4vh, 96px);
   /* Cuánto crece durante una seña. */
   --busto-crece: 1.5;
-  /* Lo que se corre el paño para dejar lugar al de enfrente. */
-  --franja-arriba: 46px;
+  /* Lo que se corre el paño para dejar lugar al de enfrente: crece con el busto. */
+  --franja-arriba: calc(var(--busto) * 0.77);
   /* El grosor del borde de madera (el mismo que el del paño en cada tamaño). */
   --borde: 6px;
   --margen: 8px;
@@ -45,9 +48,6 @@
 }
 @media (min-width: 720px) and (min-height: 640px) {
   .pantalla-mesa.mesa-bustos {
-    --busto: 74px;
-    --busto-lado: 62px;
-    --franja-arriba: 58px;
     --margen: 12px;
     --margen-lado: 14px;
   }

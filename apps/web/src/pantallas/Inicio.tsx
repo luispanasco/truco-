@@ -4,6 +4,7 @@ import { AjustesSonido } from '../componentes/AjustesSonido'
 import { Carta } from '../componentes/Carta'
 import { FORMATOS, NIVELES } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
+import { SelectorVistaMesa } from '../componentes/SelectorVistaMesa'
 import { InstalarApp } from '../componentes/Pwa'
 import { datosUnirse, destinoAlEntrar, MensajeError } from '../componentes/Online'
 import { TarjetaPerfil, usePerfil } from '../componentes/TarjetaPerfil'
@@ -200,12 +201,7 @@ export function Inicio() {
             titulo="Ojear cartas"
             detalle="Al repartir, descubrís tus cartas de a poco, como en la mesa (también online)"
           />
-          <Interruptor
-            activo={perfil.mesaBustos}
-            alCambiar={(v) => cambiar({ mesaBustos: v })}
-            titulo="Jugadores sentados (prueba)"
-            detalle="En la mesa, los demás se ven de medio cuerpo detrás del paño"
-          />
+          <SelectorVistaMesa valor={perfil.mesaBustos} alCambiar={(mesaBustos) => cambiar({ mesaBustos })} />
           <Interruptor
             activo={perfil.ayudas}
             alCambiar={(v) => cambiar({ ayudas: v })}
