@@ -14,7 +14,10 @@ import {
 } from '@truco/engine'
 import { crearBot, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibidas } from '@truco/bots'
 import {
+  avatarAlAzar,
+  codificarAvatar,
   LIMITES,
+  normalizarAvatar,
   MOTIVO_SENIA_TARDE,
   MOTIVO_SIN_SENIAS,
   SENIAS_DEFAULT,
@@ -205,7 +208,8 @@ export class SalaTruco extends Room {
       lugar.invitadoId = invitadoId
     }
     lugar.apodo = filtrarTexto(apodo)
-    lugar.avatar = texto(opciones?.avatar, 40)
+    // Un avatar inválido o con piezas que no tiene se reemplaza por uno armado desde el apodo.
+    lugar.avatar = normalizarAvatar(opciones?.avatar) ?? codificarAvatar(avatarAlAzar(lugar.apodo))
     lugar.sessionId = client.sessionId
     lugar.conectado = true
     client.userData = { asiento: lugar.asiento } satisfies DatosCliente
@@ -435,6 +439,8 @@ export class SalaTruco extends Room {
       numeroBot++
       l.tipo = 'bot'
       l.apodo = `Bot ${numeroBot}`
+      // Los bots pueden lucir piezas de la tienda; cada sala les arma caras distintas.
+      l.avatar = codificarAvatar(avatarAlAzar(`${this.roomId}-${numeroBot}`, false))
       l.conectado = false
     }
     this.limpiarTimer('timerOfrecer')

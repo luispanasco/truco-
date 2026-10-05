@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "e2e": "playwright test",
     "e2e:pwa": "playwright test -c playwright.pwa.config.ts",
-    "iconos": "node scripts/iconos.mjs"
+    "iconos": "node scripts/iconos.mjs",
+    "avatares:lorelei": "node scripts/avatares-lorelei.mjs"
   },
   "dependencies": {
     "@colyseus/sdk": "^0.18.4",
@@ -27,6 +28,8 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@dicebear/core": "9.4.3",
+    "@dicebear/lorelei": "9.4.3",
     "@playwright/test": "^1.63.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
