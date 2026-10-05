@@ -123,6 +123,14 @@
   }
 }
 
+/*
+ * Cartas que se levantan en cada vuelta: en la mesa queda una sola por jugador (más las
+ * mostradas al final), así que la de la vuelta en curso cae justo en el anclaje.
+ */
+.tapete .cartas-en-mesa.se-levantan .jugada.jugada {
+  --base: 0;
+}
+
 /* Si el paño cambia de tamaño (la pausa de fin de mano lo achica), las pilas se acomodan suave. */
 .tapete .cartas-en-mesa .jugada.jugada {
   transition:

@@ -231,6 +231,9 @@ export function Mesa() {
           mostradas={mostradas}
           apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
           nuestro={nuestro}
+          levantar={sala.cartasJugadas === 'seLevantan'}
+          // Terminada la mano, lo último queda a la vista con el resultado y lo mostrado.
+          quieta={finDeMano !== null || mostradas.length > 0 || vista.ganador !== null}
         />
       </main>
 
