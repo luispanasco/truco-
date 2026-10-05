@@ -24,7 +24,7 @@ import {
   type MensajesCliente,
   type MensajesServidor,
 } from '@truco/shared'
-import { TIEMPOS_SALA_DEFAULT } from '@truco/shared'
+import { normalizarCartasJugadas, TIEMPOS_SALA_DEFAULT, type CartasJugadas } from '@truco/shared'
 import type { Conexion, MensajeServidor } from './tipos'
 
 export interface OpcionesLocal {
@@ -36,6 +36,8 @@ export interface OpcionesLocal {
   ayudas?: boolean
   /** Si los rivales pescan señas y cuándo se pueden hacer (como en la sala online). */
   senias?: Partial<ConfigSenias>
+  /** Si las cartas jugadas quedan en la mesa o se levantan en cada vuelta. */
+  cartasJugadas?: CartasJugadas
   /** Para los tests: el sorteo de las señas pescadas (por defecto, Math.random). */
   azar?: () => number
   /** Demora de los bots en ms [mínimo, máximo]. En los tests, [0, 0]. */
@@ -166,6 +168,7 @@ export class ConexionLocal implements Conexion {
       publica: false,
       // Contra bots no hay reloj: los tiempos no se usan.
       tiempos: TIEMPOS_SALA_DEFAULT,
+      cartasJugadas: normalizarCartasJugadas(this.op.cartasJugadas),
       fase: this.terminada ? 'terminada' : 'jugando',
       formato: this.config.formato,
       config: this.config,

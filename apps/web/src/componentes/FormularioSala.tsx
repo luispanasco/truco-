@@ -3,6 +3,7 @@ import type { Nivel } from '@truco/bots'
 import { CONFIG_DEFAULT, type ConfigSala, type Formato } from '@truco/engine'
 import { SENIAS_DEFAULT, type ConfigSenias, type InfoSala, type MensajesCliente, type PescarSenias } from '@truco/shared'
 import { normalizarTiempos, TIEMPOS_SALA_DEFAULT, type ConfigTiempos } from '@truco/shared'
+import { CARTAS_JUGADAS_DEFAULT, normalizarCartasJugadas, type CartasJugadas } from '@truco/shared'
 import type { Perfil } from '../perfil'
 import { Interruptor } from './Interruptor'
 import '../estilos-senias.css'
@@ -34,6 +35,8 @@ export interface OpcionesSala {
   senias: ConfigSenias
   /** Segundos por jugada y para la primera jugada del mano. */
   tiempos: ConfigTiempos
+  /** Si las cartas jugadas quedan en la mesa o se levantan en cada vuelta. */
+  cartasJugadas: CartasJugadas
 }
 
 function reglasDe(c: ConfigSala): ReglasSala {
@@ -52,6 +55,7 @@ export function opcionesIniciales(p: Perfil): OpcionesSala {
     // Con o sin señas, lo último que eligió; lo demás de las señas, como siempre.
     senias: { ...SENIAS_DEFAULT, habilitadas: p.seniasHabilitadas },
     tiempos: normalizarTiempos(p.tiempos),
+    cartasJugadas: normalizarCartasJugadas(p.cartasJugadas),
   }
 }
 
@@ -64,6 +68,7 @@ export function opcionesDeSala(s: InfoSala): OpcionesSala {
     reglas: reglasDe(s.config),
     senias: s.senias ?? SENIAS_DEFAULT,
     tiempos: s.tiempos ?? TIEMPOS_SALA_DEFAULT,
+    cartasJugadas: s.cartasJugadas ?? CARTAS_JUGADAS_DEFAULT,
   }
 }
 
@@ -76,6 +81,7 @@ export function opcionesParaServidor(o: OpcionesSala): MensajesCliente['configur
     ayudas: o.ayudas,
     senias: o.senias,
     tiempos: o.tiempos,
+    cartasJugadas: o.cartasJugadas,
   }
 }
 
@@ -104,6 +110,10 @@ const PROBABILIDADES = [0.1, 0.2, 0.35, 0.5]
 const TEXTO_MOMENTO: Record<ConfigSenias['momento'], [string, string]> = {
   libre: ['Cuando quieras', 'Se pueden hacer señas en cualquier momento de la mano.'],
   antesDeJugar: ['Antes de jugar', 'Solo hasta que tirás tu primera carta de la mano.'],
+}
+const TEXTO_CARTAS_JUGADAS: Record<CartasJugadas, [string, string]> = {
+  quedan: ['Quedan en la mesa', 'Cada uno deja sus cartas frente a sí hasta que termina la mano.'],
+  seLevantan: ['Se levantan en cada vuelta', 'Al cerrar cada vuelta se ve quién la ganó y se levantan: queda solo la vuelta en curso.'],
 }
 const porcentaje = (p: number) => `${Math.round(p * 100)} %`
 
@@ -148,6 +158,19 @@ export function Segmentado<T extends string | number>({
       </div>
       {detalle && <small className="campo-detalle">{detalle}</small>}
     </div>
+  )
+}
+
+/** Si las cartas jugadas quedan en la mesa o se levantan en cada vuelta (en la sala y contra bots). */
+export function SelectorCartasJugadas({ valor, alCambiar }: { valor: CartasJugadas; alCambiar: (v: CartasJugadas) => void }) {
+  return (
+    <Segmentado
+      titulo="Cartas jugadas"
+      valor={valor}
+      opciones={(['quedan', 'seLevantan'] as const).map((v) => [v, TEXTO_CARTAS_JUGADAS[v][0]])}
+      alCambiar={alCambiar}
+      detalle={TEXTO_CARTAS_JUGADAS[valor][1]}
+    />
   )
 }
 
@@ -216,6 +239,7 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
           }
         />
       )}
+      <SelectorCartasJugadas valor={valor.cartasJugadas} alCambiar={(cartasJugadas) => cambiar({ cartasJugadas })} />
 
       <h3 className="reglas-subtitulo">Tiempos</h3>
       <Segmentado
@@ -326,6 +350,7 @@ export function resumenSala(o: OpcionesSala): string[] {
     o.ayudas ? 'Con ayudas' : 'Sin ayudas',
   ]
   if (o.formato === '3v3') partes.push(r.picaPica ? (r.picaPicaAlternado ? 'Pica-pica alternado' : 'Pica-pica en todas las manos de malas') : 'Sin pica-pica')
+  partes.push(o.cartasJugadas === 'seLevantan' ? 'Las cartas se levantan en cada vuelta' : 'Las cartas quedan en la mesa')
   partes.push(`${o.tiempos.turnoS} s por jugada; la primera del mano, ${o.tiempos.primeraJugadaS} s`)
   partes.push(
     r.florObligatoria ? 'Flor obligatoria' : 'Flor no obligatoria',

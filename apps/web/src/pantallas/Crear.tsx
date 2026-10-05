@@ -28,6 +28,7 @@ export function Crear() {
       picaPica: opciones.reglas.picaPica,
       tiempos: opciones.tiempos,
       seniasHabilitadas: opciones.senias.habilitadas,
+      cartasJugadas: opciones.cartasJugadas,
     })
     try {
       const c = await ConexionOnline.crearSala({ ...datosUnirse(perfil), ...opcionesParaServidor(opciones) })

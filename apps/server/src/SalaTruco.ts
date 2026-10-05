@@ -23,11 +23,14 @@ import {
   SENIAS_DEFAULT,
   normalizarSenias,
   normalizarTiempos,
+  normalizarCartasJugadas,
+  CARTAS_JUGADAS_DEFAULT,
   TIEMPOS_SALA_DEFAULT,
   yaJugoEnLaMano,
   type CanalChat,
   type ConfigSenias,
   type ConfigTiempos,
+  type CartasJugadas,
   type FaseSala,
   type InfoSala,
   type MensajeChat,
@@ -143,6 +146,7 @@ export class SalaTruco extends Room {
   private ayudas = true
   private configSenias: ConfigSenias = SENIAS_DEFAULT
   private configTiempos: ConfigTiempos = TIEMPOS_SALA_DEFAULT
+  private cartasJugadas: CartasJugadas = CARTAS_JUGADAS_DEFAULT
   private lugares: Lugar[] = []
   private anfitrion: string | null = null
 
@@ -398,6 +402,7 @@ export class SalaTruco extends Room {
     if (typeof op.ayudas === 'boolean') this.ayudas = op.ayudas
     if (op.senias && typeof op.senias === 'object') this.configSenias = normalizarSenias(op.senias, this.configSenias)
     if (op.tiempos && typeof op.tiempos === 'object') this.configTiempos = normalizarTiempos(op.tiempos, this.configTiempos)
+    this.cartasJugadas = normalizarCartasJugadas(op.cartasJugadas, this.cartasJugadas)
   }
 
   private cambiarCantidadDeLugares() {
@@ -697,6 +702,7 @@ export class SalaTruco extends Room {
       ayudas: this.ayudas,
       senias: this.configSenias,
       tiempos: this.configTiempos,
+      cartasJugadas: this.cartasJugadas,
       chatEquipo: this.chatEquipo(),
       lugares: this.lugares.map((l) => ({
         asiento: l.asiento,

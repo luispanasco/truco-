@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AjustesSonido } from '../componentes/AjustesSonido'
 import { Carta } from '../componentes/Carta'
-import { FORMATOS, NIVELES } from '../componentes/FormularioSala'
+import { FORMATOS, NIVELES, SelectorCartasJugadas } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
 import { SelectorVistaMesa } from '../componentes/SelectorVistaMesa'
 import { InstalarApp } from '../componentes/Pwa'
@@ -116,6 +116,7 @@ export function Inicio() {
         formato: perfil.formato,
         nivelBots: perfil.nivelBots,
         ayudas: perfil.ayudas,
+        cartasJugadas: perfil.cartasJugadas,
         config: { picaPica: perfil.picaPica },
         senias: {
           habilitadas: perfil.seniasHabilitadas,
@@ -202,6 +203,7 @@ export function Inicio() {
             detalle="Al repartir, descubrís tus cartas de a poco, como en la mesa (también online)"
           />
           <SelectorVistaMesa valor={perfil.mesaBustos} alCambiar={(mesaBustos) => cambiar({ mesaBustos })} />
+          <SelectorCartasJugadas valor={perfil.cartasJugadas} alCambiar={(cartasJugadas) => cambiar({ cartasJugadas })} />
           <Interruptor
             activo={perfil.ayudas}
             alCambiar={(v) => cambiar({ ayudas: v })}
