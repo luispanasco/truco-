@@ -37,12 +37,16 @@ function piezaDe(capa: CapaLorelei, a: Avatar): string | null {
   }
 }
 
-/** Reemplaza las marcas `{{capa}}` por su pieza (que a su vez puede traer otras) y los colores. */
-function componer(plantilla: string, a: Avatar): string {
+/**
+ * Reemplaza las marcas `{{capa}}` por su pieza (que a su vez puede traer otras) y los colores.
+ * `despuesDeCabeza` va justo después de la cabeza: entre el pelo de atrás y el de adelante.
+ */
+function componer(plantilla: string, a: Avatar, despuesDeCabeza = ''): string {
   return plantilla
     .replace(/\{\{([a-z]+)\}\}/g, (_, capa: CapaLorelei) => {
       const pieza = piezaDe(capa, a)
-      return pieza === null ? '' : `<g class="capa capa-${capa}">${componer(pieza, a)}</g>`
+      const extra = capa === 'cabeza' ? despuesDeCabeza : ''
+      return pieza === null ? extra : `<g class="capa capa-${capa}">${componer(pieza, a, despuesDeCabeza)}</g>${extra}`
     })
     .replace(/\{\{color:([a-z]+)\}\}/g, (_, color: string) => {
       if (color === 'pelo') return COLORES_PELO[a.colorPelo] ?? COLORES_PELO[0]
@@ -50,6 +54,16 @@ function componer(plantilla: string, a: Avatar): string {
       if (color === 'aros') return COLOR_AROS
       return TINTA
     })
+}
+
+/**
+ * Con sombrero, el pelo de arriba (y la ropa, que queda lejos) se recorta para que no asome
+ * por encima. El id depende solo del sombrero: si hay varios avatares en la página, todos
+ * los clipPath con el mismo id son iguales.
+ */
+function recortado(contenido: string, sombrero: number, recorte: string): string {
+  const id = `lorelei-recorte-sombrero-${sombrero}`
+  return `<clipPath id="${id}"><path d="${recorte}"/></clipPath><g clip-path="url(#${id})">${contenido}</g>`
 }
 
 /**
@@ -61,11 +75,15 @@ export const LORELEI: EstiloAvatar = {
   viewBox: '0 0 980 980',
   dibujar(a) {
     const piel = PIELES[a.piel] ?? PIELES[0]
+    // La ropa va encima del cuello de Lorelei (que termina en un pecho sin contorno) y debajo
+    // del pelo de adelante, que cae sobre los hombros. Sus coordenadas son las del viewBox.
+    const ropa = `<g class="capa capa-ropa" transform="translate(-10 60)">${ROPAS[a.ropa]?.(piel) ?? ''}</g>`
+    const sombrero = a.sombrero > 0 ? SOMBREROS[a.sombrero - 1] : undefined
+    const cabeza = `<g transform="translate(10 -60)">${componer('{{pelo}}', a, ropa)}</g>`
     return [
-      `<g class="capa capa-ropa">${ROPAS[a.ropa]?.(piel) ?? ''}</g>`,
-      `<g transform="translate(10 -60)">${componer('{{pelo}}', a)}</g>`,
-      a.sombrero > 0 ? `<g class="capa capa-sombrero">${SOMBREROS[a.sombrero - 1]?.(COLORES_PELO[a.colorPelo] ?? '') ?? ''}</g>` : '',
-      a.accesorio > 0 ? `<g class="capa capa-accesorio">${ACCESORIOS[a.accesorio - 1]?.() ?? ''}</g>` : '',
+      sombrero ? recortado(cabeza, a.sombrero, sombrero.recorte) : cabeza,
+      sombrero ? `<g class="capa capa-sombrero">${sombrero.dibujo(COLORES_PELO[a.colorPelo] ?? COLORES_PELO[0])}</g>` : '',
+      a.accesorio > 0 ? `<g class="capa capa-accesorio">${ACCESORIOS[a.accesorio - 1]?.(piel) ?? ''}</g>` : '',
     ].join('')
   },
 }
