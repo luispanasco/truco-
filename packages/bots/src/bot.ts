@@ -89,6 +89,12 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[]): Accion {
     return { tipo: 'cantarFlor', jugador, canto }
   }
 
+  // Ya cantadas todas las flores, se puede subir con contraflor.
+  if (yaCante && pend !== 'flor' && (flor('contraflor') || flor('contraflorAlResto'))) {
+    const canto = est.cantarFlor(ctx, { contraflor: !!flor('contraflor'), alResto: !!flor('contraflorAlResto') })
+    if (canto !== 'flor') return { tipo: 'cantarFlor', jugador, canto }
+  }
+
   if (pend === 'flor') {
     const r = est.responderContraflor(ctx, !!flor('contraflorAlResto'))
     return r === 'subir' ? { tipo: 'cantarFlor', jugador, canto: 'contraflorAlResto' } : responder(r)
@@ -107,7 +113,7 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[]): Accion {
   }
 
   if (pend === 'truco') {
-    // "Primero está el envido".
+    // "Envido va primero".
     if (envidos.length > 0) {
       const canto = est.cantarEnvido(ctx, envidos)
       if (canto) return { tipo: 'cantarEnvido', jugador, canto }

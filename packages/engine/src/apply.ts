@@ -56,6 +56,36 @@ function jugadorDe(estado: EstadoPartida, id: string): Jugador | undefined {
   return estado.jugadores.find((j) => j.id === id)
 }
 
+/**
+ * Si el asiento tiene que cantar la flor: la tiene, no la cantó, está en la primera vuelta y
+ * todavía no jugó. En modo sucio nadie está obligado (puede callarla).
+ */
+export function debeCantarFlor(estado: EstadoPartida, e: Enfrentamiento, a: number): boolean {
+  const tanto = estado.mano.tantos[a]
+  if (estado.config.modoSucio || !tanto || tanto.florReal === null) return false
+  if (e.flor.cantadas.some((f) => f.asiento === a) || e.flor.estado === 'noQuerida') return false
+  if (e.vueltas.length !== 1) return false
+  return !e.vueltas[0]!.jugadas.some((j) => j.asiento === a)
+}
+
+/**
+ * Con la flor obligatoria, cuando alguien la canta, todos los que tienen flor la cantan en ese
+ * momento, en orden desde el mano. Devuelve los que faltan; mientras haya, no se hace otra cosa.
+ */
+export function floresPorCantar(estado: EstadoPartida, e: Enfrentamiento): number[] {
+  if (!estado.config.florObligatoria || e.flor.cantadas.length === 0) return []
+  return e.participantes.filter((a) => debeCantarFlor(estado, e, a))
+}
+
+/**
+ * Los del equipo que tienen una flor sin cantar. Mientras haya, el equipo no canta ni contesta
+ * el envido: la flor lo anularía, así que el que la tiene la canta.
+ */
+export function florSinCantarDelEquipo(estado: EstadoPartida, e: Enfrentamiento, eq: Equipo): number[] {
+  if (!estado.config.florObligatoria) return []
+  return e.participantes.filter((a) => equipoDe(a) === eq && debeCantarFlor(estado, e, a))
+}
+
 const MENSAJE_PENDIENTE: Record<Pendiente, string> = {
   flor: 'Hay una contraflor sin responder',
   envido: 'Hay un envido sin responder',
@@ -90,20 +120,27 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
   const yaJugoPrimera = primeraVuelta?.jugadas.some((j) => j.asiento === a) ?? false
   const cantoFlor = e.flor.cantadas.some((f) => f.asiento === a)
   /** En modo normal, quien tiene flor y todavía puede cantarla tiene que hacerlo antes de envidar o jugar. */
-  const debeCantarFlor =
-    !cfg.modoSucio &&
-    tanto.florReal !== null &&
-    !cantoFlor &&
-    enPrimera &&
-    !yaJugoPrimera &&
-    e.flor.estado !== 'noQuerida'
+  const debeCantar = debeCantarFlor(estado, e, a)
+  /** Compañeros (o uno mismo) con flor sin cantar: el equipo no toca el envido. */
+  const florDelEquipo = florSinCantarDelEquipo(estado, e, eq)
+  const motivoFlorDelEquipo = florDelEquipo.includes(a) ? 'Tenés flor: cantala' : 'Tu compañero tiene flor: la tiene que cantar'
+
+  // Alguien cantó flor: primero la cantan todos los que la tienen.
+  const porCantar = floresPorCantar(estado, e)
+  if (porCantar.length > 0 && accion.tipo !== 'irseAlMazo') {
+    const esElQueSigue = porCantar[0] === a && accion.tipo === 'cantarFlor' && accion.canto === 'flor'
+    if (!esElQueSigue) {
+      if (porCantar[0] === a) return 'Tenés flor: cantala'
+      return porCantar.includes(a) ? 'Esperá: están cantando la flor' : 'Están cantando la flor'
+    }
+  }
 
   switch (accion.tipo) {
     case 'jugarCarta': {
       if (pend) return MENSAJE_PENDIENTE[pend]
       if (e.turno !== a) return 'No es tu turno'
       if (!mano.cartas[a]?.some((c) => mismaCarta(c, accion.carta))) return 'No tenés esa carta'
-      if (debeCantarFlor && cfg.florObligatoria) return 'Tenés flor: tenés que cantarla antes de jugar'
+      if (debeCantar && cfg.florObligatoria) return 'Tenés flor: tenés que cantarla antes de jugar'
       return null
     }
 
@@ -127,7 +164,8 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if (e.envido.estado === 'anulado' || e.flor.cantadas.length > 0) return 'Con flor no hay envido'
       if (!enPrimera) return 'El envido se canta en la primera vuelta'
       if (yaJugoPrimera) return 'Ya jugaste tu carta'
-      if (debeCantarFlor) return 'Tenés flor: cantala'
+      if (debeCantar) return 'Tenés flor: cantala'
+      if (florDelEquipo.length > 0) return motivoFlorDelEquipo
       if (e.envido.estado === 'libre') {
         if (pend === null) {
           if (e.turno !== a) return 'No es tu turno'
@@ -135,7 +173,7 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
           return null
         }
         if (pend === 'truco') {
-          // "Primero está el envido"
+          // "Envido va primero"
           const p = e.truco.pendiente!
           if (p.equipo === eq) return 'Esperá la respuesta del rival'
           if (p.nivel !== 2) return 'Ya no se puede cantar envido'
@@ -182,14 +220,15 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
     case 'responder': {
       if (pend === null || pend === 'declaracion') return 'No hay nada que responder'
       if (equipoQueCanto(e, pend) === eq) return 'Esperá la respuesta del rival'
-      if (pend === 'envido' && debeCantarFlor) return 'Tenés flor: cantala'
+      if (pend === 'envido' && debeCantar) return 'Tenés flor: cantala'
+      if (pend === 'envido' && florDelEquipo.length > 0) return motivoFlorDelEquipo
       return null
     }
 
     case 'declararTanto': {
       if (e.envido.estado !== 'declarando') return 'No se está declarando el envido'
       if (siguienteDeclarante(e) !== a) return 'No te toca declarar'
-      if (debeCantarFlor) return 'Tenés flor: cantala'
+      if (debeCantar) return 'Tenés flor: cantala'
       const mejor = mejorDeclaracion(e)
       if (accion.tanto === 'sonBuenas') return mejor ? null : 'El primero tiene que decir su tanto'
       const t = accion.tanto
@@ -466,7 +505,8 @@ function calcularPuntosTanto(estado: EstadoPartida, e: Enfrentamiento): [number,
       const valor = ultimo(f.contra).canto === 'contraflor' ? estado.config.valorContraflor : valorResto(estado)
       puntos[ganadorFlor(e)] += valor
     } else if (equipos.size === 2) {
-      puntos[ganadorFlor(e)] += 3
+      const g = ganadorFlor(e)
+      puntos[g] += 3 * f.cantadas.filter((x) => x.equipo === g).length
     } else {
       for (const x of f.cantadas) puntos[x.equipo] += 3
     }

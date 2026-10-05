@@ -70,7 +70,7 @@ function describirEvento(ev: Evento): string | null {
     case 'cantoFlor':
       return `${quien(ev.asiento)}: ¡${TEXTO_CANTO[ev.canto]}!`
     case 'cantoEnvido':
-      return `${quien(ev.asiento)}: ${ev.primeroEstaElEnvido ? 'Primero está el envido. ' : ''}¡${TEXTO_CANTO[ev.canto]}!`
+      return `${quien(ev.asiento)}: ${ev.primeroEstaElEnvido ? 'Envido va primero. ' : ''}¡${TEXTO_CANTO[ev.canto]}!`
     case 'respuesta':
       return `${quien(ev.asiento)}: ${ev.respuesta === 'quiero' ? 'Quiero' : 'No quiero'}`
     case 'tantoDeclarado':

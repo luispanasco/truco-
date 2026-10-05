@@ -13,12 +13,20 @@ export interface ConfigSala {
   puntosMalas: number
   florConPiezas: ReglaFlorConPiezas
   valorContraflor: number
-  /** Con los dos equipos en malas: 'loQueFalta' al que va ganando, o 'ganaPartido'. */
-  faltaEnvidoEnMalas: 'loQueFalta' | 'ganaPartido'
+  /**
+   * Cuánto vale la falta envido:
+   * - 'completarMalas': si el que va ganando está en malas (menos de 15), lo que le falta para
+   *   llegar a 15; si no, lo que le falta para ganar;
+   * - 'loQueFalta': siempre lo que le falta al que va ganando para ganar;
+   * - 'ganaPartido': con los dos en malas, la falta gana el partido.
+   */
+  faltaEnvidoEnMalas: 'completarMalas' | 'loQueFalta' | 'ganaPartido'
   /** Solo en 3v3. */
   picaPica: boolean
   /** Se juega pica-pica mientras los dos equipos tienen entre `desde` y `hasta` puntos. */
   tramoPicaPica: { desde: number; hasta: number }
+  /** Dentro del tramo, una mano redonda y una de pica-pica, empezando por la redonda. */
+  picaPicaAlternado: boolean
   /** La flor se canta en la primera vuelta antes de jugar; si no, se pierde. */
   florObligatoria: boolean
   envidoEnvido: boolean
@@ -38,9 +46,10 @@ export const CONFIG_DEFAULT: ConfigSala = {
   puntosMalas: 15,
   florConPiezas: 'piezaMayorMasDigitos',
   valorContraflor: 6,
-  faltaEnvidoEnMalas: 'loQueFalta',
+  faltaEnvidoEnMalas: 'completarMalas',
   picaPica: true,
   tramoPicaPica: { desde: 0, hasta: 15 },
+  picaPicaAlternado: true,
   florObligatoria: true,
   envidoEnvido: true,
   empiezaTrasParda: 'quienEmpezo',

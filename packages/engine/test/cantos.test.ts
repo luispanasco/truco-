@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { enfrentamientoActual } from '../src'
+import { enfrentamientoActual, esperandoA } from '../src'
 import { jugar, partidaCon, rechaza } from './helpers'
 
 // Muestra 3 de copas. "a" es mano (equipo 0), "b" es pie (equipo 1).
@@ -115,6 +115,20 @@ describe('envido', () => {
     expect(enfrentamientoActual(estado).envido.ganador).toBe(1)
   })
 
+  it('en 2v2 (jugadores 1, 2, 3 y 4): si va ganando el 1, el 3 no habla; si el 4 lo pasa, el 3 puede decir', () => {
+    // a (1): 7, b (2): 6, c (3): 33, d (4): 28.
+    const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 6e 12o', '5b 3b 11o'], '3c')
+    let { estado } = jugar(p, ['envido', 'a'], ['quiero', 'b'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'])
+    expect(esperandoA(estado)).toEqual([3])
+    rechaza(estado, ['declarar', 'c', 33], 'No te toca')
+    ;({ estado } = jugar(estado, ['declarar', 'd', 28]))
+    expect(esperandoA(estado)).toEqual([2])
+    ;({ estado } = jugar(estado, ['declarar', 'c', 33]))
+    const e = enfrentamientoActual(estado)
+    expect(e.envido.estado).toBe('resuelto')
+    expect(e.envido.ganador).toBe(0)
+  })
+
   it('en 2v2 declaran en orden y el que ya va ganando no habla', () => {
     // a: 7, b: 26, c: 33, d: 5
     const p = partidaCon(['1e 7o 4b', '1b 2o 4o', '7e 6e 12b', '5e 11b 10o'], '3c')
@@ -137,7 +151,27 @@ describe('envido', () => {
     rechaza(segunda, ['envido', 'a'], 'primera vuelta')
   })
 
-  it('primero está el envido', () => {
+  it('envido va primero en 2v2: lo dice el que no jugó, se juega el envido y después no se quiere el truco', () => {
+    // Nadie tiene flor. a: 7, b: 6, c: 25, d: 6.
+    const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 5o 12b', '3e 6b 11o'], '3c')
+    let { estado } = jugar(p, ['jugar', 'a', '4b'], ['truco', 'b'])
+    rechaza(estado, ['envido', 'a'], 'Ya jugaste')
+    let eventos
+    ;({ estado, eventos } = jugar(estado, ['envido', 'c']))
+    expect(eventos).toContainEqual(expect.objectContaining({ tipo: 'cantoEnvido', asiento: 2, primeroEstaElEnvido: true }))
+    ;({ estado } = jugar(
+      estado,
+      ['quiero', 'b'],
+      ['declarar', 'a', 7],
+      ['declarar', 'b', 'sonBuenas'],
+      ['declarar', 'd', 'sonBuenas'],
+      ['noQuiero', 'c'],
+    ))
+    // El envido querido (2) para el equipo 0 y el truco no querido (1) para el equipo 1.
+    expect(estado.puntos).toEqual([2, 1])
+  })
+
+  it('envido va primero en 1v1', () => {
     let { estado, eventos } = jugar(sinFlor(), ['truco', 'a'], ['envido', 'b'])
     expect(eventos).toContainEqual(expect.objectContaining({ tipo: 'cantoEnvido', primeroEstaElEnvido: true }))
     rechaza(estado, ['quiero', 'b'], 'Esperá')
@@ -161,11 +195,21 @@ describe('envido', () => {
     expect(jugar(sinFlor(), ['envido', 'a'], ['mazo', 'a']).estado.puntos).toEqual([0, 1])
   })
 
-  it('falta envido: lo que le falta al que va ganando', () => {
-    const p = sinFlor()
-    p.puntos = [5, 10]
-    const { estado } = jugar(p, ['faltaEnvido', 'a'], ['quiero', 'b'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'], ['mazo', 'b'])
-    expect(estado.puntos).toEqual([5 + 20 + 1, 10])
+  it('falta envido: en malas, lo que le falta al que va ganando para llegar a 15; desde 15, para ganar', () => {
+    /** Lo que cobra "a" por la falta querida (sin el 1 del truco, porque "b" se va al mazo). */
+    const falta = (puntos: [number, number], config = {}) => {
+      const p = partidaCon(['1e 7o 4b', '1b 2e 6o'], '3c', config)
+      p.puntos = puntos
+      const { estado } = jugar(p, ['faltaEnvido', 'a'], ['quiero', 'b'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'], ['mazo', 'b'])
+      return estado.puntos[0] - puntos[0] - 1
+    }
+    expect(falta([5, 10])).toBe(5)
+    expect(falta([14, 3])).toBe(1)
+    // Con 15 se completaron las malas (las buenas empiezan en 16): la falta es para ganar.
+    expect(falta([3, 15])).toBe(15)
+    expect(falta([10, 22])).toBe(8)
+    // La opción vieja: siempre lo que falta para ganar.
+    expect(falta([5, 10], { faltaEnvidoEnMalas: 'loQueFalta' })).toBe(20)
   })
 
   it('falta envido con los dos en malas y la opción "gana el partido"', () => {
@@ -224,8 +268,8 @@ describe('flor', () => {
     const { estado } = jugar(
       conFlor('1b 2b 3b'),
       ['flor', 'a'],
-      ['jugar', 'a', '7e'],
       ['flor', 'b'],
+      ['jugar', 'a', '7e'],
       ['jugar', 'b', '1b'],
       ['jugar', 'b', '2b'],
       ['jugar', 'a', '6e'],
@@ -235,13 +279,13 @@ describe('flor', () => {
   })
 
   it('flores iguales: gana el mano', () => {
-    const { estado } = jugar(conFlor('7b 6b 5b'), ['flor', 'a'], ['jugar', 'a', '7e'], ['flor', 'b'], ['jugar', 'b', '7b'], ['jugar', 'a', '6e'], ['jugar', 'b', '6b'])
+    const { estado } = jugar(conFlor('7b 6b 5b'), ['flor', 'a'], ['flor', 'b'], ['jugar', 'a', '7e'], ['jugar', 'b', '7b'], ['jugar', 'a', '6e'], ['jugar', 'b', '6b'])
     expect(estado.mano.numero).toBe(2)
     expect(estado.puntos).toEqual([4, 0])
   })
 
   describe('contraflor', () => {
-    const antesDeContra = () => jugar(conFlor('7b 6b 4b'), ['flor', 'a'], ['jugar', 'a', '7e']).estado
+    const antesDeContra = () => jugar(conFlor('7b 6b 4b'), ['flor', 'a'], ['flor', 'b'], ['jugar', 'a', '7e']).estado
 
     it('querida: el de mayor flor gana el valor de la contraflor', () => {
       const { estado } = jugar(antesDeContra(), ['contraflor', 'b'], ['quiero', 'a'], ['mazo', 'b'])
@@ -266,7 +310,7 @@ describe('flor', () => {
     })
 
     it('no se puede cantar contraflor sin flor del rival, ni subir más allá del resto', () => {
-      rechaza(jugar(conFlor('7b 6b 4b'), ['flor', 'a']).estado, ['contraflor', 'a'], 'El rival no cantó flor')
+      rechaza(jugar(conFlor(), ['flor', 'a']).estado, ['contraflor', 'a'], 'El rival no cantó flor')
       const alResto = jugar(antesDeContra(), ['contraflorAlResto', 'b']).estado
       rechaza(alResto, ['contraflorAlResto', 'a'], 'No se puede subir más')
     })
@@ -277,27 +321,58 @@ describe('flor', () => {
     const { estado } = jugar(
       p,
       ['flor', 'a'],
+      ['flor', 'c'],
       ['jugar', 'a', '7e'],
       ['jugar', 'b', '2o'],
-      ['flor', 'c'],
       ['jugar', 'c', '7b'],
       ['mazo', 'd'],
     )
     expect(estado.puntos).toEqual([3 + 3 + 1, 0])
   })
 
-  it('en 2v2 con flor en los dos equipos, el ganador suma 3 en total', () => {
-    const p = partidaCon(['7e 6e 5e', '1b 2b 3b', '7o 6o 4o', '1o 3e 12o'], '3c')
-    const { estado } = jugar(
-      p,
-      ['flor', 'a'],
-      ['jugar', 'a', '7e'],
-      ['flor', 'b'],
-      ['jugar', 'b', '1b'],
-      ['flor', 'c'],
-      ['jugar', 'c', '7o'],
-      ['mazo', 'd'],
-    )
+  it('cuando alguien canta flor, todos los que la tienen la cantan en ese momento, en orden desde el mano', () => {
+    // a: 38, b: 37, d: 34. c no tiene flor.
+    const p = partidaCon(['7e 6e 5e', '7b 6b 4b', '1e 4o 12b', '7o 6o 1o'], '3c')
+    let { estado } = jugar(p, ['flor', 'a'])
+    expect(esperandoA(estado)).toEqual([1])
+    rechaza(estado, ['jugar', 'a', '7e'], 'Están cantando la flor')
+    rechaza(estado, ['flor', 'd'], 'Esperá')
+    rechaza(estado, ['truco', 'b'], 'Tenés flor')
+    ;({ estado } = jugar(estado, ['flor', 'b']))
+    expect(esperandoA(estado)).toEqual([3])
+    ;({ estado } = jugar(estado, ['flor', 'd']))
+    expect(esperandoA(estado)).toEqual([0])
+    // Gana la flor de a (38): su equipo cobra 3 por su única flor; las dos del rival no cobran.
+    ;({ estado } = jugar(estado, ['jugar', 'a', '7e'], ['mazo', 'b']))
     expect(estado.puntos).toEqual([3 + 1, 0])
+  })
+
+  it('en 2v2 con flor en los dos equipos, el ganador suma 3 por cada flor de su equipo', () => {
+    // a: 37 (equipo 0); b: 38 y d: 34 (equipo 1). Gana b: su equipo cobra sus dos flores.
+    const p = partidaCon(['7e 6e 4e', '7b 6b 5b', '1e 4o 12b', '7o 6o 1o'], '3c')
+    const { estado } = jugar(p, ['flor', 'a'], ['flor', 'b'], ['flor', 'd'], ['jugar', 'a', '7e'], ['mazo', 'c'])
+    expect(estado.puntos).toEqual([0, 3 + 3 + 1])
+    // a: 38 y c: 37 (equipo 0); d: 33 (equipo 1). Gana a: el equipo 0 cobra 6.
+    const p2 = partidaCon(['7e 6e 5e', '1b 2e 3o', '7o 6o 4o', '7b 6b 2b'], '3c')
+    expect(jugar(p2, ['flor', 'd'], ['flor', 'a'], ['flor', 'c'], ['mazo', 'b']).estado.puntos).toEqual([3 + 3 + 1, 0])
+  })
+
+  it('en 2v2, si el compañero tiene flor, el equipo no canta ni contesta el envido: el de la flor la canta y lo anula', () => {
+    // d tiene flor de 38; nadie más.
+    const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 5o 12b', '7b 6b 5b'], '3c')
+    let { estado } = jugar(p, ['envido', 'a'])
+    expect(esperandoA(estado)).toEqual([3])
+    rechaza(estado, ['quiero', 'b'], 'Tu compañero tiene flor')
+    rechaza(estado, ['noQuiero', 'b'], 'Tu compañero tiene flor')
+    rechaza(estado, ['quiero', 'd'], 'Tenés flor')
+    let eventos
+    ;({ estado, eventos } = jugar(estado, ['flor', 'd']))
+    expect(eventos).toContainEqual({ tipo: 'envidoAnulado' })
+    // El envido anulado no lo cobra nadie: el equipo 1 cobra solo la flor y el truco.
+    expect(jugar(estado, ['mazo', 'a']).estado.puntos).toEqual([0, 3 + 1])
+
+    // Tampoco puede envidar b en su turno, ni con "envido va primero".
+    rechaza(jugar(p, ['jugar', 'a', '1e']).estado, ['envido', 'b'], 'Tu compañero tiene flor')
+    rechaza(jugar(p, ['truco', 'a']).estado, ['envido', 'b'], 'Tu compañero tiene flor')
   })
 })

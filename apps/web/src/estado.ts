@@ -130,7 +130,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         mostrarGlobo(ev.asiento, `¡${TEXTO_CANTO[ev.canto]}!`)
         break
       case 'cantoEnvido':
-        mostrarGlobo(ev.asiento, `${ev.primeroEstaElEnvido ? 'Primero está el envido. ' : ''}¡${TEXTO_CANTO[ev.canto]}!`)
+        mostrarGlobo(ev.asiento, `${ev.primeroEstaElEnvido ? 'Envido va primero. ' : ''}¡${TEXTO_CANTO[ev.canto]}!`)
         break
       case 'respuesta':
         mostrarGlobo(ev.asiento, ev.respuesta === 'quiero' ? '¡Quiero!' : 'No quiero')

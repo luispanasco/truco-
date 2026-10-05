@@ -20,10 +20,11 @@ const arbConfig = fc.record<Partial<ConfigSala>>({
   florObligatoria: fc.boolean(),
   envidoEnvido: fc.boolean(),
   mazoCobraEnvidoPendiente: fc.boolean(),
-  faltaEnvidoEnMalas: fc.constantFrom('loQueFalta', 'ganaPartido'),
+  faltaEnvidoEnMalas: fc.constantFrom('completarMalas', 'loQueFalta', 'ganaPartido'),
   empiezaTrasParda: fc.constantFrom('quienEmpezo', 'mano'),
   florConPiezas: fc.constantFrom('piezaMayorMasDigitos', 'piezaMayorMasNumero'),
   picaPica: fc.boolean(),
+  picaPicaAlternado: fc.boolean(),
   modoSucio: fc.boolean(),
 })
 

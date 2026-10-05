@@ -21,7 +21,7 @@ export const NIVELES: [Nivel, string][] = [
 /** Las reglas de la mesa que se pueden cambiar al armar una sala. */
 export type ReglasSala = Pick<
   ConfigSala,
-  'picaPica' | 'florObligatoria' | 'envidoEnvido' | 'valorContraflor' | 'faltaEnvidoEnMalas' | 'mazoCobraEnvidoPendiente' | 'florConPiezas'
+  'picaPica' | 'picaPicaAlternado' | 'florObligatoria' | 'envidoEnvido' | 'valorContraflor' | 'faltaEnvidoEnMalas' | 'mazoCobraEnvidoPendiente' | 'florConPiezas'
 >
 
 export interface OpcionesSala {
@@ -37,8 +37,8 @@ export interface OpcionesSala {
 }
 
 function reglasDe(c: ConfigSala): ReglasSala {
-  const { picaPica, florObligatoria, envidoEnvido, valorContraflor, faltaEnvidoEnMalas, mazoCobraEnvidoPendiente, florConPiezas } = c
-  return { picaPica, florObligatoria, envidoEnvido, valorContraflor, faltaEnvidoEnMalas, mazoCobraEnvidoPendiente, florConPiezas }
+  const { picaPica, picaPicaAlternado, florObligatoria, envidoEnvido, valorContraflor, faltaEnvidoEnMalas, mazoCobraEnvidoPendiente, florConPiezas } = c
+  return { picaPica, picaPicaAlternado, florObligatoria, envidoEnvido, valorContraflor, faltaEnvidoEnMalas, mazoCobraEnvidoPendiente, florConPiezas }
 }
 
 /** Lo que se propone al crear una sala: lo último que eligió la persona y las reglas de siempre. */
@@ -80,7 +80,11 @@ export function opcionesParaServidor(o: OpcionesSala): MensajesCliente['configur
 }
 
 const TEXTO_FALTA: Record<ReglasSala['faltaEnvidoEnMalas'], [string, string]> = {
-  loQueFalta: ['Lo que falta', 'Vale lo que le falta al que va ganando para llegar a la partida.'],
+  completarMalas: [
+    'Hasta 15',
+    'En malas vale lo que le falta al que va ganando para llegar a 15; con 15 o más, lo que le falta para ganar.',
+  ],
+  loQueFalta: ['Hasta 30', 'Vale siempre lo que le falta al que va ganando para llegar a la partida.'],
   ganaPartido: ['Gana el partido', 'Quien la gana se lleva la partida entera.'],
 }
 const TEXTO_FLOR: Record<ReglasSala['florConPiezas'], [string, string]> = {
@@ -196,6 +200,22 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
           detalle="Mientras los dos equipos están en malas, se juega de a uno contra uno"
         />
       )}
+      {valor.formato === '3v3' && r.picaPica && (
+        <Segmentado
+          titulo="Manos de pica-pica"
+          valor={r.picaPicaAlternado ? 'alternadas' : 'todas'}
+          opciones={[
+            ['alternadas', 'Alternadas'],
+            ['todas', 'Todas'],
+          ]}
+          alCambiar={(v) => regla({ picaPicaAlternado: v === 'alternadas' })}
+          detalle={
+            r.picaPicaAlternado
+              ? 'Una mano redonda y una de pica-pica, empezando por la redonda, hasta que alguien entra en buenas.'
+              : 'Todas las manos de malas se juegan de pica-pica.'
+          }
+        />
+      )}
 
       <h3 className="reglas-subtitulo">Tiempos</h3>
       <Segmentado
@@ -244,7 +264,7 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
           <Segmentado
             titulo="Falta envido con los dos en malas"
             valor={r.faltaEnvidoEnMalas}
-            opciones={(['loQueFalta', 'ganaPartido'] as const).map((v) => [v, TEXTO_FALTA[v][0]])}
+            opciones={(['completarMalas', 'loQueFalta', 'ganaPartido'] as const).map((v) => [v, TEXTO_FALTA[v][0]])}
             alCambiar={(faltaEnvidoEnMalas) => regla({ faltaEnvidoEnMalas })}
             detalle={TEXTO_FALTA[r.faltaEnvidoEnMalas][1]}
           />
@@ -305,7 +325,7 @@ export function resumenSala(o: OpcionesSala): string[] {
     o.botsEnVacios ? `Bots en los lugares libres (${nivel})` : 'Sin bots: tiene que estar la mesa completa',
     o.ayudas ? 'Con ayudas' : 'Sin ayudas',
   ]
-  if (o.formato === '3v3') partes.push(r.picaPica ? 'Con pica-pica' : 'Sin pica-pica')
+  if (o.formato === '3v3') partes.push(r.picaPica ? (r.picaPicaAlternado ? 'Pica-pica alternado' : 'Pica-pica en todas las manos de malas') : 'Sin pica-pica')
   partes.push(`${o.tiempos.turnoS} s por jugada; la primera del mano, ${o.tiempos.primeraJugadaS} s`)
   partes.push(
     r.florObligatoria ? 'Flor obligatoria' : 'Flor no obligatoria',

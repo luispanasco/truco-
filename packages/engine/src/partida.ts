@@ -57,9 +57,14 @@ export function participantesDuelo(manoAsiento: number, k: number, n: number): n
   return [m, (m + n / 2) % n]
 }
 
-export function esManoDePicaPica(estado: Pick<EstadoPartida, 'config' | 'puntos'>): boolean {
-  const { formato, picaPica, tramoPicaPica } = estado.config
+/**
+ * Si la mano `numero` se juega en pica-pica. Alternado, las impares son redondas y las pares
+ * pica-pica (la partida arranca en malas, así que la primera siempre es redonda).
+ */
+export function esManoDePicaPica(estado: Pick<EstadoPartida, 'config' | 'puntos'>, numero: number): boolean {
+  const { formato, picaPica, tramoPicaPica, picaPicaAlternado } = estado.config
   if (formato !== '3v3' || !picaPica) return false
+  if (picaPicaAlternado && numero % 2 === 1) return false
   return estado.puntos.every((p) => p >= tramoPicaPica.desde && p <= tramoPicaPica.hasta)
 }
 
@@ -96,7 +101,7 @@ export function repartir(
     florDeclarada: null,
   }))
 
-  const picaPica = esManoDePicaPica(estado)
+  const picaPica = esManoDePicaPica(estado, numero)
   const participantes = picaPica
     ? participantesDuelo(manoAsiento, 0, n)
     : Array.from({ length: n }, (_, i) => (manoAsiento + i) % n)

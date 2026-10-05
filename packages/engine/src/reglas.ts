@@ -95,10 +95,13 @@ export function puntosEnvidoQuerido(cantos: readonly CantoHecho<CantoEnvido>[], 
 export function valorFalta(estado: EstadoPartida, ganador: Equipo): number {
   const { puntosPartida, puntosMalas, faltaEnvidoEnMalas } = estado.config
   const [a, b] = estado.puntos
+  const lider = Math.max(a, b)
   if (faltaEnvidoEnMalas === 'ganaPartido' && a <= puntosMalas && b <= puntosMalas) {
     return puntosPartida - estado.puntos[ganador]
   }
-  return puntosPartida - Math.max(a, b)
+  // Con 15 ya se completaron las malas: de ahí en más la falta es para ganar.
+  if (faltaEnvidoEnMalas === 'completarMalas' && lider < puntosMalas) return puntosMalas - lider
+  return puntosPartida - lider
 }
 
 /** Lo que vale la contraflor al resto: lo que le falta al que va ganando. */

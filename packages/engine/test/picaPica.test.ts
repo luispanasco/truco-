@@ -9,15 +9,41 @@ const MANOS = ['1e 7o 4b', '1b 2e 6o', '7e 5o 12b', '3e 6b 11o', '2b 5e 10o', '3
 describe('pica-pica', () => {
   it('se juega solo en 3v3, con la opción activa y los dos equipos en malas', () => {
     const config = crearConfig({ formato: '3v3' })
-    expect(esManoDePicaPica({ config, puntos: [0, 0] })).toBe(true)
-    expect(esManoDePicaPica({ config, puntos: [15, 15] })).toBe(true)
-    expect(esManoDePicaPica({ config, puntos: [16, 3] })).toBe(false)
-    expect(esManoDePicaPica({ config: { ...config, picaPica: false }, puntos: [0, 0] })).toBe(false)
-    expect(esManoDePicaPica({ config: crearConfig({ formato: '2v2' }), puntos: [0, 0] })).toBe(false)
+    expect(esManoDePicaPica({ config, puntos: [0, 0] }, 2)).toBe(true)
+    expect(esManoDePicaPica({ config, puntos: [15, 15] }, 2)).toBe(true)
+    expect(esManoDePicaPica({ config, puntos: [16, 3] }, 2)).toBe(false)
+    expect(esManoDePicaPica({ config: { ...config, picaPica: false }, puntos: [0, 0] }, 2)).toBe(false)
+    expect(esManoDePicaPica({ config: crearConfig({ formato: '2v2' }), puntos: [0, 0] }, 2)).toBe(false)
+  })
+
+  it('alternado: en malas, una mano redonda y una de pica-pica, empezando por la redonda', () => {
+    const config = crearConfig({ formato: '3v3' })
+    expect([1, 2, 3, 4, 5, 6].map((n) => esManoDePicaPica({ config, puntos: [8, 12] }, n))).toEqual([
+      false, true, false, true, false, true,
+    ])
+    // En buenas queda redondo hasta el final.
+    expect(esManoDePicaPica({ config, puntos: [16, 12] }, 4)).toBe(false)
+    // Sin alternar, todas las manos en malas son pica-pica.
+    const todas = { ...config, picaPicaAlternado: false }
+    expect([1, 2, 3].map((n) => esManoDePicaPica({ config: todas, puntos: [0, 0] }, n))).toEqual([true, true, true])
+  })
+
+  it('alternado en una partida: la primera mano es redonda, la segunda pica-pica y la tercera redonda', () => {
+    let estado = partidaCon(MANOS, '3c')
+    expect(estado.mano.picaPica).toBe(false)
+    expect(enfrentamientoActual(estado).participantes).toHaveLength(6)
+    ;({ estado } = jugar(estado, ['mazo', 'a']))
+    expect(estado.mano.numero).toBe(2)
+    expect(estado.mano.picaPica).toBe(true)
+    expect(enfrentamientoActual(estado).participantes).toEqual([1, 4])
+    ;({ estado } = jugar(estado, ['mazo', 'b'], ['mazo', 'c'], ['mazo', 'd']))
+    expect(estado.mano.numero).toBe(3)
+    expect(estado.mano.picaPica).toBe(false)
+    expect(enfrentamientoActual(estado).participantes).toHaveLength(6)
   })
 
   it('tres duelos en serie: abre el mano contra el de enfrente y siguen en sentido antihorario', () => {
-    let estado = partidaCon(MANOS, '3c')
+    let estado = partidaCon(MANOS, '3c', { picaPicaAlternado: false })
     expect(estado.mano.picaPica).toBe(true)
     expect(enfrentamientoActual(estado).participantes).toEqual([0, 3])
     rechaza(estado, ['jugar', 'b', '1b'], 'No jugás en este duelo')
@@ -48,7 +74,7 @@ describe('pica-pica', () => {
   })
 
   it('cuando un equipo entra en buenas se vuelve a jugar redondo', () => {
-    let estado = partidaCon(MANOS, '3c')
+    let estado = partidaCon(MANOS, '3c', { picaPicaAlternado: false })
     estado.puntos = [15, 0]
     // Primera mano: se van al mazo los tres del equipo 0.
     ;({ estado } = jugar(estado, ['mazo', 'a'], ['mazo', 'e'], ['mazo', 'c']))

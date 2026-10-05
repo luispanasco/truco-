@@ -21,7 +21,12 @@ export function describirAccion(vista: VistaPartida, a: Accion): string {
       const nivel = (tr.pendiente?.nivel ?? tr.valor) + 1
       return nivel === 2 ? 'Truco' : nivel === 3 ? 'Quiero retruco' : 'Quiero vale cuatro'
     }
-    case 'cantarEnvido':
+    case 'cantarEnvido': {
+      // Contra un truco sin contestar, el envido se juega primero.
+      const e = vista.mano.enfrentamientos[vista.mano.actual]!
+      const primero = e.envido.estado === 'libre' && e.truco.pendiente !== null
+      return primero ? `${TEXTO_CANTO[a.canto]} va primero` : TEXTO_CANTO[a.canto]!
+    }
     case 'cantarFlor':
       return TEXTO_CANTO[a.canto]!
     case 'responder':
@@ -60,7 +65,7 @@ export function describirEvento(
     case 'cantoFlor':
       return `  ${nombre(ev.asiento)}: ¡${TEXTO_CANTO[ev.canto]}!`
     case 'cantoEnvido':
-      return `  ${nombre(ev.asiento)}: ${ev.primeroEstaElEnvido ? 'Primero está el envido. ' : ''}¡${TEXTO_CANTO[ev.canto]}!`
+      return `  ${nombre(ev.asiento)}: ${ev.primeroEstaElEnvido ? 'Envido va primero. ' : ''}¡${TEXTO_CANTO[ev.canto]}!`
     case 'respuesta':
       return `  ${nombre(ev.asiento)}: ${ev.respuesta === 'quiero' ? 'Quiero' : 'No quiero'}`
     case 'tantoDeclarado':

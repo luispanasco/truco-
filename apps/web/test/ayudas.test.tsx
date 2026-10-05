@@ -160,7 +160,7 @@ function partida(config: Partial<ConfigSala>): EstadoPartida {
     jugadores: Array.from({ length: 6 }, (_, a) => ({ id: `j${a}`, nombre: `Jugador ${a}` })),
     semilla: 1,
     reparte: 5,
-    config: { formato: '3v3', picaPica: true, ...config },
+    config: { formato: '3v3', picaPica: true, picaPicaAlternado: false, ...config },
     repartoFijo: REPARTO,
   })
 }

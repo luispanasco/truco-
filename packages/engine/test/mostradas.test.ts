@@ -90,6 +90,7 @@ describe('cartas mostradas al terminar', () => {
     let estado: EstadoPartida = partidaCon(
       ['1e 7o 4b', '1b 2e 6o', '7e 5o 12b', '3e 6b 11o', '2b 5e 10o', '3o 7b 12e'],
       '3c',
+      { picaPicaAlternado: false },
     )
     let eventos: Evento[]
     ;({ estado, eventos } = jugar(

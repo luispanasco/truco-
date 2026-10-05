@@ -126,10 +126,12 @@ export function ordenadas(ctx: Contexto, cartas: readonly Carta[]): Carta[] {
 export function valorFalta(ctx: Contexto, ganador: Equipo): number {
   const { puntosPartida, puntosMalas, faltaEnvidoEnMalas } = ctx.config
   const [a, b] = ctx.vista.puntos
+  const lider = Math.max(a, b)
   if (faltaEnvidoEnMalas === 'ganaPartido' && a <= puntosMalas && b <= puntosMalas) {
     return puntosPartida - ctx.vista.puntos[ganador]
   }
-  return puntosPartida - Math.max(a, b)
+  if (faltaEnvidoEnMalas === 'completarMalas' && lider < puntosMalas) return puntosMalas - lider
+  return puntosPartida - lider
 }
 
 /** Puntos que le faltan al equipo para ganar. */

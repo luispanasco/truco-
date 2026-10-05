@@ -87,7 +87,7 @@ Dos cartas de igual orden empatan la vuelta (parda).
 
 ### Envido
 
-- Se canta durante la primera vuelta, antes de que el que canta juegue su carta. Si se canta truco primero, el rival puede responder "primero está el envido".
+- Se canta durante la primera vuelta, antes de que el que canta juegue su carta. El envido va antes que el truco: si el rival canta truco, se puede contestar "envido va primero" (solo alguien que todavía no jugó su carta); se juega el envido y después se contesta el truco, que se puede no querer.
 - Dos cartas del mismo palo: 20 más la suma de sus valores. Sin par del mismo palo: el valor de la carta más alta.
 - Con una pieza: valor de la pieza (tabla) más la carta más alta de las otras, de cualquier palo. Máximo posible: 37.
 - Cantos: envido 2, real envido 3, falta envido; se encadenan y suman. No querer da 1 punto, o lo acumulado antes del último canto.
@@ -96,20 +96,22 @@ Dos cartas de igual orden empatan la vuelta (parda).
 ### Flor
 
 - Hay flor con tres cartas del mismo palo. Las piezas funcionan como comodín: una pieza más dos cartas del mismo palo, dos piezas más cualquier carta, o tres piezas.
-- Cuando alguien tiene flor, el envido queda anulado en esa mano.
+- Cuando alguien canta flor, el envido queda anulado en esa mano, como si no se hubiese dicho: no lo cobra nadie.
+- Cuando alguien canta flor, todos los que tienen flor la cantan en ese momento, en orden desde el mano, antes de seguir. Después se puede cantar contraflor o contraflor al resto.
+- Si alguien del equipo tiene una flor sin cantar, el equipo no canta ni contesta el envido: el que tiene la flor la canta y lo anula.
 - La flor vale 3 puntos; se sube con contraflor y contraflor al resto.
 - Si varios jugadores del mismo equipo tienen flor, cada flor suma 3.
-- Si los dos equipos tienen flor y nadie canta contraflor, al final de la mano se comparan las flores y suma 3 en total el equipo con la de mayor valor, sin importar cuántas flores tenga.
+- Si los dos equipos tienen flor y nadie canta contraflor, gana la flor más grande (empate: la del más cercano al mano) y su equipo suma 3 por cada flor que tenga; el otro equipo no suma nada. Puede ser 2 contra 1 o 3 contra 1.
 - Si se canta contraflor y el rival no la quiere, el equipo que la cantó se queda con los 3.
 
 ### Puntaje
 
 - Partido a 30: malas (0 a 15) y buenas (16 a 30).
-- Falta envido: los puntos que le faltan al equipo que va ganando para llegar a 30.
+- Falta envido: si el que va ganando está en malas (menos de 15), lo que le falta para llegar a 15; con 15 o más, lo que le falta para llegar a 30. Con 15 todavía no se entró en buenas: las buenas empiezan en 16.
 
 ### 3v3 y pica-pica
 
-Mientras los dos equipos están en malas, cada jugador enfrenta al rival de adelante en tres duelos individuales, y los puntos se suman por equipo. El reparto es uno solo, como en una mano normal de 3v3 (3 cartas a cada uno y una muestra). Los duelos se juegan en serie, no en paralelo: los que juegan después ven las cartas de los duelos anteriores, y esa es parte de la gracia. Abre el duelo del mano contra su rival de enfrente y siguen las otras parejas en sentido antihorario. Cada duelo es una mano 1v1 completa, con su propio truco, envido y flor. Cuando un equipo entra en buenas se vuelve a jugar redondo. Activado por defecto y desactivable al crear la sala.
+Mientras los dos equipos están en malas, las manos se alternan: una redonda y una de pica-pica, empezando por la redonda. En la de pica-pica, cada jugador enfrenta al rival de adelante en tres duelos individuales, y los puntos se suman por equipo. El reparto es uno solo, como en una mano normal de 3v3 (3 cartas a cada uno y una muestra). Los duelos se juegan en serie, no en paralelo: los que juegan después ven las cartas de los duelos anteriores, y esa es parte de la gracia. Abre el duelo del mano contra su rival de enfrente y siguen las otras parejas en sentido antihorario. Cada duelo es una mano 1v1 completa, con su propio truco, envido y flor. Cuando un equipo entra en buenas se vuelve a jugar redondo. Activado por defecto y desactivable al crear la sala.
 
 ## Reglas configurables
 
@@ -120,8 +122,9 @@ Estas son las reglas donde las mesas difieren. Cada una va al motor como paráme
 | Cuenta de la flor con piezas | Pieza más alta con su valor completo, más el último dígito de las otras piezas, más el valor de las cartas comunes | Otra convención de mesa |
 | Cuenta de la flor sin piezas | 20 más la suma de las tres cartas | — |
 | Valor de contraflor | Contraflor 6; contraflor al resto, lo que falta para ganar | Contraflor 4 o 5 |
-| Falta envido con ambos en malas | Siempre lo que le falta al que va ganando | Gana el partido |
+| Falta envido en malas | Lo que le falta al que va ganando para llegar a 15; con 15 o más, para llegar a 30 | Siempre hasta 30; gana el partido |
 | Tramo del pica-pica en 3v3 | Solo en malas: mientras los dos equipos tienen entre 0 y 15; cuando uno llega a 16, se vuelve a redondo | Otro tramo |
+| Manos de pica-pica | Alternadas: una redonda y una de pica-pica, empezando por la redonda | Todas las manos de malas |
 | Obligación de cantar la flor | Obligatoria en la primera vuelta; si no se canta, se pierde | Opcional |
 | Envido envido | Permitido (2 + 2), y se puede seguir con real envido o falta envido | No permitido |
 | No querer el envido | Lo acumulado antes del último canto (1 si era el primero) | — |

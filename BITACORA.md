@@ -561,3 +561,38 @@ Plan aprobado el 2026-10-05. Lo hicieron tres agentes en paralelo, cada uno en s
 - **Efectos de sonido:** Kenney Casino Audio (CC0) cuando se agreguen.
 - **Voces de los cantos:** las graba el usuario, en una etapa más adelante. La 1E deja solo la estructura de packs de voces, con el globo de texto como hoy.
 
+
+---
+
+## Corrección de reglas del motor — 2026-10-05
+
+El usuario repasó las reglas como estaban programadas y marcó las que no eran como se juega en su mesa. Plan aprobado el mismo día. Las reglas nuevas quedaron en la especificación.
+
+- **Falta envido** (`faltaEnvidoEnMalas: 'completarMalas'`, la nueva por defecto):
+  - si el que va ganando tiene menos de 15, vale lo que le falta para llegar a 15 (con 10, vale 5; con 14, vale 1);
+  - con 15 o más, lo que le falta para 30 (con 15 vale 15). Con 15 todavía no se entró en buenas: las buenas siguen empezando en 16;
+  - la cobra el que gana la falta. Las opciones viejas quedan como "Hasta 30" y "Gana el partido".
+- **Flor:**
+  - cuando alguien canta flor, todos los que tienen flor la cantan en ese momento, en orden desde el mano, sin esperar su turno; hasta que no la cantan, no se hace otra cosa (salvo irse al mazo);
+  - flor contra flor sin contraflor: gana la más grande (empate, la del más cercano al mano) y su equipo cobra 3 por cada flor que tiene; el otro, nada;
+  - si alguien del equipo tiene una flor sin cantar, el equipo no canta ni contesta el envido (tampoco "no quiero"): solo puede actuar el de la flor, cantándola;
+  - el envido anulado por la flor no lo cobra nadie (ya era así).
+  - Con la flor no obligatoria o en modo sucio, nada de esto se aplica.
+- **Pica-pica alternado** (`picaPicaAlternado`, por defecto): en malas, una mano redonda y una de pica-pica, empezando por la redonda; en buenas, redondo hasta el final. "Todas las manos de malas" queda como opción.
+- **"Envido va primero":** ya funcionaba; ahora se llama así en los botones, los globos y el registro. Solo lo puede decir alguien que todavía no jugó su carta.
+- **Orden de la declaración (jugadores 1, 2, 3 y 4):** ya funcionaba como en la mesa del usuario; quedó un test con su ejemplo.
+- **Crear sala:** la falta tiene tres opciones (Hasta 15, Hasta 30, Gana el partido) y, en 3v3 con pica-pica, "Manos de pica-pica: Alternadas o Todas".
+- **Bots:**
+  - la falta se calcula con la regla nueva;
+  - con todas las flores ya cantadas, pueden subir con contraflor (antes solo al cantar la propia);
+  - la regla de la flor del compañero dejaba al medio contra el fácil en 2v2 en 64,3 % (mínimo 65 %): con menos envidos, el medio pierde parte de su ventaja. Se ajustó el medio: canta envido con más del 50 % de chances (antes 60 %) y truco con más del 55 % (antes 60 %).
+- **Tests:** 310 en total (motor 136, bots 14, servidor 36, web 124), más los 7 de punta a punta y el de sin conexión.
+
+### Criterio de los bots (1000 partidas, semilla 2026)
+
+| Enfrentamiento | 1v1 | 2v2 | 3v3 | Mínimo |
+| --- | --- | --- | --- | --- |
+| Difícil contra medio | 62,8 % | 62,9 % | 65,5 % | 60 % |
+| Medio contra fácil | 70,5 % | 66,5 % | 65,4 % | 65 % |
+
+Con otras semillas (1 y 2) el medio contra el fácil en 3v3 dio 62,5 % y 64,4 %, y el difícil contra el medio en 2v2, 60,8 %. El 3v3 no era parte del criterio, pero queda anotado.

@@ -55,7 +55,7 @@ export function crearMedio(): Estrategia {
       const atras = ctx.vista.puntos[ctx.rival] - ctx.vista.puntos[ctx.equipo]
       if (posibles.includes('faltaEnvido') && atras >= 10 && p > 0.7) return 'faltaEnvido'
       if (p > 0.8) return posibles.includes('realEnvido') ? 'realEnvido' : (posibles[0] ?? null)
-      if (p > 0.6 && posibles.includes('envido')) return 'envido'
+      if (p > 0.5 && posibles.includes('envido')) return 'envido'
       if (ctx.rng.chance(FAROL) && posibles.includes('envido')) return 'envido'
       return null
     },
@@ -70,7 +70,7 @@ export function crearMedio(): Estrategia {
 
     cantarTruco(ctx) {
       const p = pTruco(ctx)
-      if (p > 0.6) return true
+      if (p > 0.55) return true
       return p < 0.35 && ctx.rng.chance(FAROL)
     },
 
