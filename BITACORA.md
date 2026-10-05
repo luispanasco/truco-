@@ -645,3 +645,18 @@ Pedido del usuario: ver a los jugadores en la mesa. Lorelei solo tiene vista de 
 
 **Pendientes:** durante la seña, el busto de arriba tapa un momento su nombre; las pastillas de seña de los costados pisan las pilas del centro (como en círculos); no se probó con celulares de menos de 700 px de alto.
 
+---
+
+## Mesas de colores y cartas que se levantan — 2026-10-05
+
+Pedidos del usuario: elegir la combinación de colores de la mesa (como cosmético, después con monedas) y, como opción de sala, que las cartas se levanten para que la mesa no quede tan cargada. Plan aprobado; lo hicieron dos agentes en paralelo. Al integrar, dos conflictos de "las dos cosas juntas" en `perfil.ts` e `Inicio.tsx`.
+
+- **Mesas** (`packages/shared/src/mesas.ts`, `apps/web/src/estilos-mesas.css`): siete combinaciones de paño y madera que pintan la mesa y el fondo de la app (`data-mesa` en `<html>`; también el color de la barra del navegador). Gratis: Boliche (la de siempre) y Azul. En la tienda, con precios provisorios: Pizarra 300, Bordó 400, Celeste 400, Parrillero 500 (arpillera con gradientes) y Cantina 600 (mantel a cuadros). Se eligen en Inicio → Más opciones con muestras; las pagas con candado y precio. Es personal: no viaja al servidor. Se ajustaron colores por mesa para que se lean pastillas, dorsos y textos (detalle en el informe del agente).
+- **Cartas jugadas** (opción de sala, `CartasJugadas` en `@truco/shared`): "Quedan en la mesa" (por defecto) o "Se levantan en cada vuelta". El servidor la valida y la manda en `InfoSala`; el anfitrión la cambia en la espera; contra la compu va en Más opciones. Al cerrarse una vuelta, las cartas quedan 1,2 s con la ganadora resaltada y se van hacia quien la ganó (al centro si fue parda); al terminar la mano queda la última vuelta con las cartas del tanto o la flor.
+- **Tests:** 398 (motor 136, bots 14, servidor 39, web 209), 8 de punta a punta y el de sin conexión.
+
+**Pendientes:**
+- El `theme-color` del index y del manifest es el de Boliche hasta que carga la app.
+- La arpillera puede hacer moiré en pantallas de densidad 1.
+- Con jugadores sentados en 1280, el globito de chat del de abajo a la derecha queda tapado por su busto.
+
