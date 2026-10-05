@@ -26,6 +26,7 @@
   --turno: var(--acento);
   --exito: #2e8b57;
   --panel: rgb(0 0 0 / 0.32);
+  --panel-fuerte: rgb(30 20 12 / 0.92);
   --panel-borde: rgb(255 255 255 / 0.1);
   --accion-truco: var(--acento);
   --accion-envido: var(--papel);
@@ -1021,6 +1022,7 @@ button {
 }
 /* Botonera o resultado de la mano: el lugar queda reservado para que la mesa no salte. */
 .mi-lugar-pie {
+  position: relative;
   min-height: 44px;
   display: grid;
   align-content: center;
@@ -1346,13 +1348,21 @@ button {
     var(--sombra);
 }
 
-/* Resultado de la mano, durante la pausa antes de repartir de nuevo. */
+/*
+ * Resultado de la mano, durante la pausa antes de repartir de nuevo. Crece hacia arriba,
+ * sobre la mano (que en la pausa casi siempre está vacía): así la mesa no cambia de tamaño.
+ */
 .fin-de-mano {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  translate: -50% 0;
   width: min(100%, 420px);
-  margin: 0 auto;
+  z-index: 4;
+  backdrop-filter: blur(2px);
   padding: 8px 14px;
   border-radius: 14px;
-  background: rgb(0 0 0 / 0.35);
+  background: var(--panel-fuerte);
   border: 1.5px solid var(--acento);
   text-align: center;
   font-size: 0.8rem;
@@ -1527,6 +1537,29 @@ button {
   .n-6 .asiento.pos-2 .asiento-cartas,
   .n-6 .asiento.pos-4 .asiento-cartas,
   .n-6 .asiento.pos-5 .asiento-cartas {
+    grid-area: cartas;
+  }
+}
+
+/*
+ * Paño bajito y ancho (escritorio): el de enfrente también va acostado, con sus cartas al
+ * costado del avatar. Así ocupa menos alto y las cartas de la mesa no quedan de celular.
+ */
+@container mesa (max-height: 480px) and (min-width: 480px) {
+  :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) {
+    grid-template-areas:
+      'avatar cartas'
+      'nombre cartas';
+    align-items: center;
+    column-gap: 10px;
+  }
+  :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .asiento-avatar {
+    grid-area: avatar;
+  }
+  :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .asiento-nombre {
+    grid-area: nombre;
+  }
+  :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .asiento-cartas {
     grid-area: cartas;
   }
 }

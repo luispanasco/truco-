@@ -259,32 +259,35 @@ export function Mesa() {
             {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
           </span>
         </div>
-        {conTira && (
-          <TiraSenias
-            rapidas={seniasRapidas(misCartas, vista.mano.muestra)}
-            hechas={hechas.mano === vista.mano.numero ? hechas.senias : []}
-            cerrado={seniasCerradas}
-            alHacer={hacerSenia}
-            alRechazar={(motivo) => mostrarAviso(`⚠ ${motivo}`)}
+        {/* La tira de señas va a los costados de la mano (no en una fila aparte): la mesa no se achica. */}
+        <div className="mi-mano-zona">
+          {conTira && (
+            <TiraSenias
+              rapidas={seniasRapidas(misCartas, vista.mano.muestra)}
+              hechas={hechas.mano === vista.mano.numero ? hechas.senias : []}
+              cerrado={seniasCerradas}
+              alHacer={hacerSenia}
+              alRechazar={(motivo) => mostrarAviso(`⚠ ${motivo}`)}
+            />
+          )}
+          {/* La clave es el número de mano: en cada reparto las cartas entran de nuevo y se vuelven a ojear. */}
+          <ManoOjeable
+            key={vista.mano.numero}
+            className="mi-mano"
+            cartas={misCartas}
+            ojeoActivado={ojear}
+            onAbrir={() => setAbiertaEn(vista.mano.numero)}
+            abrirAlTocar={meToca}
+            reparto
+            jugable={puedeJugar}
+            resaltada={(c) => sala.ayudas && esPiezaOMata(c, vista.mano.muestra)}
+            alTocar={jugarCarta}
+            alMantener={hayCompanieros && !finDeMano ? seniaDeMiCarta : undefined}
           />
-        )}
-        {/* La clave es el número de mano: en cada reparto las cartas entran de nuevo y se vuelven a ojear. */}
-        <ManoOjeable
-          key={vista.mano.numero}
-          className="mi-mano"
-          cartas={misCartas}
-          ojeoActivado={ojear}
-          onAbrir={() => setAbiertaEn(vista.mano.numero)}
-          abrirAlTocar={meToca}
-          reparto
-          jugable={puedeJugar}
-          resaltada={(c) => sala.ayudas && esPiezaOMata(c, vista.mano.muestra)}
-          alTocar={jugarCarta}
-          alMantener={hayCompanieros && !finDeMano ? seniaDeMiCarta : undefined}
-        />
+        </div>
         <div className="mi-lugar-pie">
           {finDeMano ? (
-            // Durante la pausa entre manos, el resultado va donde estaban los botones: no tapa la mesa.
+            // Durante la pausa entre manos, el resultado va donde estaban los botones (y crece sobre la mano): no tapa la mesa.
             <div className="fin-de-mano" role="status">
               {finDeMano.split('\n').map((l, i) => (
                 <div key={i}>{l.trim().replace(/^✔\s*/, '')}</div>
