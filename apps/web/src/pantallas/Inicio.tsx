@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { AjustesSonido } from '../componentes/AjustesSonido'
 import { Carta } from '../componentes/Carta'
 import { FORMATOS, NIVELES } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
@@ -161,6 +162,7 @@ export function Inicio() {
       <PartidaEnCurso apodo={apodo.length > 0} enLinea={enLinea} alVolver={volverALaPartida} />
 
       <TarjetaPerfil perfil={perfil} cambiar={cambiar} />
+      <AjustesSonido />
 
       <section className="tarjeta">
         <h2>Contra la compu</h2>

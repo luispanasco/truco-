@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
 import { seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
 import { MOTIVO_SENIA_TARDE, yaJugoEnLaMano } from '@truco/shared'
+import { BotonSonido } from '../componentes/AjustesSonido'
 import { esPiezaOMata } from '../senias'
 import { explicarCarta, explicarTanto } from '../ayudas'
 import { GloboExplicacion, useExplicacion } from '../componentes/Ayudas'
@@ -175,6 +176,7 @@ export function Mesa() {
         </div>
         <div className="marcador-botones">
           <BotonChat noLeidos={noLeidos} alTocar={() => setPanel('chat')} />
+          <BotonSonido />
           <button type="button" className="boton-salir" onClick={() => setConfirmarSalida(true)} aria-label="Salir de la mesa">
             ✕
           </button>
