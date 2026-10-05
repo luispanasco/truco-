@@ -98,5 +98,5 @@ test('la mano llega apilada, se ojea deslizando y se juega arrastrando una carta
   await arrastrarConDedo(page, centro, { x: centro.x, y: centro.y - UMBRAL_JUGAR_PX - 30 })
   await expect(cartas).toHaveCount(2)
   await expect(page.getByRole('button', { name: `Jugar el ${nombre}` })).toHaveCount(0)
-  await expect(page.getByRole('img', { name: nombre })).toBeVisible()
+  await expect(page.getByRole('img', { name: nombre, exact: true })).toBeVisible()
 })
