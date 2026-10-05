@@ -1,12 +1,13 @@
 import type { Nivel } from '@truco/bots'
 import type { Formato } from '@truco/engine'
-import { TIEMPOS_SALA_DEFAULT, type ConfigTiempos } from '@truco/shared'
+import { TIEMPOS_SALA_DEFAULT, avatarAlAzar, codificarAvatar, normalizarAvatar, type ConfigTiempos } from '@truco/shared'
 import type { Baraja } from './baraja'
 
 /** Datos que se recuerdan en este navegador. Si el almacenamiento falla, se usan los valores por defecto. */
 export interface Perfil {
   invitadoId: string
   apodo: string
+  /** El avatar por capas, codificado ("a1.…"): es lo que viaja al servidor. */
   avatar: string
   formato: Formato
   nivelBots: Nivel
@@ -28,8 +29,6 @@ export interface Perfil {
   baraja: Baraja
 }
 
-export const AVATARES = ['🧉', '🐴', '🦉', '🐂', '🦊', '🐸', '🐶', '🐱', '🌞', '⭐']
-
 const CLAVE = 'truco.perfil'
 
 function nuevoId(): string {
@@ -38,11 +37,15 @@ function nuevoId(): string {
     : `inv-${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
+/** Un avatar al azar con piezas gratis, siempre el mismo para el mismo texto. */
+export const avatarDe = (texto: string) => codificarAvatar(avatarAlAzar(texto))
+
 export function leerPerfil(): Perfil {
+  const invitadoId = nuevoId()
   const porDefecto: Perfil = {
-    invitadoId: nuevoId(),
+    invitadoId,
     apodo: '',
-    avatar: AVATARES[0]!,
+    avatar: avatarDe(invitadoId),
     formato: '1v1',
     nivelBots: 'medio',
     ayudas: true,
@@ -60,6 +63,13 @@ export function leerPerfil(): Perfil {
     const perfil = { ...porDefecto, ...(guardado ?? {}) }
     // Una baraja que ya no existe (o un valor roto) vuelve a la propia.
     if (perfil.baraja !== 'propia' && perfil.baraja !== 'fournier1878') perfil.baraja = 'propia'
+    // Los emojis de antes (o un código roto) pasan a un avatar armado desde el apodo; las piezas
+    // de la tienda vuelven a las gratis, como hace el servidor, así se ve lo mismo que ven los demás.
+    const avatar = normalizarAvatar(perfil.avatar) ?? avatarDe(perfil.apodo || perfil.invitadoId)
+    const cambio = avatar !== perfil.avatar
+    perfil.avatar = avatar
+    // Se guarda enseguida: el perfil nuevo o migrado tiene que ser el mismo en todas las pantallas.
+    if (!guardado || cambio) guardarPerfil(perfil)
     return perfil
   } catch {
     return porDefecto

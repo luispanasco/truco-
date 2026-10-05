@@ -15,6 +15,8 @@ import { crearBot, type Bot, type Nivel, type Senia, type SeniasRecibidas } from
 import {
   MOTIVO_SENIA_TARDE,
   MOTIVO_SIN_SENIAS,
+  avatarAlAzar,
+  codificarAvatar,
   normalizarSenias,
   yaJugoEnLaMano,
   type ConfigSenias,
@@ -148,6 +150,11 @@ export class ConexionLocal implements Conexion {
     this.programar()
   }
 
+  /** Cada bot luce siempre el mismo avatar (puede tener piezas de la tienda); la persona, el de su perfil. */
+  private avatar(asiento: number) {
+    return asiento === 0 ? this.op.avatar : codificarAvatar(avatarAlAzar(this.nombre(asiento), false))
+  }
+
   private nombre(asiento: number) {
     return asiento === 0 ? this.op.apodo : NOMBRES_BOTS[(asiento - 1) % NOMBRES_BOTS.length]!
   }
@@ -171,7 +178,7 @@ export class ConexionLocal implements Conexion {
         asiento: a,
         tipo: a === 0 ? 'humano' : 'bot',
         apodo: this.nombre(a),
-        avatar: a === 0 ? this.op.avatar : null,
+        avatar: this.avatar(a),
         conectado: a === 0,
         anfitrion: a === 0,
       })),

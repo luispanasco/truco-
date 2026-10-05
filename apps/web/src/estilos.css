@@ -278,25 +278,6 @@ button {
   background: var(--papel);
   color: var(--tinta);
 }
-.perfil .avatares {
-  grid-column: 1 / -1;
-}
-.avatares {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-}
-.avatar-opcion {
-  aspect-ratio: 1;
-  border: 2px solid transparent;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.12);
-  font-size: 1.6rem;
-}
-.avatar-opcion.elegido {
-  border-color: var(--acento);
-  background: rgb(255 255 255 / 0.25);
-}
 
 .segmentado button {
   display: grid;

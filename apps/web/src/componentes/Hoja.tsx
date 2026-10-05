@@ -9,12 +9,15 @@ export function Hoja({
   alCerrar,
   children,
   clase = '',
+  claseFondo = '',
   cabecera,
 }: {
   titulo: string
   alCerrar: () => void
   children: ReactNode
   clase?: string
+  /** Para el fondo: fuera de la mesa (en el inicio) la hoja va fija sobre la pantalla. */
+  claseFondo?: string
   /** Lo que va en la cabecera además del título (por ejemplo, pestañas). */
   cabecera?: ReactNode
 }) {
@@ -27,7 +30,7 @@ export function Hoja({
   }, [alCerrar])
 
   return (
-    <div className="hoja-fondo" onClick={alCerrar}>
+    <div className={`hoja-fondo ${claseFondo}`} onClick={alCerrar}>
       <section className={`hoja ${clase}`} role="dialog" aria-modal="true" aria-label={titulo} onClick={(e) => e.stopPropagation()}>
         <header className="hoja-cabecera">
           <h2 className="hoja-titulo">{titulo}</h2>

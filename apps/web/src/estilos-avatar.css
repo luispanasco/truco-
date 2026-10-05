@@ -1,0 +1,294 @@
+/*
+ * Avatar por capas fuera de la mesa: el del perfil, los de la sala de espera y el editor.
+ * (En la mesa lo dibuja el asiento, con los gestos de las señas.)
+ */
+:root {
+  --avatar-fondo: rgb(255 255 255 / 0.14);
+  --avatar-fondo-elegido: rgb(255 255 255 / 0.26);
+  --avatar-precio-fondo: var(--panel-fuerte);
+  --avatar-precio: var(--acento);
+}
+
+/* El dibujo llena su lugar y se recorta en círculo (la ropa no se sale por abajo). */
+.perfil-avatar .avatar-dibujo,
+.lugar-avatar .avatar-dibujo,
+.editor-avatar-grande .avatar-dibujo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  clip-path: circle(50%);
+}
+.perfil-avatar,
+.lugar-avatar {
+  padding: 0;
+}
+.perfil-avatar .avatar-inicial,
+.lugar-avatar .avatar-inicial {
+  font-weight: 800;
+  font-size: 1.4rem;
+}
+.lugar-avatar .avatar-inicial {
+  font-size: 1rem;
+}
+
+/* ── Editor ───────────────────────────────────────────────────── */
+
+.hoja-fondo.hoja-fija {
+  position: fixed;
+  z-index: 40;
+}
+.hoja.hoja-avatar {
+  height: 90dvh;
+  max-height: none;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.editor-avatar {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.editor-avatar-vista {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'grande botones'
+    'grande gesto';
+  align-items: center;
+  column-gap: 14px;
+}
+.editor-avatar-grande {
+  grid-area: grande;
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  border: 3px solid var(--acento);
+  background: var(--avatar-fondo);
+  display: grid;
+  place-items: center;
+}
+.editor-avatar-grande .avatar-inicial {
+  font-size: 2.6rem;
+  font-weight: 800;
+}
+.editor-avatar-botones {
+  grid-area: botones;
+  display: grid;
+  gap: 8px;
+  align-self: end;
+}
+.editor-avatar-botones .boton {
+  padding: 10px 12px;
+}
+.editor-avatar-gesto {
+  grid-area: gesto;
+  align-self: start;
+  margin: 6px 0 0;
+  min-height: 1.2em;
+  font-size: 0.8rem;
+  opacity: 0.85;
+  text-align: center;
+}
+
+.editor-avatar-partes {
+  flex: 1;
+  min-height: 0;
+  /* Sin esto, la fila de pestañas ensancha la columna y se sale de la hoja. */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.editor-pestanias {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+  flex: none;
+}
+.editor-pestanias::-webkit-scrollbar {
+  display: none;
+}
+.editor-pestanias button {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--avatar-fondo);
+  color: var(--texto-claro);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.editor-pestanias button.elegida {
+  background: var(--acento);
+  color: var(--tinta);
+  font-weight: 700;
+}
+
+.editor-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 2px 2px 6px;
+}
+.editor-capa {
+  display: grid;
+  gap: 6px;
+}
+.editor-capa h3 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  opacity: 0.85;
+}
+.editor-tienda,
+.editor-aviso {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+.editor-aviso {
+  min-height: 1.1em;
+  color: var(--acento);
+  opacity: 1;
+}
+
+/* Piezas: miniaturas del avatar entero con esa pieza, o muestras de color. */
+.piezas-miniaturas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+}
+.pieza {
+  position: relative;
+  padding: 0;
+  border: 2px solid transparent;
+  color: inherit;
+  background: var(--avatar-fondo);
+}
+.piezas-miniaturas .pieza {
+  aspect-ratio: 1;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.pieza.elegida {
+  border-color: var(--acento);
+  background: var(--avatar-fondo-elegido);
+}
+.pieza.paga {
+  cursor: default;
+}
+.pieza-miniatura {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.pieza-miniatura .avatar-dibujo {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* Ojos, boca y demás: la miniatura se acerca a la cara. */
+.pieza-miniatura.cerca .avatar-dibujo {
+  transform: scale(1.8);
+  transform-origin: 50% 46%;
+}
+.pieza.paga .pieza-miniatura,
+.pieza.paga .pieza-color {
+  opacity: 0.5;
+}
+.pieza-precio {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px 1px 4px;
+  border-radius: 999px;
+  background: var(--avatar-precio-fondo);
+  color: var(--avatar-precio);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.candado {
+  width: 10px;
+  height: 10px;
+}
+
+.piezas-colores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.piezas-colores .pieza {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: none;
+}
+.pieza-color {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgb(255 255 255 / 0.3);
+}
+.piezas-colores .pieza.elegida {
+  box-shadow: 0 0 0 2px var(--acento);
+}
+.piezas-colores .pieza-precio {
+  right: -8px;
+  bottom: -6px;
+}
+
+/* En escritorio: el editor al medio de la pantalla, con el avatar a la izquierda. */
+@media (min-width: 720px) {
+  .hoja-fondo.hoja-fija {
+    justify-content: center;
+    padding: 24px;
+  }
+  .hoja.hoja-avatar {
+    height: min(640px, 100%);
+    border-radius: 22px;
+    border: 0;
+    border-top: 5px solid var(--madera-clara);
+  }
+  .editor-avatar {
+    flex-direction: row;
+    gap: 20px;
+  }
+  .editor-avatar-vista {
+    flex: none;
+    grid-template-columns: 200px;
+    grid-template-areas:
+      'grande'
+      'gesto'
+      'botones';
+    align-content: start;
+    justify-items: stretch;
+  }
+  .editor-avatar-grande {
+    width: 200px;
+    height: 200px;
+  }
+  .editor-avatar-botones {
+    align-self: start;
+  }
+  /* Con lugar, las pestañas van en dos filas en vez de esconderse a la derecha. */
+  .editor-pestanias {
+    flex-wrap: wrap;
+  }
+  .piezas-miniaturas {
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  }
+}
