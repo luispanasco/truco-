@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { TODO_PERMITIDO } from '@truco/shared'
+import { mostrarBaraja } from '../baraja'
 import { AjustesSonido } from '../componentes/AjustesSonido'
 import { Carta } from '../componentes/Carta'
 import { FORMATOS, NIVELES, SelectorCartasJugadas } from '../componentes/FormularioSala'
@@ -13,6 +15,7 @@ import { ConexionLocal } from '../conexion/local'
 import { ConexionOnline, descartarPartidaGuardada, leerPartidaGuardada, motivoError } from '../conexion/online'
 import { useEnLinea } from '../enLinea'
 import { useJuego } from '../estado'
+import { cosmeticosPermitidos } from '../perfil'
 import { aplicarMesa } from '../temaMesa'
 
 /** Una opción del menú online: ícono, título y una línea que explica. */
@@ -109,8 +112,15 @@ export function Inicio() {
   const [perfil, cambiar] = usePerfil()
   const apodo = perfil.apodo.trim()
   const enLinea = useEnLinea()
-  // Al elegir otra mesa, toda la app cambia de color en el momento.
-  useEffect(() => aplicarMesa(perfil.mesa), [perfil.mesa])
+  // Al elegir otra mesa, toda la app cambia de color en el momento. El perfil ya trae solo lo
+  // que se puede usar (con la tienda de prueba, también lo pago). Al volver de una sala, que
+  // tenía la mesa y la baraja del anfitrión, vuelven las tuyas.
+  useEffect(() => aplicarMesa(perfil.mesa, TODO_PERMITIDO), [perfil.mesa])
+  useEffect(() => mostrarBaraja(perfil.baraja), [perfil.baraja])
+
+  /** Prendida, todo lo pago se elige; apagada, lo pago que tuvieras vuelve a lo gratis. */
+  const cambiarTienda = (tiendaDesbloqueada: boolean) =>
+    cambiar({ tiendaDesbloqueada, ...cosmeticosPermitidos({ ...perfil, tiendaDesbloqueada }) })
 
   const jugarContraBots = () => {
     useJuego.getState().conectar(
@@ -121,6 +131,8 @@ export function Inicio() {
         nivelBots: perfil.nivelBots,
         ayudas: perfil.ayudas,
         cartasJugadas: perfil.cartasJugadas,
+        mesa: perfil.mesa,
+        baraja: perfil.baraja,
         config: { picaPica: perfil.picaPica },
         senias: {
           habilitadas: perfil.seniasHabilitadas,
@@ -208,7 +220,13 @@ export function Inicio() {
           />
           <SelectorVistaMesa valor={perfil.mesaBustos} alCambiar={(mesaBustos) => cambiar({ mesaBustos })} />
           <SelectorCartasJugadas valor={perfil.cartasJugadas} alCambiar={(cartasJugadas) => cambiar({ cartasJugadas })} />
-          <SelectorMesa valor={perfil.mesa} alCambiar={(mesa) => cambiar({ mesa })} />
+          <SelectorMesa valor={perfil.mesa} alCambiar={(mesa) => cambiar({ mesa })} tiendaDesbloqueada={perfil.tiendaDesbloqueada} />
+          <Interruptor
+            activo={perfil.tiendaDesbloqueada}
+            alCambiar={cambiarTienda}
+            titulo="Desbloquear la tienda (prueba)"
+            detalle="Mientras no hay tienda: elegís cualquier pieza del avatar o mesa sin monedas. Al apagarlo, vuelve lo gratis"
+          />
           <Interruptor
             activo={perfil.ayudas}
             alCambiar={(v) => cambiar({ ayudas: v })}

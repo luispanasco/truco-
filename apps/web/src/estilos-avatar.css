@@ -224,6 +224,11 @@
   width: 10px;
   height: 10px;
 }
+/* Tienda de prueba: el candado abierto, sin precio y apagado, para que no compita con la pieza. */
+.pieza-precio.pieza-abierta {
+  padding: 1px 3px;
+  opacity: 0.6;
+}
 
 .piezas-colores {
   display: flex;

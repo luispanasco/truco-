@@ -41,7 +41,12 @@ export function TarjetaPerfil({ perfil, cambiar }: { perfil: Perfil; cambiar: (p
       </label>
       {editando && (
         <Hoja titulo="Tu avatar" alCerrar={cerrar} clase="hoja-avatar" claseFondo="hoja-fija">
-          <EditorAvatar codigo={perfil.avatar} apodo={perfil.apodo} alCambiar={(avatar) => cambiar({ avatar })} />
+          <EditorAvatar
+            codigo={perfil.avatar}
+            apodo={perfil.apodo}
+            alCambiar={(avatar) => cambiar({ avatar })}
+            tiendaDesbloqueada={perfil.tiendaDesbloqueada}
+          />
           <button type="button" className="boton" onClick={cerrar}>
             Listo
           </button>

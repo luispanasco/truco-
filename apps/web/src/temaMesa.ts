@@ -1,4 +1,4 @@
-import { normalizarMesa, type IdMesa } from '@truco/shared'
+import { mesaGratis, normalizarMesa, type IdMesa } from '@truco/shared'
 import './estilos-mesas.css'
 
 /**
@@ -17,10 +17,11 @@ export const BARRA_MESA: Record<IdMesa, string> = {
 
 /**
  * Pinta la app con la mesa elegida: los colores son variables de estilos-mesas.css que cuelgan
- * del atributo `data-mesa` de <html>. Lo que no se puede usar vuelve a la de boliche.
+ * del atributo `data-mesa` de <html>. Lo que no se puede usar vuelve a la de boliche (con la
+ * mesa de una sala o con la tienda de prueba, `puedeUsar` deja las pagas).
  */
-export function aplicarMesa(id: unknown) {
-  const mesa = normalizarMesa(id)
+export function aplicarMesa(id: unknown, puedeUsar: (id: IdMesa) => boolean = mesaGratis) {
+  const mesa = normalizarMesa(id, puedeUsar)
   document.documentElement.dataset.mesa = mesa
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', BARRA_MESA[mesa])
 }

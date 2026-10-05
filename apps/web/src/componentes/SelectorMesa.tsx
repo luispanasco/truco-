@@ -1,14 +1,23 @@
 import { useState } from 'react'
 import { MESAS, type IdMesa } from '@truco/shared'
 import { Carta } from './Carta'
-import { Precio } from './EditorAvatar'
+import { CandadoAbierto, Precio } from './EditorAvatar'
 import '../estilos-mesas.css'
 
 /**
  * Elegir la mesa (paño y madera): una muestra chica de cada una, con su carta encima. Las de
- * la tienda se ven con candado y precio, pero todavía no se pueden elegir.
+ * la tienda se ven con candado y precio, pero todavía no se pueden elegir (con la tienda de
+ * prueba desbloqueada sí: llevan un candado abierto).
  */
-export function SelectorMesa({ valor, alCambiar }: { valor: IdMesa; alCambiar: (mesa: IdMesa) => void }) {
+export function SelectorMesa({
+  valor,
+  alCambiar,
+  tiendaDesbloqueada = false,
+}: {
+  valor: IdMesa
+  alCambiar: (mesa: IdMesa) => void
+  tiendaDesbloqueada?: boolean
+}) {
   const [aviso, setAviso] = useState<string | null>(null)
   const elegida = MESAS.find((m) => m.id === valor) ?? MESAS[0]
   return (
@@ -16,7 +25,8 @@ export function SelectorMesa({ valor, alCambiar }: { valor: IdMesa; alCambiar: (
       <span>Mesa</span>
       <div className="mesas" role="radiogroup" aria-label="Mesa">
         {MESAS.map((m) => {
-          const paga = m.precio > 0
+          const deTienda = m.precio > 0
+          const paga = deTienda && !tiendaDesbloqueada
           return (
             <button
               key={m.id}
@@ -40,6 +50,7 @@ export function SelectorMesa({ valor, alCambiar }: { valor: IdMesa; alCambiar: (
               </span>
               <span className="mesa-nombre">{m.nombre}</span>
               {paga && <Precio monedas={m.precio} />}
+              {deTienda && !paga && <CandadoAbierto />}
             </button>
           )
         })}

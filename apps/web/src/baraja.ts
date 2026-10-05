@@ -1,18 +1,25 @@
 import { create } from 'zustand'
 import type { Carta, Palo } from '@truco/engine'
+import { BARAJAS as CATALOGO_BARAJAS, type IdBaraja } from '@truco/shared'
 import { guardarPerfil, leerPerfil } from './perfil'
 
 /**
  * Barajas para elegir (es solo cosmético): la propia, dibujada en SVG por código, y la clásica
  * de Heraclio Fournier (1878), de dominio público, en imágenes WebP (ver
- * public/barajas/fournier-1878/CREDITOS.md y scripts/baraja-fournier.py).
+ * public/barajas/fournier-1878/CREDITOS.md y scripts/baraja-fournier.py). El catálogo (ids y
+ * precios) está en @truco/shared: en una sala, la baraja la pone el anfitrión.
  */
-export type Baraja = 'propia' | 'fournier1878'
+export type Baraja = IdBaraja
 
-export const BARAJAS: { id: Baraja; nombre: string; credito?: string }[] = [
-  { id: 'propia', nombre: 'Propia' },
-  { id: 'fournier1878', nombre: 'Clásica 1878', credito: 'Fournier 1878 · dominio público' },
-]
+/** Lo que agrega la web al catálogo: el nombre corto ("Baraja clásica") y el crédito. */
+const EXTRA: Record<Baraja, { corto: string; credito?: string }> = {
+  propia: { corto: 'propia' },
+  fournier1878: { corto: 'clásica', credito: 'Fournier 1878 · dominio público' },
+}
+
+export const BARAJAS: { id: Baraja; nombre: string; precio: number; corto: string; credito?: string }[] = CATALOGO_BARAJAS.map(
+  (b) => ({ ...b, ...EXTRA[b.id] }),
+)
 
 const PALOS: Palo[] = ['espada', 'basto', 'oro', 'copa']
 const NUMEROS = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12] as const
