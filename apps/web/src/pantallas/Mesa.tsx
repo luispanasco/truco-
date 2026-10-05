@@ -4,6 +4,8 @@ import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
 import { seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
 import { MOTIVO_SENIA_TARDE, yaJugoEnLaMano } from '@truco/shared'
 import { esPiezaOMata } from '../senias'
+import { explicarCarta, explicarTanto } from '../ayudas'
+import { GloboExplicacion, useExplicacion } from '../componentes/Ayudas'
 import { Acciones, BotonMazo } from '../componentes/Acciones'
 import { Asiento, Avatar, MarcaMano } from '../componentes/Asiento'
 import { CartasEnMesa } from '../componentes/CartasEnMesa'
@@ -45,6 +47,8 @@ export function Mesa() {
   const cerrarPanel = useCallback(() => setPanel(null), [])
   // Cada mensaje nuevo del chat sale, unos segundos, como globito de quien lo mandó.
   const globosChat = useGlobosChat(chat, silenciados)
+  // Ayudas: la explicación de una estrella o de la ficha del tanto, arriba de tu lugar.
+  const { explicacion, explicar, cerrar: cerrarExplicacion } = useExplicacion()
 
   useEffect(() => {
     if (!useJuego.getState().conexion) navegar('/')
@@ -244,14 +248,22 @@ export function Mesa() {
             {miReloj !== null && <AnilloReloj venceEn={miReloj} />}
             {e.mano === yo && <MarcaMano />}
           </div>
-          <span className="mi-nombre">{lugarYo.apodo}</span>
-          {sala.ayudas && (
-            <span className="mi-tanto">
-              <span className="mi-tanto-etiqueta">envido </span>
-              <b>{vista.mano.miTanto.envido}</b>
-              {vista.mano.miTanto.flor !== null && <strong className="mi-flor">flor {vista.mano.miTanto.flor}</strong>}
-            </span>
-          )}
+          {/* El nombre y, abajo, la ficha del tanto: así entra todo en un celular angosto. */}
+          <div className="mi-quien">
+            <span className="mi-nombre">{lugarYo.apodo}</span>
+            {sala.ayudas && (
+              // Con flor, el envido no se juega: la ficha muestra la flor (el envido, en la explicación).
+              <button type="button" className="mi-tanto" onClick={(ev) => explicar(explicarTanto(vista), ev.currentTarget)}>
+                {vista.mano.miTanto.flor !== null ? (
+                  <strong className="mi-flor">flor {vista.mano.miTanto.flor}</strong>
+                ) : (
+                  <>
+                    <span className="mi-tanto-etiqueta">envido</span> <b>{vista.mano.miTanto.envido}</b>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
           <span className="mi-estado">
             {meToca && (miReloj !== null ? <RelojPropio venceEn={miReloj} /> : <span className="te-toca">Te toca</span>)}
             {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
@@ -281,6 +293,7 @@ export function Mesa() {
             reparto
             jugable={puedeJugar}
             resaltada={(c) => sala.ayudas && esPiezaOMata(c, vista.mano.muestra)}
+            alTocarEstrella={(c, estrella) => explicar(explicarCarta(c, vista.mano.muestra) ?? '', estrella)}
             alTocar={jugarCarta}
             alMantener={hayCompanieros && !finDeMano ? seniaDeMiCarta : undefined}
           />
@@ -297,6 +310,7 @@ export function Mesa() {
             <Acciones vista={vista} alElegir={jugar} />
           )}
         </div>
+        {explicacion && <GloboExplicacion key={explicacion.id} explicacion={explicacion} alCerrar={cerrarExplicacion} />}
       </section>
 
       {vista.ganador !== null && (

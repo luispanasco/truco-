@@ -957,31 +957,51 @@ button {
 .mi-info .asiento-avatar::before {
   inset: -4px;
 }
-.mi-nombre {
-  min-width: 2.5em;
-  font-weight: 800;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 0 0 auto;
-  max-width: 34%;
-}
-.mi-tanto {
+.mi-quien {
   flex: 0 1 auto;
   min-width: 0;
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+}
+.mi-nombre {
+  max-width: 100%;
+  min-width: 2.5em;
+  font-weight: 800;
+  line-height: 1.15;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.1);
-  font-size: 0.76rem;
   white-space: nowrap;
+}
+/* La ficha del tanto (con ayudas): debajo del nombre, y se toca para ver de dónde sale. */
+.mi-tanto {
+  position: relative;
+  max-width: 100%;
+  padding: 1px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.12);
+  color: var(--texto-claro);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Zona de toque más grande que la ficha. */
+.mi-tanto::before {
+  content: '';
+  position: absolute;
+  inset: -8px -4px;
+}
+.mi-tanto:focus-visible {
+  outline: 2px solid var(--texto-claro);
+  outline-offset: 2px;
 }
 .mi-tanto b {
   font-weight: 800;
 }
 .mi-flor {
-  margin-left: 6px;
   color: var(--acento);
 }
 .mi-estado {
@@ -1568,6 +1588,84 @@ button {
 @container mesa (max-height: 440px) {
   .mazo-chico {
     scale: 0.68;
+  }
+}
+
+/* ── Ayudas: estrella de piezas y matas, y su explicación ─────── */
+
+/* La estrella de la carta, tocable: la misma que dibujaba la carta, con zona de toque de 36 px. */
+.mano-ojeable .mano-reparto {
+  position: relative;
+}
+.estrella-ayuda {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--acento);
+  color: var(--tinta);
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: var(--sombra);
+  touch-action: manipulation;
+}
+.estrella-ayuda::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+.estrella-ayuda:focus-visible {
+  outline: 2px solid var(--texto-claro);
+  outline-offset: 2px;
+}
+/* Mientras está apilada para ojear, la estrella no delata a una carta que todavía no se vio. */
+.mano-apilada .tapada .estrella-ayuda {
+  display: none;
+}
+/*
+ * La explicación sale arriba de tu lugar, sobre el borde de abajo del paño: no tapa los
+ * botones de canto ni la mano. La colita apunta a lo que se tocó (--flecha).
+ */
+.explicacion-ayuda {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  /* Centrada sin transform, así se puede medir dónde va la colita. */
+  left: 10px;
+  right: 10px;
+  max-width: 340px;
+  margin: 0 auto;
+  padding: 9px 13px;
+  border-radius: 14px;
+  background: var(--papel);
+  color: var(--tinta);
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1.35;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.45);
+  z-index: 22;
+  cursor: pointer;
+  animation: globo-entra 0.2s ease-out;
+}
+.explicacion-ayuda::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: var(--flecha, 50%);
+  margin-left: -7px;
+  border: 7px solid transparent;
+  border-top-color: var(--papel);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explicacion-ayuda {
+    animation: none;
   }
 }
 
