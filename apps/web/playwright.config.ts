@@ -4,8 +4,9 @@ import { defineConfig, devices } from '@playwright/test'
  * Tests de punta a punta: levantan el servidor de juego y la web, y manejan
  * navegadores de verdad en tamaño celular. Correr con `pnpm --filter @truco/web e2e`.
  */
-const PUERTO_SERVIDOR = 2595
-const PUERTO_WEB = 5320
+// Se pueden cambiar (E2E_PUERTO_SERVIDOR, E2E_PUERTO_WEB) para correr dos suites a la vez.
+const PUERTO_SERVIDOR = Number(process.env.E2E_PUERTO_SERVIDOR ?? 2595)
+const PUERTO_WEB = Number(process.env.E2E_PUERTO_WEB ?? 5320)
 
 export default defineConfig({
   testDir: 'e2e',
