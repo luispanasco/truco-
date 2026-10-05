@@ -13,7 +13,7 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 | 1B | Bots | Hecha | 2026-09-30 | `117d29d` |
 | 1C | Servidor | Hecha | 2026-09-30 | `039be94` |
 | 1D | Interfaz | Hecha (D1 a D4) | 2026-10-05 | `97fcd1d` |
-| 1E | Señas, avatares y cantos (sin el audio de los cantos) | Pendiente | — | — |
+| 1E | Señas, avatares y cantos (sin el audio de los cantos) | Hecha | 2026-10-05 | ver abajo |
 | Fase 2 | Cuentas, economía y voz | Pendiente | — | — |
 | Fase 3 | Modo sucio | Pendiente | — | — |
 
@@ -596,3 +596,33 @@ El usuario repasó las reglas como estaban programadas y marcó las que no eran 
 | Medio contra fácil | 70,5 % | 66,5 % | 65,4 % | 65 % |
 
 Con otras semillas (1 y 2) el medio contra el fácil en 3v3 dio 62,5 % y 64,4 %, y el difícil contra el medio en 2v2, 60,8 %. El 3v3 no era parte del criterio, pero queda anotado.
+
+---
+
+## Etapa 1E: avatares por capas, señas sobre el avatar y sonido — 2026-10-05
+
+Plan aprobado el 2026-10-05. Pedidos del usuario: sacar los emojis, sumar efectos de sonido, piezas uruguayas, y que la mayoría de los cosméticos queden detrás de la tienda con monedas de juego. La base la hice yo; después trabajaron tres agentes en paralelo (editor, señas, y dibujos con sonido). Al integrar hubo dos conflictos chicos (`Sala.tsx`, `Avatar.tsx`) y un import a `Cara.tsx`, que se borró en otra rama.
+
+- **Formato del avatar** (`packages/shared/src/avatar.ts`):
+  - 15 capas (piel, cabeza, pelo, color de pelo, cejas, ojos, nariz, boca, barba, lentes, aros, pecas, ropa, sombrero y accesorio), codificadas como `a1.…` en el campo `avatar`;
+  - el formato no sabe de Lorelei: el dibujo lo pone un estilo de la web (`apps/web/src/avatares/`). Un diseñador puede hacer otro estilo sin tocar los avatares guardados. El catálogo solo crece al final de cada capa;
+  - **catálogo con precio en monedas** (0 = gratis; provisorios hasta la fase 2). Gratis: las pieles (siempre), 12 peinados, 8 ojos, 8 bocas, 6 cejas, colores de pelo naturales, narices, caras, barbas, pecas y 3 remeras. Pagas: el resto, los colores de fantasía, aros, casi todos los lentes, camisetas, buzo, campera, sombreros y el mate;
+  - el servidor acepta solo piezas gratis (las pagas vuelven a la gratis de la capa) y a los bots les arma avatares que pueden lucir piezas de la tienda.
+- **Estilo Lorelei** (DiceBear, CC0): 133 piezas extraídas con `pnpm --filter @truco/web avatares:lorelei` a `src/avatares/lorelei/piezas.ts`, con `CREDITOS.md`. Se cargan en un archivo aparte (import dinámico) y quedan en la caché de la app.
+- **Dibujos propios** (`propias.ts`, con el trazo de Lorelei): 10 ropas (4 remeras, camiseta celeste sin escudo, 3 a rayas, buzo con capucha, campera de jean), 4 sombreros (boina, gorro de lana, gorra, sombrero de paja; recortan el pelo de arriba) y el mate en la mano. La ropa va entre la cabeza y el pelo de adelante. Planillas con `scripts/planillas-avatar.ts`.
+- **Editor** (`EditorAvatar.tsx`), al tocar el avatar del perfil: 11 pestañas con miniaturas, las gratis primero, colores en muestras, las pagas con candado y precio ("Pronto en la tienda"), "Al azar" (solo gratis) y "Ver una seña". Los emojis se fueron: los perfiles viejos reciben un avatar armado desde el apodo.
+- **Señas sobre el avatar** (`avatares/gestos.ts` y `gestos.css`): las 11 señas y el disimulo animan las capas reales (ojos partidos en dos para el guiño, cejas, nariz, boca) con piezas propias encima (lengua, boca abierta, dientes, cachetes, corazón). En la mesa, el avatar crece y hace el gesto; la cara grande para hacer señas es tu avatar, con las zonas tocables medidas sobre sus capas. `Cara.tsx` se borró. Con movimiento reducido, poses quietas.
+- **Sonido** (`src/sonido/`):
+  - efectos de Kenney Casino Audio (CC0, 5 .ogg, 46 KB): repartir, tirar carta, fin de vuelta y un tic por fósforo; suenan recién después del primer toque y quedan para jugar sin conexión;
+  - estructura de packs de voces para los 13 cantos (sin audio todavía) y `scripts/voces.mjs` para procesar las grabaciones (recorta silencios, normaliza a -16 LUFS, WebM/Opus). Necesita ffmpeg, que no está instalado;
+  - ajustes en Inicio ("Sonido": efectos sí/no, volumen, voz de los cantos "Pronto") y botón de silenciar en la mesa.
+- **Tests:** 368 en total (motor 136, bots 14, servidor 36, web 191 — antes 131 —), más 8 de punta a punta (nuevo: un avatar armado en el perfil se ve igual desde otro navegador) y el de sin conexión, que ahora verifica los efectos.
+
+**Pendientes:**
+- Escuchar los efectos (se eligieron por nombre y duración) y probar Ogg/Opus en iPhone; si falla, sumar .m4a.
+- Grabar las voces (instalar ffmpeg) y pegar el pack en `PACKS_VOCES`. Decidir si el botón de silenciar también calla las voces.
+- Las muecas con la pera (1 y 7 bravos) se notan menos: Lorelei tiene bocas chicas y la pera es parte de la cabeza.
+- En la mesa, el avatar de arriba de todo tapa un momento su nombre y sus cartas durante el gesto.
+- Algunas piezas de Lorelei traen ojos cerrados o lengua afuera, y la barba grande tapa la boca.
+- Precios de la tienda: provisorios hasta la fase 2.
+

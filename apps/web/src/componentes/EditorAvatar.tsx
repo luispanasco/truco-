@@ -12,8 +12,15 @@ import {
 } from '@truco/shared'
 import { GESTO, SENIAS, type Senia } from '@truco/bots'
 import { Avatar } from './Avatar'
-import { DURACION_GESTO } from './Cara'
+import { DURACION_GESTO } from '../gestos'
 import '../estilos-avatar.css'
+
+/** Las piezas de la capa con su posición en el catálogo, las gratis primero. */
+function ordenGratisPrimero(capa: CapaAvatar) {
+  return CATALOGO_AVATAR[capa]
+    .map((pieza, i) => [pieza, i] as const)
+    .sort(([a], [b]) => Number(a.precio > 0) - Number(b.precio > 0))
+}
 
 /** Pestañas del editor: cada una junta las capas que se eligen juntas. */
 export const PESTANIAS_AVATAR: readonly { id: string; titulo: string; capas: readonly CapaAvatar[] }[] = [
@@ -103,7 +110,8 @@ function Opciones({
       role="radiogroup"
       aria-label={TITULO_CAPA[capa]}
     >
-      {CATALOGO_AVATAR[capa].map((pieza, i) => {
+      {/* Primero las gratis: en los peinados, la mayoría son de la tienda. */}
+      {ordenGratisPrimero(capa).map(([pieza, i]) => {
         const elegida = avatar[capa] === i
         const paga = pieza.precio > 0
         const etiqueta = paga ? `${pieza.nombre}: ${pieza.precio} monedas, pronto en la tienda` : pieza.nombre
