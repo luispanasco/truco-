@@ -12,8 +12,8 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 | 1A | Motor de reglas | Hecha | 2026-09-30 | `55961aa` |
 | 1B | Bots | Hecha | 2026-09-30 | `117d29d` |
 | 1C | Servidor | Hecha | 2026-09-30 | `039be94` |
-| 1D | Interfaz | En curso (D1, D2 y D3 hechos) | — | — |
-| 1E | Señas, avatares y cantos | Pendiente | — | — |
+| 1D | Interfaz | Hecha (D1 a D4) | 2026-10-05 | `97fcd1d` |
+| 1E | Señas, avatares y cantos (sin el audio de los cantos) | Pendiente | — | — |
 | Fase 2 | Cuentas, economía y voz | Pendiente | — | — |
 | Fase 3 | Modo sucio | Pendiente | — | — |
 
@@ -521,3 +521,43 @@ Pedido del usuario: "El texto del chat debería verse saliendo de la persona".
 **Pendientes:**
 - Si el de enfrente y el del costado de arriba escriben a la vez en 3v3, sus globos pueden encimarse.
 - Tu globo tapa el mazo un momento cuando el mazo está abajo a la izquierda.
+
+### Tramo D4: app instalable, pulido, ayudas y pruebas — 2026-10-05
+
+Plan aprobado el 2026-10-05. Lo hicieron tres agentes en paralelo, cada uno en su rama (PWA, pulido con ayudas, y pruebas); las tres se integraron a `main` sin conflictos.
+
+- **App instalable y sin internet** (vite-plugin-pwa, `registerType: 'prompt'`):
+  - manifiesto "Truco Uruguayo"; íconos generados desde `public/icono.svg` con `pnpm --filter @truco/web iconos` (`scripts/iconos.mjs`);
+  - se guardan de entrada la app, el motor y los bots (unos 825 KiB): "Contra la compu" anda sin red;
+  - la baraja clásica se guarda recién cuando se usa (caché `barajas`), y `/juego` queda fuera de toda caché;
+  - fuentes propias con @fontsource (OFL) en lugar de Google Fonts;
+  - sin conexión, lo online de Inicio queda desactivado con "Sin conexión" (`useEnLinea`);
+  - aviso "Hay una versión nueva · Actualizar" solo fuera de la partida (inicio, crear, unirme o fin de partida); nunca recarga sola;
+  - botón "Instalar la app" y, en iPhone, el cartelito de "Compartir → Agregar a inicio".
+- **Pulido de la mesa** (los siete pendientes anotados seguían pasando; script nuevo `scripts/capturas-escenas.mjs` con semilla fija para repetir cada caso):
+  - con flor, la ficha muestra solo "flor N" debajo del nombre y ya no se corta a 360 px;
+  - las señas rápidas van a los costados de la mano: el paño gana unos 38 px en el celular;
+  - globos de 3v3 sin encimarse; tus globos y las señas de los costados ya no pisan el mazo;
+  - el avatar del gesto crece hacia arriba y no tapa el nombre;
+  - el resultado de la mano crece sobre la mano y no achica el paño; en escritorio las cartas de la mesa pasan de 32 a unos 54 px en 2v2;
+  - la carta que sale de la mesa se apaga antes y queda debajo de la nueva.
+- **Ayudas:** tocar la estrella o la ficha del tanto muestra una explicación corta (`src/ayudas.ts`), armada con las reglas del motor y la configuración de la sala ("Pieza: el perico…", "Tu envido: 33 (7 y 6 de oros + 20)", la flor según la regla de piezas). Funcionan bien en 3v3 y en pica-pica.
+- **Pruebas de punta a punta:** de 2 a 7 (`e2e/`, con ayudantes en `e2e/ayudantes.ts`): partida entera contra la compu, señas en 2v2 que el rival no recibe, revancha, recargar y volver, y ojeo y arrastre con el dedo. Más `pnpm --filter @truco/web e2e:pwa`, que corre contra la versión compilada: corta la red, recarga y juega.
+- **Tests:** 304 en total (motor 130, bots 14, servidor 36, web 124), más 7 de punta a punta y 1 sin conexión. Las 7 de punta a punta pasaron en tres corridas seguidas después de integrar.
+
+**Pendientes:**
+- Probar en celulares reales: instalar en Android e iPhone, ícono maskable, ojeo y arrastre, tocar la estrella sin jugar la carta, las señas rápidas al costado de la mano (unos 60 px en 360).
+- El JS principal pesa 689 kB; conviene partirlo.
+- En la pausa entre manos, el resultado tapa las cartas que no se jugaron.
+- En 3v3, si hablan cuatro a la vez, todavía se pueden encimar globos; en 2v2 con el mazo arriba a la izquierda, un globo largo puede tocarlo.
+- Abrir `/s/:codigo` sin conexión no tiene un aviso propio.
+
+---
+
+## Avatares y voces — 2026-10-05
+
+- **Criterio para el contenido gráfico y sonoro:** lo genérico sale de bibliotecas con licencia CC0 o MIT (anotadas en un `CREDITOS.md`); lo que se anima o es bien uruguayo se hace propio.
+- **Avatar:** se comparó Notionists, Lorelei y Open Peeps (DiceBear, los tres CC0) con las 11 señas animadas por capas. Se eligió **Lorelei** por ahora: tiene la cara separada en cejas, ojos, nariz y boca, la mayor variedad de ojos y bocas, y color por capa. Open Peeps queda descartado porque su cara es una sola pieza. Más adelante puede reemplazarlo un diseñador, así que el avatar se arma detrás de un formato de capas propio.
+- **Efectos de sonido:** Kenney Casino Audio (CC0) cuando se agreguen.
+- **Voces de los cantos:** las graba el usuario, en una etapa más adelante. La 1E deja solo la estructura de packs de voces, con el globo de texto como hoy.
+
