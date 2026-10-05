@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import type { Evento } from '@truco/engine'
+import type { Evento, VistaPartida } from '@truco/engine'
 import type { Conexion, MensajeServidor } from '../src/conexion/tipos'
 import { useJuego } from '../src/estado'
 import { AjustesSonido, BotonSonido } from '../src/componentes/AjustesSonido'
@@ -182,6 +182,16 @@ describe('sonidos de la mesa', () => {
       ['/sonidos/punto.ogg', 220],
     ])
     expect(espia.pedidos.every((p) => p.volumen === AJUSTES_SONIDO_POR_DEFECTO.volumen)).toBe(true)
+  })
+
+  it('el primer reparto (que llega como vista, sin evento) también suena, una sola vez', () => {
+    usarReproductor(espia)
+    let oyente: ((m: MensajeServidor) => void) | null = null
+    useJuego.getState().conectar({ tipo: 'local', enviar: () => {}, escuchar: (o) => ((oyente = o), () => {}), salir: () => {} })
+    const vista = { mano: { enfrentamientos: [], actual: 0 }, ganador: null, puntos: [0, 0] } as unknown as VistaPartida
+    oyente!({ tipo: 'vista', datos: vista })
+    oyente!({ tipo: 'vista', datos: vista })
+    expect(espia.pedidos.map((p) => p.urls[0])).toEqual(['/sonidos/repartir.ogg'])
   })
 
   it('los fósforos cuentan desde el tanteador de antes', () => {

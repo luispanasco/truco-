@@ -94,6 +94,6 @@ test('sin conexión carga, avisa en lo online y se juega contra la compu con la 
       { timeout: 60_000, intervals: [250] },
     )
     .toBeLessThan(3)
-  // Sonaron el reparto y la carta (el toque en "Jugar" habilitó el audio).
+  // Sonaron el reparto y la carta: el toque en "Jugar" habilitó el audio y los .ogg salieron de la caché.
   await expect.poll(() => page.evaluate(() => (window as unknown as { sonidos: number }).sonidos)).toBeGreaterThanOrEqual(2)
 })
