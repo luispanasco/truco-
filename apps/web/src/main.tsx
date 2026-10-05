@@ -18,15 +18,18 @@ import { Mesa } from './pantallas/Mesa'
 import { PruebaOjeo } from './pantallas/PruebaOjeo'
 import { Sala } from './pantallas/Sala'
 import { Unirme } from './pantallas/Unirme'
-import { bustosDesdeUrl } from './perfil'
+import { bustosDesdeUrl, leerPerfil } from './perfil'
 import { escucharInstalacion } from './pwa'
 import { prepararSonido } from './sonido'
+import { aplicarMesa } from './temaMesa'
 import './estilos.css'
 import './estilos-online.css'
 
 escucharInstalacion()
 prepararSonido()
 bustosDesdeUrl(location.search)
+// La mesa elegida pinta toda la app (también el inicio y las salas), antes de dibujar nada.
+aplicarMesa(leerPerfil().mesa)
 // El service worker existe solo en la versión compilada (en desarrollo molestaría con la caché).
 if (import.meta.env.PROD) void import('./registrarSW').then((m) => m.registrarSW())
 

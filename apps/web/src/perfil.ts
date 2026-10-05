@@ -2,13 +2,16 @@ import type { Nivel } from '@truco/bots'
 import type { Formato } from '@truco/engine'
 import {
   CARTAS_JUGADAS_DEFAULT,
+  MESA_DEFAULT,
   TIEMPOS_SALA_DEFAULT,
   avatarAlAzar,
   codificarAvatar,
   normalizarAvatar,
   normalizarCartasJugadas,
+  normalizarMesa,
   type CartasJugadas,
   type ConfigTiempos,
+  type IdMesa,
 } from '@truco/shared'
 import type { Baraja } from './baraja'
 
@@ -40,6 +43,8 @@ export interface Perfil {
   cartasJugadas: CartasJugadas
   /** Prueba: en la mesa, los demás sentados de medio cuerpo detrás del paño (en vez del círculo). */
   mesaBustos: boolean
+  /** La mesa (paño y madera) con la que se ve la partida y el fondo de la app (cosmético). */
+  mesa: IdMesa
 }
 
 const CLAVE = 'truco.perfil'
@@ -72,6 +77,7 @@ export function leerPerfil(): Perfil {
     baraja: 'propia',
     mesaBustos: false,
     cartasJugadas: CARTAS_JUGADAS_DEFAULT,
+    mesa: MESA_DEFAULT,
   }
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as Partial<Perfil> | null
@@ -82,8 +88,11 @@ export function leerPerfil(): Perfil {
     // Los emojis de antes (o un código roto) pasan a un avatar armado desde el apodo; las piezas
     // de la tienda vuelven a las gratis, como hace el servidor, así se ve lo mismo que ven los demás.
     const avatar = normalizarAvatar(perfil.avatar) ?? avatarDe(perfil.apodo || perfil.invitadoId)
-    const cambio = avatar !== perfil.avatar
+    // Una mesa que no existe, o una de la tienda (todavía no se pueden comprar), vuelve a la de boliche.
+    const mesa = normalizarMesa(perfil.mesa)
+    const cambio = avatar !== perfil.avatar || mesa !== perfil.mesa
     perfil.avatar = avatar
+    perfil.mesa = mesa
     // Se guarda enseguida: el perfil nuevo o migrado tiene que ser el mismo en todas las pantallas.
     if (!guardado || cambio) guardarPerfil(perfil)
     return perfil

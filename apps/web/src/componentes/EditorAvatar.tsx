@@ -71,7 +71,7 @@ export function conPieza(codigo: string, capa: CapaAvatar, pieza: number): strin
 /** Un avatar nuevo al azar, solo con piezas gratis. */
 export const avatarNuevoAlAzar = () => codificarAvatar(avatarAlAzar(`${Date.now()}-${Math.random()}`, true))
 
-function Candado() {
+export function Candado() {
   return (
     <svg className="candado" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" strokeWidth="1.8" />
@@ -81,7 +81,7 @@ function Candado() {
 }
 
 /** El precio de una pieza de la tienda: candado y monedas. */
-function Precio({ monedas }: { monedas: number }) {
+export function Precio({ monedas }: { monedas: number }) {
   return (
     <span className="pieza-precio" aria-hidden="true">
       <Candado />
