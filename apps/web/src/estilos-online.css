@@ -535,3 +535,21 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* La mesa y la baraja de la sala (las del anfitrión, ya aplicadas en <html>): una línea discreta con la muestra del paño. */
+.linea-mesa-sala {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 4px 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+.muestra-mesa-sala {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--tapete);
+  border: 3px solid var(--madera-clara);
+}

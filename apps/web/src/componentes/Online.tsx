@@ -4,9 +4,19 @@ import type { OpcionesUnirse } from '@truco/shared'
 import { useJuego } from '../estado'
 import type { Perfil } from '../perfil'
 
-/** Con qué nombre y cara se entra a una sala. */
+/**
+ * Con qué nombre y cara se entra a una sala, y la mesa y la baraja que se proponen (si sos el
+ * anfitrión, las de la sala). Con la tienda de prueba se avisa, para que el servidor acepte lo pago.
+ */
 export function datosUnirse(p: Perfil): OpcionesUnirse {
-  return { invitadoId: p.invitadoId, apodo: p.apodo.trim(), avatar: p.avatar }
+  return {
+    invitadoId: p.invitadoId,
+    apodo: p.apodo.trim(),
+    avatar: p.avatar,
+    mesa: p.mesa,
+    baraja: p.baraja,
+    ...(p.tiendaDesbloqueada ? { tiendaDesbloqueada: true } : {}),
+  }
 }
 
 /** Título de las pantallas online, con la flecha para volver. */

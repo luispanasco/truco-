@@ -5,6 +5,7 @@ import type { Senia } from '@truco/bots'
 import { describirEvento, TEXTO_CANTO, type InfoSala, type MensajeChat, type MensajesCliente } from '@truco/shared'
 import type { Conexion, EstadoConexion, MensajeServidor } from './conexion/tipos'
 import { sonarEfecto, sonarEvento } from './sonido'
+import { aplicarTemaDeSala, aplicarTemaPropio } from './temaSala'
 
 export interface Jugada {
   asiento: number
@@ -186,6 +187,8 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     }
     switch (m.tipo) {
       case 'sala':
+        // Online, la mesa y la baraja son las del anfitrión; contra la compu, las tuyas (como siempre).
+        if (get().conexion?.tipo === 'online') aplicarTemaDeSala(m.datos)
         set({ sala: m.datos, ...(m.datos.fase !== 'esperando' ? { ofrecerBot: false } : {}) })
         break
       case 'vista':
@@ -260,7 +263,10 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       timerPausa = null
       enPausa = false
       cola = []
-      get().conexion?.salir()
+      const conexion = get().conexion
+      conexion?.salir()
+      // Fuera de la sala vuelven tu mesa y tu baraja.
+      if (conexion?.tipo === 'online') aplicarTemaPropio()
       set({
         conexion: null,
         sala: null,
