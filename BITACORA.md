@@ -17,6 +17,10 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 | Fase 2 | Cuentas, economía y voz | Pendiente | — | — |
 | Fase 3 | Modo sucio | Pendiente | — | — |
 
+### Ideas pedidas para más adelante
+
+- **Pedir que te repitan las señas** (pedido 2026-10-05): tocar el avatar del compañero para pedirle que te vuelva a hacer las señas. Si es un bot, las repite solo; si es una persona, le aparece "X te pidió que le repitas las señas".
+
 ---
 
 ## Reglas configurables — 2026-09-30
