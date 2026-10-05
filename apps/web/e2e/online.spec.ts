@@ -1,34 +1,9 @@
-import { expect, test, type Browser, type Page } from '@playwright/test'
+import { expect, jugarSiLeToca, persona, test } from './ayudantes'
 
 /**
  * De punta a punta: dos personas en navegadores separados, contra el servidor real.
  * La configuración (servidor + web) está en playwright.config.ts.
  */
-
-async function persona(browser: Browser, apodo: string): Promise<Page> {
-  const ctx = await browser.newContext()
-  const page = await ctx.newPage()
-  await page.goto('/')
-  await page.getByPlaceholder('¿Cómo te dicen?').fill(apodo)
-  return page
-}
-
-/** Si le toca, hace algo razonable: abre la mano, contesta que quiere o juega una carta. */
-async function jugarSiLeToca(page: Page): Promise<boolean> {
-  const verTodas = page.getByRole('button', { name: 'Ver todas' })
-  if (await verTodas.isVisible().catch(() => false)) await verTodas.click()
-  // Con timeout corto: si mientras tanto dejó de ser su turno, el botón se desactiva y se sigue.
-  const tocar = (l: ReturnType<Page['locator']>) =>
-    l.click({ timeout: 1500 }).then(
-      () => true,
-      () => false,
-    )
-  const quiero = page.getByRole('button', { name: /^(Quiero|Decir mi tanto|Flor)/ }).first()
-  if (await quiero.isVisible().catch(() => false)) return tocar(quiero)
-  const carta = page.locator('.mi-mano .carta-jugable:not([disabled])').first()
-  if (await carta.isVisible().catch(() => false)) return tocar(carta)
-  return false
-}
 
 test('dos personas crean una sala, entran con el código y juegan', async ({ browser }) => {
   const ana = await persona(browser, 'Ana')
