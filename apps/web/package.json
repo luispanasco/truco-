@@ -12,7 +12,8 @@
     "e2e": "playwright test",
     "e2e:pwa": "playwright test -c playwright.pwa.config.ts",
     "iconos": "node scripts/iconos.mjs",
-    "avatares:lorelei": "node scripts/avatares-lorelei.mjs"
+    "avatares:lorelei": "node scripts/avatares-lorelei.mjs",
+    "voces": "node scripts/voces.mjs"
   },
   "dependencies": {
     "@colyseus/sdk": "^0.18.4",
