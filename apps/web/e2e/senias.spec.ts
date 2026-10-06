@@ -88,3 +88,39 @@ test('una seña le llega al compañero y no al rival', async ({ browser }) => {
   await caro.waitForTimeout(300)
   await expect(asientoDe(caro, 'Beto').locator('[data-gesto]')).toHaveCount(0)
 })
+
+test('tocando el avatar del compañero se ven sus señas y se le pide que las repita', async ({ browser }) => {
+  const ana = await persona(browser, 'Ana')
+  const beto = await persona(browser, 'Beto')
+
+  const codigo = await crearSala(ana, async (p) => {
+    await elegir(p, 'Formato', /Parejas/)
+    await p.getByText('Reglas de la mesa').click()
+    await elegir(p, 'Los rivales pescan señas', 'Nunca')
+  })
+  await unirse(beto, codigo)
+  await beto.getByRole('button', { name: 'Lugar libre 3: sentarme acá' }).click()
+  await expect(ana.getByRole('group', { name: 'Equipo 1' }).getByText('Beto')).toBeVisible()
+  await empezar(ana, [ana, beto])
+
+  // Beto le guiña el ojo derecho (perico).
+  await beto.getByRole('button', { name: 'Hacer una seña' }).click()
+  await beto.getByRole('dialog', { name: 'Señas' }).getByRole('button', { name: 'Guiño derecho (perico)' }).click()
+  await expect(asientoDe(ana, 'Beto').locator('[data-gesto="perico"]').first()).toBeVisible()
+
+  // Ana toca el avatar de Beto: ve lo que le marcó y le pide que lo repita.
+  await ana.getByRole('button', { name: 'Señas de Beto' }).click()
+  const panel = ana.getByRole('dialog', { name: 'Señas de Beto' })
+  await expect(panel.locator('.companiero-lista')).toContainText('perico')
+  await panel.getByRole('button', { name: 'Pedile que te repita' }).click()
+  await expect(ana.getByText('Le pediste a Beto que te repita las señas')).toBeVisible()
+  // Los rivales (bots) no tienen el avatar tocable.
+  await expect(ana.locator('.asiento.rival .asiento-avatar-tocable')).toHaveCount(0)
+
+  // A Beto le llega el pedido y repite: Ana vuelve a ver el guiño.
+  const pedido = beto.getByRole('status').filter({ hasText: 'Ana te pidió que le repitas las señas' })
+  await expect(pedido).toBeVisible()
+  await expect(asientoDe(ana, 'Beto').locator('[data-gesto]')).toHaveCount(0, { timeout: 5_000 })
+  await pedido.getByRole('button', { name: 'Repetir' }).click()
+  await expect(asientoDe(ana, 'Beto').locator('[data-gesto="perico"]').first()).toBeVisible()
+})

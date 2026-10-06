@@ -24,6 +24,8 @@ interface Props {
   silenciado?: boolean
   /** Solo online y para personas: tocar el nombre abre su menú. */
   alTocarNombre?: () => void
+  /** Solo compañeros con señas en juego: tocar el avatar muestra lo que te marcó. */
+  alTocarAvatar?: () => void
   /** Seña que está haciendo (un compañero, o un rival al que se la pescaste). */
   gesto?: GestoActivo
   /** Último mensaje de chat que mandó, mientras se ve. */
@@ -115,6 +117,7 @@ export function Asiento({
   venceEn,
   silenciado,
   alTocarNombre,
+  alTocarAvatar,
   gesto,
   chat,
   arriba = false,
@@ -187,6 +190,9 @@ export function Asiento({
         <Avatar lugar={lugar} gesto={gesto} busto={busto} />
         {conReloj && <AnilloReloj venceEn={venceEn} />}
         {esMano && <MarcaMano />}
+        {alTocarAvatar && (
+          <button type="button" className="asiento-avatar-tocable" onClick={alTocarAvatar} aria-label={`Señas de ${lugar.apodo}`} />
+        )}
       </div>
       {alTocarNombre ? (
         <button type="button" className="asiento-nombre tocable" onClick={alTocarNombre} aria-label={`Opciones para ${lugar.apodo}`}>

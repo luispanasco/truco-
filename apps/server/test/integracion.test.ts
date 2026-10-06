@@ -160,7 +160,7 @@ describe('sala privada', () => {
     await b.esperar(() => b.de('chat').length === 1)
     await esperarMs(100)
 
-    expect(c.de('senia').filter((s) => s.de === 0)).toEqual([{ de: 0, senia: 'tres' }])
+    expect(c.de('senia').filter((s) => s.de === 0)).toEqual([{ de: 0, senia: 'tres', mano: c.vista!.mano.numero }])
     expect(b.de('senia').some((s) => s.de === 0)).toBe(false)
     expect(b.de('chat').map((m) => m.texto)).toEqual(['buena suerte'])
     expect(c.de('chat').map((m) => [m.canal, m.texto])).toEqual([

@@ -196,7 +196,7 @@ describe('gestos en los avatares', () => {
     const datos = partida2v2()
     const { llegar } = await entrar(datos)
     const companiero = (datos.yo + 2) % 4
-    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'pieza2' } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'pieza2', mano: datos.vista.mano.numero } })
     const avatar = avatarDe(APODOS[companiero]!)
     expect(avatar.getAttribute('data-gesto')).toBe('pieza2')
     // Lo hace el dibujo del mismo avatar (cuando termina de cargar el estilo).
@@ -212,8 +212,8 @@ describe('gestos en los avatares', () => {
     const datos = partida2v2()
     const { llegar } = await entrar(datos)
     const companiero = (datos.yo + 2) % 4
-    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'perico' } })
-    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'tres' } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'perico', mano: datos.vista.mano.numero } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'tres', mano: datos.vista.mano.numero } })
     const gesto = () => avatarDe(APODOS[companiero]!).getAttribute('data-gesto')
     expect(gesto()).toBe('perico')
     await waitFor(() => expect(gesto()).toBe('tres'), { timeout: DURACION_GESTO + 1000 })
@@ -348,7 +348,60 @@ describe('mesa sin señas', () => {
     expect(seniasEnviadas(enviados)).toEqual([])
 
     // Aunque llegara una seña (no debería), no se ve como gesto.
-    llegar({ tipo: 'senia', datos: { de: (datos.yo + 2) % 4, senia: 'pieza2' } })
+    llegar({ tipo: 'senia', datos: { de: (datos.yo + 2) % 4, senia: 'pieza2', mano: datos.vista.mano.numero } })
     expect(document.querySelector('.avatar[data-gesto]')).toBeNull()
+  })
+})
+
+describe('señas de un compañero (tocando su avatar)', () => {
+  const tocarAvatar = (apodo: string) => fireEvent.click(screen.getByRole('button', { name: `Señas de ${apodo}` }))
+
+  it('muestra lo que te marcó en esta mano, sin repetir y sin las de la mano anterior', async () => {
+    const datos = partida2v2()
+    const { llegar } = await entrar(datos)
+    const companiero = (datos.yo + 2) % 4
+    const mano = datos.vista.mano.numero
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'unoBravo', mano: mano - 1 } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'perico', mano } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'tres', mano } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'perico', mano, repetida: true } })
+    tocarAvatar(APODOS[companiero]!)
+    const panel = screen.getByRole('dialog', { name: `Señas de ${APODOS[companiero]}` })
+    expect([...panel.querySelectorAll('.companiero-lista b')].map((b) => b.textContent)).toEqual([SIGNIFICADO.perico, SIGNIFICADO.tres])
+    // Los rivales no tienen el avatar tocable.
+    expect(screen.queryByRole('button', { name: `Señas de ${APODOS[(datos.yo + 1) % 4]}` })).toBeNull()
+  })
+
+  it('sin señas lo dice, y "Pedile que te repita" manda el pedido y queda esperando', async () => {
+    const datos = partida2v2()
+    const { enviados } = await entrar(datos)
+    const companiero = (datos.yo + 2) % 4
+    tocarAvatar(APODOS[companiero]!)
+    const panel = screen.getByRole('dialog', { name: `Señas de ${APODOS[companiero]}` })
+    expect(within(panel).getByText('No te hizo señas en esta mano.')).toBeTruthy()
+    fireEvent.click(within(panel).getByRole('button', { name: 'Pedile que te repita' }))
+    expect(enviados.filter((e) => e.tipo === 'pedirSenias').map((e) => e.datos)).toEqual([{ asiento: companiero }])
+    // Se cierra (para ver el gesto) y avisa a quién se lo pediste.
+    expect(screen.queryByRole('dialog', { name: `Señas de ${APODOS[companiero]}` })).toBeNull()
+    expect(screen.getByText(`Le pediste a ${APODOS[companiero]} que te repita las señas`)).toBeTruthy()
+    tocarAvatar(APODOS[companiero]!)
+    const boton = screen.getByRole('button', { name: 'Ya le pediste, esperá un poco' }) as HTMLButtonElement
+    expect(boton.disabled).toBe(true)
+  })
+
+  it('cuando te piden las señas: sin hacer ninguna abre la cara; después de hacerlas, "Repetir" las manda', async () => {
+    const datos = partida2v2()
+    const { llegar, enviados } = await entrar(datos)
+    const companiero = (datos.yo + 2) % 4
+    llegar({ tipo: 'pidenSenias', datos: { de: companiero } })
+    expect(screen.getByText(/te pidió que le repitas las señas/).textContent).toContain(APODOS[companiero])
+    fireEvent.click(screen.getByRole('button', { name: 'Hacer señas' }))
+    const cara = screen.getByRole('dialog', { name: 'Señas' })
+    fireEvent.click(within(cara).getByRole('button', { name: nombre('pieza2') }))
+
+    llegar({ tipo: 'pidenSenias', datos: { de: companiero } })
+    fireEvent.click(screen.getByRole('button', { name: 'Repetir' }))
+    expect(enviados.filter((e) => e.tipo === 'repetirSenias')).toHaveLength(1)
+    expect(screen.queryByText(/te pidió que le repitas las señas/)).toBeNull()
   })
 })

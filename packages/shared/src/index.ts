@@ -107,6 +107,9 @@ export const MOTIVO_SENIA_TARDE = 'En esta sala las señas se hacen antes de jug
 /** Texto del rechazo cuando la mesa se juega sin señas. */
 export const MOTIVO_SIN_SENIAS = 'En esta mesa no se hacen señas'
 
+/** Cada cuánto se le puede pedir a un compañero que repita las señas. */
+export const ESPERA_PEDIR_SENIAS_MS = 10_000
+
 // ── Cliente → servidor ──────────────────────────────────────────────
 
 /** Opciones al entrar a cualquier sala. */
@@ -151,6 +154,10 @@ export interface MensajesCliente {
   accion: { accion: Accion }
   chat: { texto: string; canal: CanalChat }
   senia: { senia: Senia }
+  /** Pedirle a un compañero que te repita las señas de esta mano. Un bot las repite solo. */
+  pedirSenias: { asiento: number }
+  /** Volver a hacerles a tus compañeros las señas que ya les hiciste en esta mano. */
+  repetirSenias: Record<string, never>
   silenciar: { asiento: number; silenciar: boolean }
   reportar: { asiento: number; motivo?: string }
   /** En la espera: cambiarse a un lugar libre (para elegir equipo). */
@@ -229,8 +236,13 @@ export interface MensajesServidor {
   /** A quién espera el juego y cuándo vence el turno (ms desde epoch; null si juega un bot). */
   turno: { asientos: number[]; venceEn: number | null }
   chat: MensajeChat
-  /** Seña de un compañero. */
-  senia: { de: number; senia: Senia }
+  /**
+   * Seña de un compañero, con el número de mano en que la hizo. `repetida` si la volvió a
+   * hacer porque se la pidieron.
+   */
+  senia: { de: number; senia: Senia; mano: number; repetida?: boolean }
+  /** Un compañero te pide que le repitas las señas de esta mano. */
+  pidenSenias: { de: number }
   /**
    * Seña de un rival a su compañero que este jugador alcanzó a ver. `senia` es null
    * si la sala solo deja ver que se hizo una (no cuál).

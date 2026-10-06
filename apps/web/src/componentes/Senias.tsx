@@ -219,7 +219,7 @@ export function PanelSenias({
 }
 
 /** Ícono y nombre corto de cada gesto, para los botones de la tira rápida. */
-const CORTO: Record<Senia, { icono: string; nombre: string; espejo?: boolean }> = {
+export const CORTO: Record<Senia, { icono: string; nombre: string; espejo?: boolean }> = {
   pieza2: { icono: '🤨', nombre: 'Cejas' },
   pieza4: { icono: '💋', nombre: 'Beso' },
   pieza5: { icono: '😤', nombre: 'Nariz' },

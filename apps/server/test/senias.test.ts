@@ -123,3 +123,75 @@ describe('momento de las señas', () => {
     expect(sala.seniasParaTests()[2]![0]).toEqual(['tres'])
   })
 })
+
+describe('pedir que te repitan las señas', () => {
+  it('el compañero bot repite lo que ya marcó, sin anotarlo de nuevo; si no marcó nada, avisa', async () => {
+    const { a, b, sala } = await mesa({ pescar: 'nunca' })
+    const primeras = a.de('senia').filter((s) => s.de === 2)
+    a.enviar('pedirSenias', { asiento: 2 })
+    if (primeras.length > 0) {
+      await a.esperar(() => a.de('senia').filter((s) => s.de === 2).length === primeras.length * 2, 5_000, 'la repetición')
+      const repetidas = a.de('senia').filter((s) => s.de === 2).slice(primeras.length)
+      expect(repetidas.map((s) => s.senia)).toEqual(primeras.map((s) => s.senia))
+      expect(repetidas.every((s) => s.repetida === true && s.mano === a.vista!.mano.numero)).toBe(true)
+      expect(sala.seniasParaTests()[0]![2]).toEqual(primeras.map((s) => s.senia))
+    } else {
+      await a.esperar(() => a.de('error').length > 0, 5_000, 'el aviso')
+      expect(a.de('error')[0]!.motivo).toMatch(/no tiene señas para hacerte$/)
+    }
+    // Al rival no le llega nada como seña de compañero.
+    expect(b.de('senia').some((s) => s.de === 2)).toBe(false)
+  })
+
+  it('no se le pueden pedir señas a un rival, ni pedir dos veces seguidas al mismo', async () => {
+    const { a } = await mesa({ pescar: 'nunca' })
+    a.enviar('pedirSenias', { asiento: 1 })
+    await a.esperar(() => a.de('error').length === 1, 5_000, 'el rechazo')
+    expect(a.de('error')[0]!.motivo).toBe('Solo le podés pedir señas a un compañero')
+    a.enviar('pedirSenias', { asiento: 2 })
+    await esperarMs(150)
+    const errores = a.de('error').length
+    a.enviar('pedirSenias', { asiento: 2 })
+    await a.esperar(() => a.de('error').length > errores, 5_000, 'el límite')
+    expect(a.de('error').at(-1)!.motivo).toBe('Esperá un poco antes de volver a pedirle')
+  })
+
+  it('entre personas: al compañero le llega el pedido y "repetir" le vuelve a mandar sus señas', async () => {
+    const a = await Jugador.crear(colyseus, { config: { formato: '2v2' }, senias: { pescar: 'gestoYCarta', probabilidadPescar: 1 } })
+    await a.esperar(() => a.sala !== null)
+    const codigo = a.sala!.codigo!
+    const b = await Jugador.unirse(colyseus, codigo) // asiento 1, rival
+    const c = await Jugador.unirse(colyseus, codigo) // asiento 2, compañero de a
+    await c.esperar(() => c.sala?.yo === 2)
+    a.enviar('iniciar', {})
+    await c.esperar(() => c.vista !== null)
+    await a.esperar(() => a.vista !== null)
+
+    // Sin señas hechas todavía, repetir se rechaza.
+    c.enviar('repetirSenias', {})
+    await c.esperar(() => c.de('error').length === 1, 5_000, 'el rechazo')
+    expect(c.de('error')[0]!.motivo).toBe('Todavía no hiciste señas en esta mano')
+
+    c.enviar('senia', { senia: 'perico' })
+    c.enviar('senia', { senia: 'tres' })
+    await a.esperar(() => a.de('senia').filter((s) => s.de === 2).length === 2, 5_000, 'las señas')
+
+    a.enviar('pedirSenias', { asiento: 2 })
+    await c.esperar(() => c.de('pidenSenias').length === 1, 5_000, 'el pedido')
+    expect(c.de('pidenSenias')).toEqual([{ de: 0 }])
+    expect(b.de('pidenSenias')).toEqual([])
+
+    c.enviar('repetirSenias', {})
+    await a.esperar(() => a.de('senia').filter((s) => s.de === 2).length === 4, 5_000, 'la repetición')
+    const deC = a.de('senia').filter((s) => s.de === 2)
+    expect(deC.map((s) => [s.senia, s.repetida ?? false])).toEqual([
+      ['perico', false],
+      ['tres', false],
+      ['perico', true],
+      ['tres', true],
+    ])
+    // Repetir tiene el riesgo de siempre: el rival la puede pescar.
+    await b.esperar(() => b.de('seniaPescada').filter((p) => p.de === 2).length === 4, 5_000, 'las pescadas')
+    expect(b.de('senia').some((s) => s.de === 2)).toBe(false)
+  })
+})

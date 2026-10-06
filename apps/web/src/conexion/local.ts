@@ -135,6 +135,23 @@ export class ConexionLocal implements Conexion {
         }
         return
       }
+      case 'pedirSenias': {
+        // Contra la compu tus compañeros son bots: repiten enseguida lo que ya marcaron.
+        const comp = Number((datos as MensajesCliente['pedirSenias']).asiento)
+        const n = this.estado.jugadores.length
+        const nombre = this.nombre(comp)
+        if (!this.configSenias.habilitadas) this.emitir('error', { motivo: MOTIVO_SIN_SENIAS })
+        else if (this.terminada || n <= 2 || this.estado.mano.picaPica || comp <= 0 || comp >= n || comp % 2 !== 0) {
+          this.emitir('error', { motivo: 'Solo le podés pedir señas a un compañero' })
+        } else if (this.configSenias.momento === 'antesDeJugar' && yaJugoEnLaMano(this.estado.mano, comp)) {
+          this.emitir('error', { motivo: `${nombre} ya jugó su carta: en esta sala las señas se hacen antes` })
+        } else {
+          const hechas = this.senias[0]![comp] ?? []
+          if (hechas.length === 0) this.emitir('error', { motivo: `${nombre} no tiene señas para hacerte` })
+          else this.entregarSenias(comp, hechas, true)
+        }
+        return
+      }
       case 'revancha':
         if (this.terminada) {
           this.semilla = (this.semilla * 1103515245 + 12345) >>> 0
@@ -261,13 +278,17 @@ export class ConexionLocal implements Conexion {
     }
   }
 
-  /** Las señas llegan a los compañeros; cada rival puede pescar cada una, como en el servidor. */
-  private entregarSenias(de: number, senias: Senia[]) {
+  /**
+   * Las señas llegan a los compañeros; cada rival puede pescar cada una, como en el servidor.
+   * Una repetida no se anota de nuevo.
+   */
+  private entregarSenias(de: number, senias: Senia[], repetida = false) {
     const n = this.estado.jugadores.length
+    const mano = this.estado.mano.numero
     for (let b = de % 2; b < n; b += 2) {
       if (b === de) continue
-      this.senias[b]![de] = [...(this.senias[b]![de] ?? []), ...senias]
-      if (b === 0) for (const senia of senias) this.emitir('senia', { de, senia })
+      if (!repetida) this.senias[b]![de] = [...(this.senias[b]![de] ?? []), ...senias]
+      if (b === 0) for (const senia of senias) this.emitir('senia', { de, senia, mano, ...(repetida ? { repetida } : {}) })
     }
     const { pescar, probabilidadPescar } = this.configSenias
     if (pescar === 'nunca') return
@@ -277,7 +298,7 @@ export class ConexionLocal implements Conexion {
         if (!(azar() < probabilidadPescar)) continue
         const vista = pescar === 'gestoYCarta' ? senia : null
         if (r === 0) this.emitir('seniaPescada', { de, senia: vista })
-        else if (vista) this.senias[r]![de] = [...(this.senias[r]![de] ?? []), vista]
+        else if (vista && !(repetida && this.senias[r]![de]?.includes(vista))) this.senias[r]![de] = [...(this.senias[r]![de] ?? []), vista]
       }
     }
   }

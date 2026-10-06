@@ -559,3 +559,95 @@
     animation: none;
   }
 }
+
+/* ── Señas de un compañero (al tocar su avatar) ───────────────── */
+
+/* Toda la cara del compañero es tocable, sin cambiar cómo se ve. */
+.asiento-avatar-tocable {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+.asiento-avatar-tocable:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 3px;
+}
+.hoja-companiero {
+  gap: 12px;
+}
+.companiero-marcadas {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.companiero-marcadas > .avatar {
+  flex: none;
+}
+.companiero-titulo {
+  margin: 2px 0 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.companiero-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.companiero-lista li {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 6px;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: rgb(0 0 0 / 0.25);
+  border: 1px solid var(--panel-borde);
+}
+.companiero-lista .senia-rapida-icono {
+  grid-row: span 2;
+  font-size: 1.3rem;
+}
+.companiero-lista b {
+  font-size: 0.9rem;
+}
+.companiero-lista small {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+.companiero-nada {
+  text-align: left;
+}
+
+/* Un compañero te pide que le repitas las señas: el aviso tiene botones (el resto, no). */
+.avisos .aviso-pedido-senias {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+  border-color: var(--acento);
+  pointer-events: auto;
+}
+.aviso-botones {
+  display: flex;
+  gap: 6px;
+}
+.aviso-pedido-senias .boton {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+}
+/* Sentados, el avatar es de medio cuerpo: se toca todo el recuadro. */
+.mesa-bustos .asiento-avatar-tocable {
+  border-radius: 0;
+}

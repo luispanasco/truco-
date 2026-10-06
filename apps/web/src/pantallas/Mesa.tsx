@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
 import { seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
-import { MOTIVO_SENIA_TARDE, yaJugoEnLaMano } from '@truco/shared'
+import { ESPERA_PEDIR_SENIAS_MS, MOTIVO_SENIA_TARDE, yaJugoEnLaMano } from '@truco/shared'
 import { BotonSonido } from '../componentes/AjustesSonido'
 import { esPiezaOMata } from '../senias'
 import { explicarCarta, explicarTanto } from '../ayudas'
@@ -20,6 +20,7 @@ import { MenuJugador, useSilenciados } from '../componentes/MenuJugador'
 import { AnilloReloj, RelojPropio } from '../componentes/Reloj'
 import { useGestos } from '../gestos'
 import { AvisoSeniaHecha, BotonSenias, PanelSenias, seniasRapidas, TiraSenias } from '../componentes/Senias'
+import { AvisoPedidoSenias, PanelCompaniero, seniasMarcadas } from '../componentes/PanelCompaniero'
 import type { ConexionOnline } from '../conexion/online'
 import { useJuego } from '../estado'
 import { leerPerfil } from '../perfil'
@@ -28,13 +29,34 @@ import '../estilos-mesa-bustos.css'
 
 export function Mesa() {
   const navegar = useNavigate()
-  const { sala, vista, mesa, mostradas, globos, registro, chat, senias, pescadas, error, turno, finDeMano, conexion, enviar, salir } =
-    useJuego()
+  const {
+    sala,
+    vista,
+    mesa,
+    mostradas,
+    globos,
+    registro,
+    chat,
+    senias,
+    pedidoSenias,
+    pescadas,
+    error,
+    turno,
+    finDeMano,
+    conexion,
+    enviar,
+    salir,
+  } = useJuego()
   const [aviso, setAviso] = useState<string | null>(null)
   const [confirmarSalida, setConfirmarSalida] = useState(false)
   // Paneles de la mesa: chat y señas (hojas desde abajo) y el menú sobre otro jugador.
   const [panel, setPanel] = useState<'chat' | 'senias' | null>(null)
   const [menuDe, setMenuDe] = useState<number | null>(null)
+  // El compañero cuyo avatar tocaste (sus señas de esta mano) y a quiénes les pediste hace poco.
+  const [companieroDe, setCompanieroDe] = useState<number | null>(null)
+  const [pedidos, setPedidos] = useState<ReadonlySet<number>>(() => new Set())
+  const timersPedidos = useRef<ReturnType<typeof setTimeout>[]>([])
+  useEffect(() => () => timersPedidos.current.forEach(clearTimeout), [])
   const [seniaHecha, setSeniaHecha] = useState<{ senia: Senia; id: number } | null>(null)
   // Señas rápidas: las que ya hiciste en esta mano (quedan marcadas) y si ya abriste la mano
   // (mientras está apilada para ojear, la tira no delata tus cartas).
@@ -141,6 +163,25 @@ export function Mesa() {
   // Menú de jugador: solo online y solo sobre otras personas.
   const menuPara = (a: number) => (online && a !== yo && sala.lugares[a]?.tipo === 'humano' ? () => setMenuDe(a) : undefined)
   const lugarMenu = menuDe !== null ? sala.lugares[menuDe] : undefined
+  // Tocar el avatar de un compañero: lo que te marcó en esta mano y pedirle que lo repita.
+  const avatarPara = (a: number) =>
+    hayCompanieros && !finDeMano && a !== yo && a % 2 === yo % 2 && participa(a) ? () => setCompanieroDe(a) : undefined
+  const lugarCompaniero = companieroDe !== null && hayCompanieros && !finDeMano ? sala.lugares[companieroDe] : undefined
+  const pedirSenias = (a: number) => {
+    enviar('pedirSenias', { asiento: a })
+    setCompanieroDe(null)
+    setPedidos((p) => new Set([...p, a]))
+    timersPedidos.current.push(
+      setTimeout(() => setPedidos((p) => new Set([...p].filter((x) => x !== a))), ESPERA_PEDIR_SENIAS_MS),
+    )
+    const l = sala.lugares[a]
+    if (l?.tipo === 'humano' && l.conectado) mostrarAviso(`Le pediste a ${l.apodo} que te repita las señas`)
+  }
+  const pedidoCerrado = (a: number) =>
+    sala.senias.momento === 'antesDeJugar' && yaJugoEnLaMano(vista.mano, a)
+      ? `${sala.lugares[a]?.apodo ?? 'Tu compañero'} ya jugó su carta: en esta sala las señas se hacen antes`
+      : null
+  const misHechas = hechas.mano === vista.mano.numero ? hechas.senias : []
   // Reloj del turno (solo online, cuando el juego espera a una persona).
   const miReloj = meToca && turno.asientos.includes(yo) ? turno.venceEn : null
   // Revancha online: cuántas personas la pidieron, de las que siguen conectadas.
@@ -194,6 +235,19 @@ export function Mesa() {
         <div className="avisos">
           {aviso && <div className="aviso aviso-error">{aviso}</div>}
           <AvisoSeniaHecha hecha={seniaHecha} />
+          {hayCompanieros && (
+            <AvisoPedidoSenias
+              pedido={pedidoSenias}
+              apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
+              puedeRepetir={misHechas.length > 0}
+              cerrado={seniasCerradas}
+              alRepetir={() => {
+                enviar('repetirSenias', {})
+                mostrarAviso('Le repetiste las señas')
+              }}
+              alAbrirSenias={() => setPanel('senias')}
+            />
+          )}
         </div>
 
         {sala.lugares
@@ -212,6 +266,7 @@ export function Mesa() {
               venceEn={turno.venceEn}
               silenciado={silenciados.has(l.asiento)}
               alTocarNombre={menuPara(l.asiento)}
+              alTocarAvatar={avatarPara(l.asiento)}
               gesto={conSenias ? gestos[l.asiento] : undefined}
               chat={globosChat[l.asiento]}
               arriba={rel(l.asiento) * 2 === n}
@@ -283,7 +338,7 @@ export function Mesa() {
           {conTira && (
             <TiraSenias
               rapidas={seniasRapidas(misCartas, vista.mano.muestra)}
-              hechas={hechas.mano === vista.mano.numero ? hechas.senias : []}
+              hechas={misHechas}
               cerrado={seniasCerradas}
               alHacer={hacerSenia}
               alRechazar={(motivo) => mostrarAviso(`⚠ ${motivo}`)}
@@ -376,6 +431,18 @@ export function Mesa() {
           sugeridas={sala.ayudas ? seniasDeMano(vista.mano.misCartas, vista.mano.muestra) : null}
           config={sala.senias}
           cerrado={seniasCerradas}
+        />
+      )}
+      {lugarCompaniero && (
+        <PanelCompaniero
+          key={lugarCompaniero.asiento}
+          lugar={lugarCompaniero}
+          marcadas={seniasMarcadas(senias, lugarCompaniero.asiento, vista.mano.numero)}
+          esBot={lugarCompaniero.tipo !== 'humano' || !lugarCompaniero.conectado}
+          cerrado={pedidoCerrado(lugarCompaniero.asiento)}
+          pedido={pedidos.has(lugarCompaniero.asiento)}
+          alPedir={() => pedirSenias(lugarCompaniero.asiento)}
+          alCerrar={() => setCompanieroDe(null)}
         />
       )}
       {lugarMenu && (

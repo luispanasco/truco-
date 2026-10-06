@@ -14,12 +14,8 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 | 1C | Servidor | Hecha | 2026-09-30 | `039be94` |
 | 1D | Interfaz | Hecha (D1 a D4) | 2026-10-05 | `97fcd1d` |
 | 1E | Señas, avatares y cantos (sin el audio de los cantos) | Hecha | 2026-10-05 | ver abajo |
-| Fase 2 | Cuentas, economía y voz | Pendiente | — | — |
+| Fase 2 | Cuentas, economía y voz | Plan en revisión | — | — |
 | Fase 3 | Modo sucio | Pendiente | — | — |
-
-### Ideas pedidas para más adelante
-
-- **Pedir que te repitan las señas** (pedido 2026-10-05): tocar el avatar del compañero para pedirle que te vuelva a hacer las señas. Si es un bot, las repite solo; si es una persona, le aparece "X te pidió que le repitas las señas".
 
 ---
 
@@ -676,4 +672,25 @@ Pedidos del usuario: poder desbloquear la tienda desde el inicio para probar, y 
 - `ojeo.spec.ts` falla de vez en cuando con la máquina muy cargada (mide la separación del abanico).
 - La mesa y la baraja quedan fijas desde que empieza la partida (también en la revancha).
 - El circulito de la línea de la sala casi no se ve sobre Bordó.
+
+---
+
+## Señas del compañero y pedir que las repita — 2026-10-06
+
+Pedido del usuario como último cambio visual de la fase 1: tocar el avatar de un compañero para ver las cartas que te marcó y pedirle que repita las señas. De las dos formas propuestas eligió **solo lo que te marcó**: si tu compañero no te hizo una seña, no la ves. Se descartó la opción de sala que mostraba todas sus cartas con seña.
+
+- **Tocar el avatar de un compañero** (2v2 y 3v3, fuera del pica-pica y de la pausa entre manos) abre la hoja "Señas de X" (`PanelCompaniero.tsx`):
+  - "Te marcó en esta mano": las señas traducidas a cartas, sin repetir, con su gesto. Si no te hizo ninguna, "No te hizo señas en esta mano";
+  - el botón "Pedile que te repita". Se puede pedir una vez cada 10 s a cada compañero (`ESPERA_PEDIR_SENIAS_MS`). En las salas de "señas antes de jugar", si el compañero ya jugó su carta, en lugar del botón dice por qué no se puede.
+- **Un bot** (o el bot que juega por quien se desconectó) repite enseguida lo que ya marcó. Si no tiene señas, aparece "X no tiene señas para hacerte".
+- **A una persona** le aparece el aviso "Ana te pidió que le repitas las señas", que dura 8 s:
+  - si ya hizo señas en la mano, el botón es "Repetir" y vuelve a mandar las mismas;
+  - si no hizo ninguna, el botón es "Hacer señas" y abre la cara.
+- **Mensajes nuevos:** `pedirSenias`, `repetirSenias` y `pidenSenias`. La seña ahora viaja con el número de mano (`mano`) y con `repetida` si es una repetición.
+  - Una repetición no se anota dos veces para los bots.
+  - El rival la puede pescar como cualquier seña: repetir tiene el mismo riesgo que en la mesa.
+  - El pedido nunca le llega al otro equipo.
+- **Tests:** 427 en total (motor 136, bots 14, servidor 52, web 225), 10 de punta a punta (nueva: Ana ve el guiño de Beto en su panel, le pide que lo repita y Beto repite) y el de sin conexión.
+
+**Pendiente:** al recargar la página se pierden las señas recibidas en la mano (el panel queda vacío), pero se pueden recuperar pidiéndolas de nuevo.
 

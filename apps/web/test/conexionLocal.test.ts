@@ -150,6 +150,65 @@ describe('conexión local', () => {
     expect(motivo).toBe(MOTIVO_SIN_SENIAS)
   })
 
+  it('pedirle las señas al compañero bot: las repite enseguida sin anotarlas de nuevo, y si no tiene, avisa', async () => {
+    /** Arranca un 2v2, pide las señas al bot 2 y junta lo que llega después del pedido. */
+    const pedir = async (semilla: number) => {
+      const c = new ConexionLocal({ apodo: 'Test', avatar: null, formato: '2v2', nivelBots: 'medio', demoraBots: [60_000, 60_000], semilla, senias: { pescar: 'nunca' } })
+      const antes: MensajeServidor[] = []
+      const despues: MensajeServidor[] = []
+      let pedido = false
+      await new Promise<void>((resolve) => {
+        c.escuchar((m) => {
+          ;(pedido ? despues : antes).push(m)
+          if (!pedido && m.tipo === 'vista') {
+            pedido = true
+            c.enviar('pedirSenias', { asiento: 2 })
+            setTimeout(resolve, 20)
+          }
+        })
+      })
+      const anotadas = (c as unknown as { senias: Record<number, string[]>[] }).senias[0]![2]
+      c.salir()
+      const senias = (ms: MensajeServidor[]) => ms.flatMap((m) => (m.tipo === 'senia' ? [m.datos] : []))
+      return { primeras: senias(antes), repetidas: senias(despues), errores: despues.flatMap((m) => (m.tipo === 'error' ? [m.datos.motivo] : [])), anotadas }
+    }
+    let conSenias = false
+    let sinSenias = false
+    for (let semilla = 1; semilla < 40 && !(conSenias && sinSenias); semilla++) {
+      const r = await pedir(semilla)
+      if (r.primeras.length > 0) {
+        conSenias = true
+        expect(r.repetidas.map((s) => s.senia)).toEqual(r.primeras.map((s) => s.senia))
+        expect(r.repetidas.every((s) => s.repetida === true && s.de === 2 && s.mano === r.primeras[0]!.mano)).toBe(true)
+        expect(r.anotadas).toEqual(r.primeras.map((s) => s.senia))
+        expect(r.errores).toEqual([])
+      } else {
+        sinSenias = true
+        expect(r.repetidas).toEqual([])
+        expect(r.errores).toEqual(['Bot Chela no tiene señas para hacerte'])
+      }
+    }
+    expect(conSenias && sinSenias).toBe(true)
+  })
+
+  it('a un rival no se le pueden pedir señas', async () => {
+    const c = new ConexionLocal({ apodo: 'Test', avatar: null, formato: '2v2', nivelBots: 'medio', demoraBots: [60_000, 60_000], semilla: 3 })
+    const errores: string[] = []
+    await new Promise<void>((resolve) => {
+      let pedido = false
+      c.escuchar((m) => {
+        if (m.tipo === 'error') errores.push(m.datos.motivo)
+        if (!pedido && m.tipo === 'vista') {
+          pedido = true
+          c.enviar('pedirSenias', { asiento: 1 })
+          setTimeout(resolve, 20)
+        }
+      })
+    })
+    c.salir()
+    expect(errores).toEqual(['Solo le podés pedir señas a un compañero'])
+  })
+
   it('una jugada inválida devuelve el motivo', async () => {
     const c = new ConexionLocal({ apodo: 'Test', avatar: null, formato: '1v1', nivelBots: 'facil', demoraBots: [0, 0], semilla: 3 })
     const error = await new Promise<string>((resolve) => {

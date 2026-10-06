@@ -48,7 +48,10 @@ interface EstadoJuego {
   globos: Record<number, Globo>
   registro: LineaRegistro[]
   chat: MensajeChat[]
-  senias: { de: number; senia: Senia; id: number }[]
+  /** Señas de tus compañeros, con la mano en que te las hicieron (y si fue una repetición). */
+  senias: { de: number; senia: Senia; mano: number; repetida?: boolean; id: number }[]
+  /** El último compañero que te pidió que le repitas las señas. */
+  pedidoSenias: { de: number; id: number } | null
   /** Señas de los rivales que alcanzaste a ver (sin la carta si la sala no la deja ver). */
   pescadas: { de: number; senia: Senia | null; id: number }[]
   turno: { asientos: number[]; venceEn: number | null }
@@ -212,7 +215,10 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         set((s) => ({ chat: [...s.chat.slice(-99), m.datos] }))
         break
       case 'senia':
-        set((s) => ({ senias: [...s.senias.slice(-20), { ...m.datos, id: ++contador }] }))
+        set((s) => ({ senias: [...s.senias.slice(-40), { ...m.datos, id: ++contador }] }))
+        break
+      case 'pidenSenias':
+        set({ pedidoSenias: { de: m.datos.de, id: ++contador } })
         break
       case 'seniaPescada':
         set((s) => ({ pescadas: [...s.pescadas.slice(-20), { ...m.datos, id: ++contador }] }))
@@ -235,6 +241,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     registro: [],
     chat: [],
     senias: [],
+    pedidoSenias: null,
     pescadas: [],
     turno: { asientos: [], venceEn: null },
     error: null,
@@ -276,6 +283,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         registro: [],
         chat: [],
         senias: [],
+        pedidoSenias: null,
         pescadas: [],
         turno: { asientos: [], venceEn: null },
         error: null,
