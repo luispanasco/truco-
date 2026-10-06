@@ -17,6 +17,12 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 | Fase 2 | Cuentas, economía y voz | Plan en revisión | — | — |
 | Fase 3 | Modo sucio | Pendiente | — | — |
 
+### Ideas pedidas para más adelante
+
+- **Cambios en el motor y en algunas mecánicas** (pedido 2026-10-06; se ven en detalle antes de la fase 2). Por ejemplo:
+  - **el pie lidera el juego** del equipo;
+  - con bots en el equipo, lidera el pie que no es bot o, si hay una sola persona, esa persona.
+
 ---
 
 ## Reglas configurables — 2026-09-30
