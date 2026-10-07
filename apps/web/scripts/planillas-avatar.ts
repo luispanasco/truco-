@@ -26,8 +26,8 @@ const peinados = CATALOGO_AVATAR.pelo.map((_, i) => i)
 const planillas: Record<string, string> = {
   // Todas las ropas, grandes y a 44 px, con pieles y cabezas distintas.
   ropas:
-    `<h2>Ropas</h2><div class="fila">${ropas.map((r) => celda(av({ ropa: r, piel: r % 6, cabeza: r % 4, pelo: r * 3 }), 220, CATALOGO_AVATAR.ropa[r]!.nombre)).join('')}</div>` +
-    `<h2>44 px</h2><div class="fila">${ropas.map((r) => celda(av({ ropa: r, piel: r % 6, cabeza: r % 4, pelo: r * 3 }), 44)).join('')}</div>` +
+    `<h2>Ropas</h2><div class="fila">${ropas.map((r) => celda(av({ ropa: r, piel: r % 6, cabeza: r % 4, pelo: (r * 3) % 48 }), 220, CATALOGO_AVATAR.ropa[r]!.nombre)).join('')}</div>` +
+    `<h2>44 px</h2><div class="fila">${ropas.map((r) => celda(av({ ropa: r, piel: r % 6, cabeza: r % 4, pelo: (r * 3) % 48 }), 44)).join('')}</div>` +
     `<h2>Mate</h2><div class="fila">${PIELES.map((_, p) => celda(av({ ropa: p, piel: p, accesorio: 1, pelo: p * 5, cabeza: p % 4 }), 220)).join('')}${PIELES.map((_, p) => celda(av({ ropa: p, piel: p, accesorio: 1, pelo: p * 5 }), 44)).join('')}</div>`,
   // Cada sombrero con los 48 peinados.
   ...Object.fromEntries(

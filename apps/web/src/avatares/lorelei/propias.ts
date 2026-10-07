@@ -155,6 +155,53 @@ const rayas = (fondo: string, raya: string) => () => {
   return torso(LINEA_REDONDA, fondo, false) + franjas.join('') + borde(LINEA_REDONDA) + MANGAS + ribete(ESCOTE_REDONDO, raya)
 }
 
+/**
+ * Camiseta con cuello en V de un color y un vivo de otro adentro del cuello y en los puños:
+ * la blanca tricolor (cuello azul, vivo rojo).
+ */
+const camisetaConVivo = (color: string, cuello: string, vivo: string) => () =>
+  camiseta(color, cuello)() +
+  `<path d="${camino(curva(ESCOTE_V.map(([x, y]) => [x, y + 20] as Punto)))}" stroke="${vivo}" stroke-width="9" fill="none" stroke-linecap="round"/>` +
+  `<path d="M184 958c-6 14-8 28-8 42M776 958c6 14 8 28 8 42" stroke="${vivo}" stroke-width="14" fill="none" stroke-linecap="round"/>`
+
+/**
+ * Camiseta lisa con una franja diagonal que cruza el pecho desde el hombro izquierdo (el de
+ * la derecha de la pantalla) hasta la cadera del otro lado. La franja se recorta a mano con la
+ * silueta: para cada x, el tramo entre los dos bordes de la franja que cae debajo de los hombros.
+ */
+const conFranjaDiagonal = (fondo: string, banda: string, cuello: string) => () => {
+  const linea = LINEA_V
+  // Bordes de la franja: rectas y = y0 + m (x - 480), con el pecho (x=480) a media altura.
+  const m = -0.62
+  const borde1 = (x: number) => 892 + m * (x - 480)
+  const borde2 = (x: number) => 892 + 92 + m * (x - 480)
+  const arriba: Punto[] = []
+  const abajo: Punto[] = []
+  for (let x = 90; x <= 870; x += 6) {
+    const techo = Math.max(alturaEn(linea, x), borde1(x))
+    const piso = Math.min(1000, borde2(x))
+    if (piso <= techo) continue
+    arriba.push([x, techo])
+    abajo.push([x, piso])
+  }
+  const banda_ = arriba.length > 1 ? `<path d="${camino([...arriba, ...abajo.reverse()])}Z" fill="${banda}"/>` : ''
+  return torso(linea, fondo, false) + banda_ + borde(linea) + MANGAS + ribete(ESCOTE_V, cuello, 26)
+}
+
+/**
+ * Camiseta celeste "de época" (como las de 1930): cuello redondo blanco con una abertura en el
+ * pecho cerrada con cordón cruzado.
+ */
+const deEpoca = (color: string, cuello: string) => () =>
+  torso(LINEA_REDONDA, color) +
+  MANGAS +
+  ribete(ESCOTE_REDONDO, cuello, 30) +
+  // La abertura del pecho y el cordón que la cierra.
+  `<path d="M480 896v74" ${fino(NEGRO, 8)}/>` +
+  `<path d="M462 906l36 18M498 906l-36 18M462 932l36 18M498 932l-36 18" stroke="${NEGRO}" stroke-width="13" stroke-linecap="round" fill="none"/>` +
+  `<path d="M462 906l36 18M498 906l-36 18M462 932l36 18M498 932l-36 18" stroke="${cuello}" stroke-width="6" stroke-linecap="round" fill="none"/>` +
+  `<circle cx="462" cy="906" r="5" fill="${NEGRO}"/><circle cx="498" cy="906" r="5" fill="${NEGRO}"/>`
+
 /** Buzo con la capucha caída sobre los hombros y los cordones. */
 const buzo = (color: string) => () => {
   const oscuro = tono(color, -0.18)
@@ -206,6 +253,17 @@ export const ROPAS: readonly ((piel: string) => string)[] = [
   rayas('#c83a32', '#2f4f9e'),
   buzo('#9a9fa6'),
   campera('#4a6fa5'),
+  // Colores de los cuadros y de la selección, sin escudos.
+  camisetaConVivo('#f5f5f0', '#1f3c88', '#c8323a'),
+  camiseta('#5b2a86', '#f5f5f0'),
+  conFranjaDiagonal('#f5f5f0', '#22201d', '#22201d'),
+  rayas('#2e8b4a', '#c83a32'),
+  rayas('#f5f5f0', '#7fb8e6'),
+  rayas('#2f4f9e', '#22201d'),
+  rayas('#f5f5f0', '#2e8b4a'),
+  rayas('#f5f5f0', '#5b2a86'),
+  camiseta('#f5f5f0', '#7fb8e6'),
+  deEpoca('#7fb8e6', '#f5f5f0'),
 ]
 
 // ---------------------------------------------------------------------------------------

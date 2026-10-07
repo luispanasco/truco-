@@ -713,3 +713,20 @@ Pedido del usuario: más barajas gratis. Se buscaron barajas españolas completa
 - **La web:** `imagenCarta(baraja, carta)` reemplaza a `imagenFournier`; toda baraja que no es la propia es de imágenes (carpeta en `public/barajas`). Zonas del ojeo medidas para cada una: en El Cid la línea de los cortes queda entre 0,053 y 0,063 de la altura y el número entre 0,066 y 0,118; en Grimaud, entre 0,013 y 0,030 y entre 0,033 y 0,098. El selector de baraja pasa a 2 × 2.
 - **Escudos de los clubes:** no se pueden usar, ni gratis (son marcas registradas de cada club). Sí los colores y las franjas, sin escudo. Al usuario le gustó la idea para los avatares, junto con la selección.
 - **Tests:** web 227 (nuevos: las dos barajas, sus 41 imágenes y sus zonas del ojeo), servidor 52.
+
+---
+
+## Camisetas de los cuadros y de la selección — 2026-10-06
+
+Pedido del usuario: los colores de los cuadros uruguayos y de la selección para los avatares, sin escudos (son marcas registradas de cada club). Plan aprobado el mismo día. Los nombres son de colores, no de clubes: el nombre también es marca y no se quiere dar a entender que un club avala la app.
+
+- **10 camisetas nuevas** (dibujos propios con el trazo de Lorelei, al final del catálogo de ropa; 200 monedas, la de época 250):
+  - blanca tricolor (cuello azul con vivo rojo), violeta y blanca con franja negra diagonal;
+  - a bastones: verde y rojo, celeste y blanco, negro y azul, verde y blanco, violeta y blanco;
+  - de la selección: blanca con cuello celeste y "celeste de época" (cuello redondo blanco con cordón cruzado, como las de 1930).
+- Las rayas que ya estaban se llaman ahora "Bastones blanco y negro", "Aurinegra a bastones" y "Bastones rojo y azul" (mismo dibujo y misma posición en el catálogo).
+- Los bots pueden lucirlas (eligen también piezas de la tienda).
+- La planilla (`scripts/planillas-avatar.ts`) ya no se pasa del último peinado con más de 16 ropas.
+- **Tests:** 429 (motor 136, bots 14, servidor 52, web 227).
+
+**Pendiente:** el usuario no contestó si quiere una bufanda con los mismos colores (como accesorio).
