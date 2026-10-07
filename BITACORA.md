@@ -700,3 +700,16 @@ Pedido del usuario como último cambio visual de la fase 1: tocar el avatar de u
 
 **Pendiente:** al recargar la página se pierden las señas recibidas en la mano (el panel queda vacío), pero se pueden recuperar pidiéndolas de nuevo.
 
+
+---
+
+## Barajas "El Cid" y Grimaud — 2026-10-06
+
+Pedido del usuario: más barajas gratis. Se buscaron barajas españolas completas de licencia libre y se le armó una página con las candidatas lado a lado (las mismas 8 cartas, más la vista del ojeo). Eligió **"El Cid"** y **Grimaud**; "La Broma" (caricaturas políticas de 1874) no le gustó. Se descartaron también la castellana dibujada de Commons (208 × 319, CC BY-SA) y las fotos de la Fournier moderna (marca registrada).
+
+- **"El Cid"** (Simeón Durá, Valencia, 1888) y **Grimaud** (Francia, 1860): dominio público, escaneos de la Biblioteca Nacional de Francia (Gallica) subidos a Commons. Gratis en el catálogo (`cid1888`, `grimaud1860`).
+- **Licencia:** Gallica pide una licencia para el uso comercial de sus escaneos. Como son gratis, el riesgo es bajo (además, desde 2019 la ley europea no le da derechos a la foto de una obra de dominio público). **Antes de venderlas en la tienda, consultar a la biblioteca.** Detalle en el `CREDITOS.md` de cada carpeta.
+- **`scripts/baraja-gallica.py cid1888|grimaud1860`:** baja las 41 imágenes de Commons (reusa la descarga de `baraja-fournier.py`), verifica la licencia, las lleva a 400 × 600 centradas en el marco impreso y mide dónde quedan la línea de los cortes y el número.
+- **La web:** `imagenCarta(baraja, carta)` reemplaza a `imagenFournier`; toda baraja que no es la propia es de imágenes (carpeta en `public/barajas`). Zonas del ojeo medidas para cada una: en El Cid la línea de los cortes queda entre 0,053 y 0,063 de la altura y el número entre 0,066 y 0,118; en Grimaud, entre 0,013 y 0,030 y entre 0,033 y 0,098. El selector de baraja pasa a 2 × 2.
+- **Escudos de los clubes:** no se pueden usar, ni gratis (son marcas registradas de cada club). Sí los colores y las franjas, sin escudo. Al usuario le gustó la idea para los avatares, junto con la selección.
+- **Tests:** web 227 (nuevos: las dos barajas, sus 41 imágenes y sus zonas del ojeo), servidor 52.

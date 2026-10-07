@@ -48,10 +48,12 @@ const interruptorTienda = () => screen.getByRole('switch', { name: /Desbloquear 
 const mesas = () => screen.getByRole('radiogroup', { name: 'Mesa' })
 
 describe('barajas en el catálogo', () => {
-  it('las dos son gratis y lo que no existe vuelve a la propia', () => {
+  it('todas son gratis y lo que no existe vuelve a la propia', () => {
     expect(CATALOGO_BARAJAS.map((b) => [b.id, b.precio])).toEqual([
       ['propia', 0],
       ['fournier1878', 0],
+      ['cid1888', 0],
+      ['grimaud1860', 0],
     ])
     expect(normalizarBaraja('fournier1878')).toBe('fournier1878')
     expect(normalizarBaraja('tarot')).toBe('propia')

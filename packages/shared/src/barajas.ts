@@ -16,6 +16,8 @@ export interface Baraja {
 export const BARAJAS = [
   { id: 'propia', nombre: 'Propia', precio: 0 },
   { id: 'fournier1878', nombre: 'Clásica 1878', precio: 0 },
+  { id: 'cid1888', nombre: 'El Cid 1888', precio: 0 },
+  { id: 'grimaud1860', nombre: 'Grimaud 1860', precio: 0 },
 ] as const satisfies readonly Baraja[]
 
 export type IdBaraja = (typeof BARAJAS)[number]['id']

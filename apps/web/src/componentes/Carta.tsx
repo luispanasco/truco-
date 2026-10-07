@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { motion } from 'motion/react'
 import type { Carta as TCarta, Palo } from '@truco/engine'
-import { imagenFournier, precargarBaraja, useBaraja, type Baraja } from '../baraja'
+import { imagenCarta, precargarBaraja, useBaraja, type Baraja } from '../baraja'
 import { Dorso, Frente } from './dibujo'
 import '../estilos-baraja.css'
 
@@ -20,7 +20,7 @@ interface Props {
 }
 
 /**
- * Imagen de la baraja clásica. Es decorativa (alt vacío): el nombre de la carta lo lleva el
+ * Imagen de una baraja antigua. Es decorativa (alt vacío): el nombre de la carta lo lleva el
  * elemento de afuera (aria-label), igual que con el SVG.
  */
 function Imagen({ src }: { src: string }) {
@@ -33,7 +33,8 @@ export function Carta({ carta, oculta, tam = 'normal', jugable, resaltada, ganad
   // La primera carta que se dibuja con la baraja elegida baja todas (una sola vez): sin parpadeos.
   // Las miniaturas de otra baraja (el selector) no disparan la descarga.
   useEffect(() => precargarBaraja(elegida), [elegida])
-  const clasica = baraja === 'fournier1878'
+  // Las barajas que no son la propia son imágenes (todas antiguas, con el mismo papel de fondo).
+  const clasica = baraja !== 'propia'
   const clases = ['carta', `carta-${tam}`]
   if (clasica) clases.push('carta-clasica')
   if (oculta || !carta) clases.push('carta-dorso')
@@ -43,12 +44,12 @@ export function Carta({ carta, oculta, tam = 'normal', jugable, resaltada, ganad
   if (oculta || !carta) {
     return (
       <div className={clases.join(' ')} aria-label="carta boca abajo">
-        {clasica ? <Imagen src={imagenFournier()} /> : <Dorso />}
+        {baraja !== 'propia' ? <Imagen src={imagenCarta(baraja)} /> : <Dorso />}
       </div>
     )
   }
   const etiqueta = `${carta.numero} de ${NOMBRE_PALO[carta.palo]}`
-  const frente = clasica ? <Imagen src={imagenFournier(carta)} /> : <Frente palo={carta.palo} numero={carta.numero} />
+  const frente = baraja !== 'propia' ? <Imagen src={imagenCarta(baraja, carta)} /> : <Frente palo={carta.palo} numero={carta.numero} />
   return alTocar ? (
     <button type="button" className={clases.join(' ')} onClick={alTocar} disabled={!jugable} aria-label={`Jugar el ${etiqueta}`}>
       {frente}

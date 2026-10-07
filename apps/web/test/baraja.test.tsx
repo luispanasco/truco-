@@ -1,6 +1,9 @@
+import { existsSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { mostrarBaraja, useBaraja } from '../src/baraja'
+import { imagenesBaraja, mostrarBaraja, useBaraja } from '../src/baraja'
 import { Carta } from '../src/componentes/Carta'
 import { TarjetaPerfil, usePerfil } from '../src/componentes/TarjetaPerfil'
 import {
@@ -13,13 +16,16 @@ import {
   ZONA_CORTES,
   ZONA_INDICE,
   ZONA_SEPARACION,
+  ZONAS_CID,
   ZONAS_FOURNIER,
+  ZONAS_GRIMAUD,
   ZONAS_OJEO,
   ZONAS_PROPIA,
   zonaVisible,
 } from '../src/ojeo'
 import { leerPerfil } from '../src/perfil'
 
+const PUBLICO = join(dirname(fileURLToPath(import.meta.url)), '..', 'public')
 const imagen = (el: HTMLElement) => el.querySelector('img')?.getAttribute('src') ?? null
 
 beforeEach(() => {
@@ -57,6 +63,26 @@ describe('Carta según la baraja', () => {
     )
     expect(imagen(screen.getByRole('button', { name: 'Jugar el 12 de oros' }))).toBe('/barajas/fournier-1878/12-oro.webp')
     expect(imagen(screen.getByLabelText('carta boca abajo'))).toBe('/barajas/fournier-1878/dorso.webp')
+  })
+
+  it('"El Cid" y Grimaud: cada carta y el dorso salen de su carpeta, y las 41 imágenes existen', () => {
+    for (const [baraja, carpeta] of [['cid1888', 'cid-1888'], ['grimaud1860', 'grimaud-1860']] as const) {
+      act(() => mostrarBaraja(baraja))
+      render(
+        <>
+          <Carta carta={{ numero: 11, palo: 'basto' }} />
+          <Carta oculta tam="chica" />
+        </>,
+      )
+      const carta = screen.getByRole('img', { name: '11 de bastos' })
+      expect(carta.classList.contains('carta-clasica')).toBe(true)
+      expect(imagen(carta)).toBe(`/barajas/${carpeta}/11-basto.webp`)
+      expect(imagen(screen.getByLabelText('carta boca abajo'))).toBe(`/barajas/${carpeta}/dorso.webp`)
+      cleanup()
+      const imagenes = imagenesBaraja(baraja)
+      expect(imagenes).toHaveLength(41)
+      for (const url of imagenes) expect(existsSync(join(PUBLICO, url))).toBe(true)
+    }
   })
 
   it('se puede forzar una baraja (las miniaturas del selector)', () => {
@@ -121,6 +147,19 @@ describe('zonas del ojeo por baraja', () => {
     // Mucho más chica que la de la propia: el número de Fournier está arriba de todo.
     expect(z.indice.hasta).toBeLessThan(ZONA_INDICE.hasta / 2)
     expect(franja(ALTO, z)).toBeCloseTo(z.indice.hasta * ALTO)
+  })
+
+  it('"El Cid" y Grimaud tienen sus zonas, ordenadas y con el tope entre la línea y el número', () => {
+    expect(ZONAS_OJEO.cid1888).toBe(ZONAS_CID)
+    expect(ZONAS_OJEO.grimaud1860).toBe(ZONAS_GRIMAUD)
+    for (const z of [ZONAS_CID, ZONAS_GRIMAUD]) {
+      expect(z.cortes.desde).toBe(0)
+      expect(z.cortes.hasta).toBe(z.separacion.desde)
+      expect(z.separacion.hasta).toBe(z.indice.desde)
+      expect(z.tope).toBeGreaterThanOrEqual(z.cortes.hasta)
+      expect(z.tope).toBeLessThanOrEqual(z.indice.desde)
+      expect(z.indice.hasta).toBeLessThan(ZONA_INDICE.hasta)
+    }
   })
 
   it('con la clásica, una carta queda ojeada al asomar su franja (más corta)', () => {

@@ -53,7 +53,36 @@ export const ZONAS_FOURNIER: ZonasOjeo = {
   tope: 0.028,
 }
 
-export const ZONAS_OJEO: Record<Baraja, ZonasOjeo> = { propia: ZONAS_PROPIA, fournier1878: ZONAS_FOURNIER }
+/**
+ * "El Cid" (Simeón Durá, 1888), medida en las 40 imágenes de public/barajas/cid-1888 (ver
+ * scripts/baraja-gallica.py): la línea de los cortes está más abajo que en Fournier, entre 0,053
+ * y 0,063 de la altura (el escaneo deja el margen blanco de arriba), y el número va de 0,066 a
+ * 0,118. El tope queda justo debajo de la línea.
+ */
+export const ZONAS_CID: ZonasOjeo = {
+  cortes: { desde: 0, hasta: 0.066 },
+  separacion: { desde: 0.066, hasta: 0.069 },
+  indice: { desde: 0.069, hasta: 0.12 },
+  tope: 0.067,
+}
+
+/**
+ * Grimaud (1860), medida en public/barajas/grimaud-1860: la línea de los cortes va de 0,013 a
+ * 0,030 (algunas cartas vienen apenas torcidas) y el número de 0,033 a 0,098.
+ */
+export const ZONAS_GRIMAUD: ZonasOjeo = {
+  cortes: { desde: 0, hasta: 0.031 },
+  separacion: { desde: 0.031, hasta: 0.034 },
+  indice: { desde: 0.034, hasta: 0.1 },
+  tope: 0.032,
+}
+
+export const ZONAS_OJEO: Record<Baraja, ZonasOjeo> = {
+  propia: ZONAS_PROPIA,
+  fournier1878: ZONAS_FOURNIER,
+  cid1888: ZONAS_CID,
+  grimaud1860: ZONAS_GRIMAUD,
+}
 
 /**
  * Alcance (px de dedo, para cada lado) del tope: adentro la carta casi no se mueve y hay que
