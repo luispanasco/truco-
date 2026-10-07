@@ -22,7 +22,14 @@ export const CAPAS_AVATAR = [
   'ropa',
   'sombrero',
   'accesorio',
+  'bufanda',
 ] as const
+
+/**
+ * Cuántas capas tenían los primeros avatares guardados (sin la bufanda). Un código con menos
+ * capas que las de ahora se lee igual: las que faltan al final quedan en su pieza 0 ("sin …").
+ */
+const CAPAS_MINIMAS = 15
 
 export type CapaAvatar = (typeof CAPAS_AVATAR)[number]
 
@@ -104,11 +111,33 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     paga('Celeste de época', 250),
   ],
   sombrero: [gratis('Sin sombrero'), paga('Boina', 200), paga('Gorro de lana', 150), paga('Gorra', 150), paga('Sombrero de paja', 250)],
-  accesorio: [gratis('Nada'), paga('Mate', 300)],
+  accesorio: [
+    gratis('Nada'),
+    paga('Mate', 300),
+    paga('Termo', 250),
+    paga('Mate y termo', 400),
+    paga('Celular', 200),
+    paga('Libro', 200),
+    paga('Diario', 200),
+    paga('Pelota', 250),
+    paga('Naipes', 300),
+    paga('Café', 200),
+  ],
+  // Con los colores de las camisetas (sin escudos ni nombres de clubes).
+  bufanda: [
+    gratis('Sin bufanda'),
+    paga('Celeste y blanca', 150),
+    paga('Aurinegra', 150),
+    paga('Tricolor', 150),
+    paga('Violeta y blanca', 150),
+    paga('Blanca y negra', 150),
+    paga('Verde y blanca', 150),
+    paga('Roja y azul', 150),
+  ],
 }
 
 /** Capas que se pueden dejar vacías (su pieza 0 es "sin …"). */
-export const CAPAS_OPCIONALES: readonly CapaAvatar[] = ['barba', 'lentes', 'aros', 'pecas', 'sombrero', 'accesorio']
+export const CAPAS_OPCIONALES: readonly CapaAvatar[] = ['barba', 'lentes', 'aros', 'pecas', 'sombrero', 'accesorio', 'bufanda']
 
 export const AVATAR_BASE: Avatar = {
   piel: 1,
@@ -126,6 +155,7 @@ export const AVATAR_BASE: Avatar = {
   ropa: 0,
   sombrero: 0,
   accesorio: 0,
+  bufanda: 0,
 }
 
 const PREFIJO = 'a1.'
@@ -145,11 +175,11 @@ export function codificarAvatar(a: Avatar): string {
 export function leerAvatar(codigo: unknown): Avatar | null {
   if (typeof codigo !== 'string' || codigo.length > LARGO_AVATAR || !codigo.startsWith(PREFIJO)) return null
   const partes = codigo.slice(PREFIJO.length).split('.')
-  if (partes.length !== CAPAS_AVATAR.length) return null
+  if (partes.length < CAPAS_MINIMAS || partes.length > CAPAS_AVATAR.length) return null
   const a = {} as Avatar
   for (let i = 0; i < CAPAS_AVATAR.length; i++) {
     const capa = CAPAS_AVATAR[i]!
-    const parte = partes[i]!
+    const parte = partes[i] ?? '0'
     if (!/^[0-9a-z]{1,2}$/.test(parte)) return null
     const n = parseInt(parte, 36)
     if (n >= CATALOGO_AVATAR[capa].length) return null

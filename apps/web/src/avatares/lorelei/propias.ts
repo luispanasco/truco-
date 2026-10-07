@@ -393,13 +393,25 @@ export const SOMBREROS: readonly Sombrero[] = [boina, gorroDeLana, gorra, sombre
 // Accesorios
 // ---------------------------------------------------------------------------------------
 
-/** Mate forrado en cuero, con virola y bombilla, en la mano (abajo a la derecha). */
-function mate(piel: string): string {
+/**
+ * La mano que sostiene un accesorio, desde abajo a la derecha: muñeca, tres dedos que lo abrazan
+ * y el pulgar. Va encima del objeto. Coordenadas como las del mate (antes del corrimiento).
+ */
+const mano = (piel: string) =>
+  `<path d="M548 1060c-12-60-2-112 30-140 18-14 40-14 48 0 10 30 14 84 10 140Z" fill="${piel}" ${TRAZO}/>` +
+  `<path d="M600 884c44-10 96-10 132-2 20 6 18 34-4 34-40-2-84 0-124 6Z" fill="${piel}" ${TRAZO}/>` +
+  `<path d="M604 918c44-8 94-8 130 0 20 6 16 34-6 33-40-2-82 0-122 5Z" fill="${piel}" ${TRAZO}/>` +
+  `<path d="M606 952c40-6 84-6 116 2 18 6 14 32-6 30-36-2-74 0-108 4Z" fill="${piel}" ${TRAZO}/>` +
+  `<path d="M600 900c-10-32-2-62 22-80 12-8 28 2 22 18l-16 50" fill="${piel}" ${TRAZO}/>`
+
+/** Un accesorio en la mano: todo un poco más arriba, para que se vea entero en el círculo. */
+const enLaMano = (piel: string, objeto: string, detras = '') => `<g transform="translate(0 -40)">${detras}${objeto}${mano(piel)}</g>`
+
+/** Mate forrado en cuero, con virola y bombilla (sin la mano). */
+function dibujoMate(): string {
   const cuero = '#3b332d'
   const metal = '#d4d7da'
-  // Todo el mate va un poco más arriba que la mano, para que se vea entero en el círculo.
   return (
-    `<g transform="translate(0 -40)">` +
     // Bombilla: trazo negro grueso y adentro el metal.
     `<path d="M700 806l52-96c6-12 18-16 30-12" stroke="${NEGRO}" stroke-width="26" stroke-linecap="round" fill="none"/>` +
     `<path d="M700 806l52-96c6-12 18-16 30-12" stroke="${metal}" stroke-width="12" stroke-linecap="round" fill="none"/>` +
@@ -410,16 +422,129 @@ function mate(piel: string): string {
     `<ellipse cx="692" cy="812" rx="54" ry="14" ${fino(NEGRO, 8, '#7d9a3c')}/>` +
     `<path d="M636 812c0 14 26 26 56 26s56-12 56-26l-2 26c-2 14-26 22-54 22s-52-8-54-22Z" fill="${metal}" ${TRAZO}/>` +
     `<path d="M700 806l10-18" stroke="${NEGRO}" stroke-width="26" stroke-linecap="round"/>` +
-    `<path d="M700 806l10-18" stroke="${metal}" stroke-width="12" stroke-linecap="round"/>` +
-    // La mano que lo sostiene, desde abajo: muñeca, tres dedos que lo abrazan y el pulgar.
-    `<path d="M548 1060c-12-60-2-112 30-140 18-14 40-14 48 0 10 30 14 84 10 140Z" fill="${piel}" ${TRAZO}/>` +
-    `<path d="M600 884c44-10 96-10 132-2 20 6 18 34-4 34-40-2-84 0-124 6Z" fill="${piel}" ${TRAZO}/>` +
-    `<path d="M604 918c44-8 94-8 130 0 20 6 16 34-6 33-40-2-82 0-122 5Z" fill="${piel}" ${TRAZO}/>` +
-    `<path d="M606 952c40-6 84-6 116 2 18 6 14 32-6 30-36-2-74 0-108 4Z" fill="${piel}" ${TRAZO}/>` +
-    `<path d="M600 900c-10-32-2-62 22-80 12-8 28 2 22 18l-16 50" fill="${piel}" ${TRAZO}/>` +
+    `<path d="M700 806l10-18" stroke="${metal}" stroke-width="12" stroke-linecap="round"/>`
+  )
+}
+
+/** Mate forrado en cuero, con virola y bombilla, en la mano (abajo a la derecha). */
+const mate = (piel: string) => enLaMano(piel, dibujoMate())
+
+/** Termo verde de acero, con su tapón y el pico cebador, corrido (x, y) de donde lo agarra la mano. */
+function dibujoTermo(x = 0, y = 0): string {
+  const verde = '#3f6e46'
+  const metal = '#c9cdd2'
+  return (
+    `<g transform="translate(${x} ${y})">` +
+    // Cuerpo, con un brillo vertical.
+    `<path d="M630 690c0-14 10-22 24-22h76c14 0 24 8 24 22v300c0 14-10 22-24 22h-76c-14 0-24-8-24-22Z" fill="${verde}" ${TRAZO}/>` +
+    `<path d="M656 700v270" stroke="${tono(verde, 0.35)}" stroke-width="12" stroke-linecap="round"/>` +
+    // Anillos de metal y el tapón con el pico.
+    `<path d="M632 700h120M632 980h120" stroke="${metal}" stroke-width="14"/>` +
+    `<path d="M650 668v-34c0-10 8-16 18-16h48c10 0 18 6 18 16v34Z" fill="${tono(verde, -0.25)}" ${TRAZO}/>` +
+    `<path d="M676 618v-22c0-6 4-10 10-10h14c6 0 10 4 10 10v22Z" fill="${metal}" ${TRAZO}/>` +
     `</g>`
   )
 }
 
-/** Accesorios, sin el "Nada". Reciben el color de piel (para la mano). */
-export const ACCESORIOS: readonly ((piel: string) => string)[] = [mate]
+/** Celular negro con la pantalla prendida. */
+const dibujoCelular = () =>
+  `<rect x="626" y="740" width="118" height="220" rx="18" fill="#1e1e22" ${TRAZO}/>` +
+  `<rect x="640" y="760" width="90" height="176" rx="8" fill="#7fb8e6"/>` +
+  `<path d="M652 790h52M652 818h66M652 846h40" stroke="#f5f5f0" stroke-width="10" stroke-linecap="round"/>`
+
+/** Libro de tapa dura, apenas inclinado, con el lomo y el borde de las hojas. */
+const dibujoLibro = () =>
+  `<g transform="rotate(-8 690 870)">` +
+  `<path d="M604 740h170v240H604Z" fill="#f5efe0" ${TRAZO}/>` +
+  `<path d="M596 734h168v236H596Z" fill="#8a2d2a" ${TRAZO}/>` +
+  `<path d="M620 734v236" stroke="${tono('#8a2d2a', -0.3)}" stroke-width="10"/>` +
+  `<path d="M648 790h88M648 816h70" stroke="#e6c477" stroke-width="9" stroke-linecap="round"/>` +
+  `</g>`
+
+/** Diario doblado, con el titular, las columnas y una foto. */
+const dibujoDiario = () =>
+  `<g transform="rotate(10 690 860)">` +
+  `<path d="M598 720h190v270H598Z" fill="#ecebe4" ${TRAZO}/>` +
+  `<path d="M616 748h154" stroke="${NEGRO}" stroke-width="16"/>` +
+  `<path d="M616 784h70M616 806h70M616 828h70M616 850h70M700 784h70M700 806h70M700 828h70" stroke="#8d8d88" stroke-width="7"/>` +
+  `<rect x="700" y="842" width="70" height="40" fill="#b5b4ad"/>` +
+  `</g>`
+
+/** Pelota de fútbol de gajos, apoyada en la mano. */
+const dibujoPelota = () =>
+  `<circle cx="690" cy="830" r="96" fill="#f5f5f0" ${TRAZO}/>` +
+  `<path d="M690 794l34 24-13 40h-42l-13-40Z" fill="#22201d"/>` +
+  `<path d="M690 794v-60M724 818l56-20M711 858l34 50M669 858l-34 50M656 818l-56-20" stroke="${NEGRO}" stroke-width="8" stroke-linecap="round"/>` +
+  `<path d="M640 742l-22 22 6 30 30-6ZM740 742l22 22-6 30-30-6Z" fill="#22201d"/>`
+
+/** Tres naipes abiertos en abanico: el de atrás de dorso, un 1 de espada y un 7 de oro. */
+function dibujoNaipes(): string {
+  const carta = (giro: number, relleno: string, extra: string) =>
+    `<g transform="rotate(${giro} 690 960)"><rect x="640" y="720" width="100" height="150" rx="10" fill="${relleno}" ${TRAZO}/>${extra}</g>`
+  return (
+    carta(-20, '#8a2d2a', `<rect x="654" y="734" width="72" height="122" rx="6" fill="none" stroke="#e6c477" stroke-width="6"/>`) +
+    carta(0, '#fbf6ea', `<path d="M690 748v78" stroke="#2f5fae" stroke-width="12" stroke-linecap="round"/><path d="M672 812h36" stroke="#e6c477" stroke-width="10" stroke-linecap="round"/>`) +
+    carta(20, '#fbf6ea', `<circle cx="690" cy="790" r="20" ${fino(NEGRO, 6, '#e6c477')}/>`)
+  )
+}
+
+/** Taza de café con el humito. */
+const dibujoCafe = () =>
+  `<path d="M650 760c-6-20 10-30 0-50M690 760c-6-20 10-30 0-50M730 760c-6-20 10-30 0-50" stroke="#c9cdd2" stroke-width="9" fill="none" stroke-linecap="round"/>` +
+  `<path d="M776 820c40 0 44 70 4 74" stroke="${NEGRO}" stroke-width="30" fill="none" stroke-linecap="round"/>` +
+  `<path d="M776 820c40 0 44 70 4 74" stroke="#f5f5f0" stroke-width="14" fill="none" stroke-linecap="round"/>` +
+  `<path d="M612 790h176l-16 160c-2 20-18 34-40 34h-64c-22 0-38-14-40-34Z" fill="#f5f5f0" ${TRAZO}/>` +
+  `<ellipse cx="700" cy="790" rx="88" ry="14" ${fino(NEGRO, 8, '#5a3a22')}/>`
+
+/** Accesorios, sin el "Nada" (el 1 del catálogo es el primero de esta lista). */
+export const ACCESORIOS: readonly ((piel: string) => string)[] = [
+  mate,
+  (piel) => enLaMano(piel, dibujoTermo()),
+  // El termo al lado, detrás de la mano con el mate.
+  (piel) => enLaMano(piel, dibujoMate(), dibujoTermo(140, 30)),
+  (piel) => enLaMano(piel, dibujoCelular()),
+  (piel) => enLaMano(piel, dibujoLibro()),
+  (piel) => enLaMano(piel, dibujoDiario()),
+  (piel) => enLaMano(piel, dibujoPelota()),
+  (piel) => enLaMano(piel, dibujoNaipes()),
+  (piel) => enLaMano(piel, dibujoCafe()),
+]
+
+// ---------------------------------------------------------------------------------------
+// Bufandas
+// ---------------------------------------------------------------------------------------
+
+/**
+ * Bufanda de lana enroscada en el cuello, con una punta que cae sobre el pecho y sus flecos.
+ * Los colores se alternan en franjas (dos o tres colores).
+ */
+function bufanda(colores: readonly string[]): string {
+  const a = colores[0]!
+  const b = colores[1] ?? a
+  const franjas = Array.from(
+    { length: 6 },
+    (_, i) => `<rect x="512" y="${830 + i * 28}" width="84" height="28" fill="${colores[i % colores.length]}"/>`,
+  ).join('')
+  return (
+    // La vuelta alrededor del cuello: un rollo grueso de un hombro al otro.
+    `<path d="M340 812c-10-40 10-62 40-66 60 26 140 30 200 0 32 4 50 26 40 66-70 40-210 40-280 0Z" fill="${a}" ${TRAZO}/>` +
+    // Franjas del rollo.
+    `<path d="M392 772c-8 18-8 40 0 58M440 784c-6 18-6 40 0 58M532 784c6 18 6 40 0 58M580 772c8 18 8 40 0 58" stroke="${b}" stroke-width="22" fill="none"/>` +
+    // La punta que cae, a rayas, con su contorno.
+    franjas +
+    `<path d="M512 830h84v168h-84Z" fill="none" ${TRAZO}/>` +
+    // Flecos de abajo.
+    `<path d="M524 998v18M544 998v18M564 998v18M584 998v18" stroke="${a}" stroke-width="8" stroke-linecap="round"/>`
+  )
+}
+
+/** Bufandas, sin el "Sin bufanda" (el 1 del catálogo es la primera de esta lista). */
+export const BUFANDAS: readonly string[] = [
+  bufanda(['#7fb8e6', '#f5f5f0']),
+  bufanda(['#f2c230', '#22201d']),
+  bufanda(['#1f3c88', '#f5f5f0', '#c8323a']),
+  bufanda(['#5b2a86', '#f5f5f0']),
+  bufanda(['#f5f5f0', '#22201d']),
+  bufanda(['#2e8b4a', '#f5f5f0']),
+  bufanda(['#c83a32', '#2f4f9e']),
+]

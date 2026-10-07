@@ -1,7 +1,7 @@
 import { COLORES_PELO, PIELES, type Avatar } from '@truco/shared'
 import type { EstiloAvatar } from '../estilo'
 import { PIEZAS_LORELEI } from './piezas'
-import { ACCESORIOS, ROPAS, SOMBREROS } from './propias'
+import { ACCESORIOS, BUFANDAS, ROPAS, SOMBREROS } from './propias'
 
 /** Color de los trazos de la cara (ojos, cejas, nariz, boca, lentes). */
 const TINTA = '#1d1a16'
@@ -84,6 +84,8 @@ export const LORELEI: EstiloAvatar = {
     return [
       sombrero ? recortado(cabeza, a.sombrero, sombrero.recorte) : cabeza,
       sombrero ? `<g class="capa capa-sombrero">${sombrero.dibujo(COLORES_PELO[a.colorPelo] ?? COLORES_PELO[0])}</g>` : '',
+      // La bufanda va sobre el cuello y la ropa (y el pelo que cae sobre los hombros), debajo de la mano.
+      a.bufanda > 0 ? `<g class="capa capa-bufanda">${BUFANDAS[a.bufanda - 1] ?? ''}</g>` : '',
       a.accesorio > 0 ? `<g class="capa capa-accesorio">${ACCESORIOS[a.accesorio - 1]?.(piel) ?? ''}</g>` : '',
     ].join('')
   },

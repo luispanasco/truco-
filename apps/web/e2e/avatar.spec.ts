@@ -34,8 +34,8 @@ test('el avatar armado en el perfil es el que ven los demás en la sala', async 
   await expect(editor).toBeHidden()
 
   const codigoAna = await ana.locator('.perfil-avatar svg').getAttribute('data-avatar')
-  // a1. piel . cabeza . pelo 4 . color 5 . cejas . ojos 3 … ropa 1 (en base 36).
-  expect(codigoAna).toMatch(/^a1\.[0-9a-z]+\.[0-9a-z]+\.4\.5\.[0-9a-z]+\.3\.(?:[0-9a-z]+\.){6}1\.0\.0$/)
+  // a1. piel . cabeza . pelo 4 . color 5 . cejas . ojos 3 … ropa 1 . sombrero . accesorio . bufanda (en base 36).
+  expect(codigoAna).toMatch(/^a1\.[0-9a-z]+\.[0-9a-z]+\.4\.5\.[0-9a-z]+\.3\.(?:[0-9a-z]+\.){6}1\.0\.0\.0$/)
 
   // Queda guardado al recargar.
   await ana.reload()

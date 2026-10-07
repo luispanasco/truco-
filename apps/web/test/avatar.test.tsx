@@ -23,6 +23,13 @@ describe('formato del avatar', () => {
     }
   })
 
+  it('un código guardado antes de la bufanda (15 capas) se lee igual, sin bufanda', () => {
+    const viejo = codificarAvatar({ ...AVATAR_BASE, ropa: 4, accesorio: 1 }).split('.').slice(0, -1).join('.')
+    expect(viejo.split('.')).toHaveLength(16) // el prefijo "a1" y las 15 capas
+    expect(leerAvatar(viejo)).toEqual({ ...AVATAR_BASE, ropa: 4, accesorio: 1, bufanda: 0 })
+    expect(normalizarAvatar(viejo)).toBe(codificarAvatar(AVATAR_BASE))
+  })
+
   it('rechaza códigos rotos, piezas que no existen y emojis viejos', () => {
     expect(leerAvatar('🧉')).toBeNull()
     expect(leerAvatar(null)).toBeNull()

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { AVATAR_BASE, CATALOGO_AVATAR, PIELES } from '@truco/shared'
 import { LORELEI } from '../src/avatares/lorelei'
-import { ACCESORIOS, ROPAS, SOMBREROS } from '../src/avatares/lorelei/propias'
+import { ACCESORIOS, BUFANDAS, ROPAS, SOMBREROS } from '../src/avatares/lorelei/propias'
 
 /** Lo parsea como SVG de verdad: un atributo repetido o una etiqueta mal cerrada fallan. */
 function parsear(contenido: string): Document {
@@ -15,6 +15,18 @@ describe('dibujos propios de Lorelei', () => {
     expect(ROPAS).toHaveLength(CATALOGO_AVATAR.ropa.length)
     expect(SOMBREROS).toHaveLength(CATALOGO_AVATAR.sombrero.length - 1)
     expect(ACCESORIOS).toHaveLength(CATALOGO_AVATAR.accesorio.length - 1)
+    expect(BUFANDAS).toHaveLength(CATALOGO_AVATAR.bufanda.length - 1)
+  })
+
+  it('cada accesorio y cada bufanda arman un SVG válido, y la bufanda va debajo de la mano', () => {
+    for (let accesorio = 0; accesorio <= ACCESORIOS.length; accesorio++) {
+      for (let bufanda = 0; bufanda <= BUFANDAS.length; bufanda++) {
+        parsear(LORELEI.dibujar({ ...AVATAR_BASE, accesorio, bufanda }))
+      }
+    }
+    const doc = parsear(LORELEI.dibujar({ ...AVATAR_BASE, accesorio: 1, bufanda: 1 }))
+    expect(doc.querySelector('.capa-bufanda')!.nextElementSibling?.classList.contains('capa-accesorio')).toBe(true)
+    expect(LORELEI.dibujar(AVATAR_BASE)).not.toContain('capa-bufanda')
   })
 
   it('cada combinación arma un SVG válido', () => {

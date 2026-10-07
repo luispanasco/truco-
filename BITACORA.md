@@ -729,4 +729,14 @@ Pedido del usuario: los colores de los cuadros uruguayos y de la selección para
 - La planilla (`scripts/planillas-avatar.ts`) ya no se pasa del último peinado con más de 16 ropas.
 - **Tests:** 429 (motor 136, bots 14, servidor 52, web 227).
 
-**Pendiente:** el usuario no contestó si quiere una bufanda con los mismos colores (como accesorio).
+---
+
+## Bufandas y más accesorios — 2026-10-06
+
+Pedido del usuario: la bufanda con los colores de los cuadros y más accesorios además del mate (termo, celular, libro…).
+
+- **Capa nueva "bufanda"** (la 16.ª, al final del formato del avatar), así se puede tener bufanda y mate a la vez. Un código guardado con las 15 capas de antes se sigue leyendo: las capas que faltan al final quedan en su pieza 0 ("Sin bufanda"). En el editor va en la pestaña Ropa.
+- **7 bufandas** de lana a franjas, con la vuelta al cuello y una punta con flecos sobre el pecho (150 monedas): celeste y blanca, aurinegra, tricolor, violeta y blanca, blanca y negra, verde y blanca, roja y azul. Van encima de la ropa y debajo de la mano.
+- **8 accesorios nuevos en la mano**, con la misma mano del mate: termo (250), mate y termo (400), celular, libro, diario y café (200 cada uno), pelota (250) y naipes (300; un dorso, un 1 de espada y un 7 de oro en abanico).
+- **Tests:** web 229 (nuevos: todas las combinaciones de accesorio y bufanda arman un SVG válido; un código de 15 capas se lee sin bufanda), servidor 52; la prueba de punta a punta del avatar espera la capa nueva.
+
