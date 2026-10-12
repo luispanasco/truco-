@@ -8,6 +8,8 @@ import { esPiezaOMata } from '../senias'
 import { explicarCarta, explicarTanto } from '../ayudas'
 import { GloboExplicacion, useExplicacion } from '../componentes/Ayudas'
 import { Acciones, BotonMazo } from '../componentes/Acciones'
+import { BotonPasar, PanelPie } from '../componentes/Pie'
+import { TiradaDeReyes } from '../componentes/Reyes'
 import { Asiento, Avatar, avatarDeLugar, MarcaMano } from '../componentes/Asiento'
 import { CartasEnMesa } from '../componentes/CartasEnMesa'
 import { BotonChat, PanelChat, useNoLeidos } from '../componentes/Chat'
@@ -44,9 +46,14 @@ export function Mesa() {
     turno,
     finDeMano,
     conexion,
+    reyes,
+    expulsado,
+    cerrarReyes,
     enviar,
     salir,
   } = useJuego()
+  // Pasar en la tercera: la próxima carta que toques va tapada.
+  const [pasando, setPasando] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
   const [confirmarSalida, setConfirmarSalida] = useState(false)
   // Paneles de la mesa: chat y señas (hojas desde abajo) y el menú sobre otro jugador.
@@ -101,9 +108,13 @@ export function Mesa() {
   const meToca = vista.esperandoA.includes(yo) && vista.ganador === null && !finDeMano
   const jugar = (a: Accion) => enviar('accion', { accion: a })
   const jugarCarta = (c: TCarta) => {
-    const a = vista.accionesValidas.find((x) => x.tipo === 'jugarCarta' && mismaCarta(x.carta, c))
+    const a = vista.accionesValidas.find((x) => x.tipo === 'jugarCarta' && mismaCarta(x.carta, c) && !!x.tapada === pasando)
+    setPasando(false)
     if (a) jugar(a)
   }
+  // Hasta que no se corta no hay muestra: lo que depende de ella espera.
+  const muestra = vista.mano.muestra
+  const cortando = vista.mano.cortando
   const puedeJugar = (c: TCarta) =>
     !finDeMano &&
     vista.accionesValidas.some((x) => x.tipo === 'jugarCarta' && mismaCarta(x.carta, c))
@@ -111,7 +122,7 @@ export function Mesa() {
   // Las que di vuelta al terminar (flor o envido) también quedan en la mesa y no en la mano.
   const misMostradas = mostradas.find((m) => m.asiento === yo)?.cartas ?? []
   const misCartas = vista.mano.misCartas.filter(
-    (c) => !mesa.jugadas.some((j) => j.asiento === yo && mismaCarta(j.carta, c)) && !misMostradas.some((x) => mismaCarta(x, c)),
+    (c) => !mesa.jugadas.some((j) => j.asiento === yo && j.carta && mismaCarta(j.carta, c)) && !misMostradas.some((x) => mismaCarta(x, c)),
   )
   // Las de los demás: sin la última que tiraron (en la pausa) ni las que dieron vuelta.
   const enManoDe = (a: number) => {
@@ -152,14 +163,14 @@ export function Mesa() {
   const seniasCerradas = sala.senias.momento === 'antesDeJugar' && yaJugoEnLaMano(vista.mano, yo) ? MOTIVO_SENIA_TARDE : null
   // Mantener apretada una carta hace su seña.
   const seniaDeMiCarta = (c: TCarta) => {
-    const s = seniaDeCarta(c, vista.mano.muestra)
+    const s = muestra ? seniaDeCarta(c, muestra) : null
     if (seniasCerradas) mostrarAviso(`⚠ ${seniasCerradas}`)
     else if (!s) mostrarAviso('Esa carta no tiene seña')
     else hacerSenia(s)
   }
   const { ojear, mesaBustos } = leerPerfil()
   const manoAbierta = !ojear || misCartas.length !== 3 || abiertaEn === vista.mano.numero
-  const conTira = hayCompanieros && !finDeMano && misCartas.length > 0 && manoAbierta
+  const conTira = hayCompanieros && !finDeMano && misCartas.length > 0 && manoAbierta && muestra !== null
   // Menú de jugador: solo online y solo sobre otras personas.
   const menuPara = (a: number) => (online && a !== yo && sala.lugares[a]?.tipo === 'humano' ? () => setMenuDe(a) : undefined)
   const lugarMenu = menuDe !== null ? sala.lugares[menuDe] : undefined
@@ -329,7 +340,11 @@ export function Mesa() {
           <span className="mi-estado">
             {meToca && (miReloj !== null ? <RelojPropio venceEn={miReloj} /> : <span className="te-toca">Te toca</span>)}
             {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
+            {cortando !== null && cortando !== yo && (
+              <span className="te-toca espera">Corta {sala.lugares[cortando]?.apodo ?? 'otro'}</span>
+            )}
             {hayCompanieros && <BotonSenias alTocar={() => setPanel('senias')} cerrado={seniasCerradas} />}
+            {!finDeMano && <BotonPasar vista={vista} activo={pasando} alCambiar={setPasando} />}
             {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
           </span>
         </div>
@@ -337,7 +352,7 @@ export function Mesa() {
         <div className="mi-mano-zona">
           {conTira && (
             <TiraSenias
-              rapidas={seniasRapidas(misCartas, vista.mano.muestra)}
+              rapidas={seniasRapidas(misCartas, muestra!)}
               hechas={misHechas}
               cerrado={seniasCerradas}
               alHacer={hacerSenia}
@@ -354,8 +369,8 @@ export function Mesa() {
             abrirAlTocar={meToca}
             reparto
             jugable={puedeJugar}
-            resaltada={(c) => sala.ayudas && esPiezaOMata(c, vista.mano.muestra)}
-            alTocarEstrella={(c, estrella) => explicar(explicarCarta(c, vista.mano.muestra) ?? '', estrella)}
+            resaltada={(c) => sala.ayudas && !!muestra && esPiezaOMata(c, muestra)}
+            alTocarEstrella={(c, estrella) => muestra && explicar(explicarCarta(c, muestra) ?? '', estrella)}
             alTocar={jugarCarta}
             alMantener={hayCompanieros && !finDeMano ? seniaDeMiCarta : undefined}
           />
@@ -369,7 +384,15 @@ export function Mesa() {
               ))}
             </div>
           ) : (
-            <Acciones vista={vista} alElegir={jugar} />
+            <>
+              <Acciones vista={vista} alElegir={jugar} />
+              <PanelPie
+                vista={vista}
+                apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
+                alSugerir={(sugerencia) => enviar('sugerir', { sugerencia })}
+                alElegir={jugar}
+              />
+            </>
           )}
         </div>
         {explicacion && <GloboExplicacion key={explicacion.id} explicacion={explicacion} alCerrar={cerrarExplicacion} />}
@@ -428,7 +451,7 @@ export function Mesa() {
           apodo={lugarYo.apodo}
           alElegir={hacerSenia}
           alCerrar={cerrarPanel}
-          sugeridas={sala.ayudas ? seniasDeMano(vista.mano.misCartas, vista.mano.muestra) : null}
+          sugeridas={sala.ayudas && muestra ? seniasDeMano(vista.mano.misCartas, muestra) : null}
           config={sala.senias}
           cerrado={seniasCerradas}
         />
@@ -457,6 +480,27 @@ export function Mesa() {
           alReportar={(motivo) => enviar('reportar', { asiento: lugarMenu.asiento, motivo })}
           alCerrar={() => setMenuDe(null)}
         />
+      )}
+
+      {reyes && <TiradaDeReyes key={reyes.id} reyes={reyes} alCerrar={cerrarReyes} />}
+
+      {expulsado && (
+        <div className="modal" role="dialog" aria-modal="true" aria-labelledby="expulsado-titulo">
+          <div className="modal-caja">
+            <div className="fin-emblema chico" aria-hidden="true">
+              ⏱
+            </div>
+            <h2 id="expulsado-titulo" className="modal-titulo">
+              Te sacaron de la mesa
+            </h2>
+            <p className="modal-texto">{expulsado}. Tu lugar lo sigue jugando un bot.</p>
+            <div className="modal-botones">
+              <button type="button" className="boton boton-grande" onClick={salirDeLaMesa}>
+                Volver al inicio
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {confirmarSalida && (

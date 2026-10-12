@@ -1,9 +1,11 @@
 import { enfrentamientoActual, floresPorCantar, florSinCantarDelEquipo, validar } from './apply'
-import { equipoDe, equipoQueCanto, otroEquipo, pendienteActual, siguienteDeclarante } from './reglas'
-import type { Accion, CantoEnvido, CantoFlor, EstadoPartida } from './tipos'
+import { equipoDe, equipoQueCanto, liderDe, otroEquipo, pendienteActual, siguienteDeclarante } from './reglas'
+import type { Accion, CantoEnvido, CantoFlor, EstadoPartida, QueManda, TipoCorte } from './tipos'
 
 const CANTOS_ENVIDO: CantoEnvido[] = ['envido', 'realEnvido', 'faltaEnvido']
 const CANTOS_FLOR: CantoFlor[] = ['flor', 'contraflor', 'contraflorAlResto']
+const CORTES: TipoCorte[] = ['convencional', 'sacarMuestra', 'darAlMano']
+const ORDENES: QueManda[] = ['tocar', 'gritar']
 
 /**
  * Acciones que el jugador puede hacer ahora. Sirve para mostrar solo los botones
@@ -14,15 +16,21 @@ export function accionesValidas(estado: EstadoPartida, jugadorId: string): Accio
   const jugador = estado.jugadores.find((j) => j.id === jugadorId)
   if (!jugador || estado.ganador !== null) return []
   const jugadorAccion = { jugador: jugadorId }
+  const misCartas = estado.mano.cartas[jugador.asiento] ?? []
+  const companieros = estado.jugadores.filter((j) => j.equipo === jugador.equipo && j.asiento !== jugador.asiento)
   const candidatas: Accion[] = [
+    ...CORTES.map((corte) => ({ tipo: 'cortar' as const, ...jugadorAccion, corte })),
     { tipo: 'responder', ...jugadorAccion, respuesta: 'quiero' },
     { tipo: 'responder', ...jugadorAccion, respuesta: 'noQuiero' },
     { tipo: 'declararTanto', ...jugadorAccion, tanto: estado.mano.tantos[jugador.asiento]?.envidoReal ?? 0 },
     { tipo: 'declararTanto', ...jugadorAccion, tanto: 'sonBuenas' },
     { tipo: 'pedirVer', ...jugadorAccion },
     { tipo: 'noPedirVer', ...jugadorAccion },
-    ...(estado.mano.cartas[jugador.asiento] ?? []).map((carta) => ({ tipo: 'jugarCarta' as const, ...jugadorAccion, carta })),
+    ...misCartas.map((carta) => ({ tipo: 'jugarCarta' as const, ...jugadorAccion, carta })),
+    ...misCartas.map((carta) => ({ tipo: 'jugarCarta' as const, ...jugadorAccion, carta, tapada: true })),
     ...CANTOS_FLOR.map((canto) => ({ tipo: 'cantarFlor' as const, ...jugadorAccion, canto })),
+    { tipo: 'cantarFlor', ...jugadorAccion, canto: 'flor', yTruco: true },
+    ...companieros.flatMap((c) => ORDENES.map((que) => ({ tipo: 'mandar' as const, ...jugadorAccion, a: c.asiento, que }))),
     ...CANTOS_ENVIDO.map((canto) => ({ tipo: 'cantarEnvido' as const, ...jugadorAccion, canto })),
     { tipo: 'cantarTruco', ...jugadorAccion },
     { tipo: 'irseAlMazo', ...jugadorAccion },
@@ -38,6 +46,7 @@ export function accionesValidas(estado: EstadoPartida, jugadorId: string): Accio
  */
 export function esperandoA(estado: EstadoPartida): number[] {
   if (estado.ganador !== null) return []
+  if (estado.mano.cortando !== null) return [estado.mano.cortando]
   const e = enfrentamientoActual(estado)
   const v = estado.mano.verificacion
   if (v) return e.participantes.filter((a) => v.pendientes.includes(equipoDe(a)))
@@ -53,7 +62,10 @@ export function esperandoA(estado: EstadoPartida): number[] {
     // Al envido no lo contesta el equipo: lo anula el que tiene flor, cantándola.
     const conFlor = pend === 'envido' ? florSinCantarDelEquipo(estado, e, responde) : []
     if (conFlor.length > 0) return conFlor
-    return e.participantes.filter((a) => equipoDe(a) === responde)
+    // Con "toques y gritos del pie", al truco y al envido contesta el pie.
+    const lider = liderDe(estado, e, responde)
+    if (estado.config.toquesYGritos === 'pie' && lider !== null && pend !== 'flor') return [lider]
+    return e.participantes.filter((a) => equipoDe(a) === responde && !e.retirados.includes(a))
   }
   return e.turno === null ? [] : [e.turno]
 }

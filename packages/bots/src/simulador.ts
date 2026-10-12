@@ -2,7 +2,10 @@ import {
   apply,
   cantidadJugadores,
   crearPartida,
+  enfrentamientoActual,
+  equipoDe,
   esperandoA,
+  liderDe,
   vistaPara,
   type Accion,
   type ConfigSala,
@@ -38,13 +41,15 @@ export function jugarPartida(op: OpcionesPartidaBots): ResultadoPartida {
     reparte: op.reparte,
   })
   const n = op.bots.length
-  let numeroMano = -1
+  let numeroMano = ''
   let senias: SeniasRecibidas[] = []
   let acciones = 0
 
   while (estado.ganador === null) {
-    if (estado.mano.numero !== numeroMano) {
-      numeroMano = estado.mano.numero
+    // Las señas se hacen al ver las cartas: después del corte, si lo hay.
+    const claveMano = `${estado.mano.numero}-${estado.mano.cortando === null}`
+    if (claveMano !== numeroMano) {
+      numeroMano = claveMano
       senias = Array.from({ length: n }, () => ({}))
       if (n > 2 && !estado.mano.picaPica) {
         for (let a = 0; a < n; a++) {
@@ -55,6 +60,16 @@ export function jugarPartida(op: OpcionesPartidaBots): ResultadoPartida {
     }
     const asiento = esperandoA(estado)[0]
     if (asiento === undefined) throw new Error('La partida se trabó')
+    // Con "toques y gritos del pie", el pie le manda al compañero antes de que juegue.
+    if (estado.config.toquesYGritos === 'pie' && estado.mano.cortando === null) {
+      const e = enfrentamientoActual(estado)
+      const lider = liderDe(estado, e, equipoDe(asiento))
+      if (lider !== null && lider !== asiento && e.turno === asiento) {
+        const que = op.bots[lider]!.ordenar(vistaPara(estado, `j${lider}`), senias[lider], asiento)
+        const r = que ? apply(estado, { tipo: 'mandar', jugador: `j${lider}`, a: asiento, que }) : null
+        if (r?.ok) estado = r.estado
+      }
+    }
     const accion = op.bots[asiento]!.decidir(vistaPara(estado, `j${asiento}`), senias[asiento])
     op.alAccion?.(estado, accion, asiento)
     const r = apply(estado, accion)

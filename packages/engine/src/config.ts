@@ -42,6 +42,13 @@ export interface ConfigSala {
    * También si te vas en la primera vuelta cuando todavía se podía tocar: el rival cobra 1 de envido.
    */
   mazoCobraEnvidoPendiente: boolean
+  /**
+   * En 2v2 y 3v3 (fuera del pica-pica), quién toca y grita: 'pie' = solo el pie (o el compañero que
+   * él manda) y las respuestas al truco y al envido las da el pie; 'cualquiera' = cada uno en su turno.
+   */
+  toquesYGritos: 'pie' | 'cualquiera'
+  /** Antes de cada mano corta el de la izquierda del que reparte, eligiendo el corte. */
+  corte: boolean
   /** Modo sucio (fase 3): permite mentir en envido y flor, con verificación al final. */
   modoSucio: boolean
   /** Si piden ver y hubo mentira, los puntos de tanto del mentiroso pasan al rival. */
@@ -62,6 +69,8 @@ export const CONFIG_DEFAULT: ConfigSala = {
   envidoEnvido: true,
   empiezaTrasParda: 'quienEmpezo',
   mazoCobraEnvidoPendiente: true,
+  toquesYGritos: 'cualquiera',
+  corte: false,
   modoSucio: false,
   penalidadMentira: 'puntosAlRival',
 }

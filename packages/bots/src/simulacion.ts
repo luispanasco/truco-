@@ -1,5 +1,5 @@
 import { equipoDe, ganadorPorVueltas, ordenDesde, type Carta, type Equipo, type ResultadoVuelta } from '@truco/engine'
-import { f, type Contexto } from './contexto'
+import { f, fuerzaJugada, type Contexto } from './contexto'
 
 /**
  * La mano en curso con todas las cartas a la vista (un reparto imaginado),
@@ -26,13 +26,14 @@ export function crearMesa(ctx: Contexto, restantes: Map<number, Carta[]>): Mesa 
   const vuelta = e.vueltas[e.vueltas.length - 1]!
   return {
     n: ctx.n,
-    participantes: e.participantes,
+    // Los que se fueron solos al mazo ya no juegan.
+    participantes: e.participantes.filter((a) => !e.retirados.includes(a)),
     equipoMano: equipoDe(e.mano),
     manoAsiento: e.mano,
     pardaAlMano: ctx.config.empiezaTrasParda === 'mano',
     manos,
     empieza: vuelta.empieza,
-    jugadas: vuelta.jugadas.map((j) => ({ a: j.asiento, f: f(ctx, j.carta) })),
+    jugadas: vuelta.jugadas.filter((j) => !e.retirados.includes(j.asiento)).map((j) => ({ a: j.asiento, f: fuerzaJugada(ctx, j) })),
     resultados: e.vueltas.slice(0, -1).map((v) => v.resultado!),
   }
 }

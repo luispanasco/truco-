@@ -142,7 +142,7 @@ export function cartasAjenasEnVista(v: VistaPartida): Carta[] {
     // Las que se dieron vuelta al terminar (flor o envido ganado) son públicas.
     ...v.mano.enfrentamientos.flatMap((e) => e.resultado?.mostradas.flatMap((m) => m.cartas) ?? []),
   ]
-  return cartasDentro(v).filter((c) => !publicas.some((p) => mismaCarta(p, c)))
+  return cartasDentro(v).filter((c) => !publicas.some((p) => p !== null && mismaCarta(p, c)))
 }
 
 export const esperarMs = (ms: number) => new Promise((r) => setTimeout(r, ms))

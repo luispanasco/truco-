@@ -12,7 +12,9 @@ import {
   normalizarBaraja,
   normalizarCartasJugadas,
   normalizarMesa,
+  normalizarTirarReyes,
   type CartasJugadas,
+  type TirarReyes,
   type ConfigTiempos,
   type IdMesa,
 } from '@truco/shared'
@@ -28,6 +30,14 @@ export interface Perfil {
   nivelBots: Nivel
   ayudas: boolean
   picaPica: boolean
+  /** A cuánto se juega (contra bots y como propuesta al crear una sala): 20, 30 o 40. */
+  puntosPartida: number
+  /** Toques y gritos los decide el pie (en parejas y tríos). */
+  toquesDelPie: boolean
+  /** Cortar el mazo antes de cada mano. */
+  corte: boolean
+  /** Tirar reyes antes de la primera partida. */
+  tirarReyes: TirarReyes
   /** Bots sin demora, para partidas cortas. */
   rapido: boolean
   /** Ojear las cartas al empezar cada mano (si no, llegan directo en abanico). */
@@ -76,6 +86,10 @@ export function leerPerfil(): Perfil {
     nivelBots: 'medio',
     ayudas: true,
     picaPica: true,
+    puntosPartida: 30,
+    toquesDelPie: false,
+    corte: false,
+    tirarReyes: 'no',
     rapido: false,
     ojear: true,
     pescarSenias: true,
@@ -93,6 +107,8 @@ export function leerPerfil(): Perfil {
     const perfil = { ...porDefecto, ...(guardado ?? {}) }
     perfil.tiendaDesbloqueada = perfil.tiendaDesbloqueada === true
     perfil.cartasJugadas = normalizarCartasJugadas(perfil.cartasJugadas)
+    perfil.tirarReyes = normalizarTirarReyes(perfil.tirarReyes)
+    if (![20, 30, 40].includes(perfil.puntosPartida)) perfil.puntosPartida = 30
     const cosmeticos = cosmeticosPermitidos(perfil)
     const cambio = (['avatar', 'mesa', 'baraja'] as const).some((k) => cosmeticos[k] !== perfil[k])
     Object.assign(perfil, cosmeticos)

@@ -237,7 +237,7 @@ function mostrarMesa(breve: boolean) {
   const e = v.mano.enfrentamientos[v.mano.actual]!
   const truco = e.truco.valor > 1 ? ` · la mano vale ${e.truco.valor}` : ''
   if (!breve) console.log(`  Puntos: ${equipo(0)} ${v.puntos[0]} · ${equipo(1)} ${v.puntos[1]}`)
-  console.log(`  Muestra: ${nombreCarta(v.mano.muestra)}${truco}`)
+  console.log(`  Muestra: ${v.mano.muestra ? nombreCarta(v.mano.muestra) : '(falta cortar)'}${truco}`)
   const flor = v.mano.miTanto.flor !== null ? ` · ¡tenés flor de ${v.mano.miTanto.flor}!` : ''
   console.log(`  Tus cartas: ${v.mano.misCartas.map(nombreCarta).join(', ') || '(ninguna)'} · envido ${v.mano.miTanto.envido}${flor}`)
 }

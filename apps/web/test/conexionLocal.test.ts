@@ -63,7 +63,7 @@ describe('conexión local', () => {
           // Las que se dieron vuelta al terminar (flor o envido ganado) son públicas.
           ...v.mano.enfrentamientos.flatMap((e) => e.resultado?.mostradas.flatMap((m) => m.cartas) ?? []),
         ]
-        expect(cartasDentro(v).filter((c) => !publicas.some((p) => mismaCarta(p, c)))).toEqual([])
+        expect(cartasDentro(v).filter((c) => !publicas.some((p) => p !== null && mismaCarta(p, c)))).toEqual([])
       }
     }, 30_000)
   }

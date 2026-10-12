@@ -171,7 +171,9 @@ export function explicarFlor(
  */
 export function cartasRepartidas(vista: VistaPartida): Carta[] {
   const yo = vista.yo.asiento
-  const tiradas = vista.mano.enfrentamientos.flatMap((e) => e.vueltas.flatMap((v) => v.jugadas.filter((j) => j.asiento === yo).map((j) => j.carta)))
+  const tiradas = vista.mano.enfrentamientos.flatMap((e) =>
+    e.vueltas.flatMap((v) => v.jugadas.flatMap((j) => (j.asiento === yo && j.carta ? [j.carta] : []))),
+  )
   return [...vista.mano.misCartas, ...tiradas.filter((c) => !vista.mano.misCartas.some((x) => mismaCarta(x, c)))]
 }
 
@@ -181,11 +183,13 @@ export function cartasRepartidas(vista: VistaPartida): Carta[] {
  */
 export function explicarTanto(vista: VistaPartida): string {
   const { envido, flor } = vista.mano.miTanto
+  const muestra = vista.mano.muestra
+  if (!muestra) return 'Todavía no se cortó el mazo.'
   const cartas = cartasRepartidas(vista)
-  const e = cartas.length === 3 ? explicarEnvido(cartas, vista.mano.muestra) : null
+  const e = cartas.length === 3 ? explicarEnvido(cartas, muestra) : null
   const textoEnvido = e && e.tanto === envido ? e.texto : `Tu envido: ${envido}.`
   if (flor === null) return textoEnvido
-  const f = cartas.length === 3 ? explicarFlor(cartas, vista.mano.muestra, vista.config) : null
+  const f = cartas.length === 3 ? explicarFlor(cartas, muestra, vista.config) : null
   const textoFlor = f && f.tanto === flor ? f.texto : `Tenés flor de ${flor}.`
   return `${textoFlor} Con flor, el envido no se juega (el tuyo sería ${envido}).`
 }

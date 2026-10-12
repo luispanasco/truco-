@@ -55,14 +55,17 @@ export function crearContexto(vista: VistaPartida, senias: SeniasRecibidas | und
   const equipo = vista.yo.equipo
   const e = vista.mano.enfrentamientos[vista.mano.actual]!
   const jugadas = new Map<number, Carta[]>()
+  // Las cartas que no se ven (tapadas, piezas de otros duelos) siguen en el pool de las posibles.
   for (const enf of vista.mano.enfrentamientos) {
     for (const v of enf.vueltas) {
-      for (const j of v.jugadas) jugadas.set(j.asiento, [...(jugadas.get(j.asiento) ?? []), j.carta])
+      for (const j of v.jugadas) if (j.carta) jugadas.set(j.asiento, [...(jugadas.get(j.asiento) ?? []), j.carta])
     }
   }
-  const vistas = [vista.mano.muestra, ...vista.mano.misCartas, ...[...jugadas.values()].flat()]
+  const muestra = vista.mano.muestra
+  if (!muestra) throw new Error('Todavía no se cortó el mazo')
+  const vistas = [muestra, ...vista.mano.misCartas, ...[...jugadas.values()].flat()]
   const pool = crearBaraja().filter((c) => !vistas.some((v) => mismaCarta(v, c)))
-  const otros = e.participantes.filter((a) => a !== yo)
+  const otros = e.participantes.filter((a) => a !== yo && !e.retirados.includes(a))
   return {
     vista,
     config: vista.config,
@@ -71,7 +74,7 @@ export function crearContexto(vista: VistaPartida, senias: SeniasRecibidas | und
     rival: equipo === 0 ? 1 : 0,
     n: vista.jugadores.length,
     e,
-    muestra: vista.mano.muestra,
+    muestra,
     misCartas: vista.mano.misCartas,
     miTanto: vista.mano.miTanto,
     jugadas,
@@ -104,12 +107,18 @@ export function jugoEnPrimera(e: VistaEnfrentamiento, asiento: number): boolean 
   return e.vueltas[0]?.jugadas.some((j) => j.asiento === asiento) ?? false
 }
 
+/** Fuerza de una carta jugada; las tapadas no ganan (-1). */
+export function fuerzaJugada(ctx: Contexto, j: { carta: Carta | null; tapada?: boolean }): number {
+  return j.carta && !j.tapada ? fuerza(j.carta, ctx.muestra) : -1
+}
+
 /** Carta más alta jugada en la vuelta en curso y el equipo que la tiró; null si nadie jugó. */
 export function mejorDeLaVuelta(ctx: Contexto): { f: number; equipo: Equipo | 'parda' } | null {
   const vuelta = ctx.e.vueltas[ctx.e.vueltas.length - 1]!
-  if (vuelta.jugadas.length === 0) return null
-  const f = Math.max(...vuelta.jugadas.map((j) => fuerza(j.carta, ctx.muestra)))
-  const equipos = new Set(vuelta.jugadas.filter((j) => fuerza(j.carta, ctx.muestra) === f).map((j) => equipoDe(j.asiento)))
+  const jugadas = vuelta.jugadas.filter((j) => fuerzaJugada(ctx, j) >= 0)
+  if (jugadas.length === 0) return null
+  const f = Math.max(...jugadas.map((j) => fuerzaJugada(ctx, j)))
+  const equipos = new Set(jugadas.filter((j) => fuerzaJugada(ctx, j) === f).map((j) => equipoDe(j.asiento)))
   return { f, equipo: equipos.size > 1 ? 'parda' : [...equipos][0]! }
 }
 

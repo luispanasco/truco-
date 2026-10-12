@@ -1,5 +1,5 @@
-import type { Accion, Carta, CantoEnvido, CantoFlor, VistaPartida } from '@truco/engine'
-import { Aleatorio, crearContexto, pendiente, type Contexto } from './contexto'
+import { equipoDe, type Accion, type Carta, type CantoEnvido, type CantoFlor, type QueManda, type TipoCorte, type VistaPartida } from '@truco/engine'
+import { Aleatorio, crearContexto, f, fuerzaJugada, mejorDeLaVuelta, ordenadas, pendiente, type Contexto } from './contexto'
 import { seniasDeMano, type Senia, type SeniasRecibidas } from './senias'
 import { crearFacil } from './facil'
 import { crearMedio } from './medio'
@@ -7,13 +7,23 @@ import { crearDificil } from './dificil'
 
 export type Nivel = 'facil' | 'medio' | 'dificil'
 
+/** Lo que el pie le sugiere en voz alta a un compañero (no es obligatorio seguirlo). */
+export type Sugerencia = { tipo: 'veni' } | { tipo: 'vamosA'; asiento: number }
+
 export interface Bot {
   readonly nivel: Nivel
-  /** Elige una acción mirando solo la vista del jugador y las señas de su equipo. */
-  decidir(vista: VistaPartida, senias?: SeniasRecibidas): Accion
-  /** Señas que hace a su equipo al empezar la mano. */
+  /**
+   * Elige una acción mirando solo la vista del jugador, las señas de su equipo y la última
+   * sugerencia del pie. Las órdenes del pie (tocar, gritar) vienen en la vista y las cumple.
+   */
+  decidir(vista: VistaPartida, senias?: SeniasRecibidas, sugerencia?: Sugerencia): Accion
+  /** Señas que hace a su equipo al empezar la mano (después del corte). */
   hacerSenias(vista: VistaPartida): Senia[]
+  /** Como pie: si manda al compañero a tocar o a gritar antes de que juegue. */
+  ordenar(vista: VistaPartida, senias: SeniasRecibidas | undefined, companiero: number): QueManda | null
 }
+
+const CORTES: TipoCorte[] = ['convencional', 'sacarMuestra', 'darAlMano']
 
 export type RespuestaCanto = 'quiero' | 'noQuiero' | 'subir'
 
@@ -50,11 +60,14 @@ export function crearBotCon(nivel: Nivel, estrategia: Estrategia, semilla: numbe
   const rng = new Aleatorio(semilla >>> 0)
   return {
     nivel,
-    decidir(vista, senias) {
+    decidir(vista, senias, sugerencia) {
       const validas = vista.accionesValidas
       if (validas.length === 0) throw new Error('El bot no tiene acciones válidas')
+      if (validas.every((a) => a.tipo === 'cortar')) {
+        return { tipo: 'cortar', jugador: vista.yo.id, corte: CORTES[Math.floor(rng.sig() * CORTES.length)]! }
+      }
       const ctx = crearContexto(vista, senias, rng)
-      const elegida = elegir(ctx, estrategia, validas)
+      const elegida = elegir(ctx, estrategia, validas, sugerencia)
       const clave = JSON.stringify(elegida)
       const valida = validas.find((a) => JSON.stringify(a) === clave)
       if (valida) return valida
@@ -63,12 +76,23 @@ export function crearBotCon(nivel: Nivel, estrategia: Estrategia, semilla: numbe
       return validas.find((a) => a.tipo !== 'irseAlMazo') ?? validas[0]!
     },
     hacerSenias(vista) {
-      return seniasDeMano(vista.mano.misCartas, vista.mano.muestra)
+      return vista.mano.muestra ? seniasDeMano(vista.mano.misCartas, vista.mano.muestra) : []
+    },
+    ordenar(vista, senias, companiero) {
+      if (!vista.mano.muestra) return null
+      const e = vista.mano.enfrentamientos[vista.mano.actual]!
+      if (e.ordenes.some((o) => o.asiento === companiero)) return null
+      const ctx = crearContexto(vista, senias, rng)
+      const enPrimera = e.vueltas.length === 1 && e.envido.estado === 'libre' && e.flor.cantadas.length === 0
+      if (enPrimera && estrategia.cantarEnvido(ctx, ['envido', 'realEnvido', 'faltaEnvido'])) return 'tocar'
+      const puedeGritar = e.truco.valor < 4 && !e.truco.pendiente && (e.truco.puedeSubir === null || e.truco.puedeSubir === ctx.equipo)
+      if (puedeGritar && estrategia.cantarTruco(ctx)) return 'gritar'
+      return null
     },
   }
 }
 
-function elegir(ctx: Contexto, est: Estrategia, validas: Accion[]): Accion {
+function elegir(ctx: Contexto, est: Estrategia, validas: Accion[], sugerencia?: Sugerencia): Accion {
   const jugador = ctx.vista.yo.id
   const hay = (pred: (a: Accion) => boolean) => validas.find(pred)
   const flor = (canto: CantoFlor) => hay((a) => a.tipo === 'cantarFlor' && a.canto === canto)
@@ -86,6 +110,9 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[]): Accion {
   if (ctx.miTanto.flor !== null && !yaCante && pend !== 'flor' && flor('flor')) {
     const puede = { contraflor: !!flor('contraflor'), alResto: !!flor('contraflorAlResto') }
     const canto = puede.contraflor || puede.alResto ? est.cantarFlor(ctx, puede) : 'flor'
+    // Cargado: "flor y truco" en un solo canto.
+    const yTruco = hay((a) => a.tipo === 'cantarFlor' && a.yTruco === true)
+    if (canto === 'flor' && yTruco && est.cantarTruco(ctx)) return yTruco
     return { tipo: 'cantarFlor', jugador, canto }
   }
 
@@ -125,11 +152,48 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[]): Accion {
     return r === 'subir' ? { tipo: 'cantarTruco', jugador } : responder(r)
   }
 
+  // Lo que manda el pie se cumple.
+  const ordenes = ctx.e.ordenes.filter((o) => o.asiento === ctx.yo).map((o) => o.que)
+  if (ordenes.includes('tocar') && envidos.length > 0) {
+    return { tipo: 'cantarEnvido', jugador, canto: est.cantarEnvido(ctx, envidos) ?? envidos[0]! }
+  }
+  if (ordenes.includes('gritar') && hay((a) => a.tipo === 'cantarTruco')) return { tipo: 'cantarTruco', jugador }
+
   if (envidos.length > 0) {
     const canto = est.cantarEnvido(ctx, envidos)
     if (canto) return { tipo: 'cantarEnvido', jugador, canto }
   }
   if (hay((a) => a.tipo === 'cantarTruco') && est.cantarTruco(ctx)) return { tipo: 'cantarTruco', jugador }
-  if (hay((a) => a.tipo === 'jugarCarta')) return { tipo: 'jugarCarta', jugador, carta: est.elegirCarta(ctx) }
+  if (hay((a) => a.tipo === 'jugarCarta')) {
+    const carta = cartaSugerida(ctx, sugerencia) ?? est.elegirCarta(ctx)
+    // Pasar en la tercera: si la carta no gana y juega un compañero después, va tapada.
+    const tapada = hay((a) => a.tipo === 'jugarCarta' && a.tapada === true && JSON.stringify(a.carta) === JSON.stringify(carta))
+    if (tapada && !ganaLaVuelta(ctx, carta) && quedaCompanieroPorJugar(ctx)) return tapada
+    return { tipo: 'jugarCarta', jugador, carta }
+  }
   return validas.find((a) => a.tipo !== 'irseAlMazo') ?? validas[0]!
+}
+
+/**
+ * La carta que pide la sugerencia del pie: "vení" es tirar la más baja; "vamos a X" con un rival
+ * es ganarle a la carta que tiró (la más baja que alcance), y con un compañero es dejarle la vuelta.
+ */
+function cartaSugerida(ctx: Contexto, s: Sugerencia | undefined): Carta | null {
+  if (!s || ctx.misCartas.length === 0) return null
+  const cs = ordenadas(ctx, ctx.misCartas)
+  if (s.tipo === 'veni' || equipoDe(s.asiento) === ctx.equipo) return cs[0]!
+  const vuelta = ctx.e.vueltas[ctx.e.vueltas.length - 1]!
+  const suya = vuelta.jugadas.find((j) => j.asiento === s.asiento)
+  if (!suya) return null
+  return cs.find((c) => f(ctx, c) > fuerzaJugada(ctx, suya)) ?? cs[0]!
+}
+
+function ganaLaVuelta(ctx: Contexto, carta: Carta): boolean {
+  const mejor = mejorDeLaVuelta(ctx)
+  return !mejor || f(ctx, carta) > mejor.f
+}
+
+function quedaCompanieroPorJugar(ctx: Contexto): boolean {
+  const vuelta = ctx.e.vueltas[ctx.e.vueltas.length - 1]!
+  return ctx.companeros.some((a) => !vuelta.jugadas.some((j) => j.asiento === a))
 }

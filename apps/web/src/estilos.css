@@ -1125,6 +1125,67 @@ button {
   color: #fff;
 }
 
+/* Lo del pie: sugerencias en voz alta y mandar a tocar o a gritar, debajo de los cantos. */
+.panel-pie {
+  display: flex;
+  justify-content: safe center;
+  gap: 6px;
+  margin-top: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.panel-pie::-webkit-scrollbar {
+  display: none;
+}
+.boton-pie {
+  flex: none;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.18);
+  color: var(--texto-claro);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.boton-pie:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+.boton-pie.manda-tocar {
+  border-color: var(--accion-envido);
+}
+.boton-pie.manda-gritar {
+  border-color: var(--accion-truco);
+}
+/* Pasar en la tercera: prendido, la próxima carta va tapada. */
+.boton-pasar.activo {
+  background: var(--texto-claro);
+  color: var(--tinta);
+}
+
+/* La tirada de reyes. */
+.reyes-tiradas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0 4px;
+  padding: 0;
+  list-style: none;
+}
+.reyes-tirada {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+.reyes-tirada.rey {
+  opacity: 1;
+  font-weight: 700;
+}
+
 /* Avisos (errores y señas): arriba del paño, sin tapar el marcador. */
 .avisos {
   position: absolute;

@@ -172,6 +172,7 @@ async function entrar(estado: EstadoPartida, yo: number, ayudas = true) {
     publica: false,
     tiempos: { turnoS: 30, primeraJugadaS: 60 },
     cartasJugadas: 'quedan',
+    tirarReyes: 'no',
     mesa: 'boliche',
     baraja: 'propia',
     fase: 'jugando',

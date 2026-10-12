@@ -31,13 +31,32 @@ export function ordenDesde(asientos: readonly number[], inicio: number, n: numbe
   return [...asientos].sort((a, b) => ((a - inicio + n) % n) - ((b - inicio + n) % n))
 }
 
-/** Resultado de una vuelta completa: el equipo de la carta más alta, o parda si empatan equipos distintos. */
+/**
+ * Quién lidera al equipo en el enfrentamiento: el pie, el último del equipo en jugar la primera
+ * vuelta (el que reparte, o el primero a la izquierda del mazo). Si el pie es un bot y en el equipo
+ * hay personas, lidera la última persona. En 1v1 y en los duelos del pica-pica no hay pie.
+ */
+export function liderDe(estado: Pick<EstadoPartida, 'jugadores'>, e: Enfrentamiento, equipo: Equipo): number | null {
+  if (e.participantes.length <= 2) return null
+  const delEquipo = e.participantes.filter((a) => equipoDe(a) === equipo)
+  const pie = ultimo(delEquipo)
+  const personas = delEquipo.filter((a) => !estado.jugadores[a]?.bot)
+  if (!estado.jugadores[pie]?.bot || personas.length === 0) return pie
+  return ultimo(personas)
+}
+
+/**
+ * Resultado de una vuelta completa: el equipo de la carta más alta, o parda si empatan equipos
+ * distintos. Las cartas tapadas (pasar en la tercera) no ganan.
+ */
 export function resolverVuelta(
   jugadas: readonly Jugada[],
   muestra: Carta,
 ): { resultado: ResultadoVuelta; ganador: number | null } {
-  const max = Math.max(...jugadas.map((j) => fuerza(j.carta, muestra)))
-  const top = jugadas.filter((j) => fuerza(j.carta, muestra) === max)
+  const validas = jugadas.filter((j) => !j.tapada)
+  if (validas.length === 0) return { resultado: 'parda', ganador: null }
+  const max = Math.max(...validas.map((j) => fuerza(j.carta, muestra)))
+  const top = validas.filter((j) => fuerza(j.carta, muestra) === max)
   const equipos = new Set(top.map((j) => equipoDe(j.asiento)))
   if (equipos.size > 1) return { resultado: 'parda', ganador: null }
   const primero = top[0] as Jugada

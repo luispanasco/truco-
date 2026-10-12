@@ -6,7 +6,7 @@ Repaso de las reglas del motor, bloque por bloque, empezado el 2026-10-12. Acá 
 
 | # | Bloque | Estado |
 | --- | --- | --- |
-| 1 | Baraja y reparto | Revisado |
+| 1 | Baraja y reparto | Hecho |
 | 2 | Piezas y jerarquía de cartas | Revisado, sin cambios |
 | 3 | Vueltas, pardas y quién empieza (el pie lidera) | Revisado |
 | 4 | Truco | Revisado, sin cambios |
@@ -167,3 +167,10 @@ Va en cinco tramos. El motor primero, porque todo lo demás depende de él; desp
 **Tramo 1 hecho (2026-10-12).** Motor: cadena de envido libre (sin envido envido, uno solo), flor contra flor por flores que ganan, contraflor no querida 3 por flor + 1, contraflor al resto querida = partido, largo del partido 20/30/40 con malas y tramo a la mitad (`crearConfig`), flor sin cantar cobrada al irse el rival, irse en la primera sin tocar da el envido no querido. Tests del motor: 144 (antes 136); bots 14, servidor 52 y web 229 siguen en verde.
 - Decisiones: el 8.5 va con la misma opción que el envido pendiente al irse (`mazoCobraEnvidoPendiente`); si el rival se va al mazo, el que queda cobra todas sus flores (el que se fue pierde la comparación); "con flor quiero / me achico" no cambia el motor (es la respuesta a la contraflor), se ve en la web en el tramo 5.
 - Bots: tope provisorio para que no suban el envido sin fin (después de 4 cantos solo contestan o cantan la falta); se repasa en el tramo 3.
+
+**Tramos 2 a 5 hechos (2026-10-12).**
+- **Motor:** pasar en la tercera, "flor y truco", el pie (`liderDe`, opción `toquesYGritos`, acción `mandar`), irse al mazo solo (`retirados`), piezas por abajo y cartas tapadas (`vistaPara` y `eventosPara` las mandan en null), corte (`corte`, acción `cortar`, la mano espera con `cortando`). Los jugadores llevan `bot`. 162 tests, con las propiedades al azar que prueban también el pie, el corte y los largos.
+- **Bots:** cortan, cantan "flor y truco" cargados, pasan en la tercera si su carta no gana y juega un compañero después, cumplen las órdenes del pie y siguen sus sugerencias ("vení": la más baja; "vamos a" un rival: la más baja que le gana), y como pie mandan a tocar o a gritar (`ordenar`). La contraflor al resto la cantan y la quieren solo muy seguros. Criterio con semilla 2026: difícil contra medio 64,5 / 64,3 / 66,4 %; medio contra fácil 70,9 / 66,9 / 67,2 % (1v1 / 2v2 / 3v3). 17 tests.
+- **Servidor:** tirar reyes (`tirarReyes` en `@truco/shared`, reacomoda los lugares), sugerencias del pie (`sugerir` → `sugerencia`, en voz alta), el pie bot manda antes del turno del compañero, eventos filtrados por asiento, te saca a la tercera jugada vencida (`expulsado`), pausas de 3 s y 5 s, opciones validadas. 57 tests.
+- **Web:** opciones nuevas al crear la sala y contra la compu (partido, tirar reyes, toques y gritos, corte), tirada de reyes, botones del corte, "Pasar", panel del pie, "Flor y truco", "con flor quiero / me achico", cartas boca abajo en la mesa, aviso al sacarte de la mesa. 235 tests, 10 de punta a punta y el de sin conexión.
+- **Interpretación:** "vamos a X" con un compañero se toma como "vení" (dejarle la vuelta); con un rival, ganarle a su carta. Revisar con el usuario.

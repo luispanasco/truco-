@@ -43,7 +43,8 @@ interface Props {
 /** Una carta en la pila de un jugador: tirada en una vuelta, o mostrada al terminar. */
 interface EnPila {
   asiento: number
-  carta: TCarta
+  /** null: boca abajo (tapada, o una pieza de otro duelo que no se ve). */
+  carta: TCarta | null
   /** Lugar en la pila (0 abajo de todo); para las tiradas es la vuelta. */
   lugar: number
   mostrada?: { orden: number; etiqueta: string | null }
@@ -125,7 +126,7 @@ export function CartasEnMesa({ n, rel, mesa, mostradas, apodo, nuestro, levantar
                 }
           return (
             <motion.div
-              key={`${c.asiento}-${c.carta.numero}-${c.carta.palo}`}
+              key={c.carta ? `${c.asiento}-${c.carta.numero}-${c.carta.palo}` : `${c.asiento}-tapada-${vuelta}`}
               className={`jugada pos-${pos}${pasada ? ' pasada' : ''}${c.mostrada ? ' mostrada' : ''}`}
               style={{ '--vuelta': c.lugar, zIndex: c.lugar + 1 } as CSSProperties}
               // La que se va queda debajo de todas, también de la que llega a su lugar.
@@ -148,7 +149,7 @@ export function CartasEnMesa({ n, rel, mesa, mostradas, apodo, nuestro, levantar
                 exit={salida}
                 transition={{ duration: DURACION, ease: 'easeOut', delay: c.mostrada ? 0.1 + c.mostrada.orden * 0.12 : 0 }}
               >
-                <Carta carta={c.carta} tam="mesa" ganadora={ganadora} />
+                {c.carta ? <Carta carta={c.carta} tam="mesa" ganadora={ganadora} /> : <Carta oculta tam="mesa" ganadora={ganadora} />}
                 {c.mostrada?.etiqueta && (
                   <span className="mostradas-etiqueta" role="note" aria-label={`${apodo(c.asiento)} muestra: ${c.mostrada.etiqueta}`}>
                     {c.mostrada.etiqueta}

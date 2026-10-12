@@ -1,9 +1,15 @@
 import {
   apply,
+  barajar,
   cantidadJugadores,
+  crearBaraja,
   crearConfig,
   crearPartida,
+  enfrentamientoActual,
+  equipoDe,
   esperandoA,
+  eventosPara,
+  liderDe,
   vistaPara,
   type Accion,
   type ConfigSala,
@@ -11,18 +17,21 @@ import {
   type Evento,
   type Formato,
 } from '@truco/engine'
-import { crearBot, type Bot, type Nivel, type Senia, type SeniasRecibidas } from '@truco/bots'
+import { crearBot, type Bot, type Nivel, type Senia, type SeniasRecibidas, type Sugerencia } from '@truco/bots'
 import {
   MOTIVO_SENIA_TARDE,
   MOTIVO_SIN_SENIAS,
   avatarAlAzar,
   codificarAvatar,
   normalizarSenias,
+  normalizarTirarReyes,
+  tirarReyes,
   yaJugoEnLaMano,
   type ConfigSenias,
   type InfoSala,
   type MensajesCliente,
   type MensajesServidor,
+  type TirarReyes,
 } from '@truco/shared'
 import {
   BARAJA_DEFAULT,
@@ -46,6 +55,8 @@ export interface OpcionesLocal {
   senias?: Partial<ConfigSenias>
   /** Si las cartas jugadas quedan en la mesa o se levantan en cada vuelta. */
   cartasJugadas?: CartasJugadas
+  /** Tirar reyes para ver quién reparte (y armar los equipos) en la primera partida. */
+  tirarReyes?: TirarReyes
   /** Tu mesa y tu baraja (contra la compu no hay anfitrión: se ven las tuyas). */
   mesa?: IdMesa
   baraja?: IdBaraja
@@ -61,7 +72,7 @@ export interface OpcionesLocal {
 const NOMBRES_BOTS = ['Bot Pepe', 'Bot Chela', 'Bot Tito', 'Bot Mirta', 'Bot Ruben']
 const DEMORA_BOTS: [number, number] = [1000, 1800]
 /** La pausa entre manos coincide con la de la interfaz (PAUSA_ENTRE_MANOS), más un margen. */
-const PAUSAS = { vuelta: 900, mano: 2700 }
+const PAUSAS = { vuelta: 3000, mano: 5000 }
 const id = (asiento: number) => `j${asiento}`
 
 /**
@@ -76,7 +87,13 @@ export class ConexionLocal implements Conexion {
   private estado!: EstadoPartida
   private bots: (Bot | null)[] = []
   private senias: SeniasRecibidas[] = []
-  private numeroMano = -1
+  /** Mano en curso y si ya se cortó: los bots hacen sus señas recién con las cartas en la mano. */
+  private claveMano = ''
+  /** Lo que sugeriste como pie, válido en la vuelta en que lo dijiste. */
+  private sugerencia: { sugerencia: Sugerencia; vuelta: string } | null = null
+  /** Nombre de cada asiento: con los reyes, los bots cambian de lugar (la persona sigue en el 0). */
+  private nombres: string[] = []
+  private primera = true
   private timer: ReturnType<typeof setTimeout> | null = null
   private version = 0
   private semilla: number
@@ -152,6 +169,27 @@ export class ConexionLocal implements Conexion {
         }
         return
       }
+      case 'sugerir': {
+        const { sugerencia } = datos as MensajesCliente['sugerir']
+        const e = this.terminada ? null : enfrentamientoActual(this.estado)
+        if (!e || liderDe(this.estado, e, 0) !== 0) {
+          this.emitir('error', { motivo: 'Sugiere el pie' })
+          return
+        }
+        const valida: Sugerencia | null =
+          sugerencia?.tipo === 'veni'
+            ? { tipo: 'veni' }
+            : sugerencia?.tipo === 'vamosA' && e.participantes.includes(Number(sugerencia.asiento)) && Number(sugerencia.asiento) !== 0
+              ? { tipo: 'vamosA', asiento: Number(sugerencia.asiento) }
+              : null
+        if (!valida) {
+          this.emitir('error', { motivo: 'Sugerencia inválida' })
+          return
+        }
+        this.sugerencia = { sugerencia: valida, vuelta: this.claveVuelta() }
+        this.emitir('sugerencia', { de: 0, sugerencia: valida })
+        return
+      }
       case 'revancha':
         if (this.terminada) {
           this.semilla = (this.semilla * 1103515245 + 12345) >>> 0
@@ -166,18 +204,69 @@ export class ConexionLocal implements Conexion {
   private iniciar() {
     const n = cantidadJugadores(this.config.formato)
     this.terminada = false
+    if (this.nombres.length !== n) this.nombres = Array.from({ length: n }, (_, a) => (a === 0 ? this.op.apodo : NOMBRES_BOTS[(a - 1) % NOMBRES_BOTS.length]!))
+    // En la primera partida se pueden tirar reyes: el primer rey reparte y, con equipos, los
+    // bots se reacomodan (vos seguís en tu lugar).
+    const modo = normalizarTirarReyes(this.op.tirarReyes)
+    let reparte = this.semilla % n
+    if (this.primera && modo !== 'no') {
+      const mazo = barajar(crearBaraja(), this.semilla ^ 0x5eed).resultado
+      const r = tirarReyes(n, 0, mazo, modo === 'reparteYEquipos', 0)
+      const antes = this.nombres
+      this.nombres = antes.map((_, b) => antes[r.asientoNuevo.indexOf(b)]!)
+      reparte = r.asientoNuevo[r.conRey[0]!]!
+      this.emitir('reyes', { tiradas: r.tiradas, reparte, equipos: modo === 'reparteYEquipos' && n > 2 ? r.conRey : null, apodos: antes })
+    }
+    this.primera = false
     this.bots = Array.from({ length: n }, (_, a) => (a === 0 ? null : crearBot(this.op.nivelBots, this.semilla + a * 7919)))
     this.estado = crearPartida({
-      jugadores: Array.from({ length: n }, (_, a) => ({ id: id(a), nombre: this.nombre(a) })),
+      jugadores: Array.from({ length: n }, (_, a) => ({ id: id(a), nombre: this.nombre(a), bot: a !== 0 })),
       semilla: this.semilla,
       config: this.config,
-      reparte: this.semilla % n,
+      reparte,
     })
-    this.numeroMano = -1
+    this.claveMano = ''
+    this.sugerencia = null
     this.emitir('sala', this.infoSala())
-    this.alNuevaMano()
+    this.revisarNuevaMano()
     this.difundir([])
     this.programar()
+  }
+
+  /** La vuelta en curso: una sugerencia del pie vale hasta que termina. */
+  private claveVuelta(): string {
+    const m = this.estado.mano
+    return `${m.numero}-${m.actual}-${m.enfrentamientos[m.actual]?.vueltas.length ?? 0}`
+  }
+
+  /** Si empezó una mano o se terminó de cortar: reinicia las señas y hacen las suyas los bots. */
+  private revisarNuevaMano() {
+    const m = this.estado.mano
+    const clave = `${m.numero}-${m.cortando === null}`
+    if (clave === this.claveMano) return
+    const nueva = !this.claveMano.startsWith(`${m.numero}-`)
+    this.claveMano = clave
+    if (nueva) this.senias = this.estado.jugadores.map(() => ({}))
+    if (m.cortando === null) this.alNuevaMano()
+  }
+
+  /**
+   * Con "toques y gritos del pie": si le toca a un bot y su pie es otro bot, el pie decide si lo
+   * manda a tocar o a gritar. (En tu equipo el que lidera sos vos.)
+   */
+  private ordenarDelPie(turno: number) {
+    const estado = this.estado
+    if (estado.config.toquesYGritos !== 'pie' || estado.mano.cortando !== null) return
+    const e = enfrentamientoActual(estado)
+    if (e.turno !== turno) return
+    const lider = liderDe(estado, e, equipoDe(turno))
+    if (lider === null || lider === turno || lider === 0 || e.ordenes.some((o) => o.asiento === turno)) return
+    const que = this.bots[lider]!.ordenar(vistaPara(estado, id(lider)), this.senias[lider], turno)
+    if (!que) return
+    const r = apply(estado, { tipo: 'mandar', jugador: id(lider), a: turno, que })
+    if (!r.ok) return
+    this.estado = r.estado
+    this.difundir(r.eventos)
   }
 
   /** Cada bot luce siempre el mismo avatar (puede tener piezas de la tienda); la persona, el de su perfil. */
@@ -186,7 +275,7 @@ export class ConexionLocal implements Conexion {
   }
 
   private nombre(asiento: number) {
-    return asiento === 0 ? this.op.apodo : NOMBRES_BOTS[(asiento - 1) % NOMBRES_BOTS.length]!
+    return this.nombres[asiento] ?? (asiento === 0 ? this.op.apodo : NOMBRES_BOTS[(asiento - 1) % NOMBRES_BOTS.length]!)
   }
 
   private infoSala(): InfoSala {
@@ -197,6 +286,7 @@ export class ConexionLocal implements Conexion {
       // Contra bots no hay reloj: los tiempos no se usan.
       tiempos: TIEMPOS_SALA_DEFAULT,
       cartasJugadas: normalizarCartasJugadas(this.op.cartasJugadas),
+      tirarReyes: normalizarTirarReyes(this.op.tirarReyes),
       mesa: this.op.mesa ?? MESA_DEFAULT,
       baraja: this.op.baraja ?? BARAJA_DEFAULT,
       fase: this.terminada ? 'terminada' : 'jugando',
@@ -231,7 +321,7 @@ export class ConexionLocal implements Conexion {
       this.difundir(r.eventos)
       return null
     }
-    if (r.estado.mano.numero !== this.numeroMano) this.alNuevaMano()
+    this.revisarNuevaMano()
     this.difundir(r.eventos)
     this.programar(r.eventos)
     return null
@@ -259,7 +349,9 @@ export class ConexionLocal implements Conexion {
     this.timer = setTimeout(
       () => {
         if (version !== this.version) return
-        const accion = this.bots[a]!.decidir(vistaPara(this.estado, id(a)), this.senias[a])
+        this.ordenarDelPie(a)
+        const sug = a % 2 === 0 && this.sugerencia?.vuelta === this.claveVuelta() ? this.sugerencia.sugerencia : undefined
+        const accion = this.bots[a]!.decidir(vistaPara(this.estado, id(a)), this.senias[a], sug)
         const motivo = this.aplicar(a, accion)
         if (motivo) console.error('Un bot eligió una acción inválida:', motivo)
       },
@@ -268,9 +360,7 @@ export class ConexionLocal implements Conexion {
   }
 
   private alNuevaMano() {
-    this.numeroMano = this.estado.mano.numero
     const n = this.estado.jugadores.length
-    this.senias = Array.from({ length: n }, () => ({}))
     if (n <= 2 || this.estado.mano.picaPica || !this.configSenias.habilitadas) return
     for (let a = 1; a < n; a++) {
       const senias = this.bots[a]!.hacerSenias(vistaPara(this.estado, id(a)))
@@ -304,7 +394,7 @@ export class ConexionLocal implements Conexion {
   }
 
   private difundir(eventos: Evento[]) {
-    if (eventos.length > 0) this.emitir('eventos', eventos)
+    if (eventos.length > 0) this.emitir('eventos', eventosPara(eventos, 0))
     this.emitir('vista', vistaPara(this.estado, id(0)))
   }
 

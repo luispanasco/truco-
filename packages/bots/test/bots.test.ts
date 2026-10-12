@@ -56,13 +56,16 @@ describe('bots', () => {
           picaPica: fc.boolean(),
           faltaEnvidoEnMalas: fc.constantFrom('loQueFalta', 'ganaPartido'),
           modoSucio: fc.boolean(),
+          toquesYGritos: fc.constantFrom('pie', 'cualquiera'),
+          corte: fc.boolean(),
+          puntosPartida: fc.constantFrom(20, 30, 40),
         }),
         (formato, niveles, semilla, config) => {
           const n = formato === '1v1' ? 2 : formato === '2v2' ? 4 : 6
           const bots = niveles.slice(0, n).map((nivel, i) => crearBot(nivel, semilla + i))
           // jugarPartida falla si algún bot elige una acción inválida o si se traba.
           const r = jugarPartida({ bots, semilla, config: { ...config, formato } })
-          expect(r.puntos[r.ganador]).toBe(30)
+          expect(r.puntos[r.ganador]).toBe(config.puntosPartida ?? 30)
         },
       ),
       { numRuns: 15 },
@@ -182,6 +185,36 @@ describe('bots', () => {
       expect(cartaDeB({ 3: ['unoBravo'] }, semilla)).toEqual(c('4b'))
       // d no hizo ninguna seña: b mata con el 3.
       expect(cartaDeB({ 3: [] }, semilla)).toEqual(c('3e'))
+    }
+  })
+
+  it('corta el mazo cuando le toca', () => {
+    const p = crearPartida({
+      jugadores: IDS.slice(0, 2).map((id) => ({ id, nombre: id })),
+      semilla: 3,
+      config: { corte: true },
+    })
+    const accion = crearBot('medio', 1).decidir(vistaPara(p, 'a'))
+    expect(accion.tipo).toBe('cortar')
+    aplicar(p, accion)
+  })
+
+  it('cumple lo que le manda el pie: tocar y gritar', () => {
+    // Muestra 3 de copas. a tiene envido 7, nada que cantar solo.
+    const p = partidaCon(['4e 6o 5b', '1b 2e 6e', '7e 5o 12b', '3e 6b 11o'], '3c', { toquesYGritos: 'pie' })
+    for (const nivel of NIVELES) {
+      const toca = aplicar(p, { tipo: 'mandar', jugador: 'c', a: 0, que: 'tocar' })
+      expect(crearBot(nivel, 1).decidir(vistaPara(toca, 'a'))).toMatchObject({ tipo: 'cantarEnvido' })
+      const grita = aplicar(p, { tipo: 'mandar', jugador: 'c', a: 0, que: 'gritar' })
+      expect(crearBot(nivel, 1).decidir(vistaPara(grita, 'a'))).toEqual({ tipo: 'cantarTruco', jugador: 'a' })
+    }
+  })
+
+  it('con "vení" tira la más baja', () => {
+    const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 5o 12b', '3e 6b 11o'], '3c')
+    for (const nivel of NIVELES) {
+      const accion = crearBot(nivel, 1).decidir(vistaPara(p, 'a'), {}, { tipo: 'veni' })
+      if (accion.tipo === 'jugarCarta') expect(accion.carta).toEqual(c('4b'))
     }
   })
 })

@@ -34,13 +34,15 @@ export function posicionMazo(n: number, reparteRel: number): { left: string; top
   return { left: `${x}%`, top: `${y}%` }
 }
 
-/** La muestra boca arriba, con el mazo cruzado encima. */
-export function Mazo({ muestra, n, reparteRel }: { muestra: TCarta; n: number; reparteRel: number }) {
+/** La muestra boca arriba, con el mazo cruzado encima. Mientras se corta todavía no hay muestra. */
+export function Mazo({ muestra, n, reparteRel }: { muestra: TCarta | null; n: number; reparteRel: number }) {
   return (
-    <div className={`mazo${n === 6 ? ' mazo-chico' : ''}`} style={posicionMazo(n, reparteRel)} aria-label="Mazo y muestra">
-      <div className="mazo-muestra">
-        <Carta carta={muestra} tam="mesa" />
-      </div>
+    <div className={`mazo${n === 6 ? ' mazo-chico' : ''}`} style={posicionMazo(n, reparteRel)} aria-label={muestra ? 'Mazo y muestra' : 'Mazo sin cortar'}>
+      {muestra && (
+        <div className="mazo-muestra">
+          <Carta carta={muestra} tam="mesa" />
+        </div>
+      )}
       <div className="mazo-pila">
         <Carta oculta tam="mesa" />
       </div>

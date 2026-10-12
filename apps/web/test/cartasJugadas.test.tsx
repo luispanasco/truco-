@@ -90,6 +90,7 @@ function salaDeEspera(cartasJugadas: CartasJugadas): InfoSala {
     senias: SENIAS_DEFAULT,
     tiempos: TIEMPOS_SALA_DEFAULT,
     cartasJugadas,
+    tirarReyes: 'no',
     mesa: 'boliche',
     baraja: 'propia',
     chatEquipo: false,

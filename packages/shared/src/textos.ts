@@ -15,7 +15,7 @@ export const TEXTO_CANTO: Record<string, string> = {
 export function describirAccion(vista: VistaPartida, a: Accion): string {
   switch (a.tipo) {
     case 'jugarCarta':
-      return `Jugar el ${nombreCarta(a.carta)}`
+      return a.tapada ? `Pasar (el ${nombreCarta(a.carta)} va tapado)` : `Jugar el ${nombreCarta(a.carta)}`
     case 'cantarTruco': {
       const tr = vista.mano.enfrentamientos[vista.mano.actual]!.truco
       const nivel = (tr.pendiente?.nivel ?? tr.valor) + 1
@@ -28,9 +28,13 @@ export function describirAccion(vista: VistaPartida, a: Accion): string {
       return primero ? `${TEXTO_CANTO[a.canto]} va primero` : TEXTO_CANTO[a.canto]!
     }
     case 'cantarFlor':
-      return TEXTO_CANTO[a.canto]!
-    case 'responder':
+      return a.yTruco ? 'Flor y truco' : TEXTO_CANTO[a.canto]!
+    case 'responder': {
+      // A la contraflor se contesta "con flor quiero" o "con flor me achico".
+      const e = vista.mano.enfrentamientos[vista.mano.actual]!
+      if (e.flor.estado === 'pendiente') return a.respuesta === 'quiero' ? 'Con flor quiero' : 'Con flor me achico'
       return a.respuesta === 'quiero' ? 'Quiero' : 'No quiero'
+    }
     case 'declararTanto':
       return a.tanto === 'sonBuenas' ? 'Son buenas' : `Decir mi tanto: ${a.tanto}`
     case 'irseAlMazo':
@@ -39,8 +43,18 @@ export function describirAccion(vista: VistaPartida, a: Accion): string {
       return 'Pedir ver los tantos'
     case 'noPedirVer':
       return 'No pedir ver'
+    case 'mandar':
+      return a.que === 'tocar' ? 'Mandar a tocar' : 'Mandar a gritar'
+    case 'cortar':
+      return TEXTO_CORTE[a.corte]
   }
 }
+
+export const TEXTO_CORTE = {
+  convencional: 'Cortar',
+  sacarMuestra: 'Sacar la muestra',
+  darAlMano: 'Se la doy al mano',
+} as const
 
 /**
  * Texto de un evento de la mesa. `nombre` da el apodo de cada asiento, `equipo` el
@@ -58,15 +72,19 @@ export function describirEvento(
     case 'enfrentamientoIniciado':
       return ev.indice > 0 ? `\n── Duelo ${ev.indice + 1}: ${ev.participantes.map(nombre).join(' contra ')} ──` : null
     case 'cartaJugada':
-      return `  ${nombre(ev.asiento)} juega el ${nombreCarta(ev.carta)}`
+      if (ev.tapada) return `  ${nombre(ev.asiento)} pasa${ev.carta ? ` (el ${nombreCarta(ev.carta)}, tapado)` : ''}`
+      return `  ${nombre(ev.asiento)} juega ${ev.carta ? `el ${nombreCarta(ev.carta)}` : 'una carta por abajo'}`
     case 'vueltaTerminada':
       return `  → Vuelta ${ev.indice + 1}: ${ev.resultado === 'parda' ? 'parda' : gana(ev.resultado, 'la')}`
     case 'cantoTruco':
-    case 'cantoFlor':
       return `  ${nombre(ev.asiento)}: ¡${TEXTO_CANTO[ev.canto]}!`
+    case 'cantoFlor':
+      // "Flor y truco": el truco viene en el evento siguiente.
+      return ev.yTruco ? `  ${nombre(ev.asiento)}: ¡Flor y truco!` : `  ${nombre(ev.asiento)}: ¡${TEXTO_CANTO[ev.canto]}!`
     case 'cantoEnvido':
       return `  ${nombre(ev.asiento)}: ${ev.primeroEstaElEnvido ? 'Envido va primero. ' : ''}¡${TEXTO_CANTO[ev.canto]}!`
     case 'respuesta':
+      if (ev.a === 'flor') return `  ${nombre(ev.asiento)}: ${ev.respuesta === 'quiero' ? 'Con flor quiero' : 'Con flor me achico'}`
       return `  ${nombre(ev.asiento)}: ${ev.respuesta === 'quiero' ? 'Quiero' : 'No quiero'}`
     case 'tantoDeclarado':
       return `  ${nombre(ev.asiento)}: ${ev.tanto === null ? 'Son buenas' : ev.tanto}`
@@ -75,7 +93,14 @@ export function describirEvento(
     case 'envidoAnulado':
       return '  → Con flor, el envido queda anulado'
     case 'alMazo':
-      return `  ${nombre(ev.asiento)} se va al mazo`
+      return `  ${nombre(ev.asiento)} se va al mazo${ev.solo ? ' (el equipo sigue)' : ''}`
+    case 'orden':
+      return `  ${nombre(ev.asiento)} manda a ${nombre(ev.a)} a ${ev.que === 'tocar' ? 'tocar' : 'gritar'}`
+    case 'esperandoCorte':
+      return `
+━━━━━━━━ Mano ${ev.numero} · corta ${nombre(ev.asiento)} ━━━━━━━━`
+    case 'corte':
+      return `  ${nombre(ev.asiento)}: ${TEXTO_CORTE[ev.corte]}`
     case 'enfrentamientoTerminado': {
       const r = ev.resultado
       const tanto = r.puntosTanto.some((p) => p > 0)

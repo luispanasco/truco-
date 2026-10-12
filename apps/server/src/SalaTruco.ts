@@ -2,17 +2,24 @@ import { randomInt } from 'node:crypto'
 import { matchMaker, Room, type Client } from 'colyseus'
 import {
   apply,
+  barajar,
   cantidadJugadores,
+  crearBaraja,
   crearConfig,
   crearPartida,
+  enfrentamientoActual,
+  equipoDe,
   esperandoA,
+  eventosPara,
+  LARGOS_PARTIDA,
+  liderDe,
   vistaPara,
   type Accion,
   type ConfigSala,
   type EstadoPartida,
   type Evento,
 } from '@truco/engine'
-import { crearBot, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibidas } from '@truco/bots'
+import { crearBot, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibidas, type Sugerencia } from '@truco/bots'
 import {
   avatarAlAzar,
   BARAJA_DEFAULT,
@@ -30,7 +37,11 @@ import {
   normalizarSenias,
   normalizarTiempos,
   normalizarCartasJugadas,
+  normalizarTirarReyes,
+  tirarReyes,
   CARTAS_JUGADAS_DEFAULT,
+  TIRAR_REYES_DEFAULT,
+  VENCIDOS_PARA_SACAR,
   TIEMPOS_SALA_DEFAULT,
   yaJugoEnLaMano,
   type CanalChat,
@@ -46,6 +57,7 @@ import {
   type MensajesServidor,
   type OpcionesCrearSala,
   type OpcionesUnirse,
+  type TirarReyes,
 } from '@truco/shared'
 import { LimiteFrecuencia, filtrarTexto, prepararMensaje } from './chat'
 import { generarCodigoUnico } from './codigos'
@@ -89,8 +101,8 @@ export const TIEMPOS_DEFAULT: Tiempos = {
   cierreSinHumanosMs: 120_000,
   ofrecerBotMs: 30_000,
   reconexionS: 20,
-  pausaVueltaMs: 900,
-  pausaManoMs: 2_700,
+  pausaVueltaMs: 3_000,
+  pausaManoMs: 5_000,
 }
 
 /** Nivel del bot que juega por un humano desconectado o que se quedó sin tiempo. */
@@ -176,6 +188,7 @@ export class SalaTruco extends Room {
   private configSenias: ConfigSenias = SENIAS_DEFAULT
   private configTiempos: ConfigTiempos = TIEMPOS_SALA_DEFAULT
   private cartasJugadas: CartasJugadas = CARTAS_JUGADAS_DEFAULT
+  private tirarReyes: TirarReyes = TIRAR_REYES_DEFAULT
   private lugares: Lugar[] = []
   private anfitrion: string | null = null
 
@@ -183,7 +196,12 @@ export class SalaTruco extends Room {
   private bots: (Bot | null)[] = []
   private reemplazos: Bot[] = []
   private senias: SeniasRecibidas[] = []
-  private numeroMano = -1
+  /** Mano en curso y si ya se cortó: las señas de los bots se hacen recién con las cartas en la mano. */
+  private claveMano = ''
+  /** Por equipo: la última sugerencia del pie, válida en la vuelta en que la dijo. */
+  private sugerencias: ({ sugerencia: Sugerencia; vuelta: string } | null)[] = [null, null]
+  /** Por asiento: jugadas seguidas que se le vencieron. */
+  private vencidos = new Map<number, number>()
   private registro: RegistroPartida | null = null
   private inicioMs = 0
   /** Quién repartió la primera mano de la partida actual; en la revancha reparte el siguiente. */
@@ -401,6 +419,26 @@ export class SalaTruco extends Room {
       this.entregarSenias(asiento, hechas, true)
     })
 
+    manejar('sugerir', (client, asiento, { sugerencia }) => {
+      if (!this.limite(this.limitesAccion, client, 10, 1000)) throw new Rechazo('Demasiadas acciones seguidas')
+      if (this.fase !== 'jugando' || !this.estado) throw new Rechazo('La partida no está en juego')
+      const e = enfrentamientoActual(this.estado)
+      const equipo = equipoDe(asiento)
+      if (liderDe(this.estado, e, equipo) !== asiento) throw new Rechazo('Sugiere el pie')
+      const valida: Sugerencia | null =
+        sugerencia?.tipo === 'veni'
+          ? { tipo: 'veni' }
+          : sugerencia?.tipo === 'vamosA' && e.participantes.includes(Number(sugerencia.asiento)) && Number(sugerencia.asiento) !== asiento
+            ? { tipo: 'vamosA', asiento: Number(sugerencia.asiento) }
+            : null
+      if (!valida) throw new Rechazo('Sugerencia inválida')
+      this.sugerencias[equipo] = { sugerencia: valida, vuelta: this.claveVuelta() }
+      // Se dice en voz alta: la oyen todos.
+      for (const l of this.lugares) {
+        if (this.humanoConectado(l.asiento)) this.enviarA(l.asiento, 'sugerencia', { de: asiento, sugerencia: valida })
+      }
+    })
+
     manejar('silenciar', (_client, asiento, { asiento: otro, silenciar }) => {
       const inv = this.lugares[asiento]!.invitadoId!
       const set = this.silenciados.get(inv) ?? new Set<number>()
@@ -471,8 +509,16 @@ export class SalaTruco extends Room {
   // ── Configuración y espera ───────────────────────────────────────
 
   private aplicarConfiguracion(op: Partial<OpcionesCrearSala>) {
-    // El modo sucio se habilita recién en la fase 3.
-    this.config = crearConfig({ ...this.config, ...(op.config ?? {}), modoSucio: false })
+    // El modo sucio se habilita recién en la fase 3. Las malas y el tramo del pica-pica salen del largo.
+    const { puntosMalas: _malas, tramoPicaPica: _tramo, ...pedido } = { ...this.config, ...(op.config ?? {}) }
+    const puntosPartida = (LARGOS_PARTIDA as readonly number[]).includes(pedido.puntosPartida) ? pedido.puntosPartida : 30
+    this.config = crearConfig({
+      ...pedido,
+      puntosPartida,
+      toquesYGritos: pedido.toquesYGritos === 'pie' ? 'pie' : 'cualquiera',
+      corte: pedido.corte === true,
+      modoSucio: false,
+    })
     if (!['1v1', '2v2', '3v3'].includes(this.config.formato)) throw new Rechazo('Formato inválido')
     if (typeof op.botsEnVacios === 'boolean') this.botsEnVacios = op.botsEnVacios
     if (op.nivelBots && NIVELES.includes(op.nivelBots)) this.nivelBots = op.nivelBots
@@ -480,6 +526,7 @@ export class SalaTruco extends Room {
     if (op.senias && typeof op.senias === 'object') this.configSenias = normalizarSenias(op.senias, this.configSenias)
     if (op.tiempos && typeof op.tiempos === 'object') this.configTiempos = normalizarTiempos(op.tiempos, this.configTiempos)
     this.cartasJugadas = normalizarCartasJugadas(op.cartasJugadas, this.cartasJugadas)
+    this.tirarReyes = normalizarTirarReyes(op.tirarReyes, this.tirarReyes)
   }
 
   /**
@@ -551,19 +598,23 @@ export class SalaTruco extends Room {
    */
   private empezarPartida() {
     const n = this.lugares.length
-    // Por defecto reparte el último, así el asiento 0 es mano (como en el motor).
-    const reparte = this.reparteInicial === null ? n - 1 : (this.reparteInicial + 1) % n
+    // Por defecto reparte el último, así el asiento 0 es mano (como en el motor). En la primera
+    // partida de la sala se pueden tirar reyes.
+    const reyes = this.reparteInicial === null && this.tirarReyes !== 'no' ? this.tirarLosReyes() : null
+    const reparte = reyes ? reyes.reparte : this.reparteInicial === null ? n - 1 : (this.reparteInicial + 1) % n
     this.reparteInicial = reparte
     this.pedidosRevancha.clear()
     this.bots = this.lugares.map((l) => (l.tipo === 'bot' ? crearBot(this.nivelBots, randomInt(2 ** 31)) : null))
     this.reemplazos = this.lugares.map(() => crearBot(NIVEL_REEMPLAZO, randomInt(2 ** 31)))
     const semilla = randomInt(2 ** 31)
     this.estado = crearPartida({
-      jugadores: this.lugares.map((l) => ({ id: idJugador(l.asiento), nombre: l.apodo })),
+      jugadores: this.lugares.map((l) => ({ id: idJugador(l.asiento), nombre: l.apodo, bot: l.tipo === 'bot' })),
       semilla,
       config: this.config,
       reparte,
     })
+    this.vencidos.clear()
+    this.sugerencias = [null, null]
     this.fase = 'jugando'
     if (this.publica) void this.setPrivate(true)
     this.inicioMs = Date.now()
@@ -583,10 +634,35 @@ export class SalaTruco extends Room {
       acciones: [],
       resultado: null,
     }
+    if (reyes) {
+      for (const l of this.lugares) if (this.humanoConectado(l.asiento)) this.enviarA(l.asiento, 'reyes', reyes)
+    }
     this.enviarSala()
-    this.alNuevaMano()
+    this.claveMano = ''
+    this.revisarNuevaMano()
     this.difundir([])
     this.programar()
+  }
+
+  /**
+   * Tira reyes (ver `tirarReyes`): desde el anfitrión, el primer rey reparte y, con equipos, los
+   * del rey quedan juntos (se reacomodan los lugares).
+   */
+  private tirarLosReyes(): MensajesServidor['reyes'] {
+    const n = this.lugares.length
+    const conEquipos = this.tirarReyes === 'reparteYEquipos'
+    const mazo = barajar(crearBaraja(), randomInt(2 ** 31)).resultado
+    const r = tirarReyes(n, this.delAnfitrion()?.asiento ?? 0, mazo, conEquipos)
+    const apodos = this.lugares.map((l) => l.apodo)
+    if (r.asientoNuevo.some((b, a) => b !== a)) {
+      const antes = this.lugares
+      this.lugares = antes.map((_, b) => ({ ...antes[r.asientoNuevo.indexOf(b)]!, asiento: b }))
+      for (const l of this.lugares) {
+        const client = l.sessionId ? this.clients.get(l.sessionId) : undefined
+        if (client) client.userData = { asiento: l.asiento } satisfies DatosCliente
+      }
+    }
+    return { tiradas: r.tiradas, reparte: r.asientoNuevo[r.conRey[0]!]!, equipos: conEquipos && n > 2 ? r.conRey : null, apodos }
   }
 
   /**
@@ -607,7 +683,8 @@ export class SalaTruco extends Room {
     if (!r.ok) return r.motivo
     this.estado = r.estado
     this.registro?.acciones.push({ ms: Date.now() - this.inicioMs, asiento, accion: { ...accion, jugador: idJugador(asiento) } as Accion, porBot })
-    if (r.estado.mano.numero !== this.numeroMano) this.alNuevaMano()
+    if (!porBot) this.vencidos.delete(asiento)
+    this.revisarNuevaMano()
     this.difundir(r.eventos)
     if (r.estado.ganador !== null) this.terminar()
     else this.programar(r.eventos)
@@ -637,6 +714,7 @@ export class SalaTruco extends Room {
       : eventos.some((ev) => ev.tipo === 'vueltaTerminada')
         ? this.tiempos.pausaVueltaMs
         : 0
+    this.ordenarDelPie()
     const version = this.version
     const esperando = esperandoA(this.estado)
     const humanos = esperando.filter((a) => this.humanoConectado(a))
@@ -650,7 +728,7 @@ export class SalaTruco extends Room {
     } else {
       const espera = extra + this.tiempoDeTurno(esperando)
       const venceEn = Date.now() + espera
-      this.timerJuego = setTimeout(() => this.jugarBot(humanos[0]!, version), espera)
+      this.timerJuego = setTimeout(() => this.jugarBot(humanos[0]!, version, true), espera)
       this.broadcast('turno', { asientos: esperando, venceEn })
     }
   }
@@ -687,13 +765,21 @@ export class SalaTruco extends Room {
     )
   }
 
-  private jugarBot(asiento: number, version: number) {
+  private jugarBot(asiento: number, version: number, porTiempo = false) {
     this.timerJuego = null
     if (version !== this.version || !this.estado || this.fase !== 'jugando') return
     const lugar = this.lugares[asiento]!
+    if (porTiempo) {
+      // Al que deja vencer el tiempo varias veces seguidas se lo saca y queda un bot.
+      const vencidos = (this.vencidos.get(asiento) ?? 0) + 1
+      this.vencidos.set(asiento, vencidos)
+      if (vencidos >= VENCIDOS_PARA_SACAR) this.sacar(asiento, 'Se te venció el tiempo varias veces seguidas')
+    }
     const bot = lugar.tipo === 'bot' ? this.bots[asiento]! : this.reemplazos[asiento]!
     const vista = vistaPara(this.estado, idJugador(asiento))
-    const accion = bot.decidir(vista, this.senias[asiento])
+    const sug = this.sugerencias[equipoDe(asiento)]
+    const sugerencia = sug && sug.vuelta === this.claveVuelta() ? sug.sugerencia : undefined
+    const accion = bot.decidir(vista, this.senias[asiento], sugerencia)
     const motivo = this.aplicar(asiento, accion, true)
     if (motivo) {
       // No debería pasar: el bot elige entre las acciones válidas. Por las dudas, la primera.
@@ -703,15 +789,70 @@ export class SalaTruco extends Room {
     }
   }
 
+  /** Saca a alguien de la mesa: su lugar queda para un bot y ya no puede volver a esta partida. */
+  private sacar(asiento: number, motivo: string) {
+    const lugar = this.lugares[asiento]!
+    const client = lugar.sessionId ? this.clients.get(lugar.sessionId) : undefined
+    if (client) this.enviar(client, 'expulsado', { motivo })
+    lugar.tipo = 'bot'
+    lugar.invitadoId = null
+    lugar.sessionId = null
+    lugar.conectado = false
+    this.bots[asiento] = this.reemplazos[asiento]!
+    this.vencidos.delete(asiento)
+    client?.leave()
+    this.enviarSala()
+  }
+
+  /** La vuelta en curso: una sugerencia del pie vale hasta que termina. */
+  private claveVuelta(): string {
+    if (!this.estado) return ''
+    const m = this.estado.mano
+    return `${m.numero}-${m.actual}-${m.enfrentamientos[m.actual]?.vueltas.length ?? 0}`
+  }
+
+  /**
+   * Con "toques y gritos del pie": si le toca jugar a alguien y su pie no es una persona
+   * conectada (un bot, o el que juega por quien no está), el pie decide si lo manda a tocar o a gritar.
+   */
+  private ordenarDelPie() {
+    const estado = this.estado
+    if (!estado || estado.config.toquesYGritos !== 'pie' || estado.mano.cortando !== null || estado.mano.verificacion) return
+    const e = enfrentamientoActual(estado)
+    const turno = e.turno
+    if (turno === null || esperandoA(estado)[0] !== turno) return
+    const lider = liderDe(estado, e, equipoDe(turno))
+    if (lider === null || lider === turno || this.humanoConectado(lider)) return
+    if (e.ordenes.some((o) => o.asiento === turno)) return
+    const bot = this.lugares[lider]!.tipo === 'bot' ? this.bots[lider]! : this.reemplazos[lider]!
+    const que = bot.ordenar(vistaPara(estado, idJugador(lider)), this.senias[lider], turno)
+    if (!que) return
+    const r = apply(estado, { tipo: 'mandar', jugador: idJugador(lider), a: turno, que })
+    if (!r.ok) return
+    this.estado = r.estado
+    this.registro?.acciones.push({ ms: Date.now() - this.inicioMs, asiento: lider, accion: { tipo: 'mandar', jugador: idJugador(lider), a: turno, que }, porBot: true })
+    this.difundir(r.eventos)
+  }
+
   // ── Señas ────────────────────────────────────────────────────────
 
   private hayCompanieros(): boolean {
     return this.fase === 'jugando' && this.lugares.length > 2 && !!this.estado && !this.estado.mano.picaPica
   }
 
+  /** Si empezó una mano o se terminó de cortar: reinicia las señas y hacen las suyas los bots. */
+  private revisarNuevaMano() {
+    const m = this.estado!.mano
+    const clave = `${m.numero}-${m.cortando === null}`
+    if (clave === this.claveMano) return
+    const nuevaMano = !this.claveMano.startsWith(`${m.numero}-`)
+    this.claveMano = clave
+    if (nuevaMano) this.senias = this.lugares.map(() => ({}))
+    // Hasta que no se corta no hay cartas para señar.
+    if (m.cortando === null) this.alNuevaMano()
+  }
+
   private alNuevaMano() {
-    this.numeroMano = this.estado!.mano.numero
-    this.senias = this.lugares.map(() => ({}))
     // Sin señas en la mesa, los bots no hacen ni reciben ninguna (juegan a ciegas).
     if (!this.hayCompanieros() || !this.configSenias.habilitadas) return
     // Los bots (y los reemplazos de quien no está) hacen sus señas al empezar la mano.
@@ -777,7 +918,7 @@ export class SalaTruco extends Room {
     if (!this.estado) return
     for (const l of this.lugares) {
       if (!this.humanoConectado(l.asiento)) continue
-      if (eventos.length > 0) this.enviarA(l.asiento, 'eventos', eventos)
+      if (eventos.length > 0) this.enviarA(l.asiento, 'eventos', eventosPara(eventos, l.asiento))
       this.enviarA(l.asiento, 'vista', vistaPara(this.estado, idJugador(l.asiento)))
     }
   }
@@ -802,6 +943,7 @@ export class SalaTruco extends Room {
       senias: this.configSenias,
       tiempos: this.configTiempos,
       cartasJugadas: this.cartasJugadas,
+      tirarReyes: this.tirarReyes,
       mesa: this.delAnfitrion()?.mesa ?? MESA_DEFAULT,
       baraja: this.delAnfitrion()?.baraja ?? BARAJA_DEFAULT,
       chatEquipo: this.chatEquipo(),

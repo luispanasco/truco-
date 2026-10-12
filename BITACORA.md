@@ -19,7 +19,7 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 
 ### Ideas pedidas para más adelante
 
-- **Cambios en el motor y en algunas mecánicas** (pedido 2026-10-06). Revisados regla por regla el 2026-10-12, con el plan en [REVISION-REGLAS.md](REVISION-REGLAS.md): el pie, pasar en la tercera, cadena de envido libre, flor y contraflor, largo del partido, irse al mazo solo, piezas tapadas en el pica-pica, tirar reyes, el corte, tiempos.
+- **Bots más fuertes y tipografías** (pedido 2026-10-12): estudiar los bots (predecibles y flojos), sumar "Muy difícil" y "Master" (el máximo posible sin ver cartas ajenas: contar cartas y calcular envidos), y tipografías como cosmético: al menos 10 de bibliotecas públicas, 2 gratis y 8 en la tienda. Plan en revisión.
 
 ---
 
@@ -738,3 +738,21 @@ Pedido del usuario: la bufanda con los colores de los cuadros y más accesorios 
 - **8 accesorios nuevos en la mano**, con la misma mano del mate: termo (250), mate y termo (400), celular, libro, diario y café (200 cada uno), pelota (250) y naipes (300; un dorso, un 1 de espada y un 7 de oro en abanico).
 - **Tests:** web 229 (nuevos: todas las combinaciones de accesorio y bufanda arman un SVG válido; un código de 15 capas se lee sin bufanda), servidor 52; la prueba de punta a punta del avatar espera la capa nueva.
 
+
+
+---
+
+## Revisión de reglas del motor — 2026-10-12
+
+Repaso regla por regla con el usuario (10 bloques), con el detalle, las decisiones y el avance en [REVISION-REGLAS.md](REVISION-REGLAS.md). Las reglas nuevas quedaron en la especificación.
+
+- **Motor:** cadena de envido sin límite hasta la falta; flor contra flor por flores que ganan; contraflor no querida 3 por flor + 1; contraflor al resto = el partido; "con flor quiero / me achico"; "flor y truco"; partido a 20, 30 o 40; irse en la primera sin tocar da el envido; la flor sin cantar se cobra si el rival se va; pasar en la tercera; el pie (lidera, sugiere, manda a tocar y gritar; opción "toques y gritos"); irse al mazo solo hasta que se va el pie; piezas por abajo en el pica-pica; corte con tres tipos.
+- **Bots:** juegan con todo lo nuevo; criterio cumplido (difícil contra medio 64–66 %, medio contra fácil 67–71 %).
+- **Servidor:** tirar reyes, sugerencias del pie, el pie bot manda, eventos filtrados por asiento, te sacan a la tercera jugada vencida, pausas de 3 s entre vueltas y 5 s entre manos.
+- **Web:** opciones nuevas, tirada de reyes, corte, pasar, panel del pie, cartas boca abajo.
+- **Tests:** 471 (motor 162, bots 17, servidor 57, web 235), 10 de punta a punta y el de sin conexión.
+
+**Pendientes:**
+- "Vamos a X": se interpretó como dejarle la vuelta a un compañero o ganarle a la carta de un rival.
+- La tirada de reyes y el corte no tienen animación de mazo: la tirada sale en un cuadro y el corte en botones.
+- Con chat de voz (fase 2) hay que apagar lo del pie.

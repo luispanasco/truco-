@@ -1,8 +1,10 @@
 import { mismaCarta } from './cartas'
-import { nuevoEnfrentamiento, participantesDuelo, repartir } from './partida'
+import { esPieza } from './jerarquia'
+import { cortarYRepartir, nuevoEnfrentamiento, participantesDuelo, repartir } from './partida'
 import {
   equipoDe,
   equipoQueCanto,
+  liderDe,
   mejorDeclaracion,
   ordenDesde,
   otroEquipo,
@@ -26,8 +28,10 @@ import type {
   Enfrentamiento,
   Equipo,
   EstadoPartida,
+  EstadoMano,
   Evento,
   Jugador,
+  QueManda,
   ResultadoApply,
   ResultadoEnfrentamiento,
   TantoRevelado,
@@ -64,6 +68,7 @@ export function debeCantarFlor(estado: EstadoPartida, e: Enfrentamiento, a: numb
   const tanto = estado.mano.tantos[a]
   if (estado.config.modoSucio || !tanto || tanto.florReal === null) return false
   if (e.flor.cantadas.some((f) => f.asiento === a) || e.flor.estado === 'noQuerida') return false
+  if (e.retirados.includes(a)) return false
   if (e.vueltas.length !== 1) return false
   return !e.vueltas[0]!.jugadas.some((j) => j.asiento === a)
 }
@@ -108,9 +113,21 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
     return null
   }
   if (mano.verificacion) return 'Se está verificando la mano'
+  if (mano.cortando !== null) {
+    if (accion.tipo !== 'cortar') return 'Están cortando el mazo'
+    return mano.cortando === a ? null : 'Corta otro'
+  }
+  if (accion.tipo === 'cortar') return 'No hay nada que cortar'
 
   const e = enfrentamientoActual(estado)
   if (!e.participantes.includes(a)) return 'No jugás en este duelo'
+  if (e.retirados.includes(a)) return 'Te fuiste al mazo'
+
+  // El pie: con "toques y gritos del pie", toca y grita él o el compañero que manda, y contesta él.
+  const conPie = cfg.toquesYGritos === 'pie' && e.participantes.length > 2
+  const lider = liderDe(estado, e, eq)
+  const esLider = !conPie || lider === a
+  const puede = (que: QueManda) => esLider || e.ordenes.some((o) => o.asiento === a && o.que === que)
 
   const pend = pendienteActual(e)
   const tanto = mano.tantos[a]
@@ -141,6 +158,13 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if (e.turno !== a) return 'No es tu turno'
       if (!mano.cartas[a]?.some((c) => mismaCarta(c, accion.carta))) return 'No tenés esa carta'
       if (debeCantar && cfg.florObligatoria) return 'Tenés flor: tenés que cantarla antes de jugar'
+      if (accion.tapada) {
+        if (e.participantes.length <= 2) return 'En 1v1 no se puede pasar'
+        if (e.vueltas.length !== 3) return 'Solo se puede pasar en la tercera'
+        if (ultimo(e.vueltas).jugadas.some((j) => equipoDe(j.asiento) === eq)) {
+          return 'Pasa solo el primero de tu equipo en jugar'
+        }
+      }
       return null
     }
 
@@ -149,6 +173,7 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
         const p = e.truco.pendiente!
         if (p.equipo === eq) return 'Esperá la respuesta del rival'
         if (p.nivel === 4) return 'No se puede subir más'
+        if (!esLider) return 'Contesta el pie'
         return null
       }
       if (pend) return MENSAJE_PENDIENTE[pend]
@@ -157,6 +182,7 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if (e.truco.puedeSubir !== null && e.truco.puedeSubir !== eq) {
         return 'Solo puede subir el equipo que aceptó el último canto'
       }
+      if (!puede('gritar')) return 'Grita el pie'
       return null
     }
 
@@ -170,6 +196,7 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
         if (pend === null) {
           if (e.turno !== a) return 'No es tu turno'
           if (e.truco.valor !== 1) return 'Ya se aceptó el truco'
+          if (!puede('tocar')) return 'Toca el pie'
           return null
         }
         if (pend === 'truco') {
@@ -177,6 +204,7 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
           const p = e.truco.pendiente!
           if (p.equipo === eq) return 'Esperá la respuesta del rival'
           if (p.nivel !== 2) return 'Ya no se puede cantar envido'
+          if (!puede('tocar')) return 'Toca el pie'
           return null
         }
         return MENSAJE_PENDIENTE[pend]
@@ -184,6 +212,7 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if (e.envido.estado === 'pendiente') {
         if (ultimo(e.envido.cantos).equipo === eq) return 'Esperá la respuesta del rival'
         if (!puedeEncadenarEnvido(e.envido.cantos, accion.canto, cfg)) return 'No se puede cantar eso ahora'
+        if (!esLider) return 'Contesta el pie'
         return null
       }
       return 'El envido ya se cantó'
@@ -211,6 +240,13 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
           if (t !== undefined && (!Number.isInteger(t) || t < 0 || t > MAX_FLOR)) return 'Tanto inválido'
         }
       }
+      if (accion.yTruco) {
+        if (accion.canto !== 'flor' || cantoFlor) return '"Flor y truco" va con tu flor'
+        if (pend) return MENSAJE_PENDIENTE[pend]
+        if (e.turno !== a) return 'No es tu turno'
+        if (e.truco.valor !== 1) return 'Ya se cantó el truco'
+        if (!puede('gritar')) return 'Grita el pie'
+      }
       if (accion.canto === 'flor') return null
       if (f.contra.length > 0) return 'Ya se cantó contraflor'
       if (!f.cantadas.some((x) => x.equipo !== eq)) return 'El rival no cantó flor'
@@ -220,6 +256,7 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
     case 'responder': {
       if (pend === null || pend === 'declaracion') return 'No hay nada que responder'
       if (equipoQueCanto(e, pend) === eq) return 'Esperá la respuesta del rival'
+      if ((pend === 'truco' || pend === 'envido') && !esLider) return 'Contesta el pie'
       if (pend === 'envido' && debeCantar) return 'Tenés flor: cantala'
       if (pend === 'envido' && florDelEquipo.length > 0) return motivoFlorDelEquipo
       return null
@@ -242,6 +279,21 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if (e.envido.estado === 'declarando') return 'Esperá que terminen de declarar el envido'
       return null
     }
+
+    case 'mandar': {
+      if (!conPie) return 'En esta mesa no manda el pie'
+      if (lider !== a) return 'Manda el pie'
+      const comp = accion.a
+      if (comp === a || !e.participantes.includes(comp) || equipoDe(comp) !== eq) return 'Mandá a un compañero'
+      if (e.retirados.includes(comp)) return 'Ese compañero se fue al mazo'
+      if (e.ordenes.some((o) => o.asiento === comp && o.que === accion.que)) return 'Ya se lo mandaste'
+      if (accion.que === 'tocar' && (!enPrimera || e.envido.estado !== 'libre' || e.flor.cantadas.length > 0)) {
+        return 'Ya no se puede tocar'
+      }
+      if (accion.que === 'gritar' && e.truco.valor === 4) return 'No se puede subir más'
+      return null
+    }
+
   }
 }
 
@@ -251,6 +303,15 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
   const jugador = jugadorDe(estado, accion.jugador)!
   const { asiento: a, equipo: eq } = jugador
   const { config: cfg, mano } = estado
+
+  if (accion.tipo === 'cortar') {
+    const r = cortarYRepartir(estado, accion.corte)
+    estado.rng = r.rng
+    estado.mano = r.mano
+    eventos.push({ tipo: 'corte', asiento: a, corte: accion.corte })
+    eventosDeReparto(estado.mano, eventos)
+    return
+  }
 
   if (accion.tipo === 'pedirVer' || accion.tipo === 'noPedirVer') {
     const v = mano.verificacion!
@@ -272,32 +333,22 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
         cartas.findIndex((c) => mismaCarta(c, accion.carta)),
         1,
       )
-      const vuelta = ultimo(e.vueltas)
-      vuelta.jugadas.push({ asiento: a, carta: accion.carta })
-      eventos.push({ tipo: 'cartaJugada', asiento: a, carta: accion.carta })
-
-      const orden = ordenDesde(e.participantes, vuelta.empieza, n)
-      if (vuelta.jugadas.length < orden.length) {
-        e.turno = orden[vuelta.jugadas.length]!
-        return
-      }
-      const { resultado, ganador } = resolverVuelta(vuelta.jugadas, mano.muestra)
-      vuelta.resultado = resultado
-      vuelta.ganador = ganador
-      eventos.push({ tipo: 'vueltaTerminada', indice: e.vueltas.length - 1, resultado, ganador })
-
-      const g = ganadorPorVueltas(
-        e.vueltas.map((v) => v.resultado!),
-        equipoDe(e.mano),
-      )
-      if (g !== null) {
-        terminarJuego(estado, 'vueltas', g, e.truco.valor, eventos)
-        return
-      }
-      const empieza =
-        ganador ?? (cfg.empiezaTrasParda === 'mano' ? e.mano : vuelta.empieza)
-      e.vueltas.push({ empieza, jugadas: [], resultado: null, ganador: null })
-      e.turno = empieza
+      const tapada = accion.tapada === true
+      ultimo(e.vueltas).jugadas.push({ asiento: a, carta: accion.carta, ...(tapada ? { tapada } : {}) })
+      // Tapada no la ve nadie más; en el pica-pica las piezas van por abajo: solo las ve el rival del duelo.
+      const ocultaPara = tapada
+        ? estado.jugadores.map((j) => j.asiento).filter((x) => x !== a)
+        : mano.picaPica && esPieza(accion.carta, mano.muestra)
+          ? estado.jugadores.map((j) => j.asiento).filter((x) => !e.participantes.includes(x))
+          : []
+      eventos.push({
+        tipo: 'cartaJugada',
+        asiento: a,
+        carta: accion.carta,
+        ...(tapada ? { tapada } : {}),
+        ...(ocultaPara.length > 0 ? { ocultaPara } : {}),
+      })
+      avanzarVuelta(estado, e, eventos)
       return
     }
 
@@ -313,6 +364,7 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
         nivel = (tr.valor + 1) as 2 | 3 | 4
       }
       tr.pendiente = { nivel, equipo: eq, asiento: a }
+      usarOrden(e, a, 'gritar')
       eventos.push({ tipo: 'cantoTruco', asiento: a, canto: CANTO_TRUCO[nivel] })
       return
     }
@@ -321,6 +373,7 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
       const primeroEstaElEnvido = e.envido.estado === 'libre' && e.truco.pendiente !== null
       e.envido.estado = 'pendiente'
       e.envido.cantos.push({ canto: accion.canto, asiento: a, equipo: eq })
+      usarOrden(e, a, 'tocar')
       eventos.push({ tipo: 'cantoEnvido', asiento: a, canto: accion.canto, primeroEstaElEnvido })
       return
     }
@@ -348,6 +401,14 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
         f.contra.push({ canto: accion.canto, asiento: a, equipo: eq })
         f.estado = 'pendiente'
       }
+      if (accion.yTruco) {
+        // "Flor y truco": primero se resuelve la flor y después el rival contesta el truco.
+        e.truco.pendiente = { nivel: 2, equipo: eq, asiento: a }
+        usarOrden(e, a, 'gritar')
+        eventos.push({ tipo: 'cantoFlor', asiento: a, canto: accion.canto, yTruco: true })
+        eventos.push({ tipo: 'cantoTruco', asiento: a, canto: 'truco' })
+        return
+      }
       eventos.push({ tipo: 'cantoFlor', asiento: a, canto: accion.canto })
       return
     }
@@ -373,7 +434,7 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
       } else if (pend === 'envido') {
         if (quiere) {
           e.envido.estado = 'declarando'
-          e.envido.porDeclarar = [...e.participantes]
+          e.envido.porDeclarar = e.participantes.filter((x) => !e.retirados.includes(x))
         } else {
           e.envido.estado = 'noQuerido'
           e.envido.ganador = ultimo(e.envido.cantos).equipo
@@ -401,6 +462,16 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
     }
 
     case 'irseAlMazo': {
+      // Mientras no se vaya el pie, los compañeros se van solos y el equipo sigue.
+      const lider = liderDe(estado, e, eq)
+      if (lider !== null && lider !== a) {
+        e.retirados.push(a)
+        mano.cartas[a] = []
+        e.ordenes = e.ordenes.filter((o) => o.asiento !== a)
+        eventos.push({ tipo: 'alMazo', asiento: a, equipo: eq, solo: true })
+        avanzarVuelta(estado, e, eventos)
+        return
+      }
       eventos.push({ tipo: 'alMazo', asiento: a, equipo: eq })
       const env = e.envido
       const f = e.flor
@@ -446,7 +517,69 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
       terminarJuego(estado, 'mazo', otroEquipo(eq), e.truco.valor, eventos)
       return
     }
+
+    case 'mandar': {
+      e.ordenes.push({ asiento: accion.a, que: accion.que })
+      eventos.push({ tipo: 'orden', asiento: a, a: accion.a, que: accion.que })
+      return
+    }
   }
+}
+
+/** El compañero que el pie mandó a tocar o a gritar ya lo hizo. */
+function usarOrden(e: Enfrentamiento, a: number, que: QueManda) {
+  e.ordenes = e.ordenes.filter((o) => o.asiento !== a || o.que !== que)
+}
+
+/**
+ * Después de una carta (o de que alguien se fue solo al mazo): le toca al siguiente que falta
+ * jugar en la vuelta o, si ya jugaron todos los que siguen en la mano, se cierra la vuelta.
+ */
+function avanzarVuelta(estado: EstadoPartida, e: Enfrentamiento, eventos: Evento[]) {
+  const { mano, config: cfg } = estado
+  const n = estado.jugadores.length
+  const vuelta = ultimo(e.vueltas)
+  const activos = (desde: number) => ordenDesde(e.participantes, desde, n).filter((x) => !e.retirados.includes(x))
+  const faltan = activos(vuelta.empieza).filter((x) => !vuelta.jugadas.some((j) => j.asiento === x))
+  if (faltan.length > 0) {
+    e.turno = faltan[0]!
+    return
+  }
+  const { resultado, ganador } = resolverVuelta(vuelta.jugadas, mano.muestra)
+  vuelta.resultado = resultado
+  vuelta.ganador = ganador
+  eventos.push({ tipo: 'vueltaTerminada', indice: e.vueltas.length - 1, resultado, ganador })
+
+  const g = ganadorPorVueltas(
+    e.vueltas.map((v) => v.resultado!),
+    equipoDe(e.mano),
+  )
+  if (g !== null) {
+    terminarJuego(estado, 'vueltas', g, e.truco.valor, eventos)
+    return
+  }
+  // Si el que tiene que empezar se fue al mazo, empieza el siguiente que sigue en la mano.
+  const empieza = activos(ganador ?? (cfg.empiezaTrasParda === 'mano' ? e.mano : vuelta.empieza))[0]!
+  e.vueltas.push({ empieza, jugadas: [], resultado: null, ganador: null })
+  e.turno = empieza
+}
+
+/** Eventos de una mano nueva: repartida, o esperando el corte. */
+function eventosDeReparto(m: EstadoMano, eventos: Evento[]) {
+  if (m.cortando !== null) {
+    eventos.push({ tipo: 'esperandoCorte', numero: m.numero, reparte: m.reparte, mano: m.mano, asiento: m.cortando })
+    return
+  }
+  const e0 = m.enfrentamientos[0]!
+  eventos.push({
+    tipo: 'manoRepartida',
+    numero: m.numero,
+    reparte: m.reparte,
+    mano: m.mano,
+    muestra: m.muestra,
+    picaPica: m.picaPica,
+  })
+  eventos.push({ tipo: 'enfrentamientoIniciado', indice: 0, participantes: e0.participantes, mano: e0.mano })
 }
 
 /**
@@ -593,7 +726,14 @@ function cerrarEnfrentamiento(estado: EstadoPartida, piden: Equipo[], eventos: E
 
   e.resultado = { ...fin, puntosTanto, revelados, mentirosos, mostradas: cartasMostradas(estado, e) }
   mano.verificacion = null
-  eventos.push({ tipo: 'enfrentamientoTerminado', indice: mano.actual, resultado: e.resultado })
+  eventos.push({
+    tipo: 'enfrentamientoTerminado',
+    indice: mano.actual,
+    resultado: e.resultado,
+    participantes: [...e.participantes],
+    muestra: mano.muestra,
+    picaPica: mano.picaPica,
+  })
 
   // El tanto se anota antes que el truco.
   sumarPuntos(estado, puntosTanto)
@@ -622,16 +762,7 @@ function cerrarEnfrentamiento(estado: EstadoPartida, piden: Equipo[], eventos: E
   const nueva = repartir(estado, mano.numero + 1, reparte)
   estado.rng = nueva.rng
   estado.mano = nueva.mano
-  const e0 = nueva.mano.enfrentamientos[0]!
-  eventos.push({
-    tipo: 'manoRepartida',
-    numero: nueva.mano.numero,
-    reparte,
-    mano: nueva.mano.mano,
-    muestra: nueva.mano.muestra,
-    picaPica: nueva.mano.picaPica,
-  })
-  eventos.push({ tipo: 'enfrentamientoIniciado', indice: 0, participantes: e0.participantes, mano: e0.mano })
+  eventosDeReparto(nueva.mano, eventos)
 }
 
 /**

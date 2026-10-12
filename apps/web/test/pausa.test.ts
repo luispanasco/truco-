@@ -39,6 +39,9 @@ describe('pausa entre manos', () => {
       {
         tipo: 'enfrentamientoTerminado',
         indice: 0,
+        participantes: [0, 1],
+        muestra: carta(4, 'oro'),
+        picaPica: false,
         resultado: { motivo: 'vueltas', ganador: 0, puntosTruco: 2, puntosTanto: [0, 0], revelados: [], mentirosos: [], mostradas: [] },
       },
       { tipo: 'puntos', puntos: [2, 0] },
@@ -72,6 +75,9 @@ describe('pausa entre manos', () => {
         {
           tipo: 'enfrentamientoTerminado',
           indice: 0,
+          participantes: [0, 1],
+          muestra: carta(4, 'oro'),
+          picaPica: false,
           resultado: { motivo: 'mazo', ganador: 1, puntosTruco: 1, puntosTanto: [0, 0], revelados: [], mentirosos: [], mostradas: [] },
         },
         { tipo: 'partidaTerminada', ganador: 1, puntos: [20, 30] },
@@ -107,6 +113,9 @@ describe('pausa entre manos', () => {
         {
           tipo: 'enfrentamientoTerminado',
           indice: 0,
+          participantes: [0, 1],
+          muestra: carta(4, 'oro'),
+          picaPica: false,
           resultado: {
             motivo: 'mazo',
             ganador: 1,

@@ -22,8 +22,9 @@ describe('tiempos', () => {
     const turno = a.de('turno').find((t) => t.asientos.includes(0) && t.venceEn !== null)!
     expect(turno.venceEn! - Date.now()).toBeLessThanOrEqual(150)
 
-    // a no hace nada: igual la partida avanza y termina, jugando el bot por él.
-    await a.esperar(() => a.vista?.ganador != null, 60_000, 'que termine la partida')
+    // a no hace nada: juega un bot por él y, a la tercera vencida seguida, lo sacan de la mesa.
+    await a.esperar(() => a.de('expulsado').length > 0, 10_000, 'que lo saquen')
+    expect(a.de('expulsado')[0]!.motivo).toContain('tiempo')
     expect(a.de('error')).toEqual([])
   }, 90_000)
 

@@ -37,7 +37,7 @@ const TEXTO_CANTO: Record<string, string> = {
 function describirAccion(estado: EstadoPartida, a: Accion): string {
   switch (a.tipo) {
     case 'jugarCarta':
-      return `Jugar el ${nombreCarta(a.carta)}`
+      return a.tapada ? `Pasar con el ${nombreCarta(a.carta)}` : `Jugar el ${nombreCarta(a.carta)}`
     case 'cantarTruco': {
       const tr = enfrentamientoActual(estado).truco
       const nivel = (tr.pendiente?.nivel ?? tr.valor) + 1
@@ -45,7 +45,7 @@ function describirAccion(estado: EstadoPartida, a: Accion): string {
     }
     case 'cantarEnvido':
     case 'cantarFlor':
-      return TEXTO_CANTO[a.canto]!
+      return a.tipo === 'cantarFlor' && a.yTruco ? 'Flor y truco' : TEXTO_CANTO[a.canto]!
     case 'responder':
       return a.respuesta === 'quiero' ? 'Quiero' : 'No quiero'
     case 'declararTanto':
@@ -56,6 +56,10 @@ function describirAccion(estado: EstadoPartida, a: Accion): string {
       return 'Pedir ver los tantos'
     case 'noPedirVer':
       return 'No pedir ver'
+    case 'mandar':
+      return `Mandar a ${NOMBRES[a.a]} a ${a.que === 'tocar' ? 'tocar' : 'gritar'}`
+    case 'cortar':
+      return a.corte === 'convencional' ? 'Cortar' : a.corte === 'sacarMuestra' ? 'Sacar la muestra' : 'Se la doy al mano'
   }
 }
 
@@ -63,7 +67,7 @@ function describirEvento(ev: Evento): string | null {
   const quien = (asiento: number) => NOMBRES[asiento]!
   switch (ev.tipo) {
     case 'cartaJugada':
-      return `${quien(ev.asiento)}: ${nombreCarta(ev.carta)}`
+      return `${quien(ev.asiento)}: ${ev.carta ? nombreCarta(ev.carta) : 'carta tapada'}`
     case 'vueltaTerminada':
       return `  → Vuelta ${ev.indice + 1}: ${ev.resultado === 'parda' ? 'parda' : `gana ${NOMBRES[ev.resultado]}`}`
     case 'cantoTruco':
@@ -103,7 +107,7 @@ function mostrarMesa(estado: EstadoPartida) {
   const v = vistaPara(estado, YO)
   const e = v.mano.enfrentamientos[v.mano.actual]!
   const truco = e.truco.valor > 1 ? ` · la mano vale ${e.truco.valor}` : ''
-  console.log(`\nMuestra: ${nombreCarta(v.mano.muestra)}${truco}`)
+  console.log(`\nMuestra: ${v.mano.muestra ? nombreCarta(v.mano.muestra) : '(sin cortar)'}${truco}`)
   const flor = v.mano.miTanto.flor !== null ? ` · ¡tenés flor de ${v.mano.miTanto.flor}!` : ''
   console.log(`Tus cartas: ${v.mano.misCartas.map(nombreCarta).join(', ')} · tu envido: ${v.mano.miTanto.envido}${flor}`)
 }

@@ -26,6 +26,9 @@ const arbConfig = fc.record<Partial<ConfigSala>>({
   picaPica: fc.boolean(),
   picaPicaAlternado: fc.boolean(),
   modoSucio: fc.boolean(),
+  toquesYGritos: fc.constantFrom('pie', 'cualquiera'),
+  corte: fc.boolean(),
+  puntosPartida: fc.constantFrom(20, 30, 40),
 })
 
 function nueva(config: Partial<ConfigSala>, semilla: number): EstadoPartida {
@@ -83,7 +86,7 @@ describe('propiedades', () => {
           anterior = [...estado.puntos]
         })
         expect(final.ganador).not.toBeNull()
-        expect(final.puntos[final.ganador!]).toBe(30)
+        expect(final.puntos[final.ganador!]).toBe(final.config.puntosPartida)
       }),
       { numRuns: 60 },
     )

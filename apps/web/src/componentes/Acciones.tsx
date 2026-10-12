@@ -9,6 +9,7 @@ function grupoDe(a: Accion): Grupo | null {
     case 'declararTanto':
     case 'pedirVer':
     case 'noPedirVer':
+    case 'cortar':
       return 'respuesta'
     case 'cantarEnvido':
       return 'envido'

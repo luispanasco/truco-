@@ -32,7 +32,8 @@ describe('pica-pica', () => {
     let estado = partidaCon(MANOS, '3c')
     expect(estado.mano.picaPica).toBe(false)
     expect(enfrentamientoActual(estado).participantes).toHaveLength(6)
-    ;({ estado } = jugar(estado, ['mazo', 'a']))
+    // Se va el pie del equipo 0 (e): el equipo pierde la mano.
+    ;({ estado } = jugar(estado, ['mazo', 'e']))
     expect(estado.mano.numero).toBe(2)
     expect(estado.mano.picaPica).toBe(true)
     expect(enfrentamientoActual(estado).participantes).toEqual([1, 4])

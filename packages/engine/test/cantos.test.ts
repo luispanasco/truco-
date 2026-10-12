@@ -369,8 +369,8 @@ describe('flor', () => {
     ;({ estado } = jugar(estado, ['flor', 'd']))
     expect(esperandoA(estado)).toEqual([0])
     // Gana la flor de a (38): su equipo cobra 3 por su única flor; las dos del rival no cobran.
-    ;({ estado } = jugar(estado, ['jugar', 'a', '7e'], ['mazo', 'b']))
-    expect(estado.puntos).toEqual([3 + 1, 0])
+    ;({ estado } = jugar(estado, ['jugar', 'a', '7e'], ['truco', 'b'], ['noQuiero', 'c']))
+    expect(estado.puntos).toEqual([3, 1])
   })
 
   it('en 2v2 con flor en los dos equipos, el ganador suma 3 por cada flor suya mayor que la mejor del rival', () => {
@@ -413,8 +413,8 @@ describe('flor', () => {
     let eventos
     ;({ estado, eventos } = jugar(estado, ['flor', 'd']))
     expect(eventos).toContainEqual({ tipo: 'envidoAnulado' })
-    // El envido anulado no lo cobra nadie: el equipo 1 cobra solo la flor y el truco.
-    expect(jugar(estado, ['mazo', 'a']).estado.puntos).toEqual([0, 3 + 1])
+    // El envido anulado no lo cobra nadie: el equipo 1 cobra solo la flor y el truco (se va el pie, c).
+    expect(jugar(estado, ['mazo', 'c']).estado.puntos).toEqual([0, 3 + 1])
 
     // Tampoco puede envidar b en su turno, ni con "envido va primero".
     rechaza(jugar(p, ['jugar', 'a', '1e']).estado, ['envido', 'b'], 'Tu compañero tiene flor')

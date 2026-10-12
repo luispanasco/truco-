@@ -81,6 +81,7 @@ function partida2v2({
     publica: false,
     tiempos: { turnoS: 30, primeraJugadaS: 60 },
     cartasJugadas: 'quedan',
+    tirarReyes: 'no',
     mesa: 'boliche',
     baraja: 'propia',
     fase: 'jugando',
@@ -158,7 +159,7 @@ describe('cara de señas', () => {
   it('con ayudas se marcan las señas de tus cartas; sin ayudas, ninguna', async () => {
     const datos = partida2v2()
     await entrar(datos)
-    const mias = seniasDeMano(datos.vista.mano.misCartas, datos.vista.mano.muestra)
+    const mias = seniasDeMano(datos.vista.mano.misCartas, datos.vista.mano.muestra!)
     const panel = abrir()
     const marcadas = [...panel.querySelectorAll('.sugerida')].map((b) => b.getAttribute('aria-label'))
     const DE_BOCA: Senia[] = ['pieza4', 'tres', 'dosComun', 'unoFalso', 'flor']
@@ -246,8 +247,8 @@ describe('gestos en los avatares', () => {
 describe('señas rápidas', () => {
   // Una mano con dos cartas con seña y una sin, sin flor (así la tira es la de las cartas).
   const conSenias = (v: VistaPartida) => {
-    const con = v.mano.misCartas.filter((c) => seniaDeCarta(c, v.mano.muestra) !== null)
-    return con.length === 2 && !seniasDeMano(v.mano.misCartas, v.mano.muestra).includes('flor')
+    const con = v.mano.misCartas.filter((c) => seniaDeCarta(c, v.mano.muestra!) !== null)
+    return con.length === 2 && !seniasDeMano(v.mano.misCartas, v.mano.muestra!).includes('flor')
   }
   /** La mano llega apilada para ojear: hasta abrirla no se ve la tira (no delata las cartas). */
   const abrirMano = () => {
@@ -261,7 +262,8 @@ describe('señas rápidas', () => {
     const datos = partida2v2({ requisito: conSenias })
     const { enviados } = await entrar(datos)
     abrirMano()
-    const { misCartas, muestra } = datos.vista.mano
+    const { misCartas } = datos.vista.mano
+    const muestra = datos.vista.mano.muestra!
     const esperadas = seniasRapidas(misCartas, muestra)
     const tira = screen.getByRole('group', { name: 'Señas rápidas' })
     const botones = within(tira).getAllByRole('button')
@@ -283,7 +285,8 @@ describe('señas rápidas', () => {
     const datos = partida2v2({ requisito: conSenias })
     const { enviados } = await entrar(datos)
     abrirMano()
-    const { misCartas, muestra } = datos.vista.mano
+    const { misCartas } = datos.vista.mano
+    const muestra = datos.vista.mano.muestra!
     const conSenia = misCartas.find((c) => seniaDeCarta(c, muestra) !== null)!
     const el = botonCarta(conSenia).closest('.ojeo-carta') as HTMLElement
 
@@ -311,7 +314,7 @@ describe('señas rápidas', () => {
     const datos = partida2v2({
       senias: { ...SENIAS_DEFAULT, momento: 'antesDeJugar' },
       jugada: true,
-      requisito: (v) => v.mano.misCartas.some((c) => seniaDeCarta(c, v.mano.muestra) !== null),
+      requisito: (v) => v.mano.misCartas.some((c) => seniaDeCarta(c, v.mano.muestra!) !== null),
     })
     const { enviados } = await entrar(datos)
     // Con una carta jugada la mano ya llega abierta.
@@ -330,14 +333,15 @@ describe('mesa sin señas', () => {
   it('no hay botón, ni tira, ni mantener apretado, ni gestos', async () => {
     const datos = partida2v2({
       senias: { ...SENIAS_DEFAULT, habilitadas: false },
-      requisito: (v) => v.mano.misCartas.some((c) => seniaDeCarta(c, v.mano.muestra) !== null),
+      requisito: (v) => v.mano.misCartas.some((c) => seniaDeCarta(c, v.mano.muestra!) !== null),
     })
     const { enviados, llegar } = await entrar(datos)
     fireEvent.click(screen.getByRole('button', { name: 'Ver todas' }))
     expect(screen.queryByRole('button', { name: 'Hacer una seña' })).toBeNull()
     expect(document.querySelector('.tira-senias')).toBeNull()
 
-    const { misCartas, muestra } = datos.vista.mano
+    const { misCartas } = datos.vista.mano
+    const muestra = datos.vista.mano.muestra!
     const conSenia = misCartas.find((c) => seniaDeCarta(c, muestra) !== null)!
     const el = screen.getByRole('button', { name: `Jugar el ${nombreCarta(conSenia)}` }).closest('.ojeo-carta') as HTMLElement
     const toque = { pointerId: 1, clientX: 100, clientY: 100, button: 0, pointerType: 'touch' }

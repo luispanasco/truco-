@@ -44,15 +44,20 @@ export function crearDificil(permitirMentiras: boolean, parcial: Partial<Ajustes
   return {
     cantarFlor(ctx, puede) {
       const p = pFlor(ctx)
-      if (puede.alResto && p > 0.85 && valorFalta(ctx, ctx.equipo) <= 12) return 'contraflorAlResto'
+      // La contraflor al resto es el partido: solo muy seguro.
+      if (puede.alResto && p > 0.9) return 'contraflorAlResto'
       if (puede.contraflor && p > 0.65) return 'contraflor'
       return 'flor'
     },
 
     responderContraflor(ctx, puedeSubir) {
       const p = pFlor(ctx)
-      if (puedeSubir && p > 0.85) return 'subir'
-      // Querer entrega 6 si pierde y gana 6 si gana; no querer entrega 3.
+      if (puedeSubir && p > 0.9) return 'subir'
+      // Al resto se juega el partido: querer solo con buenas chances o si no querer ya lo pierde.
+      if (ctx.e.flor.contra.at(-1)?.canto === 'contraflorAlResto') {
+        return p > 0.6 || faltanPara(ctx, ctx.rival) <= 4 ? 'quiero' : 'noQuiero'
+      }
+      // Querer entrega 6 si pierde y gana 6 si gana; no querer entrega 4.
       return p > 0.3 || faltanPara(ctx, ctx.rival) <= 3 ? 'quiero' : 'noQuiero'
     },
 

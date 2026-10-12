@@ -4,7 +4,7 @@ import { TODO_PERMITIDO } from '@truco/shared'
 import { mostrarBaraja } from '../baraja'
 import { AjustesSonido } from '../componentes/AjustesSonido'
 import { Carta } from '../componentes/Carta'
-import { FORMATOS, NIVELES, SelectorCartasJugadas } from '../componentes/FormularioSala'
+import { FORMATOS, NIVELES, Segmentado, SelectorCartasJugadas, SelectorLargo } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
 import { SelectorMesa } from '../componentes/SelectorMesa'
 import { SelectorVistaMesa } from '../componentes/SelectorVistaMesa'
@@ -133,13 +133,19 @@ export function Inicio() {
         cartasJugadas: perfil.cartasJugadas,
         mesa: perfil.mesa,
         baraja: perfil.baraja,
-        config: { picaPica: perfil.picaPica },
+        config: {
+          picaPica: perfil.picaPica,
+          puntosPartida: perfil.puntosPartida,
+          toquesYGritos: perfil.toquesDelPie ? 'pie' : 'cualquiera',
+          corte: perfil.corte,
+        },
+        tirarReyes: perfil.tirarReyes,
         senias: {
           habilitadas: perfil.seniasHabilitadas,
           pescar: perfil.pescarSenias ? 'gesto' : 'nunca',
           momento: perfil.seniasAntesDeJugar ? 'antesDeJugar' : 'libre',
         },
-        ...(perfil.rapido ? { demoraBots: [350, 700] as [number, number], pausas: { vuelta: 500, mano: 2700 } } : {}),
+        ...(perfil.rapido ? { demoraBots: [350, 700] as [number, number], pausas: { vuelta: 1500, mano: 5000 } } : {}),
       }),
     )
     navegar('/mesa')
@@ -220,6 +226,30 @@ export function Inicio() {
           />
           <SelectorVistaMesa valor={perfil.mesaBustos} alCambiar={(mesaBustos) => cambiar({ mesaBustos })} />
           <SelectorCartasJugadas valor={perfil.cartasJugadas} alCambiar={(cartasJugadas) => cambiar({ cartasJugadas })} />
+          <SelectorLargo valor={perfil.puntosPartida} alCambiar={(puntosPartida) => cambiar({ puntosPartida })} />
+          <Segmentado
+            titulo="Tirar reyes"
+            valor={perfil.tirarReyes}
+            opciones={[
+              ['no', 'No'],
+              ['reparte', 'Para repartir'],
+              ['reparteYEquipos', 'Y los equipos'],
+            ]}
+            alCambiar={(tirarReyes) => cambiar({ tirarReyes })}
+            detalle="Una carta a cada uno hasta el primer rey, que reparte (y, con equipos, los primeros reyes van juntos)"
+          />
+          <Interruptor
+            activo={perfil.toquesDelPie}
+            alCambiar={(v) => cambiar({ toquesDelPie: v })}
+            titulo="Toques y gritos del pie"
+            detalle="En parejas y tríos, toca y grita el pie (o el que él manda) y contesta él"
+          />
+          <Interruptor
+            activo={perfil.corte}
+            alCambiar={(v) => cambiar({ corte: v })}
+            titulo="Cortar el mazo"
+            detalle="Antes de cada mano: corte, sacar la muestra o se la doy al mano"
+          />
           <SelectorMesa valor={perfil.mesa} alCambiar={(mesa) => cambiar({ mesa })} tiendaDesbloqueada={perfil.tiendaDesbloqueada} />
           <Interruptor
             activo={perfil.tiendaDesbloqueada}

@@ -99,6 +99,7 @@ function salaDeEspera(tiempos: InfoSala['tiempos']): InfoSala {
     senias: SENIAS_DEFAULT,
     tiempos,
     cartasJugadas: 'quedan',
+    tirarReyes: 'no',
     mesa: 'boliche',
     baraja: 'propia',
     chatEquipo: false,

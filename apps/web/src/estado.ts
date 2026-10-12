@@ -1,15 +1,25 @@
 import { create } from 'zustand'
 import { mismaCarta } from '@truco/engine'
 import type { Carta, CartasMostradas, Evento, ResultadoEnfrentamiento, ResultadoVuelta, VistaPartida } from '@truco/engine'
-import type { Senia } from '@truco/bots'
-import { describirEvento, TEXTO_CANTO, type InfoSala, type MensajeChat, type MensajesCliente } from '@truco/shared'
+import type { Senia, Sugerencia } from '@truco/bots'
+import {
+  describirEvento,
+  TEXTO_CANTO,
+  TEXTO_CORTE,
+  type InfoSala,
+  type MensajeChat,
+  type MensajesCliente,
+  type MensajesServidor,
+} from '@truco/shared'
 import type { Conexion, EstadoConexion, MensajeServidor } from './conexion/tipos'
 import { sonarEfecto, sonarEvento } from './sonido'
 import { aplicarTemaDeSala, aplicarTemaPropio } from './temaSala'
 
 export interface Jugada {
   asiento: number
-  carta: Carta
+  /** null: no la podés ver (tapada, o pieza de otro duelo en el pica-pica). */
+  carta: Carta | null
+  tapada?: boolean
   /** Vuelta en la que se tiró (0, 1 o 2). */
   vuelta: number
 }
@@ -64,6 +74,13 @@ interface EstadoJuego {
   finDeMano: string | null
   /** Cartas que se dieron vuelta al terminar (flor o envido ganado), mientras dura la pausa. */
   mostradas: Mostradas[]
+  /** La última sugerencia del pie (la dijo en voz alta: la oyen todos). */
+  sugerencia: { de: number; sugerencia: Sugerencia; id: number } | null
+  /** Los reyes que se tiraron antes de empezar, mientras se muestran. */
+  reyes: (MensajesServidor['reyes'] & { id: number }) | null
+  /** Te sacaron de la mesa. */
+  expulsado: string | null
+  cerrarReyes(): void
 
   conectar(conexion: Conexion): void
   enviar<K extends keyof MensajesCliente>(tipo: K, datos: MensajesCliente[K]): void
@@ -76,7 +93,7 @@ const DURACION_GLOBO = 2600
  * Al terminar una mano, las cartas quedan a la vista este tiempo con el resultado y después
  * se levantan. Lo que llegue mientras tanto (la mano nueva) espera en cola.
  */
-export const PAUSA_ENTRE_MANOS = 2500
+export const PAUSA_ENTRE_MANOS = 4800
 
 let contador = 0
 let desuscribir: (() => void) | null = null
@@ -120,8 +137,15 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     switch (ev.tipo) {
       case 'cartaJugada':
         set((s) => ({
-          mesa: { ...s.mesa, jugadas: [...s.mesa.jugadas, { asiento: ev.asiento, carta: ev.carta, vuelta: s.mesa.vueltas.length }] },
+          mesa: {
+            ...s.mesa,
+            jugadas: [
+              ...s.mesa.jugadas,
+              { asiento: ev.asiento, carta: ev.carta, vuelta: s.mesa.vueltas.length, ...(ev.tapada ? { tapada: true } : {}) },
+            ],
+          },
         }))
+        if (ev.tapada) mostrarGlobo(ev.asiento, 'Paso')
         break
       case 'vueltaTerminada':
         set((s) => ({ mesa: { ...s.mesa, vueltas: [...s.mesa.vueltas, { resultado: ev.resultado, ganador: ev.ganador }] } }))
@@ -134,14 +158,24 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         set({ mostradas: etiquetarMostradas(ev.resultado, get().vista) })
         break
       case 'cantoTruco':
+        // Con "flor y truco" el globo ya lo dice todo.
+        if (get().globos[ev.asiento]?.texto !== '¡Flor y truco!') mostrarGlobo(ev.asiento, `¡${TEXTO_CANTO[ev.canto]}!`)
+        break
       case 'cantoFlor':
-        mostrarGlobo(ev.asiento, `¡${TEXTO_CANTO[ev.canto]}!`)
+        mostrarGlobo(ev.asiento, ev.yTruco ? '¡Flor y truco!' : `¡${TEXTO_CANTO[ev.canto]}!`)
+        break
+      case 'orden':
+        mostrarGlobo(ev.asiento, `${ev.que === 'tocar' ? '¡Tocá' : '¡Gritá'}, ${nombre(ev.a)}!`)
+        break
+      case 'corte':
+        mostrarGlobo(ev.asiento, TEXTO_CORTE[ev.corte])
         break
       case 'cantoEnvido':
         mostrarGlobo(ev.asiento, `${ev.primeroEstaElEnvido ? 'Envido va primero. ' : ''}¡${TEXTO_CANTO[ev.canto]}!`)
         break
       case 'respuesta':
-        mostrarGlobo(ev.asiento, ev.respuesta === 'quiero' ? '¡Quiero!' : 'No quiero')
+        if (ev.a === 'flor') mostrarGlobo(ev.asiento, ev.respuesta === 'quiero' ? '¡Con flor quiero!' : 'Con flor me achico')
+        else mostrarGlobo(ev.asiento, ev.respuesta === 'quiero' ? '¡Quiero!' : 'No quiero')
         break
       case 'tantoDeclarado':
         mostrarGlobo(ev.asiento, ev.tanto === null ? 'Son buenas' : String(ev.tanto))
@@ -229,6 +263,18 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       case 'ofrecerBot':
         set({ ofrecerBot: true })
         break
+      case 'sugerencia': {
+        const { de, sugerencia } = m.datos
+        set({ sugerencia: { de, sugerencia, id: ++contador } })
+        mostrarGlobo(de, sugerencia.tipo === 'veni' ? '¡Vení!' : `¡Vamos a ${nombre(sugerencia.asiento)}!`)
+        break
+      }
+      case 'reyes':
+        set({ reyes: { ...m.datos, id: ++contador } })
+        break
+      case 'expulsado':
+        set({ expulsado: m.datos.motivo })
+        break
     }
   }
 
@@ -249,6 +295,13 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     mostradas: [],
     estadoConexion: 'conectada',
     ofrecerBot: false,
+    sugerencia: null,
+    reyes: null,
+    expulsado: null,
+
+    cerrarReyes() {
+      set({ reyes: null })
+    },
 
     conectar(conexion) {
       get().salir()
@@ -291,6 +344,9 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         mostradas: [],
         estadoConexion: 'conectada',
         ofrecerBot: false,
+        sugerencia: null,
+        reyes: null,
+        expulsado: null,
       })
     },
   }
@@ -300,14 +356,16 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
 function mesaDesdeVista(v: VistaPartida, antes: MesaVisible): MesaVisible {
   const e = v.mano.enfrentamientos[v.mano.actual]
   if (!e) return MESA_VACIA
-  const jugadas = e.vueltas.flatMap((vu, i) => vu.jugadas.map((j) => ({ asiento: j.asiento, carta: j.carta, vuelta: i })))
+  const jugadas: Jugada[] = e.vueltas.flatMap((vu, i) =>
+    vu.jugadas.map((j) => ({ asiento: j.asiento, carta: j.carta, vuelta: i, ...(j.tapada ? { tapada: true } : {}) })),
+  )
   const vueltas = e.vueltas.flatMap((vu) => (vu.resultado === null ? [] : [{ resultado: vu.resultado, ganador: vu.ganador }]))
   const igual =
     vueltas.length === antes.vueltas.length &&
     jugadas.length === antes.jugadas.length &&
     jugadas.every((j, i) => {
       const a = antes.jugadas[i]!
-      return a.asiento === j.asiento && a.vuelta === j.vuelta && mismaCarta(a.carta, j.carta)
+      return a.asiento === j.asiento && a.vuelta === j.vuelta && (a.carta && j.carta ? mismaCarta(a.carta, j.carta) : a.carta === j.carta)
     })
   return igual ? antes : { jugadas, vueltas }
 }

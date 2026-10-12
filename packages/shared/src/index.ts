@@ -2,8 +2,8 @@
  * Mensajes entre la web y el servidor de juego. Los usan los dos lados, así un
  * cambio en el protocolo no compila hasta que ambos lo acompañan.
  */
-import type { Accion, ConfigSala, Evento, Formato, VistaPartida } from '@truco/engine'
-import type { Nivel, Senia } from '@truco/bots'
+import type { Accion, Carta, ConfigSala, Evento, Formato, VistaPartida } from '@truco/engine'
+import type { Nivel, Senia, Sugerencia } from '@truco/bots'
 import type { IdBaraja } from './barajas'
 import type { IdMesa } from './mesas'
 
@@ -96,6 +96,22 @@ export function normalizarCartasJugadas(op: unknown, base: CartasJugadas = CARTA
   return op === 'quedan' || op === 'seLevantan' ? op : base
 }
 
+/**
+ * Tirar reyes antes de la primera partida de la sala: se da una carta a cada uno desde el
+ * anfitrión, en sentido antihorario, sacándolas del fondo del mazo. El primer rey reparte y,
+ * con equipos, los primeros 2 (2v2) o 3 (3v3) reyes forman un equipo.
+ */
+export type TirarReyes = 'no' | 'reparte' | 'reparteYEquipos'
+
+export const TIRAR_REYES_DEFAULT: TirarReyes = 'no'
+
+export function normalizarTirarReyes(op: unknown, base: TirarReyes = TIRAR_REYES_DEFAULT): TirarReyes {
+  return op === 'no' || op === 'reparte' || op === 'reparteYEquipos' ? op : base
+}
+
+/** Jugadas vencidas seguidas por las que el servidor saca a alguien de la mesa (queda un bot). */
+export const VENCIDOS_PARA_SACAR = 3
+
 /** Si el asiento ya jugó alguna carta en la mano (sirve con el estado del motor y con la vista). */
 export function yaJugoEnLaMano(mano: { enfrentamientos: { vueltas: { jugadas: { asiento: number }[] }[] }[] }, asiento: number): boolean {
   return mano.enfrentamientos.some((e) => e.vueltas.some((v) => v.jugadas.some((j) => j.asiento === asiento)))
@@ -145,6 +161,8 @@ export interface OpcionesCrearSala extends OpcionesUnirse {
   tiempos?: Partial<ConfigTiempos>
   /** Si las cartas jugadas quedan en la mesa o se levantan en cada vuelta. */
   cartasJugadas?: CartasJugadas
+  /** Tirar reyes para ver quién reparte (y, si se pide, para armar los equipos). */
+  tirarReyes?: TirarReyes
 }
 
 export type CanalChat = 'general' | 'equipo'
@@ -158,6 +176,8 @@ export interface MensajesCliente {
   pedirSenias: { asiento: number }
   /** Volver a hacerles a tus compañeros las señas que ya les hiciste en esta mano. */
   repetirSenias: Record<string, never>
+  /** Solo el pie: sugerencia en voz alta a sus compañeros ("vení", "vamos a X"). La oyen todos. */
+  sugerir: { sugerencia: Sugerencia }
   silenciar: { asiento: number; silenciar: boolean }
   reportar: { asiento: number; motivo?: string }
   /** En la espera: cambiarse a un lugar libre (para elegir equipo). */
@@ -204,6 +224,7 @@ export interface InfoSala {
   senias: ConfigSenias
   tiempos: ConfigTiempos
   cartasJugadas: CartasJugadas
+  tirarReyes: TirarReyes
   /**
    * La mesa y la baraja con las que todos ven la partida: las del anfitrión (en la cola
    * pública, que no tiene, las de siempre).
@@ -248,6 +269,17 @@ export interface MensajesServidor {
    * si la sala solo deja ver que se hizo una (no cuál).
    */
   seniaPescada: { de: number; senia: Senia | null }
+  /** El pie le sugirió algo a su equipo, en voz alta. */
+  sugerencia: { de: number; sugerencia: Sugerencia }
+  /**
+   * Se tiraron reyes. `tiradas` son las cartas que se dieron, en orden, con el asiento que
+   * tenía cada uno al tirar; `equipos` (si se armaron) son esos asientos de los que sacaron rey.
+   * `reparte` es el asiento que reparte, ya con los lugares nuevos. `apodos` son los de cada
+   * asiento al tirar (antes de reacomodarse).
+   */
+  reyes: { tiradas: { asiento: number; carta: Carta }[]; reparte: number; equipos: number[] | null; apodos: string[] }
+  /** Te sacaron de la mesa (por ejemplo, por dejar vencer el tiempo varias veces seguidas). */
+  expulsado: { motivo: string }
   error: { motivo: string }
   /** Cola pública: hace rato que no aparece nadie. */
   ofrecerBot: Record<string, never>
@@ -256,7 +288,8 @@ export interface MensajesServidor {
 export type TipoMensajeCliente = keyof MensajesCliente
 export type TipoMensajeServidor = keyof MensajesServidor
 
-export { describirAccion, describirEvento, TEXTO_CANTO } from './textos'
+export { describirAccion, describirEvento, TEXTO_CANTO, TEXTO_CORTE } from './textos'
 export * from './avatar'
 export * from './mesas'
 export * from './barajas'
+export * from './reyes'

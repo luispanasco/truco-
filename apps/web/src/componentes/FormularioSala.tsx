@@ -4,6 +4,7 @@ import { CONFIG_DEFAULT, type ConfigSala, type Formato } from '@truco/engine'
 import { SENIAS_DEFAULT, type ConfigSenias, type InfoSala, type MensajesCliente, type PescarSenias } from '@truco/shared'
 import { normalizarTiempos, TIEMPOS_SALA_DEFAULT, type ConfigTiempos } from '@truco/shared'
 import { CARTAS_JUGADAS_DEFAULT, normalizarCartasJugadas, type CartasJugadas } from '@truco/shared'
+import { normalizarTirarReyes, TIRAR_REYES_DEFAULT, type TirarReyes } from '@truco/shared'
 import type { Perfil } from '../perfil'
 import { Interruptor } from './Interruptor'
 import '../estilos-senias.css'
@@ -22,7 +23,17 @@ export const NIVELES: [Nivel, string][] = [
 /** Las reglas de la mesa que se pueden cambiar al armar una sala. */
 export type ReglasSala = Pick<
   ConfigSala,
-  'picaPica' | 'picaPicaAlternado' | 'florObligatoria' | 'envidoEnvido' | 'valorContraflor' | 'faltaEnvidoEnMalas' | 'mazoCobraEnvidoPendiente' | 'florConPiezas'
+  | 'picaPica'
+  | 'picaPicaAlternado'
+  | 'florObligatoria'
+  | 'envidoEnvido'
+  | 'valorContraflor'
+  | 'faltaEnvidoEnMalas'
+  | 'mazoCobraEnvidoPendiente'
+  | 'florConPiezas'
+  | 'puntosPartida'
+  | 'toquesYGritos'
+  | 'corte'
 >
 
 export interface OpcionesSala {
@@ -37,11 +48,26 @@ export interface OpcionesSala {
   tiempos: ConfigTiempos
   /** Si las cartas jugadas quedan en la mesa o se levantan en cada vuelta. */
   cartasJugadas: CartasJugadas
+  /** Tirar reyes antes de la primera partida. */
+  tirarReyes: TirarReyes
 }
 
 function reglasDe(c: ConfigSala): ReglasSala {
   const { picaPica, picaPicaAlternado, florObligatoria, envidoEnvido, valorContraflor, faltaEnvidoEnMalas, mazoCobraEnvidoPendiente, florConPiezas } = c
-  return { picaPica, picaPicaAlternado, florObligatoria, envidoEnvido, valorContraflor, faltaEnvidoEnMalas, mazoCobraEnvidoPendiente, florConPiezas }
+  const { puntosPartida, toquesYGritos, corte } = c
+  return {
+    picaPica,
+    picaPicaAlternado,
+    florObligatoria,
+    envidoEnvido,
+    valorContraflor,
+    faltaEnvidoEnMalas,
+    mazoCobraEnvidoPendiente,
+    florConPiezas,
+    puntosPartida,
+    toquesYGritos,
+    corte,
+  }
 }
 
 /** Lo que se propone al crear una sala: lo último que eligió la persona y las reglas de siempre. */
@@ -51,11 +77,18 @@ export function opcionesIniciales(p: Perfil): OpcionesSala {
     nivelBots: p.nivelBots,
     botsEnVacios: true,
     ayudas: p.ayudas,
-    reglas: { ...reglasDe(CONFIG_DEFAULT), picaPica: p.picaPica },
+    reglas: {
+      ...reglasDe(CONFIG_DEFAULT),
+      picaPica: p.picaPica,
+      puntosPartida: p.puntosPartida,
+      toquesYGritos: p.toquesDelPie ? 'pie' : 'cualquiera',
+      corte: p.corte,
+    },
     // Con o sin señas, lo último que eligió; lo demás de las señas, como siempre.
     senias: { ...SENIAS_DEFAULT, habilitadas: p.seniasHabilitadas },
     tiempos: normalizarTiempos(p.tiempos),
     cartasJugadas: normalizarCartasJugadas(p.cartasJugadas),
+    tirarReyes: normalizarTirarReyes(p.tirarReyes),
   }
 }
 
@@ -69,6 +102,7 @@ export function opcionesDeSala(s: InfoSala): OpcionesSala {
     senias: s.senias ?? SENIAS_DEFAULT,
     tiempos: s.tiempos ?? TIEMPOS_SALA_DEFAULT,
     cartasJugadas: s.cartasJugadas ?? CARTAS_JUGADAS_DEFAULT,
+    tirarReyes: s.tirarReyes ?? TIRAR_REYES_DEFAULT,
   }
 }
 
@@ -82,16 +116,32 @@ export function opcionesParaServidor(o: OpcionesSala): MensajesCliente['configur
     senias: o.senias,
     tiempos: o.tiempos,
     cartasJugadas: o.cartasJugadas,
+    tirarReyes: o.tirarReyes,
   }
 }
 
-const TEXTO_FALTA: Record<ReglasSala['faltaEnvidoEnMalas'], [string, string]> = {
-  completarMalas: [
-    'Hasta 15',
-    'En malas vale lo que le falta al que va ganando para llegar a 15; con 15 o más, lo que le falta para ganar.',
-  ],
-  loQueFalta: ['Hasta 30', 'Vale siempre lo que le falta al que va ganando para llegar a la partida.'],
-  ganaPartido: ['Gana el partido', 'Quien la gana se lleva la partida entera.'],
+/** Los textos de la falta dependen del largo del partido (las malas son la mitad). */
+function textoFalta(v: ReglasSala['faltaEnvidoEnMalas'], partido: number): [string, string] {
+  const malas = partido / 2
+  if (v === 'completarMalas') {
+    return [
+      `Hasta ${malas}`,
+      `En malas vale lo que le falta al que va ganando para llegar a ${malas}; con ${malas} o más, lo que le falta para ganar.`,
+    ]
+  }
+  if (v === 'loQueFalta') return [`Hasta ${partido}`, 'Vale siempre lo que le falta al que va ganando para llegar a la partida.']
+  return ['Gana el partido', 'Quien la gana se lleva la partida entera.']
+}
+
+export const LARGOS: [number, string][] = [
+  [20, '10 y 10'],
+  [30, '15 y 15'],
+  [40, '20 y 20'],
+]
+const TEXTO_REYES: Record<TirarReyes, [string, string]> = {
+  no: ['No', 'Reparte primero el último lugar (el anfitrión es mano).'],
+  reparte: ['Para repartir', 'Desde el anfitrión, una carta a cada uno: el primer rey reparte.'],
+  reparteYEquipos: ['Y los equipos', 'Además, los primeros reyes forman un equipo (los lugares se reacomodan).'],
 }
 const TEXTO_FLOR: Record<ReglasSala['florConPiezas'], [string, string]> = {
   piezaMayorMasDigitos: [
@@ -174,6 +224,19 @@ export function SelectorCartasJugadas({ valor, alCambiar }: { valor: CartasJugad
   )
 }
 
+/** A cuánto se juega: 10 y 10, 15 y 15 o 20 y 20. */
+export function SelectorLargo({ valor, alCambiar }: { valor: number; alCambiar: (v: number) => void }) {
+  return (
+    <Segmentado
+      titulo="Partido"
+      valor={valor}
+      opciones={LARGOS}
+      alCambiar={alCambiar}
+      detalle={`A ${valor}: malas hasta ${valor / 2} y buenas desde ${valor / 2 + 1}.`}
+    />
+  )
+}
+
 /** Formulario de la sala privada: se usa al crearla y cuando el anfitrión la cambia en la espera. */
 export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCambiar: (o: OpcionesSala) => void }) {
   const cambiar = (p: Partial<OpcionesSala>) => alCambiar({ ...valor, ...p })
@@ -239,7 +302,17 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
           }
         />
       )}
+      <SelectorLargo valor={r.puntosPartida} alCambiar={(puntosPartida) => regla({ puntosPartida })} />
       <SelectorCartasJugadas valor={valor.cartasJugadas} alCambiar={(cartasJugadas) => cambiar({ cartasJugadas })} />
+      <Segmentado
+        titulo="Tirar reyes"
+        valor={valor.tirarReyes}
+        opciones={(['no', 'reparte', 'reparteYEquipos'] as const)
+          .filter((v) => v !== 'reparteYEquipos' || valor.formato !== '1v1')
+          .map((v) => [v, TEXTO_REYES[v][0]])}
+        alCambiar={(tirarReyes) => cambiar({ tirarReyes })}
+        detalle={TEXTO_REYES[valor.tirarReyes][1]}
+      />
 
       <h3 className="reglas-subtitulo">Tiempos</h3>
       <Segmentado
@@ -247,7 +320,7 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
         valor={valor.tiempos.turnoS}
         opciones={opcionesSegundos(SEGUNDOS_TURNO, valor.tiempos.turnoS)}
         alCambiar={(turnoS) => cambiar({ tiempos: { ...valor.tiempos, turnoS } })}
-        detalle="También para contestar cantos. Si se acaba, juega un bot por vos."
+        detalle="También para contestar cantos. Si se acaba, juega un bot por vos; a la tercera seguida, te sacan de la mesa."
       />
       <Segmentado
         titulo="Primera jugada del mano"
@@ -270,27 +343,49 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
             activo={r.envidoEnvido}
             alCambiar={(envidoEnvido) => regla({ envidoEnvido })}
             titulo="Envido envido"
-            detalle="Se puede contestar un envido con otro envido antes de subir a real o falta"
+            detalle="Envido y real envido se encadenan sin límite; solo la falta corta. Apagado, un solo envido"
           />
           <Interruptor
             activo={r.mazoCobraEnvidoPendiente}
             alCambiar={(mazoCobraEnvidoPendiente) => regla({ mazoCobraEnvidoPendiente })}
             titulo="Mazo con envido pendiente"
-            detalle="Si te vas al mazo sin contestar un envido, el rival lo cobra como no querido"
+            detalle="Si te vas al mazo sin contestar un envido, o en la primera sin que se haya tocado, el rival cobra el envido no querido"
+          />
+          {valor.formato !== '1v1' && (
+            <Segmentado
+              titulo="Toques y gritos"
+              valor={r.toquesYGritos}
+              opciones={[
+                ['pie', 'Los decide el pie'],
+                ['cualquiera', 'Cualquiera'],
+              ]}
+              alCambiar={(toquesYGritos) => regla({ toquesYGritos })}
+              detalle={
+                r.toquesYGritos === 'pie'
+                  ? 'Toca y grita el pie (o el compañero que él manda), y el pie contesta. No vale en el pica-pica.'
+                  : 'Cada uno toca y grita en su turno, y contesta cualquiera del equipo.'
+              }
+            />
+          )}
+          <Interruptor
+            activo={r.corte}
+            alCambiar={(corte) => regla({ corte })}
+            titulo="Cortar el mazo"
+            detalle="Antes de cada mano corta el de la izquierda del que reparte: corte, sacar la muestra o se la doy al mano"
           />
           <Segmentado
             titulo="Valor de la contraflor"
             valor={r.valorContraflor}
             opciones={[4, 5, 6].map((n) => [n, `${n} puntos`] as [number, string])}
             alCambiar={(valorContraflor) => regla({ valorContraflor })}
-            detalle="Lo que se lleva quien gana la contraflor querida."
+            detalle="Lo que se lleva quien gana la contraflor querida. La contraflor al resto es el partido."
           />
           <Segmentado
             titulo="Falta envido con los dos en malas"
             valor={r.faltaEnvidoEnMalas}
-            opciones={(['completarMalas', 'loQueFalta', 'ganaPartido'] as const).map((v) => [v, TEXTO_FALTA[v][0]])}
+            opciones={(['completarMalas', 'loQueFalta', 'ganaPartido'] as const).map((v) => [v, textoFalta(v, r.puntosPartida)[0]])}
             alCambiar={(faltaEnvidoEnMalas) => regla({ faltaEnvidoEnMalas })}
-            detalle={TEXTO_FALTA[r.faltaEnvidoEnMalas][1]}
+            detalle={textoFalta(r.faltaEnvidoEnMalas, r.puntosPartida)[1]}
           />
           <Segmentado
             titulo="Cuenta de la flor con piezas"
@@ -345,7 +440,7 @@ export function resumenSala(o: OpcionesSala): string[] {
   const formato = FORMATOS.find(([f]) => f === o.formato)!
   const nivel = NIVELES.find(([n]) => n === o.nivelBots)![1].toLowerCase()
   const partes = [
-    `${formato[1]} (${formato[2]})`,
+    `${formato[1]} (${formato[2]}) a ${r.puntosPartida}`,
     o.botsEnVacios ? `Bots en los lugares libres (${nivel})` : 'Sin bots: tiene que estar la mesa completa',
     o.ayudas ? 'Con ayudas' : 'Sin ayudas',
   ]
@@ -356,10 +451,13 @@ export function resumenSala(o: OpcionesSala): string[] {
     r.florObligatoria ? 'Flor obligatoria' : 'Flor no obligatoria',
     r.envidoEnvido ? 'Envido envido' : 'Sin envido envido',
     `Contraflor: ${r.valorContraflor} puntos`,
-    `Falta en malas: ${TEXTO_FALTA[r.faltaEnvidoEnMalas][0].toLowerCase()}`,
+    `Falta en malas: ${textoFalta(r.faltaEnvidoEnMalas, r.puntosPartida)[0].toLowerCase()}`,
     r.mazoCobraEnvidoPendiente ? 'Mazo con envido pendiente lo cobra el rival' : 'Mazo con envido pendiente no se cobra',
     `Flor con piezas: ${TEXTO_FLOR[r.florConPiezas][0].toLowerCase()}`,
   )
+  if (o.formato !== '1v1') partes.push(r.toquesYGritos === 'pie' ? 'Toques y gritos del pie' : 'Toca y grita cualquiera')
+  if (r.corte) partes.push('Se corta el mazo')
+  if (o.tirarReyes !== 'no') partes.push(o.tirarReyes === 'reparte' ? 'Se tiran reyes para repartir' : 'Se tiran reyes para repartir y armar los equipos')
   if (o.formato !== '1v1') {
     const se = o.senias
     if (!se.habilitadas) {

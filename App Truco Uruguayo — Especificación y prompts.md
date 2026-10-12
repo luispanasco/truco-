@@ -39,6 +39,8 @@ El motor implementa estas reglas como default; las que varían entre mesas está
 
 - Baraja española de 40 cartas: 1 al 7, 10, 11 y 12 de espadas, bastos, oros y copas.
 - Se reparten 3 cartas a cada jugador y se da vuelta una carta del mazo: la **muestra**. El juego gira en sentido antihorario; es mano el jugador a la derecha del que reparte, y el reparto rota cada mano.
+- **Tirar reyes** (opción de sala): antes de la primera partida, desde el anfitrión y en sentido antihorario, se da una carta del fondo del mazo a cada uno, boca arriba, hasta el primer rey: ese reparte. Con equipos al azar se sigue hasta que salen 2 (2v2) o 3 (3v3) reyes, y esos van juntos.
+- **Corte** (opción de sala): antes de cada mano corta el de la izquierda del que reparte, eligiendo: corte convencional, sacar la muestra (la de arriba es la muestra) o se la doy al mano (se corta una carta, va al fondo y es del mano).
 
 ### Piezas
 
@@ -77,7 +79,15 @@ Dos cartas de igual orden empatan la vuelta (parda).
 3. Si la primera tiene ganador y la segunda es parda, gana quien ganó la primera.
 4. Si todas son pardas, gana el equipo del mano.
 5. Empieza cada vuelta quien ganó la anterior.
-6. Un jugador puede irse al mazo: su equipo pierde la mano y el rival cobra lo que valga el truco en ese momento (1 si no se cantó).
+6. Un jugador puede irse al mazo y el rival cobra lo que valga el truco en ese momento (1 si no se cantó). En 2v2 y 3v3, hasta que no se va el pie, el equipo sigue jugando: los compañeros se pueden ir solos.
+7. Si te vas en la primera vuelta cuando todavía se podía tocar el envido, el rival cobra además el envido no querido (1); si tiene flor, la flor.
+8. **Pasar** (2v2 y 3v3): en la tercera vuelta, el primero de su equipo en jugar puede tirar su carta tapada, que no gana la vuelta.
+
+### El pie (2v2 y 3v3)
+
+- Es el último de cada equipo en jugar la primera vuelta: el que reparte y el primero a la izquierda del mazo. Cada jugador es pie dos manos seguidas. Con bots en el equipo lidera una persona.
+- Sugiere en voz alta (lo oyen todos): "Vení" (no juegues nada bueno) y "Vamos a X". Puede mandar a un compañero a tocar (envido) o a gritar (truco).
+- Opción de sala "Toques y gritos": los decide el pie (los demás tocan o gritan solo si los manda, y las respuestas las da el pie) o cualquiera. En el pica-pica no hay pie. Con chat de voz, todo esto se dice por voz.
 
 ### Truco
 
@@ -90,7 +100,7 @@ Dos cartas de igual orden empatan la vuelta (parda).
 - Se canta durante la primera vuelta, antes de que el que canta juegue su carta. El envido va antes que el truco: si el rival canta truco, se puede contestar "envido va primero" (solo alguien que todavía no jugó su carta); se juega el envido y después se contesta el truco, que se puede no querer.
 - Dos cartas del mismo palo: 20 más la suma de sus valores. Sin par del mismo palo: el valor de la carta más alta.
 - Con una pieza: valor de la pieza (tabla) más la carta más alta de las otras, de cualquier palo. Máximo posible: 37.
-- Cantos: envido 2, real envido 3, falta envido; se encadenan y suman. No querer da 1 punto, o lo acumulado antes del último canto.
+- Cantos: envido 2, real envido 3, falta envido; se encadenan y suman, sin límite y en cualquier orden. Solo la falta envido corta la cadena. No querer da 1 punto, o lo acumulado antes del último canto.
 - Declaración: empieza el mano; cada uno dice un tanto mayor o "son buenas". Empate de tantos: gana el mano.
 
 ### Flor
@@ -101,17 +111,20 @@ Dos cartas de igual orden empatan la vuelta (parda).
 - Si alguien del equipo tiene una flor sin cantar, el equipo no canta ni contesta el envido: el que tiene la flor la canta y lo anula.
 - La flor vale 3 puntos; se sube con contraflor y contraflor al resto.
 - Si varios jugadores del mismo equipo tienen flor, cada flor suma 3.
-- Si los dos equipos tienen flor y nadie canta contraflor, gana la flor más grande (empate: la del más cercano al mano) y su equipo suma 3 por cada flor que tenga; el otro equipo no suma nada. Puede ser 2 contra 1 o 3 contra 1.
-- Si se canta contraflor y el rival no la quiere, el equipo que la cantó se queda con los 3.
+- Si los dos equipos tienen flor y nadie canta contraflor, gana la flor más grande (empate: la del más cercano al mano) y su equipo suma 3 por cada flor suya mayor que la mejor del rival; el otro equipo no suma nada.
+- A la contraflor se contesta "con flor quiero" o "con flor me achico". No querida, el que la cantó cobra 3 por cada flor de su equipo más 1.
+- La contraflor al resto es el partido: querida, el que la gana gana la partida.
+- "Flor y truco": el que tiene flor puede cantar las dos cosas juntas en su turno; primero se resuelve la flor y después se contesta el truco.
+- La flor que alguien no llegó a cantar porque el rival se fue al mazo se cobra igual.
 
 ### Puntaje
 
-- Partido a 30: malas (0 a 15) y buenas (16 a 30).
+- Partido a 30: malas (0 a 15) y buenas (16 a 30). Opción de sala: a 20 (10 y 10) o a 40 (20 y 20); las malas son la mitad.
 - Falta envido: si el que va ganando está en malas (menos de 15), lo que le falta para llegar a 15; con 15 o más, lo que le falta para llegar a 30. Con 15 todavía no se entró en buenas: las buenas empiezan en 16.
 
 ### 3v3 y pica-pica
 
-Mientras los dos equipos están en malas, las manos se alternan: una redonda y una de pica-pica, empezando por la redonda. En la de pica-pica, cada jugador enfrenta al rival de adelante en tres duelos individuales, y los puntos se suman por equipo. El reparto es uno solo, como en una mano normal de 3v3 (3 cartas a cada uno y una muestra). Los duelos se juegan en serie, no en paralelo: los que juegan después ven las cartas de los duelos anteriores, y esa es parte de la gracia. Abre el duelo del mano contra su rival de enfrente y siguen las otras parejas en sentido antihorario. Cada duelo es una mano 1v1 completa, con su propio truco, envido y flor. Cuando un equipo entra en buenas se vuelve a jugar redondo. Activado por defecto y desactivable al crear la sala.
+Mientras los dos equipos están en malas, las manos se alternan: una redonda y una de pica-pica, empezando por la redonda. En la de pica-pica, cada jugador enfrenta al rival de adelante en tres duelos individuales, y los puntos se suman por equipo. El reparto es uno solo, como en una mano normal de 3v3 (3 cartas a cada uno y una muestra). Los duelos se juegan en serie, no en paralelo: los que juegan después ven las cartas de los duelos anteriores, y esa es parte de la gracia. Abre el duelo del mano contra su rival de enfrente y siguen las otras parejas en sentido antihorario. Cada duelo es una mano 1v1 completa, con su propio truco, envido y flor, sin pie ni señas. Las piezas van por abajo: solo las ve el rival del duelo; los demás ven una carta boca abajo, y no se descubren nunca. Cuando un equipo entra en buenas se vuelve a jugar redondo. Activado por defecto y desactivable al crear la sala.
 
 ## Reglas configurables
 
@@ -121,15 +134,19 @@ Estas son las reglas donde las mesas difieren. Cada una va al motor como paráme
 | --- | --- | --- |
 | Cuenta de la flor con piezas | Pieza más alta con su valor completo, más el último dígito de las otras piezas, más el valor de las cartas comunes | Otra convención de mesa |
 | Cuenta de la flor sin piezas | 20 más la suma de las tres cartas | — |
-| Valor de contraflor | Contraflor 6; contraflor al resto, lo que falta para ganar | Contraflor 4 o 5 |
+| Valor de contraflor | Contraflor 6; contraflor al resto, el partido | Contraflor 4 o 5 |
 | Falta envido en malas | Lo que le falta al que va ganando para llegar a 15; con 15 o más, para llegar a 30 | Siempre hasta 30; gana el partido |
 | Tramo del pica-pica en 3v3 | Solo en malas: mientras los dos equipos tienen entre 0 y 15; cuando uno llega a 16, se vuelve a redondo | Otro tramo |
 | Manos de pica-pica | Alternadas: una redonda y una de pica-pica, empezando por la redonda | Todas las manos de malas |
 | Obligación de cantar la flor | Obligatoria en la primera vuelta; si no se canta, se pierde | Opcional |
-| Envido envido | Permitido (2 + 2), y se puede seguir con real envido o falta envido | No permitido |
+| Envido envido | Permitido: envido y real envido sin límite, hasta la falta | Un solo envido |
+| Largo del partido | 15 y 15 (a 30) | 10 y 10, 20 y 20 |
+| Toques y gritos | Cualquiera | Los decide el pie |
+| Corte del mazo | Sin corte | Corta el de la izquierda del que reparte |
+| Tirar reyes | No | Para repartir; para repartir y armar los equipos |
 | No querer el envido | Lo acumulado antes del último canto (1 si era el primero) | — |
 | Quién empieza tras una parda | El que empezó la vuelta empatada | El mano |
-| Irse al mazo con envido pendiente | El rival también cobra el envido no querido | Solo cobra el truco |
+| Irse al mazo con envido pendiente (o en la primera sin tocar) | El rival también cobra el envido no querido | Solo cobra el truco |
 
 ## Arquitectura técnica
 
