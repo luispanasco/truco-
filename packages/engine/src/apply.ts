@@ -403,6 +403,22 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
     case 'irseAlMazo': {
       eventos.push({ tipo: 'alMazo', asiento: a, equipo: eq })
       const env = e.envido
+      const f = e.flor
+      // La flor que el rival no llegó a cantar porque te fuiste se cobra igual.
+      if (cfg.florObligatoria) {
+        for (const r of e.participantes) {
+          if (equipoDe(r) === eq || !debeCantarFlor(estado, e, r)) continue
+          const t = mano.tantos[r]!
+          t.florDeclarada = t.florReal
+          f.cantadas.push({ asiento: r, equipo: equipoDe(r), tantoDeclarado: t.florReal! })
+          eventos.push({ tipo: 'cantoFlor', asiento: r, canto: 'flor' })
+        }
+        if (f.cantadas.length > 0 && env.estado !== 'anulado') {
+          env.estado = 'anulado'
+          env.porDeclarar = []
+          env.ganador = null
+        }
+      }
       if (env.estado === 'pendiente') {
         const ult = ultimo(env.cantos)
         if (cfg.mazoCobraEnvidoPendiente && ult.equipo !== eq) {
@@ -411,8 +427,11 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
         } else {
           env.estado = 'anulado'
         }
+      } else if (cfg.mazoCobraEnvidoPendiente && env.estado === 'libre' && sePodiaTocar(e)) {
+        // Irse en la primera cuando todavía se podía tocar: el rival cobra el envido no querido.
+        env.estado = 'noQuerido'
+        env.ganador = otroEquipo(eq)
       }
-      const f = e.flor
       if (f.estado === 'pendiente') {
         if (ultimo(f.contra).equipo !== eq) {
           rechazarOQuererFlor(estado, e, false)
@@ -430,17 +449,26 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
   }
 }
 
+/**
+ * Si el envido todavía se podía tocar: primera vuelta, sin flor, sin truco querido y, con un
+ * truco sin contestar, solo si era el truco (todavía cabe "envido va primero").
+ */
+function sePodiaTocar(e: Enfrentamiento): boolean {
+  if (e.vueltas.length !== 1 || e.flor.cantadas.length > 0) return false
+  if (e.truco.valor !== 1) return false
+  return e.truco.pendiente === null || e.truco.pendiente.nivel === 2
+}
+
 function rechazarOQuererFlor(estado: EstadoPartida, e: Enfrentamiento, quiere: boolean) {
   const f = e.flor
   if (quiere) {
     f.estado = 'querida'
     return
   }
+  // El que la cantó cobra 3 por cada flor de su equipo, más 1 por la contra no querida.
+  const equipo = ultimo(f.contra).equipo
   f.estado = 'noQuerida'
-  f.noQuerida = {
-    equipo: ultimo(f.contra).equipo,
-    puntos: f.contra.length === 1 ? 3 : estado.config.valorContraflor,
-  }
+  f.noQuerida = { equipo, puntos: 3 * f.cantadas.filter((x) => x.equipo === equipo).length + 1 }
 }
 
 /** Termina el juego de cartas del enfrentamiento y pasa a la verificación. */
@@ -487,6 +515,22 @@ function ganadorFlor(e: Enfrentamiento): Equipo {
   return mejor.equipo
 }
 
+/**
+ * Cuántas flores del equipo ganador le ganan a la mejor flor del rival (mayor, o igual y más
+ * cerca del mano). Si el rival se fue al mazo, valen todas.
+ */
+function floresQueGanan(e: Enfrentamiento, g: Equipo): number {
+  const propias = e.flor.cantadas.filter((x) => x.equipo === g)
+  if (e.alMazo !== null) return propias.length
+  const pos = (a: number) => e.participantes.indexOf(a)
+  const rival = e.flor.cantadas
+    .filter((x) => x.equipo !== g)
+    .reduce((m, x) => (x.tantoDeclarado > m.tantoDeclarado || (x.tantoDeclarado === m.tantoDeclarado && pos(x.asiento) < pos(m.asiento)) ? x : m))
+  return propias.filter(
+    (x) => x.tantoDeclarado > rival.tantoDeclarado || (x.tantoDeclarado === rival.tantoDeclarado && pos(x.asiento) < pos(rival.asiento)),
+  ).length
+}
+
 function calcularPuntosTanto(estado: EstadoPartida, e: Enfrentamiento): [number, number] {
   const puntos: [number, number] = [0, 0]
   const env = e.envido
@@ -502,11 +546,11 @@ function calcularPuntosTanto(estado: EstadoPartida, e: Enfrentamiento): [number,
   } else if (f.cantadas.length > 0) {
     const equipos = new Set(f.cantadas.map((x) => x.equipo))
     if (f.estado === 'querida') {
-      const valor = ultimo(f.contra).canto === 'contraflor' ? estado.config.valorContraflor : valorResto(estado)
-      puntos[ganadorFlor(e)] += valor
+      const g = ganadorFlor(e)
+      puntos[g] += ultimo(f.contra).canto === 'contraflor' ? estado.config.valorContraflor : valorResto(estado, g)
     } else if (equipos.size === 2) {
       const g = ganadorFlor(e)
-      puntos[g] += 3 * f.cantadas.filter((x) => x.equipo === g).length
+      puntos[g] += 3 * floresQueGanan(e, g)
     } else {
       for (const x of f.cantadas) puntos[x.equipo] += 3
     }

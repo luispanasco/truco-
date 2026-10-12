@@ -66,7 +66,11 @@ export function ganadorPorVueltas(resultados: readonly ResultadoVuelta[], equipo
 
 const VALOR_ENVIDO: Record<Exclude<CantoEnvido, 'faltaEnvido'>, number> = { envido: 2, realEnvido: 3 }
 
-/** Si `canto` se puede agregar a la cadena de envido ya cantada. */
+/**
+ * Si `canto` se puede agregar a la cadena de envido ya cantada. Solo la falta envido la corta.
+ * Con envido envido, envido y real envido se encadenan sin límite y en cualquier orden; sin él,
+ * un solo envido, después un real envido y después la falta.
+ */
 export function puedeEncadenarEnvido(
   cantos: readonly CantoHecho<CantoEnvido>[],
   canto: CantoEnvido,
@@ -74,9 +78,9 @@ export function puedeEncadenarEnvido(
 ): boolean {
   const hay = (c: CantoEnvido) => cantos.filter((x) => x.canto === c).length
   if (hay('faltaEnvido') > 0) return false
-  if (canto === 'faltaEnvido') return true
+  if (canto === 'faltaEnvido' || config.envidoEnvido) return true
   if (canto === 'realEnvido') return hay('realEnvido') === 0
-  return hay('realEnvido') === 0 && hay('envido') < (config.envidoEnvido ? 2 : 1)
+  return hay('realEnvido') === 0 && hay('envido') === 0
 }
 
 /** No querido: 1 si era el primer canto, o lo acumulado antes del último. */
@@ -104,9 +108,9 @@ export function valorFalta(estado: EstadoPartida, ganador: Equipo): number {
   return puntosPartida - lider
 }
 
-/** Lo que vale la contraflor al resto: lo que le falta al que va ganando. */
-export function valorResto(estado: EstadoPartida): number {
-  return estado.config.puntosPartida - Math.max(...estado.puntos)
+/** La contraflor al resto es el partido: vale lo que le falta para ganar al que la gana. */
+export function valorResto(estado: EstadoPartida, ganador: Equipo): number {
+  return estado.config.puntosPartida - estado.puntos[ganador]
 }
 
 /** Si una declaración le gana a otra: tanto mayor, o igual y más cerca del mano. */

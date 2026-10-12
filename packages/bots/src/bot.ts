@@ -101,7 +101,9 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[]): Accion {
   }
 
   if (pend === 'envido') {
-    const r = est.responderEnvido(ctx, envidos)
+    // La cadena no tiene límite: después de 4 cantos el bot ya no sube, salvo con la falta.
+    const subidas = ctx.e.envido.cantos.length >= 4 ? envidos.filter((c) => c === 'faltaEnvido') : envidos
+    const r = est.responderEnvido(ctx, subidas)
     return r === 'quiero' || r === 'noQuiero' ? responder(r) : { tipo: 'cantarEnvido', jugador, canto: r }
   }
 

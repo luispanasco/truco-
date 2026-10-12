@@ -47,10 +47,23 @@ describe('truco', () => {
   })
 
   it('irse al mazo entrega lo que vale el truco aceptado', () => {
-    expect(jugar(sinFlor(), ['mazo', 'a']).estado.puntos).toEqual([0, 1])
+    const soloTruco = () => partidaCon(['1e 7o 4b', '1b 2e 6o'], '3c', { mazoCobraEnvidoPendiente: false })
+    expect(jugar(soloTruco(), ['mazo', 'a']).estado.puntos).toEqual([0, 1])
     expect(jugar(sinFlor(), ['truco', 'a'], ['quiero', 'b'], ['mazo', 'a']).estado.puntos).toEqual([0, 2])
     // Con un truco sin responder, cobra lo aceptado hasta ahí.
-    expect(jugar(sinFlor(), ['truco', 'a'], ['mazo', 'b']).estado.puntos).toEqual([1, 0])
+    expect(jugar(soloTruco(), ['truco', 'a'], ['mazo', 'b']).estado.puntos).toEqual([1, 0])
+  })
+
+  it('irse en la primera cuando todavía se podía tocar: el rival cobra el envido no querido y el truco', () => {
+    expect(jugar(sinFlor(), ['mazo', 'a']).estado.puntos).toEqual([0, 2])
+    // Con el truco sin contestar todavía cabe "envido va primero".
+    expect(jugar(sinFlor(), ['truco', 'a'], ['mazo', 'b']).estado.puntos).toEqual([2, 0])
+    // Con el retruco ya no.
+    expect(jugar(sinFlor(), ['truco', 'a'], ['truco', 'b'], ['mazo', 'a']).estado.puntos).toEqual([0, 2])
+    // En la segunda vuelta, solo el truco.
+    expect(jugar(sinFlor(), ['jugar', 'a', '4b'], ['jugar', 'b', '6o'], ['mazo', 'a']).estado.puntos).toEqual([0, 1])
+    // Con el envido ya jugado, se cobra lo que se jugó.
+    expect(jugar(sinFlor(), ['envido', 'a'], ['noQuiero', 'b'], ['mazo', 'b']).estado.puntos).toEqual([2, 0])
   })
 })
 
@@ -72,21 +85,32 @@ describe('envido', () => {
     expect(jugar(sinFlor(), ['realEnvido', 'a'], ['noQuiero', 'b'], ['mazo', 'a']).estado.puntos).toEqual([1, 1])
   })
 
-  it('cadenas inválidas', () => {
-    const dos = jugar(sinFlor(), ['envido', 'a'], ['envido', 'b']).estado
-    rechaza(dos, ['envido', 'a'], 'No se puede cantar eso')
-    const real = jugar(sinFlor(), ['realEnvido', 'a']).estado
-    rechaza(real, ['envido', 'b'], 'No se puede cantar eso')
-    rechaza(real, ['realEnvido', 'b'], 'No se puede cantar eso')
-    const falta = jugar(sinFlor(), ['faltaEnvido', 'a']).estado
-    rechaza(falta, ['realEnvido', 'b'], 'No se puede cantar eso')
-    rechaza(falta, ['faltaEnvido', 'b'], 'No se puede cantar eso')
-    rechaza(dos, ['envido', 'b'], 'Esperá')
+  it('la cadena no tiene límite: envido y real envido en cualquier orden', () => {
+    const cadena = () =>
+      jugar(sinFlor(), ['envido', 'a'], ['envido', 'b'], ['envido', 'a'], ['realEnvido', 'b'], ['envido', 'a'], ['realEnvido', 'b'])
+        .estado
+    rechaza(cadena(), ['envido', 'b'], 'Esperá')
+    // No querido: lo acumulado antes del último (2 + 2 + 2 + 3 + 2 = 11).
+    expect(jugar(cadena(), ['noQuiero', 'a'], ['mazo', 'a']).estado.puntos).toEqual([0, 11 + 1])
+    // Querido: la suma (14). "a" tiene 7 y "b" 6.
+    const querido = jugar(cadena(), ['quiero', 'a'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'], ['mazo', 'a'])
+    expect(querido.estado.puntos).toEqual([14, 1])
   })
 
-  it('envido envido se puede desactivar', () => {
-    const p = partidaCon(['1e 7o 4b', '1b 2e 6o'], '3c', { envidoEnvido: false })
-    rechaza(jugar(p, ['envido', 'a']).estado, ['envido', 'b'], 'No se puede cantar eso')
+  it('solo la falta envido corta la cadena', () => {
+    const falta = jugar(sinFlor(), ['envido', 'a'], ['faltaEnvido', 'b']).estado
+    rechaza(falta, ['envido', 'a'], 'No se puede cantar eso')
+    rechaza(falta, ['realEnvido', 'a'], 'No se puede cantar eso')
+    rechaza(falta, ['faltaEnvido', 'a'], 'No se puede cantar eso')
+  })
+
+  it('sin envido envido: un solo envido, después real envido y la falta', () => {
+    const p = () => partidaCon(['1e 7o 4b', '1b 2e 6o'], '3c', { envidoEnvido: false })
+    rechaza(jugar(p(), ['envido', 'a']).estado, ['envido', 'b'], 'No se puede cantar eso')
+    const real = jugar(p(), ['envido', 'a'], ['realEnvido', 'b']).estado
+    rechaza(real, ['envido', 'a'], 'No se puede cantar eso')
+    rechaza(real, ['realEnvido', 'a'], 'No se puede cantar eso')
+    jugar(real, ['faltaEnvido', 'a'])
   })
 
   it('querido: declara primero el mano y el otro dice un tanto mayor o son buenas', () => {
@@ -246,7 +270,8 @@ describe('flor', () => {
   it('si no es obligatoria, se puede jugar sin cantarla y se pierde', () => {
     const { estado } = jugar(conFlor('1b 2o 4o', { florObligatoria: false }), ['jugar', 'a', '7e'])
     rechaza(estado, ['flor', 'a'], 'primera vuelta')
-    expect(jugar(estado, ['mazo', 'b']).estado.puntos).toEqual([1, 0])
+    // "b" no jugó: todavía se podía tocar, así que "a" cobra el envido y el truco.
+    expect(jugar(estado, ['mazo', 'b']).estado.puntos).toEqual([2, 0])
   })
 
   it('no se puede cantar flor sin tenerla', () => {
@@ -292,21 +317,22 @@ describe('flor', () => {
       expect(estado.puntos).toEqual([6 + 1, 0])
     })
 
-    it('no querida: el que la cantó se queda con los 3', () => {
+    it('no querida ("con flor me achico"): el que la cantó cobra 3 por su flor y 1 por la contra', () => {
       const { estado } = jugar(antesDeContra(), ['contraflor', 'b'], ['noQuiero', 'a'], ['mazo', 'b'])
-      expect(estado.puntos).toEqual([1, 3])
+      expect(estado.puntos).toEqual([1, 3 + 1])
     })
 
-    it('al resto no querida: el que la cantó cobra la contraflor', () => {
+    it('al resto no querida: igual, 3 por cada flor y 1 por la contra', () => {
       const { estado } = jugar(antesDeContra(), ['contraflor', 'b'], ['contraflorAlResto', 'a'], ['noQuiero', 'b'], ['mazo', 'b'])
-      expect(estado.puntos).toEqual([6 + 1, 0])
+      expect(estado.puntos).toEqual([3 + 1 + 1, 0])
     })
 
-    it('al resto querida: el ganador cobra lo que falta para ganar', () => {
+    it('al resto querida es el partido: el que la gana, gana', () => {
       const p = antesDeContra()
       p.puntos = [10, 20]
       const { estado } = jugar(p, ['contraflorAlResto', 'b'], ['quiero', 'a'], ['mazo', 'b'])
-      expect(estado.puntos).toEqual([10 + 10 + 1, 20])
+      expect(estado.puntos).toEqual([30, 20])
+      expect(estado.ganador).toBe(0)
     })
 
     it('no se puede cantar contraflor sin flor del rival, ni subir más allá del resto', () => {
@@ -347,14 +373,33 @@ describe('flor', () => {
     expect(estado.puntos).toEqual([3 + 1, 0])
   })
 
-  it('en 2v2 con flor en los dos equipos, el ganador suma 3 por cada flor de su equipo', () => {
-    // a: 37 (equipo 0); b: 38 y d: 34 (equipo 1). Gana b: su equipo cobra sus dos flores.
+  it('en 2v2 con flor en los dos equipos, el ganador suma 3 por cada flor suya mayor que la mejor del rival', () => {
+    // a: 37 (equipo 0); b: 38 y d: 34 (equipo 1). Gana b, pero la de d no le gana a la de a: cobra 3.
+    const p = partidaCon(['7e 6e 4e', '7b 6b 5b', '1e 4o 12b', '7o 6o 1o'], '3c')
+    const { estado } = jugar(p, ['flor', 'a'], ['flor', 'b'], ['flor', 'd'], ['truco', 'a'], ['noQuiero', 'b'])
+    expect(estado.puntos).toEqual([1, 3])
+    // a: 38 y c: 37 (equipo 0); d: 33 (equipo 1). Las dos le ganan a la de d: el equipo 0 cobra 6.
+    const p2 = partidaCon(['7e 6e 5e', '1b 2e 3o', '7o 6o 4o', '7b 6b 2b'], '3c')
+    const r2 = jugar(p2, ['flor', 'd'], ['flor', 'a'], ['flor', 'c'], ['truco', 'a'], ['noQuiero', 'b'])
+    expect(r2.estado.puntos).toEqual([3 + 3 + 1, 0])
+  })
+
+  it('si el rival se va al mazo, pierde la comparación y el otro cobra todas sus flores', () => {
     const p = partidaCon(['7e 6e 4e', '7b 6b 5b', '1e 4o 12b', '7o 6o 1o'], '3c')
     const { estado } = jugar(p, ['flor', 'a'], ['flor', 'b'], ['flor', 'd'], ['jugar', 'a', '7e'], ['mazo', 'c'])
     expect(estado.puntos).toEqual([0, 3 + 3 + 1])
-    // a: 38 y c: 37 (equipo 0); d: 33 (equipo 1). Gana a: el equipo 0 cobra 6.
-    const p2 = partidaCon(['7e 6e 5e', '1b 2e 3o', '7o 6o 4o', '7b 6b 2b'], '3c')
-    expect(jugar(p2, ['flor', 'd'], ['flor', 'a'], ['flor', 'c'], ['mazo', 'b']).estado.puntos).toEqual([3 + 3 + 1, 0])
+  })
+
+  it('la flor que no se llegó a cantar porque el rival se fue se cobra igual', () => {
+    // b tiene flor de 37; a se va antes de que la cante.
+    const p = partidaCon(['1e 7o 4c', '7b 6b 4b'], '3c')
+    const { estado, eventos } = jugar(p, ['mazo', 'a'])
+    expect(eventos).toContainEqual({ tipo: 'cantoFlor', asiento: 1, canto: 'flor' })
+    // La flor anula el envido: 3 de la flor y 1 del truco.
+    expect(estado.puntos).toEqual([0, 3 + 1])
+    // Si ya jugó su carta, la perdió.
+    const jugada = jugar(partidaCon(['1e 7o 4c', '7b 6b 4b'], '3c', { florObligatoria: false }), ['jugar', 'a', '4c'], ['jugar', 'b', '4b'])
+    expect(jugar(jugada.estado, ['mazo', 'a']).estado.puntos).toEqual([0, 1])
   })
 
   it('en 2v2, si el compañero tiene flor, el equipo no canta ni contesta el envido: el de la flor la canta y lo anula', () => {

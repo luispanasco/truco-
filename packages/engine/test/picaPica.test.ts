@@ -74,7 +74,7 @@ describe('pica-pica', () => {
   })
 
   it('cuando un equipo entra en buenas se vuelve a jugar redondo', () => {
-    let estado = partidaCon(MANOS, '3c', { picaPicaAlternado: false })
+    let estado = partidaCon(MANOS, '3c', { picaPicaAlternado: false, mazoCobraEnvidoPendiente: false })
     estado.puntos = [15, 0]
     // Primera mano: se van al mazo los tres del equipo 0.
     ;({ estado } = jugar(estado, ['mazo', 'a'], ['mazo', 'e'], ['mazo', 'c']))

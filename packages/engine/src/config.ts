@@ -6,10 +6,14 @@ export type ReglaFlorConPiezas =
   /** Pieza más alta completa + las demás cartas por su número, como comunes. */
   | 'piezaMayorMasNumero'
 
+/** Largos de partido: 10 y 10, 15 y 15 o 20 y 20. */
+export const LARGOS_PARTIDA = [20, 30, 40] as const
+
 export interface ConfigSala {
   formato: Formato
+  /** A cuánto se juega (ver `LARGOS_PARTIDA`). */
   puntosPartida: number
-  /** Último puntaje que cuenta como "malas". */
+  /** Último puntaje que cuenta como "malas": la mitad del partido. */
   puntosMalas: number
   florConPiezas: ReglaFlorConPiezas
   valorContraflor: number
@@ -23,16 +27,20 @@ export interface ConfigSala {
   faltaEnvidoEnMalas: 'completarMalas' | 'loQueFalta' | 'ganaPartido'
   /** Solo en 3v3. */
   picaPica: boolean
-  /** Se juega pica-pica mientras los dos equipos tienen entre `desde` y `hasta` puntos. */
+  /** Se juega pica-pica mientras los dos equipos tienen entre `desde` y `hasta` puntos (las malas). */
   tramoPicaPica: { desde: number; hasta: number }
   /** Dentro del tramo, una mano redonda y una de pica-pica, empezando por la redonda. */
   picaPicaAlternado: boolean
   /** La flor se canta en la primera vuelta antes de jugar; si no, se pierde. */
   florObligatoria: boolean
+  /** Permitido: envido y real envido se encadenan sin límite. No permitido: un solo envido. */
   envidoEnvido: boolean
   /** Quién empieza la vuelta siguiente a una parda. */
   empiezaTrasParda: 'quienEmpezo' | 'mano'
-  /** Irse al mazo con un envido del rival sin responder: el rival lo cobra como no querido. */
+  /**
+   * Irse al mazo con un envido del rival sin responder: el rival lo cobra como no querido.
+   * También si te vas en la primera vuelta cuando todavía se podía tocar: el rival cobra 1 de envido.
+   */
   mazoCobraEnvidoPendiente: boolean
   /** Modo sucio (fase 3): permite mentir en envido y flor, con verificación al final. */
   modoSucio: boolean
@@ -58,8 +66,19 @@ export const CONFIG_DEFAULT: ConfigSala = {
   penalidadMentira: 'puntosAlRival',
 }
 
+/**
+ * Config completa a partir de una parcial. Si cambia el largo del partido y no se dicen las malas
+ * ni el tramo del pica-pica, salen de la mitad del partido.
+ */
 export function crearConfig(parcial: Partial<ConfigSala> = {}): ConfigSala {
-  return { ...CONFIG_DEFAULT, ...parcial }
+  const puntosPartida = parcial.puntosPartida ?? CONFIG_DEFAULT.puntosPartida
+  const puntosMalas = parcial.puntosMalas ?? puntosPartida / 2
+  return {
+    ...CONFIG_DEFAULT,
+    puntosMalas,
+    tramoPicaPica: { desde: 0, hasta: puntosMalas },
+    ...parcial,
+  }
 }
 
 export function cantidadJugadores(formato: Formato): 2 | 4 | 6 {

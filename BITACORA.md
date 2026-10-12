@@ -19,9 +19,7 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 
 ### Ideas pedidas para más adelante
 
-- **Cambios en el motor y en algunas mecánicas** (pedido 2026-10-06; se ven en detalle antes de la fase 2). Por ejemplo:
-  - **el pie lidera el juego** del equipo;
-  - con bots en el equipo, lidera el pie que no es bot o, si hay una sola persona, esa persona.
+- **Cambios en el motor y en algunas mecánicas** (pedido 2026-10-06). Revisados regla por regla el 2026-10-12, con el plan en [REVISION-REGLAS.md](REVISION-REGLAS.md): el pie, pasar en la tercera, cadena de envido libre, flor y contraflor, largo del partido, irse al mazo solo, piezas tapadas en el pica-pica, tirar reyes, el corte, tiempos.
 
 ---
 
