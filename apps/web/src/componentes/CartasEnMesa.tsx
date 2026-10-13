@@ -20,7 +20,7 @@ const DURACION = 0.3
 /** Con las cartas que se levantan: lo que queda a la vista la vuelta cerrada, para ver quién la ganó. */
 export const MUESTRA_VUELTA_MS = 1200
 
-function direccion(n: number, pos: number): [number, number] {
+export function direccion(n: number, pos: number): [number, number] {
   return DIRECCION[n]?.[pos] ?? [0, 1]
 }
 

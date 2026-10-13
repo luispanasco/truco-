@@ -576,7 +576,11 @@ button {
     inset 0 0 0 2px rgb(0 0 0 / 0.18),
     inset 0 0 36px rgb(0 0 0 / 0.45),
     0 6px 16px rgb(0 0 0 / 0.35);
-  min-height: 280px;
+  /*
+   * Lo que el paño cede si abajo no entra todo (mano apilada para ojear, respuestas y cantos):
+   * la botonera nunca queda cortada contra el borde de la pantalla.
+   */
+  min-height: 200px;
   container: mesa / size;
 }
 
@@ -996,8 +1000,12 @@ button {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex: none;
+  /* Si con "Pasar" y "Pie" no entra todo, baja a otra línea en vez de salirse de la pantalla. */
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 6px;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 .te-toca {
   padding: 4px 10px;
@@ -1116,6 +1124,12 @@ button {
   max-width: 180px;
   background: var(--papel);
 }
+/* Los tres cortes comparten la fila: el texto largo ("Se la doy al mano") baja de renglón. */
+.acciones-respuestas .accion-cortar {
+  padding: 4px 10px;
+  white-space: normal;
+  line-height: 1.15;
+}
 .boton-accion.accion-si {
   background: var(--exito);
   color: #fff;
@@ -1125,14 +1139,30 @@ button {
   color: #fff;
 }
 
-/* Lo del pie: sugerencias en voz alta y mandar a tocar o a gritar, debajo de los cantos. */
+/*
+ * Lo del pie: sugerencias en voz alta y mandar a tocar o a gritar. Se abre con el botón "Pie" y
+ * flota arriba de tu lugar, sobre el borde del paño: no ocupa una fila, así nunca empuja ni tapa
+ * los cantos ni la mano. Si no entra, la fila se desliza.
+ */
 .panel-pie {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: calc(100% + 8px);
+  z-index: 21;
+  width: fit-content;
+  max-width: calc(100% - 16px);
+  margin: 0 auto;
   display: flex;
-  justify-content: safe center;
   gap: 6px;
-  margin-top: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--panel-fuerte);
+  border: 1px solid var(--panel-borde);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.45);
   overflow-x: auto;
   scrollbar-width: none;
+  animation: globo-entra 0.2s ease-out;
 }
 .panel-pie::-webkit-scrollbar {
   display: none;
@@ -1158,10 +1188,24 @@ button {
 .boton-pie.manda-gritar {
   border-color: var(--accion-truco);
 }
-/* Pasar en la tercera: prendido, la próxima carta va tapada. */
-.boton-pasar.activo {
+/* Pasar en la tercera: prendido, la próxima carta va tapada. Igual el botón del pie, abierto. */
+.boton-pasar.activo,
+.boton-abrir-pie.activo {
   background: var(--texto-claro);
   color: var(--tinta);
+}
+
+/* El pie puede mandar a tocar o a gritar: un puntito en el botón para que no se le pase. */
+.boton-abrir-pie.con-ordenes::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--acento);
+  box-shadow: 0 0 0 2px var(--panel-fuerte);
 }
 
 /* La tirada de reyes. */
@@ -1416,6 +1460,62 @@ button {
     3px 3px 0 var(--dorso-detalle),
     var(--sombra);
 }
+/* Lo que se levanta al cortar va encima de la pila (y pasa abajo cambiando de capa). */
+.mazo-base {
+  position: relative;
+  z-index: 1;
+}
+.mazo-cortado {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.mazo-cortado .carta {
+  box-shadow: var(--sombra);
+}
+/* Mientras el que corta elige: el mazo brilla y dice quién corta. */
+.mazo-esperando-corte {
+  z-index: 6;
+}
+.mazo-esperando-corte .mazo-base .carta {
+  animation: mazo-brilla 1.4s ease-in-out infinite;
+}
+@keyframes mazo-brilla {
+  0%,
+  100% {
+    box-shadow:
+      2px 2px 0 var(--dorso),
+      3px 3px 0 var(--dorso-detalle),
+      0 0 0 2px color-mix(in srgb, var(--acento) 60%, transparent),
+      0 0 10px 2px color-mix(in srgb, var(--acento) 35%, transparent);
+  }
+  50% {
+    box-shadow:
+      2px 2px 0 var(--dorso),
+      3px 3px 0 var(--dorso-detalle),
+      0 0 0 3px var(--acento),
+      0 0 22px 7px color-mix(in srgb, var(--acento) 60%, transparent);
+  }
+}
+.mazo-aviso {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  translate: -50% 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--acento);
+  color: var(--tinta);
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: var(--sombra);
+  animation: globo-entra 0.25s ease-out;
+}
+.mazo-aviso.arriba {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
 
 /*
  * Resultado de la mano, durante la pausa antes de repartir de nuevo. Crece hacia arriba,
@@ -1566,6 +1666,16 @@ button {
   }
   .mi-lugar {
     padding: 10px 18px 14px;
+  }
+}
+
+/*
+ * Escritorio bajito (una notebook): las cartas de la mano un poco más chicas, para que la mano
+ * apilada, las respuestas y los cantos entren sin achicar demasiado el paño.
+ */
+@media (min-width: 720px) and (min-height: 640px) and (max-height: 860px) {
+  :root {
+    --carta-grande: 86px;
   }
 }
 
@@ -1723,8 +1833,17 @@ button {
     animation: none;
     background: var(--turno);
   }
+  .mazo-esperando-corte .mazo-base .carta {
+    animation: none;
+    box-shadow:
+      2px 2px 0 var(--dorso),
+      3px 3px 0 var(--dorso-detalle),
+      0 0 0 3px var(--acento);
+  }
   .globo,
   .aviso,
+  .panel-pie,
+  .mazo-aviso,
   .modal,
   .modal-caja,
   .fin-de-mano {

@@ -754,5 +754,13 @@ Repaso regla por regla con el usuario (10 bloques), con el detalle, las decision
 
 **Pendientes:**
 - "Vamos a X": se interpretó como dejarle la vuelta a un compañero o ganarle a la carta de un rival.
-- La tirada de reyes y el corte no tienen animación de mazo: la tirada sale en un cuadro y el corte en botones.
+- La tirada de reyes no tiene animación de mazo: sale en un cuadro. (El corte ya la tiene: ver abajo.)
 - Con chat de voz (fase 2) hay que apagar lo del pie.
+
+## Botonera tapada y animación del corte — 2026-10-12
+
+- **El bug:** la zona de abajo (mano, respuestas, cantos y la fila nueva del pie) no tenía tope de alto y el paño no bajaba de 280 px; cuando no entraba todo (sobre todo con la mano apilada para ojear y un truco por contestar), la pantalla cortaba lo de abajo: el retruco, el envido y el pie quedaban fuera de la vista. En una notebook de 800 px pasaba siempre; en un celular de 640 px también.
+- **Pie:** ya no ocupa una fila. Se abre con un botón chico "Pie" al lado de "Mazo" (con un puntito si podés mandar a tocar o a gritar) y sale flotando sobre el borde del paño, en una fila que se desliza; se cierra al elegir.
+- **Lugar:** el paño cede hasta 200 px antes de cortar la botonera; en escritorio bajito la mano es un poco más chica; la fila de "Te toca", Seña, Pasar, Pie y Mazo baja de renglón si no entra; los tres cortes comparten la fila.
+- **Corte:** mientras se elige, el mazo brilla con el aviso "Corta X" ("Cortás vos"). Al cortar se ve en el mazo: el convencional levanta un pedazo y lo pasa abajo, sacar la muestra da vuelta la de arriba, y "se la doy al mano" manda una carta al fondo y después al mano. Después la muestra gira y se reparte (cerca de 1,5 s en total; sin animación con movimiento reducido).
+- **Tests:** web 237 (dos nuevos: el botón del pie y el mazo en el corte) y los 10 de punta a punta.

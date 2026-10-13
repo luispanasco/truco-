@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { apply, crearPartida, vistaPara, type Carta, type EstadoPartida } from '@truco/engine'
-import { BotonPasar, PanelPie } from '../src/componentes/Pie'
+import { BotonPasar, BotonPie, PanelPie } from '../src/componentes/Pie'
+import { Mazo } from '../src/componentes/Mazo'
 import { TiradaDeReyes } from '../src/componentes/Reyes'
 import { CartasEnMesa } from '../src/componentes/CartasEnMesa'
 import { ConexionLocal } from '../src/conexion/local'
@@ -51,6 +52,36 @@ describe('el panel del pie', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Tocá, A' }))
     expect(alElegir).toHaveBeenCalledWith({ tipo: 'mandar', jugador: 'c', a: 0, que: 'tocar' })
     expect(screen.getByRole('button', { name: 'Gritá, A' })).toBeTruthy()
+  })
+
+  it('se abre con el botón "Pie" (marcado si puede mandar) y se cierra al elegir', () => {
+    const p = dosVsDos({ toquesYGritos: 'pie' })
+    const { container } = render(<BotonPie vista={vistaPara(p, 'a')} abierto={false} alCambiar={() => {}} />)
+    expect(container.querySelector('.boton-abrir-pie')).toBeNull()
+    const alCambiar = vi.fn()
+    render(<BotonPie vista={vistaPara(p, 'c')} abierto={false} alCambiar={alCambiar} />)
+    fireEvent.click(screen.getByRole('button', { name: /^Pie: podés mandar/ }))
+    expect(alCambiar).toHaveBeenCalledWith(true)
+    const alCerrar = vi.fn()
+    render(<PanelPie vista={vistaPara(p, 'c')} apodo={apodo} alSugerir={() => {}} alElegir={() => {}} alCerrar={alCerrar} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Vení' }))
+    expect(alCerrar).toHaveBeenCalled()
+  })
+})
+
+describe('el corte en el mazo', () => {
+  it('mientras se elige, el mazo brilla y dice quién corta; la muestra espera al giro', () => {
+    const { container, rerender } = render(<Mazo muestra={null} n={4} reparteRel={0} avisoCorte="Corta B" />)
+    expect(container.querySelector('.mazo-esperando-corte')).not.toBeNull()
+    expect(screen.getByRole('status').textContent).toBe('Corta B')
+    // Cortando: la muestra que ya llegó no se ve hasta que se da vuelta.
+    const corte = { corte: 'darAlMano' as const, id: 1 }
+    rerender(<Mazo muestra={c(3, 'copa')} n={4} reparteRel={0} corte={corte} fase="corte" />)
+    expect(container.querySelector('.mazo-muestra')).toBeNull()
+    expect(container.querySelector('.mazo-cortado')).not.toBeNull()
+    rerender(<Mazo muestra={c(3, 'copa')} n={4} reparteRel={0} corte={corte} fase="muestra" />)
+    expect(container.querySelector('.mazo-muestra')).not.toBeNull()
+    expect(container.querySelector('.mazo-esperando-corte')).toBeNull()
   })
 })
 

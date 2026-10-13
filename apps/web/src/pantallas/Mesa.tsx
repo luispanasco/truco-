@@ -8,16 +8,16 @@ import { esPiezaOMata } from '../senias'
 import { explicarCarta, explicarTanto } from '../ayudas'
 import { GloboExplicacion, useExplicacion } from '../componentes/Ayudas'
 import { Acciones, BotonMazo } from '../componentes/Acciones'
-import { BotonPasar, PanelPie } from '../componentes/Pie'
+import { BotonPasar, BotonPie, PanelPie } from '../componentes/Pie'
 import { TiradaDeReyes } from '../componentes/Reyes'
 import { Asiento, Avatar, avatarDeLugar, MarcaMano } from '../componentes/Asiento'
-import { CartasEnMesa } from '../componentes/CartasEnMesa'
+import { CartasEnMesa, direccion } from '../componentes/CartasEnMesa'
 import { BotonChat, PanelChat, useNoLeidos } from '../componentes/Chat'
 import { EstadoConexion } from '../componentes/EstadoConexion'
 import { GloboDeChat, useGlobosChat } from '../componentes/GlobosChat'
 import { Fosforos } from '../componentes/Fosforos'
 import { ManoOjeable } from '../componentes/ManoOjeable'
-import { Mazo } from '../componentes/Mazo'
+import { Mazo, useFaseCorte } from '../componentes/Mazo'
 import { MenuJugador, useSilenciados } from '../componentes/MenuJugador'
 import { AnilloReloj, RelojPropio } from '../componentes/Reloj'
 import { useGestos } from '../gestos'
@@ -48,12 +48,17 @@ export function Mesa() {
     conexion,
     reyes,
     expulsado,
+    corte,
     cerrarReyes,
     enviar,
     salir,
   } = useJuego()
   // Pasar en la tercera: la próxima carta que toques va tapada.
   const [pasando, setPasando] = useState(false)
+  // Lo del pie se abre con su botón (en la mano en que lo abriste) y sale flotando: no empuja los cantos.
+  const [pieAbiertoEn, setPieAbiertoEn] = useState<number | null>(null)
+  // El corte del mazo se ve antes de la muestra y del reparto: mientras tanto, las cartas esperan.
+  const faseCorte = useFaseCorte(corte)
   const [aviso, setAviso] = useState<string | null>(null)
   const [confirmarSalida, setConfirmarSalida] = useState(false)
   // Paneles de la mesa: chat y señas (hojas desde abajo) y el menú sobre otro jugador.
@@ -121,11 +126,13 @@ export function Mesa() {
   // En la pausa entre manos la vista todavía no trae la última jugada: no mostrar dos veces la carta.
   // Las que di vuelta al terminar (flor o envido) también quedan en la mesa y no en la mano.
   const misMostradas = mostradas.find((m) => m.asiento === yo)?.cartas ?? []
-  const misCartas = vista.mano.misCartas.filter(
+  const repartiendo = faseCorte !== null
+  const misCartas = (repartiendo ? [] : vista.mano.misCartas).filter(
     (c) => !mesa.jugadas.some((j) => j.asiento === yo && j.carta && mismaCarta(j.carta, c)) && !misMostradas.some((x) => mismaCarta(x, c)),
   )
   // Las de los demás: sin la última que tiraron (en la pausa) ni las que dieron vuelta.
   const enManoDe = (a: number) => {
+    if (repartiendo) return 0
     const enVista = e.vueltas.reduce((t, v) => t + v.jugadas.filter((j) => j.asiento === a).length, 0)
     const sinVista = Math.max(0, mesa.jugadas.filter((j) => j.asiento === a).length - enVista)
     const dadas = mostradas.find((m) => m.asiento === a)?.cartas.length ?? 0
@@ -192,6 +199,7 @@ export function Mesa() {
     sala.senias.momento === 'antesDeJugar' && yaJugoEnLaMano(vista.mano, a)
       ? `${sala.lugares[a]?.apodo ?? 'Tu compañero'} ya jugó su carta: en esta sala las señas se hacen antes`
       : null
+  const pieAbierto = pieAbiertoEn === vista.mano.numero && !finDeMano
   const misHechas = hechas.mano === vista.mano.numero ? hechas.senias : []
   // Reloj del turno (solo online, cuando el juego espera a una persona).
   const miReloj = meToca && turno.asientos.includes(yo) ? turno.venceEn : null
@@ -288,7 +296,15 @@ export function Mesa() {
             />
           ))}
 
-        <Mazo muestra={vista.mano.muestra} n={n} reparteRel={rel(vista.mano.reparte)} />
+        <Mazo
+          muestra={vista.mano.muestra}
+          n={n}
+          reparteRel={rel(vista.mano.reparte)}
+          avisoCorte={cortando === null || finDeMano ? null : cortando === yo ? 'Cortás vos' : `Corta ${sala.lugares[cortando]?.apodo ?? 'otro'}`}
+          corte={corte}
+          fase={faseCorte}
+          haciaMano={direccion(n, rel(vista.mano.mano))}
+        />
 
         <CartasEnMesa
           n={n}
@@ -324,7 +340,8 @@ export function Mesa() {
           {/* El nombre y, abajo, la ficha del tanto: así entra todo en un celular angosto. */}
           <div className="mi-quien">
             <span className="mi-nombre">{lugarYo.apodo}</span>
-            {sala.ayudas && (
+            {/* Mientras se corta todavía no hay cartas: no hay tanto que mostrar. */}
+            {sala.ayudas && cortando === null && !repartiendo && (
               // Con flor, el envido no se juega: la ficha muestra la flor (el envido, en la explicación).
               <button type="button" className="mi-tanto" onClick={(ev) => explicar(explicarTanto(vista), ev.currentTarget)}>
                 {vista.mano.miTanto.flor !== null ? (
@@ -340,11 +357,9 @@ export function Mesa() {
           <span className="mi-estado">
             {meToca && (miReloj !== null ? <RelojPropio venceEn={miReloj} /> : <span className="te-toca">Te toca</span>)}
             {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
-            {cortando !== null && cortando !== yo && (
-              <span className="te-toca espera">Corta {sala.lugares[cortando]?.apodo ?? 'otro'}</span>
-            )}
             {hayCompanieros && <BotonSenias alTocar={() => setPanel('senias')} cerrado={seniasCerradas} />}
             {!finDeMano && <BotonPasar vista={vista} activo={pasando} alCambiar={setPasando} />}
+            {!finDeMano && <BotonPie vista={vista} abierto={pieAbierto} alCambiar={(a) => setPieAbiertoEn(a ? vista.mano.numero : null)} />}
             {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
           </span>
         </div>
@@ -384,17 +399,19 @@ export function Mesa() {
               ))}
             </div>
           ) : (
-            <>
-              <Acciones vista={vista} alElegir={jugar} />
-              <PanelPie
-                vista={vista}
-                apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
-                alSugerir={(sugerencia) => enviar('sugerir', { sugerencia })}
-                alElegir={jugar}
-              />
-            </>
+            <Acciones vista={vista} alElegir={jugar} />
           )}
         </div>
+        {/* Lo del pie flota sobre el borde del paño, arriba de tu lugar: no tapa la mano ni los cantos. */}
+        {pieAbierto && (
+          <PanelPie
+            vista={vista}
+            apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
+            alSugerir={(sugerencia) => enviar('sugerir', { sugerencia })}
+            alElegir={jugar}
+            alCerrar={() => setPieAbiertoEn(null)}
+          />
+        )}
         {explicacion && <GloboExplicacion key={explicacion.id} explicacion={explicacion} alCerrar={cerrarExplicacion} />}
       </section>
 

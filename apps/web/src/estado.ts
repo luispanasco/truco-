@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { mismaCarta } from '@truco/engine'
-import type { Carta, CartasMostradas, Evento, ResultadoEnfrentamiento, ResultadoVuelta, VistaPartida } from '@truco/engine'
+import type { Carta, CartasMostradas, Evento, ResultadoEnfrentamiento, ResultadoVuelta, TipoCorte, VistaPartida } from '@truco/engine'
 import type { Senia, Sugerencia } from '@truco/bots'
 import {
   describirEvento,
@@ -80,6 +80,8 @@ interface EstadoJuego {
   reyes: (MensajesServidor['reyes'] & { id: number }) | null
   /** Te sacaron de la mesa. */
   expulsado: string | null
+  /** El último corte del mazo: la mesa lo anima antes de mostrar la muestra y repartir. */
+  corte: { asiento: number; corte: TipoCorte; id: number } | null
   cerrarReyes(): void
 
   conectar(conexion: Conexion): void
@@ -169,6 +171,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         break
       case 'corte':
         mostrarGlobo(ev.asiento, TEXTO_CORTE[ev.corte])
+        set({ corte: { asiento: ev.asiento, corte: ev.corte, id: ++contador } })
         break
       case 'cantoEnvido':
         mostrarGlobo(ev.asiento, `${ev.primeroEstaElEnvido ? 'Envido va primero. ' : ''}¡${TEXTO_CANTO[ev.canto]}!`)
@@ -298,6 +301,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     sugerencia: null,
     reyes: null,
     expulsado: null,
+    corte: null,
 
     cerrarReyes() {
       set({ reyes: null })
@@ -347,6 +351,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         sugerencia: null,
         reyes: null,
         expulsado: null,
+        corte: null,
       })
     },
   }
