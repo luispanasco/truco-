@@ -16,6 +16,23 @@ const proxy = {
 }
 
 /**
+ * Las letras de la tienda (src/temaTipografia.ts), con el nombre del paquete de @fontsource: sus
+ * archivos salen como assets/<nombre>-latin-<peso>-normal-<hash>.woff2. No se bajan a todos: cada
+ * una se guarda la primera vez que se usa (al elegirla o al ver su muestra en Más opciones).
+ */
+const LETRAS_DE_TIENDA = [
+  'bebas-neue',
+  'special-elite',
+  'playfair-display',
+  'caveat',
+  'lobster',
+  'permanent-marker',
+  'pacifico',
+  'press-start-2p',
+]
+const esLetraDeTienda = (ruta: string) => LETRAS_DE_TIENDA.some((l) => ruta.startsWith(`/assets/${l}-latin-`) && ruta.endsWith('.woff2'))
+
+/**
  * App instalable (PWA). El service worker guarda de entrada la app entera (HTML, JS, CSS, fuentes
  * e íconos): el motor y los bots corren en el navegador, así "Contra la compu" anda sin internet.
  * Con registerType 'prompt' nunca se recarga solo: la versión nueva espera a que la persona toque
@@ -53,7 +70,8 @@ const pwa = VitePWA({
     globPatterns: ['**/*.{js,css,html,svg,woff2}', 'sonidos/*.ogg'],
     // La baraja clásica (1,5 MB) no se baja a todos: se guarda al elegirla (runtimeCaching).
     // Las voces, tampoco: cada pack se guarda la primera vez que suena.
-    globIgnores: ['barajas/**', 'voces/**'],
+    // Las letras de la tienda, tampoco: el CSS (chico) va de entrada y el woff2 se guarda al usarla.
+    globIgnores: ['barajas/**', 'voces/**', ...LETRAS_DE_TIENDA.map((l) => `assets/${l}-latin-*.woff2`)],
     navigateFallback: 'index.html',
     // El servidor de juego (Colyseus) va por /juego: no se guarda nunca ni cae en el index.html.
     // Los websockets no pasan por el service worker, y los pedidos HTTP de /juego no tienen ruta.
@@ -68,6 +86,15 @@ const pwa = VitePWA({
         options: {
           cacheName: 'barajas',
           expiration: { maxEntries: 100 },
+          cacheableResponse: { statuses: [0, 200] },
+        },
+      },
+      {
+        urlPattern: ({ sameOrigin, url }) => sameOrigin && esLetraDeTienda(url.pathname),
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'tipografias',
+          expiration: { maxEntries: 30 },
           cacheableResponse: { statuses: [0, 200] },
         },
       },

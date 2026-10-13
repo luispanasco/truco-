@@ -1,0 +1,58 @@
+/*
+ * Tipografías (cosmético): las variables de la letra están en estilos.css y las pone
+ * temaTipografia.ts en <html>. Acá, solo el selector de Más opciones.
+ */
+
+/* Tres por fila en un celular de 360 px; en pantallas anchas, más. */
+.tipografias {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+}
+.tipografia-opcion {
+  position: relative;
+  display: grid;
+  grid-template-rows: 40px auto;
+  gap: 3px;
+  justify-items: center;
+  align-items: center;
+  min-width: 0;
+  padding: 6px 4px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  color: inherit;
+  background: var(--avatar-fondo, rgb(255 255 255 / 0.14));
+}
+.tipografia-opcion.elegida {
+  border-color: var(--acento);
+  background: var(--avatar-fondo-elegido, rgb(255 255 255 / 0.26));
+}
+.tipografia-opcion.paga {
+  cursor: default;
+}
+.tipografia-opcion.paga .muestra-tipografia {
+  opacity: 0.6;
+}
+/* La muestra: el tamaño lo pone cada tipografía (en px, con su escala). Peso normal y sin
+ * negrita inventada, como se ven los títulos. */
+.muestra-tipografia {
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 400;
+  font-synthesis-weight: none;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--papel);
+}
+.tipografia-nombre {
+  max-width: 100%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+/* El precio va abajo del nombre (no encima de la muestra, que en las anchas ocupa todo). */
+.tipografia-opcion .pieza-precio {
+  position: static;
+}

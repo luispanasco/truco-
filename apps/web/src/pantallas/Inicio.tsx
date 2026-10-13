@@ -7,6 +7,7 @@ import { Carta } from '../componentes/Carta'
 import { FORMATOS, NIVELES, Segmentado, SelectorCartasJugadas, SelectorLargo } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
 import { SelectorMesa } from '../componentes/SelectorMesa'
+import { SelectorTipografia } from '../componentes/SelectorTipografia'
 import { SelectorVistaMesa } from '../componentes/SelectorVistaMesa'
 import { InstalarApp } from '../componentes/Pwa'
 import { datosUnirse, destinoAlEntrar, MensajeError } from '../componentes/Online'
@@ -17,6 +18,7 @@ import { useEnLinea } from '../enLinea'
 import { useJuego } from '../estado'
 import { cosmeticosPermitidos } from '../perfil'
 import { aplicarMesa } from '../temaMesa'
+import { aplicarTipografia } from '../temaTipografia'
 
 /** Una opción del menú online: ícono, título y una línea que explica. */
 function OpcionOnline({
@@ -117,6 +119,8 @@ export function Inicio() {
   // tenía la mesa y la baraja del anfitrión, vuelven las tuyas.
   useEffect(() => aplicarMesa(perfil.mesa, TODO_PERMITIDO), [perfil.mesa])
   useEffect(() => mostrarBaraja(perfil.baraja), [perfil.baraja])
+  // La tipografía es solo tuya (no cambia en las salas): se aplica al elegirla.
+  useEffect(() => aplicarTipografia(perfil.tipografia, TODO_PERMITIDO), [perfil.tipografia])
 
   /** Prendida, todo lo pago se elige; apagada, lo pago que tuvieras vuelve a lo gratis. */
   const cambiarTienda = (tiendaDesbloqueada: boolean) =>
@@ -251,11 +255,16 @@ export function Inicio() {
             detalle="Antes de cada mano: corte, sacar la muestra o se la doy al mano"
           />
           <SelectorMesa valor={perfil.mesa} alCambiar={(mesa) => cambiar({ mesa })} tiendaDesbloqueada={perfil.tiendaDesbloqueada} />
+          <SelectorTipografia
+            valor={perfil.tipografia}
+            alCambiar={(tipografia) => cambiar({ tipografia })}
+            tiendaDesbloqueada={perfil.tiendaDesbloqueada}
+          />
           <Interruptor
             activo={perfil.tiendaDesbloqueada}
             alCambiar={cambiarTienda}
             titulo="Desbloquear la tienda (prueba)"
-            detalle="Mientras no hay tienda: elegís cualquier pieza del avatar o mesa sin monedas. Al apagarlo, vuelve lo gratis"
+            detalle="Mientras no hay tienda: elegís cualquier pieza del avatar, mesa o tipografía sin monedas. Al apagarlo, vuelve lo gratis"
           />
           <Interruptor
             activo={perfil.ayudas}

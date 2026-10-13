@@ -756,3 +756,17 @@ Repaso regla por regla con el usuario (10 bloques), con el detalle, las decision
 - "Vamos a X": se interpretó como dejarle la vuelta a un compañero o ganarle a la carta de un rival.
 - La tirada de reyes y el corte no tienen animación de mazo: la tirada sale en un cuadro y el corte en botones.
 - Con chat de voz (fase 2) hay que apagar lo del pie.
+
+---
+
+## Tipografías — 2026-10-12
+
+Pedido del usuario: tipografías como cosmético, por el mismo camino que las mesas. Se aplican a toda la app y son personales (no viajan al servidor; en las salas no cambian). Lo hizo un agente.
+
+- **Catálogo** (`packages/shared/src/tipografias.ts`): diez letras de licencia libre (OFL, Google Fonts), autoalojadas con @fontsource para que anden sin conexión. Gratis: Nunito (la de siempre, con títulos en Alfa Slab One) y Alfa Slab One en toda la app. En la tienda, con precios provisorios: Bebas Neue 200, Special Elite 300, Playfair Display 300, Caveat 300, Lobster 400, Permanent Marker 400, Pacifico 500 y Press Start 2P 500. Cada una tiene una `escala` para que se lea como Nunito (Press Start 2P 0,58; Pacifico 0,82; Caveat 1,12) y no inventa negrita si no la trae. `normalizarTipografia` hace lo pago gratis, salvo con la tienda de prueba.
+- **Web:** `perfil.tipografia` (entra en `cosmeticosPermitidos`). `temaTipografia.ts` pone `data-tipografia` en `<html>` y las variables `--fuente-texto`, `--fuente-titulo` y `--escala-texto` (agranda o achica todo lo medido en rem). Las pagas se cargan con import dinámico del CSS de @fontsource; el woff2 no va en la precarga de la PWA y se guarda al usarlo (caché `tipografias`, como las barajas). Los campos de texto (como el del chat), que tenían la letra del sistema, ahora usan la de la app.
+- **Selector** en Inicio → Más opciones: "Truco" escrito con cada letra, tres por fila en 360 px, las pagas con candado y precio (abierto con la tienda de prueba).
+- **Revisado en 360 px** (capturas del inicio, el selector y la mesa de parejas con las diez): no hay desborde. Los cantos largos con Caveat o Lobster se deslizan en su fila, como ya pasaba.
+- **Tests:** web 246 (11 nuevos en `tipografias.test.tsx`).
+
+**Pendiente:** con Press Start 2P, los renglones de las bajadas chicas (el autor de cada baraja) quedan muy juntos.

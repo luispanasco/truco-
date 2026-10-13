@@ -6,17 +6,20 @@ import {
   MESA_DEFAULT,
   TODO_PERMITIDO,
   TIEMPOS_SALA_DEFAULT,
+  TIPOGRAFIA_DEFAULT,
   avatarAlAzar,
   codificarAvatar,
   normalizarAvatar,
   normalizarBaraja,
   normalizarCartasJugadas,
   normalizarMesa,
+  normalizarTipografia,
   normalizarTirarReyes,
   type CartasJugadas,
   type TirarReyes,
   type ConfigTiempos,
   type IdMesa,
+  type IdTipografia,
 } from '@truco/shared'
 import type { Baraja } from './baraja'
 
@@ -58,6 +61,8 @@ export interface Perfil {
   mesaBustos: boolean
   /** La mesa (paño y madera) con la que se ve la partida y el fondo de la app (cosmético). */
   mesa: IdMesa
+  /** La letra de toda la app (cosmético). Es solo tuya: no viaja al servidor. */
+  tipografia: IdTipografia
   /**
    * Prueba de la tienda (fase 1, todavía sin monedas): todo lo pago se puede elegir. El servidor
    * lo acepta mientras tenga prendida la tienda de prueba. En la fase 2 se va: vale lo comprado.
@@ -100,6 +105,7 @@ export function leerPerfil(): Perfil {
     mesaBustos: false,
     cartasJugadas: CARTAS_JUGADAS_DEFAULT,
     mesa: MESA_DEFAULT,
+    tipografia: TIPOGRAFIA_DEFAULT,
     tiendaDesbloqueada: false,
   }
   try {
@@ -110,7 +116,7 @@ export function leerPerfil(): Perfil {
     perfil.tirarReyes = normalizarTirarReyes(perfil.tirarReyes)
     if (![20, 30, 40].includes(perfil.puntosPartida)) perfil.puntosPartida = 30
     const cosmeticos = cosmeticosPermitidos(perfil)
-    const cambio = (['avatar', 'mesa', 'baraja'] as const).some((k) => cosmeticos[k] !== perfil[k])
+    const cambio = (['avatar', 'mesa', 'baraja', 'tipografia'] as const).some((k) => cosmeticos[k] !== perfil[k])
     Object.assign(perfil, cosmeticos)
     // Se guarda enseguida: el perfil nuevo o migrado tiene que ser el mismo en todas las pantallas.
     if (!guardado || cambio) guardarPerfil(perfil)
@@ -121,17 +127,18 @@ export function leerPerfil(): Perfil {
 }
 
 /**
- * El avatar, la mesa y la baraja que se pueden usar. Los emojis de antes (o un código roto) pasan
- * a un avatar armado desde el apodo; lo que no existe vuelve a lo de siempre; y lo de la tienda
- * vuelve a lo gratis, como hace el servidor (así se ve lo mismo que ven los demás), salvo con la
- * tienda de prueba desbloqueada.
+ * El avatar, la mesa, la baraja y la tipografía que se pueden usar. Los emojis de antes (o un
+ * código roto) pasan a un avatar armado desde el apodo; lo que no existe vuelve a lo de siempre; y
+ * lo de la tienda vuelve a lo gratis, como hace el servidor (así se ve lo mismo que ven los demás),
+ * salvo con la tienda de prueba desbloqueada. La tipografía no viaja, pero sigue la misma regla.
  */
-export function cosmeticosPermitidos(p: Perfil): Pick<Perfil, 'avatar' | 'mesa' | 'baraja'> {
+export function cosmeticosPermitidos(p: Perfil): Pick<Perfil, 'avatar' | 'mesa' | 'baraja' | 'tipografia'> {
   const puede = p.tiendaDesbloqueada ? TODO_PERMITIDO : undefined
   return {
     avatar: normalizarAvatar(p.avatar, puede) ?? avatarDe(p.apodo || p.invitadoId),
     mesa: normalizarMesa(p.mesa, puede),
     baraja: normalizarBaraja(p.baraja, puede),
+    tipografia: normalizarTipografia(p.tipografia, puede),
   }
 }
 
