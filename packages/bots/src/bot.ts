@@ -1,5 +1,5 @@
 import { equipoDe, type Accion, type Carta, type CantoEnvido, type CantoFlor, type QueManda, type TipoCorte, type VistaPartida } from '@truco/engine'
-import { Aleatorio, crearContexto, f, fuerzaJugada, mejorDeLaVuelta, ordenadas, pendiente, type Contexto } from './contexto'
+import { Aleatorio, crearContexto, f, mejorDeLaVuelta, ordenadas, pendiente, type Contexto } from './contexto'
 import { seniasDeMano, type Senia, type SeniasRecibidas } from './senias'
 import { crearFacil } from './facil'
 import { crearMedio } from './medio'
@@ -188,17 +188,13 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[], sugerencia?: 
 }
 
 /**
- * La carta que pide la sugerencia del pie: "vení" es tirar la más baja; "vamos a X" con un rival
- * es ganarle a la carta que tiró (la más baja que alcance), y con un compañero es dejarle la vuelta.
+ * La carta que pide la sugerencia del pie: "vení" es tirar la más baja; "vamos a X" (X es un
+ * compañero) también, porque la vuelta la lleva X. Si el nombrado es el propio bot, juega a ganarla.
  */
 function cartaSugerida(ctx: Contexto, s: Sugerencia | undefined): Carta | null {
   if (!s || ctx.misCartas.length === 0) return null
-  const cs = ordenadas(ctx, ctx.misCartas)
-  if (s.tipo === 'veni' || equipoDe(s.asiento) === ctx.equipo) return cs[0]!
-  const vuelta = ctx.e.vueltas[ctx.e.vueltas.length - 1]!
-  const suya = vuelta.jugadas.find((j) => j.asiento === s.asiento)
-  if (!suya) return null
-  return cs.find((c) => f(ctx, c) > fuerzaJugada(ctx, suya)) ?? cs[0]!
+  if (s.tipo === 'vamosA' && (s.asiento === ctx.yo || equipoDe(s.asiento) !== ctx.equipo)) return null
+  return ordenadas(ctx, ctx.misCartas)[0]!
 }
 
 function ganaLaVuelta(ctx: Contexto, carta: Carta): boolean {

@@ -42,6 +42,7 @@ import {
   CARTAS_JUGADAS_DEFAULT,
   TIRAR_REYES_DEFAULT,
   VENCIDOS_PARA_SACAR,
+  ESPERA_ORDEN_MS,
   TIEMPOS_SALA_DEFAULT,
   yaJugoEnLaMano,
   type CanalChat,
@@ -90,6 +91,8 @@ export interface Tiempos {
   /** Espera extra al cerrar una vuelta y al terminar una mano, para que se vea el resultado. */
   pausaVueltaMs: number
   pausaManoMs: number
+  /** Lo que tarda un bot en cumplir una orden del pie (ver `ESPERA_ORDEN_MS`). */
+  esperaOrdenMs: [number, number]
 }
 
 export const TIEMPOS_DEFAULT: Tiempos = {
@@ -103,6 +106,7 @@ export const TIEMPOS_DEFAULT: Tiempos = {
   reconexionS: 20,
   pausaVueltaMs: 3_000,
   pausaManoMs: 5_000,
+  esperaOrdenMs: ESPERA_ORDEN_MS,
 }
 
 /** Nivel del bot que juega por un humano desconectado o que se quedó sin tiempo. */
@@ -428,7 +432,10 @@ export class SalaTruco extends Room {
       const valida: Sugerencia | null =
         sugerencia?.tipo === 'veni'
           ? { tipo: 'veni' }
-          : sugerencia?.tipo === 'vamosA' && e.participantes.includes(Number(sugerencia.asiento)) && Number(sugerencia.asiento) !== asiento
+          : sugerencia?.tipo === 'vamosA' &&
+              e.participantes.includes(Number(sugerencia.asiento)) &&
+              Number(sugerencia.asiento) !== asiento &&
+              equipoDe(Number(sugerencia.asiento)) === equipo
             ? { tipo: 'vamosA', asiento: Number(sugerencia.asiento) }
             : null
       if (!valida) throw new Rechazo('Sugerencia inválida')
@@ -714,7 +721,10 @@ export class SalaTruco extends Room {
       : eventos.some((ev) => ev.tipo === 'vueltaTerminada')
         ? this.tiempos.pausaVueltaMs
         : 0
-    this.ordenarDelPie()
+    // Si el pie acaba de mandar a alguien (él o un bot), el que la cumple no canta al instante.
+    const ordeno = this.ordenarDelPie() || eventos.some((ev) => ev.tipo === 'orden')
+    const [ordenMin, ordenMax] = this.tiempos.esperaOrdenMs
+    const reaccion = ordeno ? ordenMin + (ordenMax > ordenMin ? randomInt(ordenMax - ordenMin + 1) : 0) : 0
     const version = this.version
     const esperando = esperandoA(this.estado)
     const humanos = esperando.filter((a) => this.humanoConectado(a))
@@ -722,7 +732,7 @@ export class SalaTruco extends Room {
       const a = esperando[0]
       if (a === undefined) return
       const { botMinMs, botMaxMs } = this.tiempos
-      const demora = extra + botMinMs + (botMaxMs > botMinMs ? randomInt(botMaxMs - botMinMs + 1) : 0)
+      const demora = extra + reaccion + botMinMs + (botMaxMs > botMinMs ? randomInt(botMaxMs - botMinMs + 1) : 0)
       this.timerJuego = setTimeout(() => this.jugarBot(a, version), demora)
       this.broadcast('turno', { asientos: esperando, venceEn: null })
     } else {
@@ -815,23 +825,25 @@ export class SalaTruco extends Room {
    * Con "toques y gritos del pie": si le toca jugar a alguien y su pie no es una persona
    * conectada (un bot, o el que juega por quien no está), el pie decide si lo manda a tocar o a gritar.
    */
-  private ordenarDelPie() {
+  /** Devuelve si mandó a alguien. */
+  private ordenarDelPie(): boolean {
     const estado = this.estado
-    if (!estado || estado.config.toquesYGritos !== 'pie' || estado.mano.cortando !== null || estado.mano.verificacion) return
+    if (!estado || estado.config.toquesYGritos !== 'pie' || estado.mano.cortando !== null || estado.mano.verificacion) return false
     const e = enfrentamientoActual(estado)
     const turno = e.turno
-    if (turno === null || esperandoA(estado)[0] !== turno) return
+    if (turno === null || esperandoA(estado)[0] !== turno) return false
     const lider = liderDe(estado, e, equipoDe(turno))
-    if (lider === null || lider === turno || this.humanoConectado(lider)) return
-    if (e.ordenes.some((o) => o.asiento === turno)) return
+    if (lider === null || lider === turno || this.humanoConectado(lider)) return false
+    if (e.ordenes.some((o) => o.asiento === turno)) return false
     const bot = this.lugares[lider]!.tipo === 'bot' ? this.bots[lider]! : this.reemplazos[lider]!
     const que = bot.ordenar(vistaPara(estado, idJugador(lider)), this.senias[lider], turno)
-    if (!que) return
+    if (!que) return false
     const r = apply(estado, { tipo: 'mandar', jugador: idJugador(lider), a: turno, que })
-    if (!r.ok) return
+    if (!r.ok) return false
     this.estado = r.estado
     this.registro?.acciones.push({ ms: Date.now() - this.inicioMs, asiento: lider, accion: { tipo: 'mandar', jugador: idJugador(lider), a: turno, que }, porBot: true })
     this.difundir(r.eventos)
+    return true
   }
 
   // ── Señas ────────────────────────────────────────────────────────

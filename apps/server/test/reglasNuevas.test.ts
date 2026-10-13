@@ -70,6 +70,12 @@ describe('el pie y sus sugerencias', () => {
     a.enviar('sugerir', { sugerencia: { tipo: 'vamosA', asiento: 9 } })
     await a.esperar(() => a.de('error').length > 0, 5_000, 'el rechazo')
     expect(a.de('error')[0]!.motivo).toBe('Sugerencia inválida')
+    // "Vamos a X" es solo a un compañero: a un rival (asiento 1) no.
+    a.enviar('sugerir', { sugerencia: { tipo: 'vamosA', asiento: 1 } })
+    await a.esperar(() => a.de('error').length > 1, 5_000, 'el rechazo del rival')
+    a.enviar('sugerir', { sugerencia: { tipo: 'vamosA', asiento: 2 } })
+    await a.esperar(() => a.de('sugerencia').length > 1, 5_000, 'la sugerencia al compañero')
+    expect(a.de('sugerencia')[1]).toEqual({ de: 0, sugerencia: { tipo: 'vamosA', asiento: 2 } })
   })
 })
 

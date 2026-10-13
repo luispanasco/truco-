@@ -49,8 +49,8 @@ Aprobado sin cambios: 3.1 gana el que gana 2, 3.2 pardas, 3.3 orden antihorario 
 - **Quién es:** en cada equipo, el último en jugar la primera vuelta. Es el que reparte y, en el otro equipo, el primero a la izquierda del mazo. Con la rotación, cada jugador es pie dos manos seguidas: primero a la izquierda del mazo y después repartiendo.
 - **Sugerencias**, que el compañero no está obligado a seguir:
   - "Vení": no juegues nada bueno, vení a lo que juego yo;
-  - "Vamos a X", donde X es un jugador.
-- **Órdenes:** puede mandar a un compañero a tocar (cantar envido) o a gritar (cantar truco).
+  - "Vamos a X", donde X es un compañero (nunca un rival).
+- **Órdenes:** puede mandar a un compañero a tocar (cantar envido) o a gritar (cantar truco). No son obligatorias: el pie puede no mandar nada. El que cumple la orden no canta al instante: pasa un rato, como en la mesa.
 - Las sugerencias y las órdenes se dicen **en voz alta**: las oye el rival.
 - **Opción de sala "Toques y gritos":** los decide el pie, o puede tocar y gritar cualquiera. Si los decide el pie, los demás tocan o gritan solo cuando él los manda, y las respuestas (quiero, no quiero, subir) las da solo el pie.
 - **Con chat de voz, todo lo del pie queda anulado:** eso se dice por voz, como en persona.
@@ -174,3 +174,5 @@ Va en cinco tramos. El motor primero, porque todo lo demás depende de él; desp
 - **Servidor:** tirar reyes (`tirarReyes` en `@truco/shared`, reacomoda los lugares), sugerencias del pie (`sugerir` → `sugerencia`, en voz alta), el pie bot manda antes del turno del compañero, eventos filtrados por asiento, te saca a la tercera jugada vencida (`expulsado`), pausas de 3 s y 5 s, opciones validadas. 57 tests.
 - **Web:** opciones nuevas al crear la sala y contra la compu (partido, tirar reyes, toques y gritos, corte), tirada de reyes, botones del corte, "Pasar", panel del pie, "Flor y truco", "con flor quiero / me achico", cartas boca abajo en la mesa, aviso al sacarte de la mesa. 235 tests, 10 de punta a punta y el de sin conexión.
 - **Interpretación:** "vamos a X" con un compañero se toma como "vení" (dejarle la vuelta); con un rival, ganarle a su carta. Revisar con el usuario.
+
+**Ajustes del pie (2026-10-13, después de probarlo):** "Vamos a X" solo a un compañero (el bot lo toma como "vení": la vuelta la lleva X); el bot que cumple una orden del pie espera 1,5 a 2,5 s antes de cantar (`ESPERA_ORDEN_MS`), online y contra la compu.

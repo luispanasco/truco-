@@ -41,8 +41,11 @@ describe('el panel del pie', () => {
     render(<PanelPie vista={vistaPara(p, 'c')} apodo={apodo} alSugerir={alSugerir} alElegir={() => {}} />)
     fireEvent.click(screen.getByRole('button', { name: 'Vení' }))
     expect(alSugerir).toHaveBeenCalledWith({ tipo: 'veni' })
-    fireEvent.click(screen.getByRole('button', { name: 'Vamos a B' }))
-    expect(alSugerir).toHaveBeenCalledWith({ tipo: 'vamosA', asiento: 1 })
+    // "Vamos a" es solo a un compañero: a A sí, a los rivales (B y D) no.
+    fireEvent.click(screen.getByRole('button', { name: 'Vamos a A' }))
+    expect(alSugerir).toHaveBeenCalledWith({ tipo: 'vamosA', asiento: 0 })
+    expect(screen.queryByRole('button', { name: 'Vamos a B' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Vamos a D' })).toBeNull()
   })
 
   it('con "toques y gritos del pie" manda a tocar o a gritar', () => {

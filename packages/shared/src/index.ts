@@ -109,6 +109,12 @@ export function normalizarTirarReyes(op: unknown, base: TirarReyes = TIRAR_REYES
   return op === 'no' || op === 'reparte' || op === 'reparteYEquipos' ? op : base
 }
 
+/**
+ * Cuando el pie manda a tocar o a gritar, el compañero no canta al instante: como en la mesa,
+ * pasa un rato (en ms, entre el mínimo y el máximo) hasta que lo hace.
+ */
+export const ESPERA_ORDEN_MS: [number, number] = [1500, 2500]
+
 /** Jugadas vencidas seguidas por las que el servidor saca a alguien de la mesa (queda un bot). */
 export const VENCIDOS_PARA_SACAR = 3
 

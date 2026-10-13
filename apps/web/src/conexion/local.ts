@@ -26,6 +26,7 @@ import {
   normalizarSenias,
   normalizarTirarReyes,
   tirarReyes,
+  ESPERA_ORDEN_MS,
   yaJugoEnLaMano,
   type ConfigSenias,
   type InfoSala,
@@ -179,7 +180,10 @@ export class ConexionLocal implements Conexion {
         const valida: Sugerencia | null =
           sugerencia?.tipo === 'veni'
             ? { tipo: 'veni' }
-            : sugerencia?.tipo === 'vamosA' && e.participantes.includes(Number(sugerencia.asiento)) && Number(sugerencia.asiento) !== 0
+            : sugerencia?.tipo === 'vamosA' &&
+              e.participantes.includes(Number(sugerencia.asiento)) &&
+              Number(sugerencia.asiento) !== 0 &&
+              Number(sugerencia.asiento) % 2 === 0
               ? { tipo: 'vamosA', asiento: Number(sugerencia.asiento) }
               : null
         if (!valida) {
@@ -254,19 +258,28 @@ export class ConexionLocal implements Conexion {
    * Con "toques y gritos del pie": si le toca a un bot y su pie es otro bot, el pie decide si lo
    * manda a tocar o a gritar. (En tu equipo el que lidera sos vos.)
    */
-  private ordenarDelPie(turno: number) {
+  /** Devuelve si mandó a alguien. */
+  private ordenarDelPie(turno: number): boolean {
     const estado = this.estado
-    if (estado.config.toquesYGritos !== 'pie' || estado.mano.cortando !== null) return
+    if (estado.config.toquesYGritos !== 'pie' || estado.mano.cortando !== null) return false
     const e = enfrentamientoActual(estado)
-    if (e.turno !== turno) return
+    if (e.turno !== turno) return false
     const lider = liderDe(estado, e, equipoDe(turno))
-    if (lider === null || lider === turno || lider === 0 || e.ordenes.some((o) => o.asiento === turno)) return
+    if (lider === null || lider === turno || lider === 0 || e.ordenes.some((o) => o.asiento === turno)) return false
     const que = this.bots[lider]!.ordenar(vistaPara(estado, id(lider)), this.senias[lider], turno)
-    if (!que) return
+    if (!que) return false
     const r = apply(estado, { tipo: 'mandar', jugador: id(lider), a: turno, que })
-    if (!r.ok) return
+    if (!r.ok) return false
     this.estado = r.estado
     this.difundir(r.eventos)
+    return true
+  }
+
+  /** Lo que tarda en cumplir una orden del pie (en los tests, con bots sin demora, nada). */
+  private esperaOrden(): number {
+    if (this.op.demoraBots) return 0
+    const [min, max] = ESPERA_ORDEN_MS
+    return min + Math.random() * (max - min)
   }
 
   /** Cada bot luce siempre el mismo avatar (puede tener piezas de la tienda); la persona, el de su perfil. */
@@ -346,16 +359,22 @@ export class ConexionLocal implements Conexion {
         : 0
     const version = this.version
     this.emitir('turno', { asientos: esperando, venceEn: null })
+    const jugar = () => {
+      if (version !== this.version) return
+      const sug = a % 2 === 0 && this.sugerencia?.vuelta === this.claveVuelta() ? this.sugerencia.sugerencia : undefined
+      const accion = this.bots[a]!.decidir(vistaPara(this.estado, id(a)), this.senias[a], sug)
+      const motivo = this.aplicar(a, accion)
+      if (motivo) console.error('Un bot eligió una acción inválida:', motivo)
+    }
+    // Si el pie (vos u otro bot) lo acaba de mandar, el bot no canta al instante.
+    const mandado = eventos.some((ev) => ev.tipo === 'orden') ? this.esperaOrden() : 0
     this.timer = setTimeout(
       () => {
         if (version !== this.version) return
-        this.ordenarDelPie(a)
-        const sug = a % 2 === 0 && this.sugerencia?.vuelta === this.claveVuelta() ? this.sugerencia.sugerencia : undefined
-        const accion = this.bots[a]!.decidir(vistaPara(this.estado, id(a)), this.senias[a], sug)
-        const motivo = this.aplicar(a, accion)
-        if (motivo) console.error('Un bot eligió una acción inválida:', motivo)
+        if (this.ordenarDelPie(a)) this.timer = setTimeout(jugar, this.esperaOrden())
+        else jugar()
       },
-      extra + min + Math.random() * (max - min),
+      extra + mandado + min + Math.random() * (max - min),
     )
   }
 

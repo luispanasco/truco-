@@ -16,7 +16,8 @@ export function opcionesDelPie(vista: VistaPartida) {
   const e = vista.mano.enfrentamientos[vista.mano.actual]!
   if (vista.ganador !== null || vista.mano.cortando !== null || e.lideres[yo % 2] !== yo || e.fin) return null
   return {
-    otros: e.participantes.filter((a) => a !== yo && !e.retirados.includes(a)),
+    // "Vamos a X" es siempre a un compañero.
+    otros: e.participantes.filter((a) => a !== yo && a % 2 === yo % 2 && !e.retirados.includes(a)),
     mandar: vista.accionesValidas.filter((a): a is Extract<Accion, { tipo: 'mandar' }> => a.tipo === 'mandar'),
   }
 }
