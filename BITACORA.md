@@ -20,6 +20,8 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 ### Ideas pedidas para más adelante
 
 - **Bots más fuertes y tipografías** (pedido 2026-10-12): estudiar los bots (predecibles y flojos), sumar "Muy difícil" y "Master" (el máximo posible sin ver cartas ajenas: contar cartas y calcular envidos), y tipografías como cosmético: al menos 10 de bibliotecas públicas, 2 gratis y 8 en la tienda. Hecho el mismo día: ver "Tipografías" y "Bots Muy difícil y Master" más abajo.
+- **Cosméticos criollos** (pedido 2026-10-13): pipa, cosas de asado y más, bien criollo. Plan aprobado el mismo día (ver la entrada).
+- **Modo historia** (idea del usuario, 2026-10-13): recorrer el país jugando en lugares reales (se pedirá permiso a cada lugar), desbloqueando cosas, niveles y dificultades más altas. Decidido: va **después de la fase 2** (el progreso se guarda en la cuenta); **mapa abierto** (elegís a dónde ir); individual y **cooperativo con amigos online o con un compañero bot**; mientras llegan los permisos, lugares inventados pero creíbles que después se reemplazan por los reales. El plan se arma después de la fase 2.
 
 ---
 
@@ -802,3 +804,25 @@ Pedido del usuario: los bots eran predecibles y flojos; dos niveles nuevos por e
 **Pendientes:**
 - La ventaja sobre el difícil es chica (el truco tiene mucha suerte y el difícil ya simula la mano). Para más: ajustar los parámetros con muchas más partidas (horas de máquina), o un modelo de apuestas del truco más fino.
 - Medir contra personas: el Master aprende de cada rival y ahí debería sacar más diferencia que contra un bot fijo.
+
+---
+
+## Cosméticos criollos — 2026-10-13
+
+Pedido del usuario: pipa, cosas de asado y más, bien criollo. Plan aprobado el mismo día, con precios provisorios. Por el mismo camino que las bufandas: todo al final de cada capa y una capa nueva al final del formato.
+
+- **Capa nueva "en la boca"** (`enBoca`, la 17.ª, al final del formato del avatar), así se puede tener pipa y mate a la vez: "Nada en la boca" (gratis), pipa (300), pajita de pasto (100) y escarbadientes (100). Un código guardado con 16 capas (o con las 15 de antes) se sigue leyendo, con la capa nueva en su pieza 0. En el editor va en la pestaña Accesorio, debajo de los accesorios, con miniaturas enteras (acercadas a la cara cortaban la pipa).
+  - Se dibuja dentro de la cabeza, justo después de la boca y en su propia capa (`capa-enBoca`), agarrada de la comisura de cada boca: `CAJAS_BOCA` en `propias.ts` tiene la caja de las 27 bocas de Lorelei medida con getBBox (las que se sumen después usan la de la primera). Va encima de la barba.
+  - **Señas:** en las muecas de la pera (1 y 7 bravos) se va con la boca; en el beso, morderse el labio, la boca abierta, la lengua y los cachetes de la flor se guarda (`gestos.css`). Como no está adentro de la capa de la boca, no cambia la caja que miden las señas ni las zonas de la cara para tocar.
+- **6 accesorios en la mano** (con la misma mano del mate): choripán (200), tira de asado en el tenedor (250), pinza de parrilla (200), vaso de grappamiel (200), facón de asador con vaina (300) y guitarra criolla (400; asoma el mástil con el clavijero y un poco de la caja). La tira, la pinza y el facón van inclinados hacia afuera para no tapar la cara.
+- **3 pañuelos de gaucho** al cuello, en la capa de la bufanda (rojo, celeste y blanco, 150 cada uno): la vuelta, la punta del triángulo sobre el pecho y el nudo. La sección del editor se llama ahora "Bufanda o pañuelo".
+- **Sombrero de gaucho** (300): fieltro oscuro, copa baja y chata, ala ancha y recta; recorta el pelo de arriba como los otros. Revisado con los 48 peinados.
+- **Ropa:** poncho (350; rojo, a rayas, con guarda de rombos, cae más ancho que los hombros) y chaleco de campo (250; abierto sobre una camisa blanca de cuello).
+- Los bots pueden lucirlas (contra la compu, en 3 contra 3, salen poncho, tira de asado, pipa, pajita y escarbadientes). El servidor sigue aceptando solo lo gratis, salvo con la tienda de prueba.
+- **Planillas** (`scripts/planillas-avatar.ts`): hojas nuevas de accesorios, cuello (bufandas y pañuelos), una por cada cosa en la boca con las 27 bocas (con barba y sin barba, y con mate, sombrero de gaucho y poncho) y "criollos" (todo junto con pieles, peinados y bocas distintas). Se revisó también el editor y la mesa (círculos y sentados) en 360 px y en PC, y las 11 señas con pipa.
+- **Tests:** web 252 (nuevos: lo que va en la boca arma un SVG válido con cada accesorio y cada bufanda; con cada boca y cada barba va justo después de la boca y fuera de su capa; un código de 16 capas se lee con la boca vacía; el catálogo criollo con sus precios y sin mover lo que estaba), servidor 57; la prueba de punta a punta del avatar espera la capa nueva.
+
+**Pendientes:**
+- Lo que va en la boca es chico: a 44 px la pipa se adivina y la pajita y el escarbadientes casi no se ven.
+- Con barba grande y pelo oscuro la pipa se lee menos (se aclaró la madera).
+- El choripán, en vertical en la mano, se parece un poco a un pancho.

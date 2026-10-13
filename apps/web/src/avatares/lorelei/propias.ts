@@ -241,6 +241,90 @@ const campera = (color: string) => () => {
   )
 }
 
+/**
+ * Poncho de lana a rayas: cae recto desde el cuello, más ancho que los hombros, con las franjas
+ * a lo largo, una guarda de rombos y los pliegues del paño.
+ */
+const poncho = (color: string, raya: string, guarda: string) => () => {
+  // Del cuello baja casi en línea recta hasta afuera del cuadro, como una carpa.
+  const linea: Punto[] = [
+    ...curva([
+      [40, 1000],
+      [120, 930],
+      [230, 870],
+      [320, 838],
+      [372, 818],
+    ]),
+    ...curva(ESCOTE_REDONDO).slice(1),
+    ...curva([
+      [590, 818],
+      [640, 836],
+      [730, 868],
+      [840, 930],
+      [920, 1000],
+    ]).slice(1),
+  ]
+  const franjas = (
+    [
+      [214, 232, raya],
+      [246, 256, guarda],
+      [270, 288, raya],
+      [672, 690, raya],
+      [704, 714, guarda],
+      [728, 746, raya],
+    ] as const
+  )
+    .map(([a, b, c]) => `<path d="${franja(linea, a, b)}" fill="${c}"/>`)
+    .join('')
+  // Guarda de rombos sobre la franja clara de cada lado.
+  const rombos = [251, 709].flatMap((x) => [918, 956, 994].map((y) => `M${x} ${y - 14}l9 14-9 14-9-14Z`)).join('')
+  return (
+    torso(linea, color, false) +
+    franjas +
+    `<path d="${rombos}" fill="${color}" stroke="${NEGRO}" stroke-width="3"/>` +
+    // Pliegues del paño.
+    `<path d="M150 960c30-20 50-50 60-80M810 960c-30-20-50-50-60-80M420 900c-6 30-6 70 4 100M540 900c6 30 6 70-4 100" stroke="${tono(color, -0.28)}" stroke-width="9" fill="none" stroke-linecap="round"/>` +
+    borde(linea) +
+    // El cuello del poncho, un ribete grueso apenas más oscuro.
+    ribete(ESCOTE_REDONDO, tono(color, -0.15), 26)
+  )
+}
+
+/** Chaleco de campo abierto sobre una camisa blanca de cuello, con botones y bolsillos. */
+const chaleco = (color: string, camisa: string) => () => {
+  const claro = tono(color, 0.2)
+  // Mitad izquierda del chaleco (a la izquierda de la pantalla); la derecha es su espejo.
+  const izq: Punto[] = [
+    [372, 820],
+    [404, 868],
+    [438, 920],
+    [466, 1000],
+    [212, 1000],
+    [222, 950],
+    [244, 902],
+    [262, 866],
+    [300, 840],
+  ]
+  const der = izq.map(([x, y]) => [962 - x, y] as Punto)
+  const botones = [930, 966].map((y) => `<circle cx="${r(962 - 438 - (y - 920) * 0.36 - 16)}" cy="${y}" r="9" ${fino(NEGRO, 6, '#d9b36c')}/>`).join('')
+  return (
+    torso(LINEA_V, camisa) +
+    MANGAS +
+    // La tapa de la camisa, con un botón.
+    `<path d="M481 900v100" ${fino()}/>` +
+    `<circle cx="481" cy="960" r="7" fill="${NEGRO}"/>` +
+    // El cuello de la camisa: dos puntas que caen sobre el pecho.
+    `<path d="M372 818c8 36 30 64 60 84l20-48c-30-10-56-22-80-36Z" fill="${camisa}" ${TRAZO}/>` +
+    `<path d="M590 818c-8 36-30 64-60 84l-20-48c30-10 56-22 80-36Z" fill="${camisa}" ${TRAZO}/>` +
+    `<path d="${camino(izq)}Z" fill="${color}" ${TRAZO}/>` +
+    `<path d="${camino(der)}Z" fill="${color}" ${TRAZO}/>` +
+    // Los bolsillos con su tapita y los botones.
+    `<path d="M290 948h80M592 948h80" stroke="${NEGRO}" stroke-width="12" stroke-linecap="round"/>` +
+    `<path d="M296 948h68M598 948h68" stroke="${claro}" stroke-width="4" stroke-linecap="round"/>` +
+    botones
+  )
+}
+
 /** Ropas, en el orden del catálogo (`CATALOGO_AVATAR.ropa`). */
 export const ROPAS: readonly ((piel: string) => string)[] = [
   remera('#f5f5f0'),
@@ -264,6 +348,9 @@ export const ROPAS: readonly ((piel: string) => string)[] = [
   rayas('#f5f5f0', '#5b2a86'),
   camiseta('#f5f5f0', '#7fb8e6'),
   deEpoca('#7fb8e6', '#f5f5f0'),
+  // Criollos.
+  poncho('#a8322b', '#2b1b18', '#e6c477'),
+  chaleco('#5e4a36', '#f5f5f0'),
 ]
 
 // ---------------------------------------------------------------------------------------
@@ -386,8 +473,35 @@ const sombreroDePaja: Sombrero = {
   ]),
 }
 
+/** Sombrero de gaucho: fieltro oscuro, copa baja y chata y el ala ancha y recta. */
+const sombreroDeGaucho: Sombrero = {
+  dibujo: () => {
+    const c = '#3a302b'
+    const brillo = tono(c, 0.3)
+    return (
+      `<g transform="translate(0 22)">` +
+      // El ala, ancha y casi plana.
+      `<path d="M96 292c-16-34 110-74 340-82 230-8 404 18 418 56 12 34-130 68-370 76-230 8-372-12-388-50Z" fill="${c}" ${TRAZO}/>` +
+      `<path d="M150 300c110 22 260 28 410 20 130-8 230-26 268-46" stroke="${brillo}" stroke-width="7" fill="none" stroke-linecap="round"/>` +
+      // La copa, recta y chata arriba.
+      `<path d="M306 250c-6-50-6-92 6-122 90-22 220-24 316-4 12 30 14 76 8 126-110 20-224 20-330 0Z" fill="${c}" ${TRAZO}/>` +
+      `<path d="M322 140c86-14 196-14 290 2" stroke="${brillo}" stroke-width="7" fill="none" stroke-linecap="round"/>` +
+      // La cinta, angosta.
+      `<path d="M304 218c110 18 224 18 334-2l-2 34c-110 22-222 22-330 2Z" fill="#1a1512" ${TRAZO}/>` +
+      `</g>`
+    )
+  },
+  recorte: debajoDe([
+    [100, 330],
+    [300, 318],
+    [480, 322],
+    [660, 306],
+    [840, 290],
+  ]),
+}
+
 /** Sombreros, sin el "Sin sombrero" (el 1 del catálogo es el primero de esta lista). */
-export const SOMBREROS: readonly Sombrero[] = [boina, gorroDeLana, gorra, sombreroDePaja]
+export const SOMBREROS: readonly Sombrero[] = [boina, gorroDeLana, gorra, sombreroDePaja, sombreroDeGaucho]
 
 // ---------------------------------------------------------------------------------------
 // Accesorios
@@ -496,6 +610,138 @@ const dibujoCafe = () =>
   `<path d="M612 790h176l-16 160c-2 20-18 34-40 34h-64c-22 0-38-14-40-34Z" fill="#f5f5f0" ${TRAZO}/>` +
   `<ellipse cx="700" cy="790" rx="88" ry="14" ${fino(NEGRO, 8, '#5a3a22')}/>`
 
+/** Un trazo de metal (o de madera fina): el contorno negro grueso y el color adentro. */
+const varilla = (d: string, color: string, ancho = 12) =>
+  `<path d="${d}" stroke="${NEGRO}" stroke-width="${ancho + 14}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>` +
+  `<path d="${d}" stroke="${color}" stroke-width="${ancho}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`
+
+/** Choripán: el pan abierto con el chorizo asomando arriba y un poco de chimichurri. */
+function dibujoChoripan(): string {
+  const pan = '#d9944a'
+  const chorizo = '#9c3b2a'
+  return (
+    `<g transform="rotate(10 690 900)">` +
+    // El pan de atrás.
+    `<rect x="612" y="712" width="156" height="310" rx="72" fill="${pan}" ${TRAZO}/>` +
+    // El chorizo, que se pasa del pan, con las marcas de la parrilla.
+    `<rect x="668" y="664" width="44" height="330" rx="22" fill="${chorizo}" ${TRAZO}/>` +
+    `<path d="M676 690l28-12M676 724l28-12" stroke="${tono(chorizo, -0.45)}" stroke-width="7" stroke-linecap="round"/>` +
+    `<path d="M682 678c4-4 10-6 14-4" stroke="${tono(chorizo, 0.35)}" stroke-width="5" fill="none" stroke-linecap="round"/>` +
+    // La mitad de adelante del pan, abierta: tapa el chorizo de la mitad para abajo.
+    `<path d="M612 790c0-30 12-50 30-56 12 30 28 46 48 50 20-4 36-20 48-50 18 6 30 26 30 56v160c0 40-32 72-78 72s-78-32-78-72Z" fill="${pan}" ${TRAZO}/>` +
+    `<path d="M646 760c10 22 26 36 44 38 18-2 34-16 44-38" stroke="#f2d49a" stroke-width="10" fill="none" stroke-linecap="round"/>` +
+    `<path d="M636 820c6 40 6 80 0 120M744 820c-6 40-6 80 0 120" stroke="${tono(pan, 0.3)}" stroke-width="8" fill="none" stroke-linecap="round"/>` +
+    // Chimichurri.
+    `<path d="M680 704l6 4M698 740l6-4M684 756l4 6" stroke="#4f7a2a" stroke-width="9" stroke-linecap="round"/>` +
+    `</g>`
+  )
+}
+
+/** Tira de asado pinchada en el tenedor de asador (dos dientes y cabo de madera). */
+function dibujoTiraDeAsado(): string {
+  const carne = '#8e4a2a'
+  const metal = '#c9cdd2'
+  const tira =
+    `<g transform="rotate(-8 700 650)">` +
+    `<path d="M588 618c40-14 190-16 228-2 10 20 10 46 0 64-40 14-190 16-228 2-10-20-10-46 0-64Z" fill="${carne}" ${TRAZO}/>` +
+    // El hueso cortado en rodajas y las marcas de la parrilla.
+    [622, 680, 738, 790].map((x) => `<ellipse cx="${x}" cy="650" rx="14" ry="19" ${fino(NEGRO, 6, '#f1e6cf')}/>`).join('') +
+    `<path d="M598 640l10 22M650 634l12 30M708 634l12 30M762 636l10 24" stroke="${tono(carne, -0.45)}" stroke-width="7" stroke-linecap="round"/>` +
+    `<path d="M600 626c50-8 150-10 204-4" stroke="#c8784a" stroke-width="6" fill="none" stroke-linecap="round"/>` +
+    `</g>`
+  return (
+    // Inclinado hacia afuera, para que la carne no tape la cara. Los dientes, de atrás de la carne hasta arriba.
+    `<g transform="rotate(16 690 900) translate(0 50)">` +
+    varilla('M690 790V700M690 700c-24 0-30-20-30-40v-80M690 700c24 0 30-20 30-40v-80', metal, 9) +
+    tira +
+    // Las puntas que asoman arriba de la carne.
+    varilla('M660 608v-28M720 600v-20', metal, 9) +
+    `</g>` +
+    // El cabo de madera con su virola.
+    `<rect x="666" y="846" width="48" height="190" rx="18" fill="#7a4a26" ${TRAZO}/>` +
+    `<rect x="660" y="836" width="60" height="26" rx="8" fill="${metal}" ${TRAZO}/>`
+  )
+}
+
+/** Pinza de parrilla: dos brazos de metal que se abren, con las puntas dentadas. */
+function dibujoPinza(): string {
+  const metal = '#c9cdd2'
+  return (
+    // Inclinada hacia afuera, para que las puntas no lleguen a la boca.
+    `<g transform="rotate(14 690 900)">` +
+    varilla('M676 1000L664 860L628 650', metal, 14) +
+    varilla('M704 1000L716 860L760 660', metal, 14) +
+    // Las puntas, dobladas hacia adentro y dentadas.
+    `<path d="M612 660l2-36c8-8 26-6 32 4l-4 34Z" fill="${metal}" ${TRAZO}/>` +
+    `<path d="M744 668l6-36c10-6 26 0 30 10l-8 34Z" fill="${metal}" ${TRAZO}/>` +
+    `<path d="M640 636l-10 10M634 650l-10 10M762 642l10 10M758 656l10 10" stroke="${NEGRO}" stroke-width="6" stroke-linecap="round"/>` +
+    // El mango de goma negra donde se juntan.
+    `<path d="M652 860c-4 60 0 120 6 160h64c6-40 10-100 6-160Z" fill="#2a2624" ${TRAZO}/>` +
+    `</g>`
+  )
+}
+
+/** Vaso de grappamiel: un vaso chico de vidrio con la grappa color miel. */
+function dibujoGrappamiel(): string {
+  const miel = '#d68f24'
+  return (
+    `<path d="M618 750h144l-16 240c-2 14-12 22-26 22h-60c-14 0-24-8-26-22Z" fill="#e3eef1" ${TRAZO}/>` +
+    `<path d="M630 820h120l-11 168c-1 10-8 14-18 14h-62c-10 0-17-4-18-14Z" fill="${miel}"/>` +
+    `<ellipse cx="690" cy="820" rx="60" ry="10" fill="${tono(miel, 0.35)}"/>` +
+    // El brillo del vidrio y el borde.
+    `<path d="M642 776l8 190" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity="0.8"/>` +
+    `<ellipse cx="690" cy="750" rx="72" ry="12" ${fino(NEGRO, 8, '#f3f8f9')}/>`
+  )
+}
+
+/** Facón de asador en su vaina de cuero, con la empuñadura y los adornos de plata. */
+function dibujoFacon(): string {
+  const plata = '#d4d7da'
+  const cuero = '#6b3e22'
+  return (
+    `<g transform="rotate(16 690 880)">` +
+    // La vaina, que se afina hacia abajo, con la boca de plata.
+    `<path d="M660 778h60l-8 280h-44Z" fill="${cuero}" ${TRAZO}/>` +
+    `<path d="M676 810v190" stroke="${tono(cuero, 0.3)}" stroke-width="6" stroke-linecap="round"/>` +
+    `<rect x="654" y="772" width="72" height="34" rx="8" fill="${plata}" ${TRAZO}/>` +
+    `<path d="M668 789h44" stroke="${tono(plata, -0.3)}" stroke-width="5" stroke-linecap="round"/>` +
+    // El gavilán (la cruz) en S.
+    `<path d="M630 770c0-18 20-20 30-10h60c10-10 30-8 30 10" stroke="${NEGRO}" stroke-width="24" fill="none" stroke-linecap="round"/>` +
+    `<path d="M630 770c0-18 20-20 30-10h60c10-10 30-8 30 10" stroke="${plata}" stroke-width="10" fill="none" stroke-linecap="round"/>` +
+    // La empuñadura de madera con sus virolas y el pomo de plata.
+    `<path d="M664 760c-6-50-6-100 0-150h52c6 50 6 100 0 150Z" fill="#4a2e1c" ${TRAZO}/>` +
+    `<path d="M662 700h56M662 660h56" stroke="${NEGRO}" stroke-width="16"/>` +
+    `<path d="M664 700h52M664 660h52" stroke="${plata}" stroke-width="8"/>` +
+    `<path d="M656 612c0-24 14-38 34-38s34 14 34 38Z" fill="${plata}" ${TRAZO}/>` +
+    `</g>`
+  )
+}
+
+/** Guitarra criolla: asoma el mástil con el clavijero, y un poco de la caja abajo. */
+function dibujoGuitarra(): string {
+  const caja = '#d8a35c'
+  const madera = '#7a4a26'
+  const clavija = (x: number, y: number) => `<rect x="${x}" y="${y - 9}" width="22" height="18" rx="6" ${fino(NEGRO, 6, '#f1e6cf')}/>`
+  const clavijas = [520, 556, 592].map((y) => clavija(632, y) + clavija(726, y)).join('')
+  return (
+    `<g transform="rotate(20 690 900)">` +
+    // La caja, que casi no entra en el cuadro, con la boca y la roseta.
+    `<ellipse cx="690" cy="1150" rx="170" ry="150" fill="${caja}" ${TRAZO}/>` +
+    `<circle cx="690" cy="1080" r="44" fill="#2a1d14" stroke="${tono(caja, -0.35)}" stroke-width="10"/>` +
+    // El mástil, el diapasón y los trastes.
+    `<path d="M664 1010V600h52v410Z" fill="${madera}" ${TRAZO}/>` +
+    `<path d="M674 1000V610h32v390Z" fill="#3b2a20"/>` +
+    `<path d="M674 660h32M674 714h32M674 764h32M674 810h32M674 852h32" stroke="#c9cdd2" stroke-width="4"/>` +
+    // El clavijero calado, con sus seis clavijas.
+    `<path d="M654 604l-4-120c0-10 6-16 16-16h48c10 0 16 6 16 16l-4 120Z" fill="${madera}" ${TRAZO}/>` +
+    `<path d="M670 508v86M710 508v86" stroke="#2a1d14" stroke-width="12" stroke-linecap="round"/>` +
+    clavijas +
+    // Las cuerdas.
+    `<path d="M682 600v410M690 600v410M698 600v410" stroke="#f1e6cf" stroke-width="2.5"/>` +
+    `</g>`
+  )
+}
+
 /** Accesorios, sin el "Nada" (el 1 del catálogo es el primero de esta lista). */
 export const ACCESORIOS: readonly ((piel: string) => string)[] = [
   mate,
@@ -508,6 +754,13 @@ export const ACCESORIOS: readonly ((piel: string) => string)[] = [
   (piel) => enLaMano(piel, dibujoPelota()),
   (piel) => enLaMano(piel, dibujoNaipes()),
   (piel) => enLaMano(piel, dibujoCafe()),
+  // Criollos.
+  (piel) => enLaMano(piel, dibujoChoripan()),
+  (piel) => enLaMano(piel, dibujoTiraDeAsado()),
+  (piel) => enLaMano(piel, dibujoPinza()),
+  (piel) => enLaMano(piel, dibujoGrappamiel()),
+  (piel) => enLaMano(piel, dibujoFacon()),
+  (piel) => enLaMano(piel, dibujoGuitarra()),
 ]
 
 // ---------------------------------------------------------------------------------------
@@ -538,6 +791,27 @@ function bufanda(colores: readonly string[]): string {
   )
 }
 
+/**
+ * Pañuelo de gaucho anudado al cuello: la vuelta, la punta del triángulo que cae sobre el
+ * pecho, el nudo adelante y sus dos puntas.
+ */
+function panuelo(color: string): string {
+  const sombra = tono(color, color === '#f5f5f0' ? -0.18 : -0.25)
+  return (
+    // La vuelta alrededor del cuello, angosta.
+    `<path d="M352 812c-6-26 8-42 30-42 56 28 144 30 200 0 22 0 36 16 30 42-60 40-200 40-260 0Z" fill="${color}" ${TRAZO}/>` +
+    `<path d="M380 808c50 22 150 24 204 0" stroke="${sombra}" stroke-width="7" fill="none" stroke-linecap="round"/>` +
+    // La punta del triángulo.
+    `<path d="M420 840c40 12 90 12 130 0l-58 102c-4 8-10 8-14 0Z" fill="${color}" ${TRAZO}/>` +
+    `<path d="M446 858l38 68M522 858l-30 56" stroke="${sombra}" stroke-width="6" fill="none" stroke-linecap="round"/>` +
+    // Las dos puntas del nudo, que caen a los costados.
+    `<path d="M466 852l-44 52 22 14 36-54ZM504 852l44 50-22 14-34-52Z" fill="${color}" ${TRAZO}/>` +
+    // El nudo.
+    `<ellipse cx="485" cy="846" rx="28" ry="22" fill="${color}" ${TRAZO}/>` +
+    `<path d="M472 840c8 8 18 10 26 6" stroke="${sombra}" stroke-width="6" fill="none" stroke-linecap="round"/>`
+  )
+}
+
 /** Bufandas, sin el "Sin bufanda" (el 1 del catálogo es la primera de esta lista). */
 export const BUFANDAS: readonly string[] = [
   bufanda(['#7fb8e6', '#f5f5f0']),
@@ -547,4 +821,91 @@ export const BUFANDAS: readonly string[] = [
   bufanda(['#f5f5f0', '#22201d']),
   bufanda(['#2e8b4a', '#f5f5f0']),
   bufanda(['#c83a32', '#2f4f9e']),
+  // Pañuelos de gaucho.
+  panuelo('#c8323a'),
+  panuelo('#7fb8e6'),
+  panuelo('#f5f5f0'),
 ]
+
+// ---------------------------------------------------------------------------------------
+// En la boca
+// ---------------------------------------------------------------------------------------
+
+/**
+ * La caja (x, y, ancho, alto) de cada boca de Lorelei, en el sistema de la cabeza, medida con
+ * getBBox. De ahí sale la comisura donde se agarra lo que va en la boca. Las bocas que se sumen
+ * después usan la de repuesto (la de la primera).
+ */
+const CAJAS_BOCA: readonly (readonly [number, number, number, number])[] = [
+  [486, 651, 150, 50],
+  [472, 660, 141, 41],
+  [486, 651, 150, 50],
+  [472, 656, 160, 36],
+  [446, 656, 209, 60],
+  [441, 674, 195, 41],
+  [473, 649, 173, 90],
+  [533, 663, 70, 60],
+  [442, 643, 185, 71],
+  [486, 666, 156, 55],
+  [472, 678, 91, 46],
+  [455, 666, 190, 78],
+  [539, 683, 70, 46],
+  [475, 678, 113, 29],
+  [467, 663, 194, 56],
+  [419, 634, 216, 85],
+  [595, 674, 49, 55],
+  [509, 667, 119, 69],
+  [527, 665, 90, 78],
+  [562, 659, 58, 66],
+  [545, 747, 62, 20],
+  [534, 668, 94, 45],
+  [467, 656, 216, 39],
+  [448, 664, 199, 48],
+  [529, 645, 142, 72],
+  [469, 655, 153, 78],
+  [574, 657, 99, 22],
+]
+
+/** La comisura de la derecha (de la pantalla) de una boca: el 82 % del ancho, a media altura. */
+export function comisura(boca: number): Punto {
+  const [x, y, w, h] = CAJAS_BOCA[boca] ?? CAJAS_BOCA[0]!
+  return [r(x + w * 0.82), r(y + h * 0.5)]
+}
+
+/** Pipa de madera: la boquilla en la comisura, la cazoleta colgando y un hilo de humo. */
+function pipa([x, y]: Punto): string {
+  // Más clara que el pelo, así se lee sobre una barba oscura.
+  const madera = '#a8642e'
+  return (
+    `<g transform="translate(${x} ${y}) scale(1.2)">` +
+    // El humo, que sube de la cazoleta.
+    `<path d="M108 -10c-12-14 8-24-2-40s10-24 2-40" stroke="#e8e6e0" stroke-width="9" fill="none" stroke-linecap="round" opacity="0.85"/>` +
+    // La boquilla negra y el caño.
+    varilla('M-6 0L66 26', '#2a2220', 10) +
+    // La cazoleta, con el tabaco arriba.
+    `<path d="M70 8h68c2 34-4 58-20 70-14 10-34 8-44-4-10-14-8-40-4-66Z" fill="${madera}" ${TRAZO}/>` +
+    `<ellipse cx="104" cy="9" rx="34" ry="8" ${fino(NEGRO, 6, '#3a2418')}/>` +
+    `<path d="M84 26c-2 16 0 30 6 40" stroke="${tono(madera, 0.35)}" stroke-width="7" fill="none" stroke-linecap="round"/>` +
+    `</g>`
+  )
+}
+
+/** Pajita de pasto, con la espiga en la punta. */
+function pajita([x, y]: Punto): string {
+  const pasto = '#d6c06a'
+  return (
+    `<g transform="translate(${x} ${y}) scale(1.2)">` +
+    varilla('M-6 2C30 -8 70 -28 104 -56', pasto, 5) +
+    `<path d="M104 -56c4-14 14-24 26-28-2 14-10 24-26 28ZM104 -56c14-6 28-4 36 4-12 6-26 4-36-4Z" ${fino(NEGRO, 5, pasto)}/>` +
+    `</g>`
+  )
+}
+
+/** Escarbadientes de madera, apenas caído. */
+const escarbadientes = ([x, y]: Punto) => `<g transform="translate(${x} ${y})">${varilla('M-6 0L84 18', '#ead2a0', 6)}</g>`
+
+/**
+ * Lo que va en la boca, sin el "Nada en la boca" (el 1 del catálogo es el primero de esta
+ * lista). Va en el sistema de la cabeza, justo después de la boca, agarrado de la comisura.
+ */
+export const EN_BOCA: readonly ((comisura: Punto) => string)[] = [pipa, pajita, escarbadientes]

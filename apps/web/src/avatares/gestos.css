@@ -71,7 +71,7 @@
 
 /* ── La animación ─────────────────────────────────────────────── */
 
-.avatar-dibujo[data-gesto] :is(.capa-cejas, .capa-nariz, .capa-boca, .capa-barba, .ojo-mitad, .gesto-pieza) {
+.avatar-dibujo[data-gesto] :is(.capa-cejas, .capa-nariz, .capa-boca, .capa-barba, .capa-enBoca, .ojo-mitad, .gesto-pieza) {
   animation: gesto-pose var(--dur) cubic-bezier(0.3, 0.7, 0.3, 1) var(--retraso) both;
 }
 @keyframes gesto-pose {
@@ -172,11 +172,11 @@
 }
 
 /* Pera a un lado: la boca (y la barba) se van para ese lado, en mueca. */
-.avatar-dibujo[data-gesto='unoBravo'] :is(.capa-boca, .capa-barba) {
+.avatar-dibujo[data-gesto='unoBravo'] :is(.capa-boca, .capa-barba, .capa-enBoca) {
   --t: calc(var(--u) * 16px) calc(var(--u) * 1px);
   --r: -14deg;
 }
-.avatar-dibujo[data-gesto='sieteBravo'] :is(.capa-boca, .capa-barba) {
+.avatar-dibujo[data-gesto='sieteBravo'] :is(.capa-boca, .capa-barba, .capa-enBoca) {
   --t: calc(var(--u) * -16px) calc(var(--u) * 1px);
   --r: 14deg;
 }
@@ -222,6 +222,15 @@
   --s: 0.45 0.7;
 }
 
+/*
+ * Lo que va en la boca (pipa, pajita, escarbadientes): en las muecas de la pera se va con la
+ * boca (arriba); cuando la boca se abre, se frunce, se muerde o saca la lengua, se guarda.
+ */
+.avatar-dibujo:is([data-gesto='pieza4'], [data-gesto='tres'], [data-gesto='dosComun'], [data-gesto='unoFalso'], [data-gesto='flor']) .capa-enBoca {
+  --o: 0;
+  --s: 0.6;
+}
+
 /* Disimulo (seña pescada sin saber cuál): mira de reojo a un lado y al otro. */
 .avatar-dibujo[data-gesto='disimulo'] .ojo-mitad {
   animation-name: gesto-reojo;
@@ -246,7 +255,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .avatar-dibujo[data-gesto] :is(.capa-cejas, .capa-nariz, .capa-boca, .capa-barba, .ojo-mitad, .gesto-pieza) {
+  .avatar-dibujo[data-gesto] :is(.capa-cejas, .capa-nariz, .capa-boca, .capa-barba, .capa-enBoca, .ojo-mitad, .gesto-pieza) {
     animation: none;
     translate: var(--t, 0 0);
     scale: var(--s, 1);

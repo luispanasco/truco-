@@ -24,10 +24,50 @@ describe('formato del avatar', () => {
   })
 
   it('un código guardado antes de la bufanda (15 capas) se lee igual, sin bufanda', () => {
-    const viejo = codificarAvatar({ ...AVATAR_BASE, ropa: 4, accesorio: 1 }).split('.').slice(0, -1).join('.')
+    const viejo = codificarAvatar({ ...AVATAR_BASE, ropa: 4, accesorio: 1 }).split('.').slice(0, -2).join('.')
     expect(viejo.split('.')).toHaveLength(16) // el prefijo "a1" y las 15 capas
-    expect(leerAvatar(viejo)).toEqual({ ...AVATAR_BASE, ropa: 4, accesorio: 1, bufanda: 0 })
+    expect(leerAvatar(viejo)).toEqual({ ...AVATAR_BASE, ropa: 4, accesorio: 1, bufanda: 0, enBoca: 0 })
     expect(normalizarAvatar(viejo)).toBe(codificarAvatar(AVATAR_BASE))
+  })
+
+  it('un código guardado antes de lo que va en la boca (16 capas) se lee igual, con la boca vacía', () => {
+    const viejo = codificarAvatar({ ...AVATAR_BASE, ropa: 4, accesorio: 1, bufanda: 3 }).split('.').slice(0, -1).join('.')
+    expect(viejo.split('.')).toHaveLength(17) // el prefijo "a1" y las 16 capas
+    expect(leerAvatar(viejo)).toEqual({ ...AVATAR_BASE, ropa: 4, accesorio: 1, bufanda: 3, enBoca: 0 })
+    expect(codificarAvatar(leerAvatar(viejo)!)).toBe(`${viejo}.0`)
+  })
+
+  it('las piezas criollas están al final de cada capa, con su precio', () => {
+    const precios = (capa: keyof typeof CATALOGO_AVATAR, n: number) => CATALOGO_AVATAR[capa].slice(-n).map((p) => [p.nombre, p.precio])
+    expect(precios('accesorio', 6)).toEqual([
+      ['Choripán', 200],
+      ['Tira de asado en el tenedor', 250],
+      ['Pinza de parrilla', 200],
+      ['Vaso de grappamiel', 200],
+      ['Facón de asador con vaina', 300],
+      ['Guitarra criolla', 400],
+    ])
+    expect(precios('bufanda', 3)).toEqual([
+      ['Pañuelo rojo', 150],
+      ['Pañuelo celeste', 150],
+      ['Pañuelo blanco', 150],
+    ])
+    expect(precios('sombrero', 1)).toEqual([['Sombrero de gaucho', 300]])
+    expect(precios('ropa', 2)).toEqual([
+      ['Poncho', 350],
+      ['Chaleco de campo', 250],
+    ])
+    expect(CATALOGO_AVATAR.enBoca.map((p) => [p.nombre, p.precio])).toEqual([
+      ['Nada en la boca', 0],
+      ['Pipa', 300],
+      ['Pajita de pasto', 100],
+      ['Escarbadientes', 100],
+    ])
+    // Lo que estaba antes no se movió.
+    expect(CATALOGO_AVATAR.accesorio[9]!.nombre).toBe('Café')
+    expect(CATALOGO_AVATAR.bufanda[7]!.nombre).toBe('Roja y azul')
+    expect(CATALOGO_AVATAR.sombrero[4]!.nombre).toBe('Sombrero de paja')
+    expect(CATALOGO_AVATAR.ropa[19]!.nombre).toBe('Celeste de época')
   })
 
   it('rechaza códigos rotos, piezas que no existen y emojis viejos', () => {
@@ -50,6 +90,9 @@ describe('formato del avatar', () => {
   it('el servidor cambia las piezas pagas por las gratis de la capa', () => {
     const conMate = codificarAvatar({ ...AVATAR_BASE, accesorio: 1, pelo: 40 })
     expect(leerAvatar(normalizarAvatar(conMate))).toEqual({ ...AVATAR_BASE, accesorio: 0, pelo: 0 })
+    const gaucho = codificarAvatar({ ...AVATAR_BASE, enBoca: 1, sombrero: 5, ropa: 20, bufanda: 8, accesorio: 15 })
+    expect(normalizarAvatar(gaucho)).toBe(codificarAvatar(AVATAR_BASE))
+    expect(normalizarAvatar(gaucho, () => true)).toBe(gaucho)
     expect(normalizarAvatar('cualquier cosa')).toBeNull()
   })
 

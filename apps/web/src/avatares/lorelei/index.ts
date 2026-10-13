@@ -1,7 +1,7 @@
 import { COLORES_PELO, PIELES, type Avatar } from '@truco/shared'
 import type { EstiloAvatar } from '../estilo'
 import { PIEZAS_LORELEI } from './piezas'
-import { ACCESORIOS, BUFANDAS, ROPAS, SOMBREROS } from './propias'
+import { ACCESORIOS, BUFANDAS, EN_BOCA, ROPAS, SOMBREROS, comisura } from './propias'
 
 /** Color de los trazos de la cara (ojos, cejas, nariz, boca, lentes). */
 const TINTA = '#1d1a16'
@@ -38,6 +38,15 @@ function piezaDe(capa: CapaLorelei, a: Avatar): string | null {
 }
 
 /**
+ * Lo que va en la boca (pipa, pajita…), en el sistema de la cabeza: va justo después de la boca,
+ * en su propia capa, así las señas lo mueven o lo ocultan sin cambiar la caja de la boca.
+ */
+function enBoca(a: Avatar): string {
+  const dibujo = a.enBoca > 0 ? EN_BOCA[a.enBoca - 1] : undefined
+  return dibujo ? `<g class="capa capa-enBoca">${dibujo(comisura(a.boca))}</g>` : ''
+}
+
+/**
  * Reemplaza las marcas `{{capa}}` por su pieza (que a su vez puede traer otras) y los colores.
  * `despuesDeCabeza` va justo después de la cabeza: entre el pelo de atrás y el de adelante.
  */
@@ -45,7 +54,7 @@ function componer(plantilla: string, a: Avatar, despuesDeCabeza = ''): string {
   return plantilla
     .replace(/\{\{([a-z]+)\}\}/g, (_, capa: CapaLorelei) => {
       const pieza = piezaDe(capa, a)
-      const extra = capa === 'cabeza' ? despuesDeCabeza : ''
+      const extra = capa === 'cabeza' ? despuesDeCabeza : capa === 'boca' ? enBoca(a) : ''
       return pieza === null ? extra : `<g class="capa capa-${capa}">${componer(pieza, a, despuesDeCabeza)}</g>${extra}`
     })
     .replace(/\{\{color:([a-z]+)\}\}/g, (_, color: string) => {
@@ -68,7 +77,7 @@ function recortado(contenido: string, sombrero: number, recorte: string): string
 
 /**
  * Lorelei (DiceBear), de Lisa Wischofsky, CC0 1.0: cabeza y cara. El torso, la ropa, los
- * sombreros y los accesorios son dibujos nuestros con el mismo trazo (propias.ts).
+ * sombreros, los accesorios y lo que va en la boca son dibujos nuestros con el mismo trazo (propias.ts).
  */
 export const LORELEI: EstiloAvatar = {
   nombre: 'Lorelei',

@@ -34,7 +34,7 @@ export const PESTANIAS_AVATAR: readonly { id: string; titulo: string; capas: rea
   { id: 'lentes', titulo: 'Lentes y aros', capas: ['lentes', 'aros'] },
   { id: 'ropa', titulo: 'Ropa', capas: ['ropa', 'bufanda'] },
   { id: 'sombrero', titulo: 'Sombrero', capas: ['sombrero'] },
-  { id: 'accesorio', titulo: 'Accesorio', capas: ['accesorio'] },
+  { id: 'accesorio', titulo: 'Accesorio', capas: ['accesorio', 'enBoca'] },
 ]
 
 const TITULO_CAPA: Record<CapaAvatar, string> = {
@@ -53,7 +53,8 @@ const TITULO_CAPA: Record<CapaAvatar, string> = {
   ropa: 'Ropa',
   sombrero: 'Sombrero',
   accesorio: 'Accesorio',
-  bufanda: 'Bufanda',
+  bufanda: 'Bufanda o pañuelo',
+  enBoca: 'En la boca',
 }
 
 /** Las capas que se eligen por color (muestras redondas en lugar de miniaturas). */

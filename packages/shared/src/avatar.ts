@@ -23,11 +23,13 @@ export const CAPAS_AVATAR = [
   'sombrero',
   'accesorio',
   'bufanda',
+  'enBoca',
 ] as const
 
 /**
- * Cuántas capas tenían los primeros avatares guardados (sin la bufanda). Un código con menos
- * capas que las de ahora se lee igual: las que faltan al final quedan en su pieza 0 ("sin …").
+ * Cuántas capas tenían los primeros avatares guardados (sin la bufanda ni lo que va en la boca).
+ * Un código con menos capas que las de ahora se lee igual: las que faltan al final quedan en su
+ * pieza 0 ("sin …").
  */
 const CAPAS_MINIMAS = 15
 
@@ -109,8 +111,11 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     paga('Bastones violeta y blanco', 200),
     paga('Blanca con cuello celeste', 200),
     paga('Celeste de época', 250),
+    // Criollos.
+    paga('Poncho', 350),
+    paga('Chaleco de campo', 250),
   ],
-  sombrero: [gratis('Sin sombrero'), paga('Boina', 200), paga('Gorro de lana', 150), paga('Gorra', 150), paga('Sombrero de paja', 250)],
+  sombrero: [gratis('Sin sombrero'), paga('Boina', 200), paga('Gorro de lana', 150), paga('Gorra', 150), paga('Sombrero de paja', 250), paga('Sombrero de gaucho', 300)],
   accesorio: [
     gratis('Nada'),
     paga('Mate', 300),
@@ -122,6 +127,13 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     paga('Pelota', 250),
     paga('Naipes', 300),
     paga('Café', 200),
+    // Criollos: el asado y la sobremesa.
+    paga('Choripán', 200),
+    paga('Tira de asado en el tenedor', 250),
+    paga('Pinza de parrilla', 200),
+    paga('Vaso de grappamiel', 200),
+    paga('Facón de asador con vaina', 300),
+    paga('Guitarra criolla', 400),
   ],
   // Con los colores de las camisetas (sin escudos ni nombres de clubes).
   bufanda: [
@@ -133,11 +145,17 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     paga('Blanca y negra', 150),
     paga('Verde y blanca', 150),
     paga('Roja y azul', 150),
+    // Pañuelos de gaucho, anudados al cuello.
+    paga('Pañuelo rojo', 150),
+    paga('Pañuelo celeste', 150),
+    paga('Pañuelo blanco', 150),
   ],
+  // Lo que se tiene en la boca: aparte del accesorio, así se puede tener pipa y mate a la vez.
+  enBoca: [gratis('Nada en la boca'), paga('Pipa', 300), paga('Pajita de pasto', 100), paga('Escarbadientes', 100)],
 }
 
 /** Capas que se pueden dejar vacías (su pieza 0 es "sin …"). */
-export const CAPAS_OPCIONALES: readonly CapaAvatar[] = ['barba', 'lentes', 'aros', 'pecas', 'sombrero', 'accesorio', 'bufanda']
+export const CAPAS_OPCIONALES: readonly CapaAvatar[] = ['barba', 'lentes', 'aros', 'pecas', 'sombrero', 'accesorio', 'bufanda', 'enBoca']
 
 export const AVATAR_BASE: Avatar = {
   piel: 1,
@@ -156,6 +174,7 @@ export const AVATAR_BASE: Avatar = {
   sombrero: 0,
   accesorio: 0,
   bufanda: 0,
+  enBoca: 0,
 }
 
 const PREFIJO = 'a1.'
