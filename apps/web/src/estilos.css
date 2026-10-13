@@ -35,7 +35,14 @@
   --accion-truco: var(--acento);
   --accion-envido: var(--papel);
   --accion-flor: var(--papel);
+  /*
+   * Tipografía (cosmético, temaTipografia.ts): la letra del texto y la de los títulos, cuánto se
+   * agranda o achica (todo lo medido en rem) y si se inventa la negrita cuando la letra no la trae.
+   */
+  --fuente-texto: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --fuente-titulo: 'Alfa Slab One', Georgia, serif;
+  --escala-texto: 1;
+  --sintesis-negrita: auto;
   /* Ancho de las cartas según dónde están: dorsos de los rivales, mesa (jugadas, muestra) y mano. */
   --carta-chica: 26px;
   --carta-mesa: 58px;
@@ -48,7 +55,9 @@
   --senia-pescada: #5b2b6e;
   /* Anillo de mantener apretada una carta para hacer su seña. */
   --senia-mantener: #8ec5ff;
-  font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--fuente-texto);
+  font-size: calc(100% * var(--escala-texto));
+  font-synthesis-weight: var(--sintesis-negrita);
   color: var(--texto-claro);
   background: var(--madera);
   -webkit-tap-highlight-color: transparent;
@@ -67,6 +76,11 @@ body {
 button {
   font: inherit;
   cursor: pointer;
+}
+
+/* Los campos de texto, con la tipografía de la app (si no, el navegador pone la suya). */
+input {
+  font-family: inherit;
 }
 
 /* ── Botones y campos ─────────────────────────────────────────── */
@@ -175,7 +189,7 @@ button {
 }
 .inicio-cabecera h1 {
   margin: 0;
-  font-family: 'Alfa Slab One', Georgia, serif;
+  font-family: var(--fuente-titulo);
   font-weight: 400;
   font-size: 3.4rem;
   line-height: 1;
