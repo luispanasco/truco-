@@ -822,7 +822,12 @@ Pedido del usuario: pipa, cosas de asado y más, bien criollo. Plan aprobado el 
 - **Planillas** (`scripts/planillas-avatar.ts`): hojas nuevas de accesorios, cuello (bufandas y pañuelos), una por cada cosa en la boca con las 27 bocas (con barba y sin barba, y con mate, sombrero de gaucho y poncho) y "criollos" (todo junto con pieles, peinados y bocas distintas). Se revisó también el editor y la mesa (círculos y sentados) en 360 px y en PC, y las 11 señas con pipa.
 - **Tests:** web 252 (nuevos: lo que va en la boca arma un SVG válido con cada accesorio y cada bufanda; con cada boca y cada barba va justo después de la boca y fuera de su capa; un código de 16 capas se lee con la boca vacía; el catálogo criollo con sus precios y sin mover lo que estaba), servidor 57; la prueba de punta a punta del avatar espera la capa nueva.
 
+- **Ajustes después de revisarlo** (lo que había quedado flojo):
+  - **Lo que va en la boca, más grande y con contraste:** pipa, pajita y escarbadientes van a 1,5 veces, con el contorno negro de Lorelei más grueso y un halo claro debajo (`halo` en `propias.ts`) que los despega de la barba y del pelo. A 44 px y en los círculos de la mesa en 360 px ya se leen la pipa, la pajita y el escarbadientes. Siguen agarrados de la comisura, sin tapar la boca.
+  - **La pipa** tiene la cazoleta de madera clara y el caño más corto (queda más cerca de la cara y no se sale del círculo); con barba grande y pelo negro se distingue por el halo.
+  - **El choripán** es ahora un pan francés partido a lo largo (corteza con sus cortes y la miga a la vista) con el chorizo adentro, que asoma arriba con la atadura, con grasa, marcas de la parrilla y chimichurri (hojitas y gotas de aceite con ají). Va inclinado hacia afuera.
+  - **La tira de asado** es más corta y está pinchada cerca de su punta; el tenedor se inclina más (26°), así la carne queda lejos de la mandíbula.
+
 **Pendientes:**
-- Lo que va en la boca es chico: a 44 px la pipa se adivina y la pajita y el escarbadientes casi no se ven.
-- Con barba grande y pelo oscuro la pipa se lee menos (se aclaró la madera).
-- El choripán, en vertical en la mano, se parece un poco a un pancho.
+- Con mate (o mate y termo) y pipa juntos, la cazoleta queda encima de la bombilla.
+- En los círculos de la mesa (acercados a la cara) la tira de asado queda afuera del cuadro; se ve entera en el editor y sentados.

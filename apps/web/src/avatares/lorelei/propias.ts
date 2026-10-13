@@ -615,24 +615,39 @@ const varilla = (d: string, color: string, ancho = 12) =>
   `<path d="${d}" stroke="${NEGRO}" stroke-width="${ancho + 14}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>` +
   `<path d="${d}" stroke="${color}" stroke-width="${ancho}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`
 
-/** Choripán: el pan abierto con el chorizo asomando arriba y un poco de chimichurri. */
+/**
+ * Choripán: un pan francés partido a lo largo, con la miga a la vista, y el chorizo adentro,
+ * que asoma arriba con su atadura; grasa, marcas de la parrilla y chimichurri. Va inclinado
+ * hacia afuera, así se ve entero y no se confunde con un pancho.
+ */
 function dibujoChoripan(): string {
-  const pan = '#d9944a'
-  const chorizo = '#9c3b2a'
+  const pan = '#d68a3c'
+  const chorizo = '#8f2f1e'
+  const grasa = [
+    [680, 650],
+    [702, 690],
+    [678, 724],
+    [700, 760],
+    [682, 800],
+  ]
+    .map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="6" ry="4" fill="#e7b6a0"/>`)
+    .join('')
   return (
-    `<g transform="rotate(10 690 900)">` +
-    // El pan de atrás.
-    `<rect x="612" y="712" width="156" height="310" rx="72" fill="${pan}" ${TRAZO}/>` +
-    // El chorizo, que se pasa del pan, con las marcas de la parrilla.
-    `<rect x="668" y="664" width="44" height="330" rx="22" fill="${chorizo}" ${TRAZO}/>` +
-    `<path d="M676 690l28-12M676 724l28-12" stroke="${tono(chorizo, -0.45)}" stroke-width="7" stroke-linecap="round"/>` +
-    `<path d="M682 678c4-4 10-6 14-4" stroke="${tono(chorizo, 0.35)}" stroke-width="5" fill="none" stroke-linecap="round"/>` +
-    // La mitad de adelante del pan, abierta: tapa el chorizo de la mitad para abajo.
-    `<path d="M612 790c0-30 12-50 30-56 12 30 28 46 48 50 20-4 36-20 48-50 18 6 30 26 30 56v160c0 40-32 72-78 72s-78-32-78-72Z" fill="${pan}" ${TRAZO}/>` +
-    `<path d="M646 760c10 22 26 36 44 38 18-2 34-16 44-38" stroke="#f2d49a" stroke-width="10" fill="none" stroke-linecap="round"/>` +
-    `<path d="M636 820c6 40 6 80 0 120M744 820c-6 40-6 80 0 120" stroke="${tono(pan, 0.3)}" stroke-width="8" fill="none" stroke-linecap="round"/>` +
-    // Chimichurri.
-    `<path d="M680 704l6 4M698 740l6-4M684 756l4 6" stroke="#4f7a2a" stroke-width="9" stroke-linecap="round"/>` +
+    `<g transform="rotate(30 690 900)">` +
+    // El pan, la cáscara y los cortes del pan francés en las dos tiras de corteza.
+    `<rect x="622" y="640" width="136" height="380" rx="64" fill="${pan}" ${TRAZO}/>` +
+    `<path d="M630 700l14-14M628 740l16-14M752 700l-14-14M754 740l-16-14" stroke="${tono(pan, 0.4)}" stroke-width="7" stroke-linecap="round"/>` +
+    // La miga, donde está partido.
+    `<rect x="644" y="662" width="92" height="340" rx="46" ${fino(NEGRO, 7, '#f4dba4')}/>` +
+    // El chorizo, con la atadura de la punta, la grasa y las marcas de la parrilla.
+    `<path d="M690 590l-8-14M690 590l10-12" stroke="${NEGRO}" stroke-width="7" stroke-linecap="round"/>` +
+    `<rect x="662" y="596" width="56" height="390" rx="28" fill="${chorizo}" ${TRAZO}/>` +
+    grasa +
+    `<path d="M668 672l40-16M668 742l40-16M668 812l40-16" stroke="${tono(chorizo, -0.5)}" stroke-width="8" stroke-linecap="round"/>` +
+    `<path d="M676 616c6-6 14-8 22-6" stroke="${tono(chorizo, 0.4)}" stroke-width="6" fill="none" stroke-linecap="round"/>` +
+    // El chimichurri: hojitas verdes y gotas de aceite con ají.
+    `<path d="M684 700l8 4M698 728l8-4M680 772l6 6M700 790l8 2M686 830l6-6" stroke="#3f7a26" stroke-width="10" stroke-linecap="round"/>` +
+    `<path d="M694 708l2 2M676 748l2 2M704 812l2 2" stroke="#d9752e" stroke-width="10" stroke-linecap="round"/>` +
     `</g>`
   )
 }
@@ -641,21 +656,23 @@ function dibujoChoripan(): string {
 function dibujoTiraDeAsado(): string {
   const carne = '#8e4a2a'
   const metal = '#c9cdd2'
+  // La tira, más corta, pinchada cerca de su punta izquierda: el resto queda hacia afuera.
   const tira =
     `<g transform="rotate(-8 700 650)">` +
-    `<path d="M588 618c40-14 190-16 228-2 10 20 10 46 0 64-40 14-190 16-228 2-10-20-10-46 0-64Z" fill="${carne}" ${TRAZO}/>` +
+    `<path d="M646 618c34-12 140-14 172-2 10 20 10 46 0 64-34 12-140 14-172 2-10-20-10-46 0-64Z" fill="${carne}" ${TRAZO}/>` +
     // El hueso cortado en rodajas y las marcas de la parrilla.
-    [622, 680, 738, 790].map((x) => `<ellipse cx="${x}" cy="650" rx="14" ry="19" ${fino(NEGRO, 6, '#f1e6cf')}/>`).join('') +
-    `<path d="M598 640l10 22M650 634l12 30M708 634l12 30M762 636l10 24" stroke="${tono(carne, -0.45)}" stroke-width="7" stroke-linecap="round"/>` +
-    `<path d="M600 626c50-8 150-10 204-4" stroke="#c8784a" stroke-width="6" fill="none" stroke-linecap="round"/>` +
+    [690, 744, 792].map((x) => `<ellipse cx="${x}" cy="650" rx="14" ry="19" ${fino(NEGRO, 6, '#f1e6cf')}/>`).join('') +
+    `<path d="M662 638l10 24M716 634l12 30M766 636l10 26" stroke="${tono(carne, -0.45)}" stroke-width="7" stroke-linecap="round"/>` +
+    `<path d="M658 626c44-8 112-10 150-4" stroke="#c8784a" stroke-width="6" fill="none" stroke-linecap="round"/>` +
     `</g>`
   return (
-    // Inclinado hacia afuera, para que la carne no tape la cara. Los dientes, de atrás de la carne hasta arriba.
-    `<g transform="rotate(16 690 900) translate(0 50)">` +
+    // Bien inclinado hacia afuera, para que la carne quede lejos de la cara. Los dientes, de
+    // atrás de la carne hasta arriba.
+    `<g transform="rotate(26 690 900) translate(0 50)">` +
     varilla('M690 790V700M690 700c-24 0-30-20-30-40v-80M690 700c24 0 30-20 30-40v-80', metal, 9) +
     tira +
     // Las puntas que asoman arriba de la carne.
-    varilla('M660 608v-28M720 600v-20', metal, 9) +
+    varilla('M660 612v-32M720 604v-24', metal, 9) +
     `</g>` +
     // El cabo de madera con su virola.
     `<rect x="666" y="846" width="48" height="190" rx="18" fill="#7a4a26" ${TRAZO}/>` +
@@ -872,37 +889,60 @@ export function comisura(boca: number): Punto {
   return [r(x + w * 0.82), r(y + h * 0.5)]
 }
 
+/**
+ * Lo que va en la boca es chico: en la mesa el avatar mide 44 px. Para que se lea, cada pieza
+ * lleva el contorno negro de Lorelei y, debajo, un halo claro que la despega de una barba o un
+ * pelo oscuro. `halo` dibuja los mismos caminos más gruesos, en claro, detrás de todo.
+ */
+const HALO = '#f6efe0'
+const halo = (d: string, ancho: number) =>
+  `<path d="${d}" stroke="${HALO}" stroke-width="${ancho}" stroke-linecap="round" stroke-linejoin="round" fill="${HALO}"/>`
+
 /** Pipa de madera: la boquilla en la comisura, la cazoleta colgando y un hilo de humo. */
 function pipa([x, y]: Punto): string {
-  // Más clara que el pelo, así se lee sobre una barba oscura.
-  const madera = '#a8642e'
+  // Madera clara (más que cualquier pelo), así la cazoleta se ve sobre una barba oscura.
+  const madera = '#c98a4b'
+  const cano = 'M-4 0L46 20'
+  const cazoleta = 'M44 6h62c2 32-4 54-18 66-14 10-32 8-42-4-10-14-8-38-2-62Z'
   return (
-    `<g transform="translate(${x} ${y}) scale(1.2)">` +
+    `<g transform="translate(${x} ${y}) scale(1.5)">` +
+    // El halo claro, detrás del caño y de la cazoleta.
+    halo(cano, 34) +
+    halo(cazoleta, 22) +
     // El humo, que sube de la cazoleta.
-    `<path d="M108 -10c-12-14 8-24-2-40s10-24 2-40" stroke="#e8e6e0" stroke-width="9" fill="none" stroke-linecap="round" opacity="0.85"/>` +
+    `<path d="M80 -6c-10-12 8-22-2-36s10-22 2-36" stroke="${NEGRO}" stroke-width="13" fill="none" stroke-linecap="round" opacity="0.35"/>` +
+    `<path d="M80 -6c-10-12 8-22-2-36s10-22 2-36" stroke="#f4f2ec" stroke-width="7" fill="none" stroke-linecap="round"/>` +
     // La boquilla negra y el caño.
-    varilla('M-6 0L66 26', '#2a2220', 10) +
-    // La cazoleta, con el tabaco arriba.
-    `<path d="M70 8h68c2 34-4 58-20 70-14 10-34 8-44-4-10-14-8-40-4-66Z" fill="${madera}" ${TRAZO}/>` +
-    `<ellipse cx="104" cy="9" rx="34" ry="8" ${fino(NEGRO, 6, '#3a2418')}/>` +
-    `<path d="M84 26c-2 16 0 30 6 40" stroke="${tono(madera, 0.35)}" stroke-width="7" fill="none" stroke-linecap="round"/>` +
+    varilla(cano, '#3a2e28', 9) +
+    // La cazoleta, con el tabaco arriba y un brillo.
+    `<path d="${cazoleta}" fill="${madera}" ${TRAZO}/>` +
+    `<ellipse cx="75" cy="7" rx="31" ry="7" ${fino(NEGRO, 6, '#3a2418')}/>` +
+    `<path d="M58 22c-2 16 0 28 6 38" stroke="${tono(madera, 0.45)}" stroke-width="7" fill="none" stroke-linecap="round"/>` +
     `</g>`
   )
 }
 
 /** Pajita de pasto, con la espiga en la punta. */
 function pajita([x, y]: Punto): string {
-  const pasto = '#d6c06a'
+  const pasto = '#e0c85e'
+  const tallo = 'M-4 2C26 -6 56 -22 84 -46'
+  const espiga = 'M84 -46c2-18 14-30 30-34 0 18-12 30-30 34ZM84 -46c16-8 34-6 44 4-14 8-32 6-44-4Z'
   return (
-    `<g transform="translate(${x} ${y}) scale(1.2)">` +
-    varilla('M-6 2C30 -8 70 -28 104 -56', pasto, 5) +
-    `<path d="M104 -56c4-14 14-24 26-28-2 14-10 24-26 28ZM104 -56c14-6 28-4 36 4-12 6-26 4-36-4Z" ${fino(NEGRO, 5, pasto)}/>` +
+    `<g transform="translate(${x} ${y}) scale(1.5)">` +
+    halo(tallo, 26) +
+    halo(espiga, 16) +
+    varilla(tallo, pasto, 8) +
+    `<path d="${espiga}" ${fino(NEGRO, 7, pasto)}/>` +
+    `<path d="M88 -50l18-22M90 -46l26 -2" stroke="${tono(pasto, -0.3)}" stroke-width="4" stroke-linecap="round"/>` +
     `</g>`
   )
 }
 
 /** Escarbadientes de madera, apenas caído. */
-const escarbadientes = ([x, y]: Punto) => `<g transform="translate(${x} ${y})">${varilla('M-6 0L84 18', '#ead2a0', 6)}</g>`
+function escarbadientes([x, y]: Punto): string {
+  const palito = 'M-4 0L64 14'
+  return `<g transform="translate(${x} ${y}) scale(1.5)">${halo(palito, 24)}${varilla(palito, '#f0d9a8', 8)}</g>`
+}
 
 /**
  * Lo que va en la boca, sin el "Nada en la boca" (el 1 del catálogo es el primero de esta
