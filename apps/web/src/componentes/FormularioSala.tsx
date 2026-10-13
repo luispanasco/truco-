@@ -18,6 +18,8 @@ export const NIVELES: [Nivel, string][] = [
   ['facil', 'Fácil'],
   ['medio', 'Medio'],
   ['dificil', 'Difícil'],
+  ['muyDificil', 'Muy difícil'],
+  ['master', 'Master'],
 ]
 
 /** Las reglas de la mesa que se pueden cambiar al armar una sala. */
@@ -182,7 +184,10 @@ export function Segmentado<T extends string | number>({
   opciones,
   alCambiar,
   detalle,
+  clase,
 }: {
+  /** Clase extra del grupo (por ejemplo, para que los niveles bajen de renglón). */
+  clase?: string
   titulo: string
   valor: T
   opciones: [T, ReactNode][]
@@ -192,7 +197,7 @@ export function Segmentado<T extends string | number>({
   return (
     <div className="campo">
       <span>{titulo}</span>
-      <div className="segmentado" role="radiogroup" aria-label={titulo}>
+      <div className={`segmentado${clase ? ` ${clase}` : ''}`} role="radiogroup" aria-label={titulo}>
         {opciones.map(([v, t]) => (
           <button
             key={String(v)}
@@ -267,6 +272,7 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
       {valor.botsEnVacios && (
         <Segmentado
           titulo="Nivel de los bots"
+          clase="segmentado-niveles"
           valor={valor.nivelBots}
           opciones={NIVELES}
           alCambiar={(nivelBots) => cambiar({ nivelBots })}

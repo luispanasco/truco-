@@ -14,7 +14,7 @@ import {
   type Numero,
   type Palo,
 } from '@truco/engine'
-import { crearBot, jugarPartida, seniasDeMano, type Nivel, type SeniasRecibidas } from '../src'
+import { crearBot, jugarPartida, NIVELES_BOT, seniasDeMano, type Nivel, type SeniasRecibidas } from '../src'
 import { Aleatorio, crearContexto } from '../src/contexto'
 import { muestrear } from '../src/muestreo'
 
@@ -41,7 +41,7 @@ function aplicar(estado: EstadoPartida, ...acciones: Accion[]): EstadoPartida {
   return estado
 }
 
-const NIVELES: Nivel[] = ['facil', 'medio', 'dificil']
+const NIVELES: Nivel[] = NIVELES_BOT
 
 describe('bots', () => {
   it('cualquier bot, en cualquier formato y configuración, elige siempre acciones válidas y la partida termina', () => {

@@ -125,6 +125,13 @@ button {
   background: rgb(255 255 255 / 0.12);
   color: var(--texto-claro);
 }
+/* Cinco niveles: en un celular bajan a dos renglones. */
+.segmentado-niveles {
+  flex-wrap: wrap;
+}
+.segmentado-niveles button {
+  flex: 1 1 28%;
+}
 .segmentado button.elegido {
   background: var(--acento);
   color: var(--tinta);

@@ -756,3 +756,26 @@ Repaso regla por regla con el usuario (10 bloques), con el detalle, las decision
 - "Vamos a X": se interpretó como dejarle la vuelta a un compañero o ganarle a la carta de un rival.
 - La tirada de reyes y el corte no tienen animación de mazo: la tirada sale en un cuadro y el corte en botones.
 - Con chat de voz (fase 2) hay que apagar lo del pie.
+
+
+---
+
+## Bots "Muy difícil" y "Master" — 2026-10-12
+
+Pedido del usuario: los bots eran predecibles y flojos; dos niveles nuevos por encima del difícil, el Master "al límite de lo programable sin ver cartas ajenas", que cuente cartas y calcule envidos. Fácil, medio y difícil quedan como estaban. Puede tardar hasta 2 o 3 s en decidir (en la práctica, el peor caso medido es de 25 ms).
+
+- **Lo que se encontró en el difícil:** umbrales fijos (truco desde 62 %, real envido desde 75 %), no tiene en cuenta qué contesta el rival ni el marcador, faroles con frecuencia fija.
+- **`experto.ts`** (los dos niveles):
+  - envido, flor y contraflor por valor esperado en **probabilidad de ganar la partida** (`equidad.ts`: tabla armada con cómo se reparten los puntos por mano entre bots, `cli/distribucion.ts`), con la respuesta probable del rival según el tanto que tendría en cada reparto imaginado;
+  - truco por umbral (cantar apenas conviene pierde la opción de cantar después: el valor esperado salía peor), con ruido para que no se lea el umbral y faroles más frecuentes;
+  - contestar el truco descontando que el que canta o sube suele tener con qué (pesa los repartos en que gana él);
+  - azar entre opciones casi iguales.
+- **Master:** más repartos (400 en 1v1), lee lo que el rival no cantó (tiró sin cantar truco), pesa más al que sube a retruco o vale cuatro, y aprende de cada rival: si quiere sus cantos, con qué tanto canta envido y si cuando sube la tiene (lo mira en el marcador al terminar la mano).
+- **Herramientas** en `packages/bots/cli`: `desglose.ts` (de dónde salen los puntos), `mezcla.ts`/`mezcla.sh` (cambiar una decisión del difícil por la del experto), `experimento.ts`, `tiempo.ts`, `distribucion.ts`.
+- **Resultados** (1200 partidas, semilla 21, 1v1): Master contra difícil 55,2 %, contra medio 62,3 % (el difícil contra el medio: 63,3 %); Muy difícil contra difícil 51,3 %, contra medio 60,5 %. En 2v2 y 3v3, contra el difícil, entre 51 y 53 %.
+- **Lo que no funcionó** (medido y descartado): decidir el truco por valor esperado, simular con el rival jugando sin ver mis cartas, y la lectura fuerte de subidas que servía contra el difícil pero hacía achicar al Master contra el medio.
+- **Web y servidor:** los cinco niveles en Inicio y al crear la sala (bajan de renglón en el celular). Tests: bots 19 (nuevos: los cinco niveles en las partidas al azar y la tabla de equidad).
+
+**Pendientes:**
+- La ventaja sobre el difícil es chica (el truco tiene mucha suerte y el difícil ya simula la mano). Para más: ajustar los parámetros con muchas más partidas (horas de máquina), o un modelo de apuestas del truco más fino.
+- Medir contra personas: el Master aprende de cada rival y ahí debería sacar más diferencia que contra un bot fijo.

@@ -192,6 +192,8 @@ Toda partida es una sala del servidor con 2, 4 o 6 lugares; cada lugar lo ocupa 
 | Fácil | Juega la carta que gana la vuelta si puede; canta solo con juego claro; casi nunca sube |
 | Medio | Estima la fuerza de su mano, canta y sube con criterio, a veces va de farol |
 | Difícil | Cuenta cartas jugadas, deduce del envido declarado, miente con frecuencia calibrada, hace y lee señas del compañero |
+| Muy difícil | Como el difícil, pero el envido, la flor y las respuestas al truco los decide por la probabilidad de ganar la partida según el marcador, con lo que contestaría el rival con cada mano posible; lee las subidas del rival y varía sus umbrales para no ser predecible |
+| Master | Lo del muy difícil, imaginando más manos, leyendo también lo que el rival no cantó, y aprendiendo de cada rival durante la partida: cuánto quiere el truco y el envido, con qué tanto canta y cuánto hay que creerle cuando sube |
 
 - Tienen un pequeño retraso aleatorio antes de jugar, para que no se sientan instantáneos.
 - Usan los cantos con voz igual que un humano.

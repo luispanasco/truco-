@@ -19,7 +19,7 @@ import {
   type EstadoPartida,
   type Evento,
 } from '@truco/engine'
-import { crearBot, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibidas, type Sugerencia } from '@truco/bots'
+import { crearBot, NIVELES_BOT, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibidas, type Sugerencia } from '@truco/bots'
 import {
   avatarAlAzar,
   BARAJA_DEFAULT,
@@ -107,7 +107,7 @@ export const TIEMPOS_DEFAULT: Tiempos = {
 
 /** Nivel del bot que juega por un humano desconectado o que se quedó sin tiempo. */
 const NIVEL_REEMPLAZO: Nivel = 'medio'
-const NIVELES: Nivel[] = ['facil', 'medio', 'dificil']
+const NIVELES: Nivel[] = NIVELES_BOT
 
 interface Lugar {
   asiento: number
