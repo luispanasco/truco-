@@ -1,15 +1,15 @@
 import { calcularEnvido, calcularFlor, equipoDe, type Carta } from '@truco/engine'
 import { f, memo, type Contexto } from './contexto'
 import { muestrear, type Muestra, type OpcionesMuestreo } from './muestreo'
-import { crearMesa, minimax, rollout, valorTrasJugar } from './simulacion'
+import { crearMesa, minimax, mixto, rollout, valorTrasJugar } from './simulacion'
 
 export interface OpcionesEstimacion extends OpcionesMuestreo {
   muestras: number
-  metodo: 'minimax' | 'golosa'
+  metodo: 'minimax' | 'golosa' | 'mixto'
 }
 
 function muestrasDe(ctx: Contexto, op: OpcionesEstimacion): Muestra[] {
-  return memo(ctx, `m:${op.muestras}:${op.declarado}:${op.pesos}:${op.senias}`, () => muestrear(ctx, op.muestras, op))
+  return memo(ctx, `m:${op.muestras}:${op.declarado}:${op.pesos}:${op.senias}:${op.pasividad === true}:${op.subidas === true}`, () => muestrear(ctx, op.muestras, op))
 }
 
 /** Gana la comparación el tanto mayor; si empatan, el más cercano al mano. */
@@ -85,7 +85,7 @@ export interface EstimacionTruco {
 export function estimarTruco(ctx: Contexto, op: OpcionesEstimacion): EstimacionTruco {
   return memo(ctx, `truco:${op.muestras}:${op.metodo}:${op.declarado}:${op.pesos}`, () => {
     const muestras = muestrasDe(ctx, op)
-    const evaluar = op.metodo === 'minimax' ? minimax : rollout
+    const evaluar = op.metodo === 'minimax' ? minimax : op.metodo === 'mixto' ? mixto : rollout
     const miTurno = ctx.e.turno === ctx.yo
     const fuerzas = [...new Set(ctx.misCartas.map((c) => f(ctx, c)))]
     const suma = new Map(fuerzas.map((x) => [x, 0]))

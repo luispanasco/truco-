@@ -207,7 +207,7 @@ export function Inicio() {
         </div>
         <div className="campo">
           <span>Dificultad</span>
-          <div className="segmentado">
+          <div className="segmentado segmentado-niveles">
             {NIVELES.map(([nv, t]) => (
               <button
                 key={nv}

@@ -1,4 +1,4 @@
-import { calcularEnvido, equipoDe, fuerza, tieneFlor, type Carta } from '@truco/engine'
+import { calcularEnvido, equipoDe, fuerza, tieneFlor, type CantoEnvido, type Carta } from '@truco/engine'
 import { jugoEnPrimera, memo, type Contexto } from './contexto'
 import { mismasSenias, seniasDeMano, type Senia } from './senias'
 
@@ -10,7 +10,21 @@ export interface OpcionesMuestreo {
   pesos: boolean
   /** Exigir que la mano del compañero coincida con sus señas. */
   senias: boolean
+  /** Lo aprendido de los rivales (master); si no, lo de siempre. */
+  modelo?: ModeloRival
+  /** Un rival que tiró en la primera sin cantar truco probablemente no tiene una mano muy fuerte. */
+  pasividad?: boolean
+  /** Pesar más fuerte las manos del rival que sube a retruco o vale cuatro. */
+  subidas?: boolean
 }
+
+/** Cómo canta un rival: desde qué tanto canta cada envido y cuánto va de farol con el truco. */
+export interface ModeloRival {
+  centrosEnvido: Record<CantoEnvido, number>
+  farolTruco: number
+}
+
+const MODELO_DEFAULT: ModeloRival = { centrosEnvido: { envido: 25, realEnvido: 27, faltaEnvido: 29 }, farolTruco: 0.15 }
 
 /** Un reparto posible de las cartas que el bot no ve. */
 export interface Muestra {
@@ -64,6 +78,7 @@ function cuadranSenias(deLaMano: Senia[], conocidas: Senia[], esRival: boolean):
 
 function filtroYPeso(ctx: Contexto, asiento: number, op: OpcionesMuestreo) {
   const { e, config, muestra } = ctx
+  const modelo = op.modelo ?? MODELO_DEFAULT
   const normal = !config.modoSucio
   const cantoFlor = e.flor.cantadas.some((x) => x.asiento === asiento)
   const noTieneFlor =
@@ -84,6 +99,10 @@ function filtroYPeso(ctx: Contexto, asiento: number, op: OpcionesMuestreo) {
     ((tr.pendiente !== null && tr.pendiente.equipo === equipoDe(asiento) && tr.pendiente.asiento === asiento) ||
       (tr.pendiente === null && tr.valor > 1 && tr.puedeSubir === ctx.equipo))
   const rivalAceptoTruco = esRival && tr.valor > 1 && tr.puedeSubir === equipoDe(asiento)
+  // Hasta dónde subió el truco este rival (3 = retruco, 4 = vale cuatro), si lo subió él.
+  const subeA = esRival && tr.pendiente !== null && tr.pendiente.asiento === asiento ? tr.pendiente.nivel : 0
+  // Tiró en la primera con el truco sin cantar (y nadie lo cantó después): no le sobraba.
+  const noCantoTruco = op.pasividad === true && esRival && tr.valor === 1 && tr.pendiente === null && jugoEnPrimera(e, asiento)
 
   const filtro = (completa: Carta[]): boolean => {
     if (normal && cantoFlor && !tieneFlor(completa, muestra)) return false
@@ -100,14 +119,16 @@ function filtroYPeso(ctx: Contexto, asiento: number, op: OpcionesMuestreo) {
     let w = 1
     const t = calcularEnvido(completa, muestra)
     for (const canto of cantosEnvido) {
-      const centro = canto === 'envido' ? 25 : canto === 'realEnvido' ? 27 : 29
-      w *= 0.1 + 0.9 * sig((t - centro) / 2.5)
+      w *= 0.1 + 0.9 * sig((t - modelo.centrosEnvido[canto]) / 2.5)
     }
     if (pasoElEnvido && !tieneFlor(completa, muestra)) w *= 1 - 0.6 * sig((t - 29) / 2)
     if (declaro && declaro.tanto === null && t > mejorNuestro) w *= 0.15
     const s = potencia(ctx, restantes)
-    if (rivalCantoTruco) w *= 0.15 + 0.85 * sig((s - 0.55) * 10)
+    if (rivalCantoTruco) w *= modelo.farolTruco + (1 - modelo.farolTruco) * sig((s - 0.55) * 10)
+    // El que sube (retruco o vale cuatro) tiene más todavía, y va menos de farol.
+    if (subeA >= 3 && op.subidas) w *= modelo.farolTruco / 2 + (1 - modelo.farolTruco / 2) * sig((s - 0.55 - 0.08 * (subeA - 2)) * 12)
     if (rivalAceptoTruco) w *= 0.3 + 0.7 * sig((s - 0.45) * 10)
+    if (noCantoTruco) w *= 1 - 0.35 * sig((s - 0.72) * 10)
     return w
   }
   return { filtro, peso }
@@ -151,7 +172,7 @@ function elegir(c: Candidatas, r: number): number[] {
  * mintió), se relaja para ese jugador.
  */
 export function muestrear(ctx: Contexto, cantidad: number, op: OpcionesMuestreo): Muestra[] {
-  const clave = `cand:${op.declarado}:${op.pesos}:${op.senias}`
+  const clave = `cand:${op.declarado}:${op.pesos}:${op.senias}:${op.pasividad === true}:${op.subidas === true}`
   const cands = memo(ctx, clave, () =>
     ctx.otros
       .map((a) => {

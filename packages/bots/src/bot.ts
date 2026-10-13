@@ -4,8 +4,12 @@ import { seniasDeMano, type Senia, type SeniasRecibidas } from './senias'
 import { crearFacil } from './facil'
 import { crearMedio } from './medio'
 import { crearDificil } from './dificil'
+import { AJUSTES_MASTER, AJUSTES_MUY_DIFICIL, crearExperto } from './experto'
 
-export type Nivel = 'facil' | 'medio' | 'dificil'
+export type Nivel = 'facil' | 'medio' | 'dificil' | 'muyDificil' | 'master'
+
+/** Los niveles de menor a mayor. */
+export const NIVELES_BOT: Nivel[] = ['facil', 'medio', 'dificil', 'muyDificil', 'master']
 
 /** Lo que el pie le sugiere en voz alta a un compañero (no es obligatorio seguirlo). */
 export type Sugerencia = { tipo: 'veni' } | { tipo: 'vamosA'; asiento: number }
@@ -42,6 +46,8 @@ export interface Estrategia {
   pedirVer(ctx: Contexto): boolean
   /** Modo sucio: tanto a declarar cuando el real no alcanza; null para decir "son buenas". */
   mentirTanto(ctx: Contexto): number | null
+  /** Mira la mesa antes de cada decisión, para aprender de los rivales (master). */
+  observar?(vista: VistaPartida): void
 }
 
 export interface OpcionesBot {
@@ -51,7 +57,13 @@ export interface OpcionesBot {
 
 export function crearBot(nivel: Nivel, semilla: number, opciones: OpcionesBot = {}): Bot {
   const estrategia =
-    nivel === 'facil' ? crearFacil() : nivel === 'medio' ? crearMedio() : crearDificil(opciones.permitirMentiras ?? false)
+    nivel === 'facil'
+      ? crearFacil()
+      : nivel === 'medio'
+        ? crearMedio()
+        : nivel === 'dificil'
+          ? crearDificil(opciones.permitirMentiras ?? false)
+          : crearExperto(nivel === 'master' ? AJUSTES_MASTER : AJUSTES_MUY_DIFICIL)
   return crearBotCon(nivel, estrategia, semilla)
 }
 
@@ -66,6 +78,7 @@ export function crearBotCon(nivel: Nivel, estrategia: Estrategia, semilla: numbe
       if (validas.every((a) => a.tipo === 'cortar')) {
         return { tipo: 'cortar', jugador: vista.yo.id, corte: CORTES[Math.floor(rng.sig() * CORTES.length)]! }
       }
+      if (vista.mano.muestra) estrategia.observar?.(vista)
       const ctx = crearContexto(vista, senias, rng)
       const elegida = elegir(ctx, estrategia, validas, sugerencia)
       const clave = JSON.stringify(elegida)

@@ -19,7 +19,7 @@ Cada etapa se revisa antes de arrancar: primero se presenta el plan, se aprueba 
 
 ### Ideas pedidas para más adelante
 
-- **Bots más fuertes y tipografías** (pedido 2026-10-12): estudiar los bots (predecibles y flojos), sumar "Muy difícil" y "Master" (el máximo posible sin ver cartas ajenas: contar cartas y calcular envidos), y tipografías como cosmético: al menos 10 de bibliotecas públicas, 2 gratis y 8 en la tienda. Plan en revisión.
+- **Bots más fuertes y tipografías** (pedido 2026-10-12): estudiar los bots (predecibles y flojos), sumar "Muy difícil" y "Master" (el máximo posible sin ver cartas ajenas: contar cartas y calcular envidos), y tipografías como cosmético: al menos 10 de bibliotecas públicas, 2 gratis y 8 en la tienda. Hecho el mismo día: ver "Tipografías" y "Bots Muy difícil y Master" más abajo.
 
 ---
 
@@ -780,3 +780,25 @@ Pedido del usuario: tipografías como cosmético, por el mismo camino que las me
 - **Tests:** web 246 (11 nuevos en `tipografias.test.tsx`).
 
 **Pendiente:** con Press Start 2P, los renglones de las bajadas chicas (el autor de cada baraja) quedan muy juntos.
+
+---
+
+## Bots "Muy difícil" y "Master" — 2026-10-12
+
+Pedido del usuario: los bots eran predecibles y flojos; dos niveles nuevos por encima del difícil, el Master "al límite de lo programable sin ver cartas ajenas", que cuente cartas y calcule envidos. Fácil, medio y difícil quedan como estaban. Puede tardar hasta 2 o 3 s en decidir (en la práctica, el peor caso medido es de 25 ms).
+
+- **Lo que se encontró en el difícil:** umbrales fijos (truco desde 62 %, real envido desde 75 %), no tiene en cuenta qué contesta el rival ni el marcador, faroles con frecuencia fija.
+- **`experto.ts`** (los dos niveles):
+  - envido, flor y contraflor por valor esperado en **probabilidad de ganar la partida** (`equidad.ts`: tabla armada con cómo se reparten los puntos por mano entre bots, `cli/distribucion.ts`), con la respuesta probable del rival según el tanto que tendría en cada reparto imaginado;
+  - truco por umbral (cantar apenas conviene pierde la opción de cantar después: el valor esperado salía peor), con ruido para que no se lea el umbral y faroles más frecuentes;
+  - contestar el truco descontando que el que canta o sube suele tener con qué (pesa los repartos en que gana él);
+  - azar entre opciones casi iguales.
+- **Master:** más repartos (400 en 1v1), lee lo que el rival no cantó (tiró sin cantar truco), pesa más al que sube a retruco o vale cuatro, y aprende de cada rival: si quiere sus cantos, con qué tanto canta envido y si cuando sube la tiene (lo mira en el marcador al terminar la mano).
+- **Herramientas** en `packages/bots/cli`: `desglose.ts` (de dónde salen los puntos), `mezcla.ts`/`mezcla.sh` (cambiar una decisión del difícil por la del experto), `experimento.ts`, `tiempo.ts`, `distribucion.ts`.
+- **Resultados** (1200 partidas, semilla 21, 1v1): Master contra difícil 55,2 %, contra medio 62,3 % (el difícil contra el medio: 63,3 %); Muy difícil contra difícil 51,3 %, contra medio 60,5 %. En 2v2 y 3v3, contra el difícil, entre 51 y 53 %.
+- **Lo que no funcionó** (medido y descartado): decidir el truco por valor esperado, simular con el rival jugando sin ver mis cartas, y la lectura fuerte de subidas que servía contra el difícil pero hacía achicar al Master contra el medio.
+- **Web y servidor:** los cinco niveles en Inicio y al crear la sala (bajan de renglón en el celular). Tests: bots 19 (nuevos: los cinco niveles en las partidas al azar y la tabla de equidad).
+
+**Pendientes:**
+- La ventaja sobre el difícil es chica (el truco tiene mucha suerte y el difícil ya simula la mano). Para más: ajustar los parámetros con muchas más partidas (horas de máquina), o un modelo de apuestas del truco más fino.
+- Medir contra personas: el Master aprende de cada rival y ahí debería sacar más diferencia que contra un bot fijo.

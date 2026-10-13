@@ -103,6 +103,8 @@ async function main() {
         ['Fácil', 'facil'],
         ['Medio', 'medio'],
         ['Difícil', 'dificil'],
+        ['Muy difícil', 'muyDificil'],
+        ['Master', 'master'],
       ])
       room = await cliente.create(SALAS.privada, { invitadoId, apodo, config: { formato }, nivelBots })
     } else if (modo === 'unirme') {

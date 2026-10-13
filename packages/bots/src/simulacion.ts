@@ -147,3 +147,37 @@ export function valorTrasJugar(
   mano.splice(i, 0, fuerzaCarta)
   return v
 }
+
+/**
+ * Como `minimax`, pero el rival no ve las cartas ajenas: juega con la política golosa (como una
+ * persona que tira la más baja que gana). Mi equipo sí busca lo mejor. Es más realista que
+ * suponer que el rival juega perfecto sabiendo todo.
+ */
+export function mixto(mesa: Mesa, equipo: Equipo): number {
+  const orden = ordenDesde(mesa.participantes, mesa.empieza, mesa.n)
+  if (mesa.jugadas.length === orden.length) return cerrarVuelta(mesa, () => mixto(mesa, equipo), equipo)
+  const p = orden[mesa.jugadas.length]!
+  const mano = mesa.manos[p]!
+  if (mano.length === 0) return 0
+  if (equipoDe(p) !== equipo) {
+    const i = golosa(mesa, p)
+    const x = mano[i]!
+    mano.splice(i, 1)
+    mesa.jugadas.push({ a: p, f: x })
+    const v = mixto(mesa, equipo)
+    mesa.jugadas.pop()
+    mano.splice(i, 0, x)
+    return v
+  }
+  for (let i = 0; i < mano.length; i++) {
+    const x = mano[i]!
+    if (mano.indexOf(x) < i) continue
+    mano.splice(i, 1)
+    mesa.jugadas.push({ a: p, f: x })
+    const v = mixto(mesa, equipo)
+    mesa.jugadas.pop()
+    mano.splice(i, 0, x)
+    if (v === 1) return 1
+  }
+  return 0
+}
