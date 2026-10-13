@@ -854,3 +854,5 @@ Pedido del usuario: la animación del corte no convencía; que se vea el mazo pa
 
 **Pendientes:**
 - Online, el reloj del primer turno corre durante la tirada (el servidor no sabe que la mesa la está mostrando): si te toca cortar, tenés unos segundos menos.
+
+**Arreglado después (2026-10-13):** online, el reloj del primer turno ya no corre mientras la mesa muestra la tirada de reyes: el plan de tiempos (`planReyes`) pasó a `@truco/shared` y el servidor espera lo que dura la tirada (con el cambio de lugares, si lo hubo) antes de arrancarlo.

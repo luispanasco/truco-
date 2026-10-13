@@ -38,6 +38,7 @@ import {
   normalizarTiempos,
   normalizarCartasJugadas,
   normalizarTirarReyes,
+  planReyes,
   tirarReyes,
   CARTAS_JUGADAS_DEFAULT,
   TIRAR_REYES_DEFAULT,
@@ -204,6 +205,8 @@ export class SalaTruco extends Room {
   private claveMano = ''
   /** Por equipo: la última sugerencia del pie, válida en la vuelta en que la dijo. */
   private sugerencias: ({ sugerencia: Sugerencia; vuelta: string } | null)[] = [null, null]
+  /** Si la última tirada de reyes cambió a alguien de lugar (la mesa anima el cambio). */
+  private reacomodados = false
   /** Por asiento: jugadas seguidas que se le vencieron. */
   private vencidos = new Map<number, number>()
   private registro: RegistroPartida | null = null
@@ -648,7 +651,9 @@ export class SalaTruco extends Room {
     this.claveMano = ''
     this.revisarNuevaMano()
     this.difundir([])
-    this.programar()
+    // Mientras la mesa muestra la tirada de reyes no corre el reloj del primer turno.
+    const cambiaron = reyes !== null && reyes.equipos !== null && this.reacomodados
+    this.programar([], reyes && this.tiempos.pausaManoMs > 0 ? planReyes(reyes.tiradas, cambiaron).fin : 0)
   }
 
   /**
@@ -661,7 +666,8 @@ export class SalaTruco extends Room {
     const mazo = barajar(crearBaraja(), randomInt(2 ** 31)).resultado
     const r = tirarReyes(n, this.delAnfitrion()?.asiento ?? 0, mazo, conEquipos)
     const apodos = this.lugares.map((l) => l.apodo)
-    if (r.asientoNuevo.some((b, a) => b !== a)) {
+    this.reacomodados = r.asientoNuevo.some((b, a) => b !== a)
+    if (this.reacomodados) {
       const antes = this.lugares
       this.lugares = antes.map((_, b) => ({ ...antes[r.asientoNuevo.indexOf(b)]!, asiento: b }))
       for (const l of this.lugares) {
@@ -712,15 +718,17 @@ export class SalaTruco extends Room {
   }
 
   /** Decide quién tiene que jugar y arma el reloj del turno o la jugada del bot. */
-  private programar(eventos: Evento[] = []) {
+  private programar(eventos: Evento[] = [], esperaMs = 0) {
     this.version++
     this.limpiarTimer('timerJuego')
     if (this.fase !== 'jugando' || !this.estado) return
-    const extra = eventos.some((ev) => ev.tipo === 'enfrentamientoTerminado')
-      ? this.tiempos.pausaManoMs
-      : eventos.some((ev) => ev.tipo === 'vueltaTerminada')
-        ? this.tiempos.pausaVueltaMs
-        : 0
+    const extra =
+      esperaMs +
+      (eventos.some((ev) => ev.tipo === 'enfrentamientoTerminado')
+        ? this.tiempos.pausaManoMs
+        : eventos.some((ev) => ev.tipo === 'vueltaTerminada')
+          ? this.tiempos.pausaVueltaMs
+          : 0)
     // Si el pie acaba de mandar a alguien (él o un bot), el que la cumple no canta al instante.
     const ordeno = this.ordenarDelPie() || eventos.some((ev) => ev.tipo === 'orden')
     const [ordenMin, ordenMax] = this.tiempos.esperaOrdenMs
