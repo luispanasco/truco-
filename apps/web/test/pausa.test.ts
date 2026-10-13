@@ -143,3 +143,60 @@ describe('pausa entre manos', () => {
     expect(useJuego.getState().mostradas).toEqual([])
   })
 })
+
+describe('la tirada de reyes en la mesa', () => {
+  const sala = (apodos: string[]) =>
+    ({
+      lugares: apodos.map((apodo, asiento) => ({ asiento, tipo: 'bot', apodo, avatar: null, conectado: true, anfitrion: false })),
+      yo: 0,
+    }) as unknown as import('@truco/shared').InfoSala
+
+  it('la primera mano espera a que termine la tirada (la sala nueva no) y después se pasa de a poco', () => {
+    vi.useFakeTimers()
+    const { c, llegar } = conexionFalsa()
+    useJuego.getState().conectar(c)
+    llegar({
+      tipo: 'reyes',
+      datos: { tiradas: [{ asiento: 1, carta: { numero: 12, palo: 'oro' } }], reparte: 1, equipos: null, apodos: ['Ana', 'Beto'] },
+    })
+    llegar({ tipo: 'sala', datos: sala(['Ana', 'Beto']) })
+    llegar({ tipo: 'turno', datos: { asientos: [0], venceEn: null } })
+    llegar({ tipo: 'eventos', datos: [{ tipo: 'corte', asiento: 0, corte: 'convencional' }] })
+    llegar({ tipo: 'eventos', datos: [{ tipo: 'cartaJugada', asiento: 1, carta: carta(4, 'oro') }] })
+    let s = useJuego.getState()
+    expect(s.reyes?.enMesa).toBe(true)
+    expect(s.sala?.lugares).toHaveLength(2)
+    expect(s.turno.asientos).toEqual([])
+    expect(s.corte).toBeNull()
+
+    // Terminó la tirada: el corte enseguida; la carta del bot, después de verse el corte.
+    useJuego.getState().cerrarReyes()
+    s = useJuego.getState()
+    expect(s.reyes).toBeNull()
+    expect(s.turno.asientos).toEqual([0])
+    expect(s.corte?.corte).toBe('convencional')
+    expect(s.mesa.jugadas).toHaveLength(0)
+    // Lo que llega mientras tanto espera detrás.
+    llegar({ tipo: 'turno', datos: { asientos: [1], venceEn: null } })
+    expect(useJuego.getState().turno.asientos).toEqual([0])
+    vi.advanceTimersByTime(2200)
+    s = useJuego.getState()
+    expect(s.mesa.jugadas).toHaveLength(1)
+    expect(s.turno.asientos).toEqual([1])
+  })
+
+  it('si la mesa no avisa que terminó, la mano arranca igual', () => {
+    vi.useFakeTimers()
+    const { c, llegar } = conexionFalsa()
+    useJuego.getState().conectar(c)
+    llegar({
+      tipo: 'reyes',
+      datos: { tiradas: [{ asiento: 0, carta: { numero: 12, palo: 'oro' } }], reparte: 0, equipos: null, apodos: ['Ana', 'Beto'] },
+    })
+    llegar({ tipo: 'turno', datos: { asientos: [1], venceEn: null } })
+    expect(useJuego.getState().turno.asientos).toEqual([])
+    vi.advanceTimersByTime(20_000)
+    expect(useJuego.getState().reyes).toBeNull()
+    expect(useJuego.getState().turno.asientos).toEqual([1])
+  })
+})

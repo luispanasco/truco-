@@ -1250,6 +1250,40 @@ input {
   opacity: 1;
   font-weight: 700;
 }
+/* En la mesa: las cartas boca arriba frente a cada uno; el rey, resaltado y un poco más grande. */
+.reyes-vuelo.rey {
+  scale: 1.08;
+}
+.reyes-vuelo.rey .carta {
+  box-shadow:
+    0 0 0 3px var(--acento),
+    0 0 18px 4px color-mix(in srgb, var(--acento) 55%, transparent),
+    var(--sombra);
+}
+/* Quién reparte (y quiénes van juntos), en el medio del paño. */
+.reyes-aviso {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  z-index: 7;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  max-width: 86%;
+  padding: 8px 18px;
+  border-radius: 16px;
+  background: var(--panel-fuerte);
+  border: 1.5px solid var(--acento);
+  box-shadow: var(--sombra);
+  text-align: center;
+  font-size: 0.8rem;
+}
+.reyes-aviso b {
+  color: var(--acento);
+  font-size: 1rem;
+  font-weight: 800;
+}
 
 /* Avisos (errores y señas): arriba del paño, sin tapar el marcador. */
 .avisos {
@@ -1473,47 +1507,62 @@ input {
   position: absolute;
   left: 0;
   top: 50%;
+  width: var(--carta-mesa);
+  aspect-ratio: 2 / 3;
   transform: translateY(-50%) rotate(-8deg);
-}
-.mazo-pila .carta {
-  box-shadow:
-    2px 2px 0 var(--dorso),
-    3px 3px 0 var(--dorso-detalle),
-    var(--sombra);
-}
-/* Lo que se levanta al cortar va encima de la pila (y pasa abajo cambiando de capa). */
-.mazo-base {
-  position: relative;
   z-index: 1;
 }
-.mazo-cortado {
+/*
+ * El mazo son varios dorsos apilados, cada uno un poco corrido: se le ve el espesor. Al
+ * cortar, las capas se mueven en grupos (las dos mitades, o la de arriba sola).
+ */
+.mazo-capa,
+.mazo-grupo {
   position: absolute;
   inset: 0;
-  z-index: 2;
 }
-.mazo-cortado .carta {
+.mazo-capa .carta {
+  box-shadow: 0.6px 0.9px 0 rgb(0 0 0 / 0.35);
+}
+.mazo-pila > .mazo-capa:first-child .carta {
   box-shadow: var(--sombra);
+}
+/* Las cartas que salen en el reparto: arrancan en la pila (la del mano, si se la dieron, desde abajo). */
+.mazo-reparto {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: var(--carta-mesa);
+  aspect-ratio: 2 / 3;
+  translate: 0 -50%;
+}
+.reparto-carta {
+  position: absolute;
+  inset: 0;
+}
+.reparto-carta .carta {
+  box-shadow: var(--sombra);
+}
+/* Mientras se corta y se reparte, lo que vuela pasa por encima de los asientos. */
+.mazo-cortando {
+  z-index: 5;
 }
 /* Mientras el que corta elige: el mazo brilla y dice quién corta. */
 .mazo-esperando-corte {
   z-index: 6;
 }
-.mazo-esperando-corte .mazo-base .carta {
+.mazo-esperando-corte .mazo-tope .carta {
   animation: mazo-brilla 1.4s ease-in-out infinite;
 }
 @keyframes mazo-brilla {
   0%,
   100% {
     box-shadow:
-      2px 2px 0 var(--dorso),
-      3px 3px 0 var(--dorso-detalle),
       0 0 0 2px color-mix(in srgb, var(--acento) 60%, transparent),
       0 0 10px 2px color-mix(in srgb, var(--acento) 35%, transparent);
   }
   50% {
     box-shadow:
-      2px 2px 0 var(--dorso),
-      3px 3px 0 var(--dorso-detalle),
       0 0 0 3px var(--acento),
       0 0 22px 7px color-mix(in srgb, var(--acento) 60%, transparent);
   }
@@ -1854,12 +1903,9 @@ input {
     animation: none;
     background: var(--turno);
   }
-  .mazo-esperando-corte .mazo-base .carta {
+  .mazo-esperando-corte .mazo-tope .carta {
     animation: none;
-    box-shadow:
-      2px 2px 0 var(--dorso),
-      3px 3px 0 var(--dorso-detalle),
-      0 0 0 3px var(--acento);
+    box-shadow: 0 0 0 3px var(--acento);
   }
   .globo,
   .aviso,

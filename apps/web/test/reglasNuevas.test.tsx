@@ -5,6 +5,7 @@ import { BotonPasar, BotonPie, PanelPie } from '../src/componentes/Pie'
 import { Mazo } from '../src/componentes/Mazo'
 import { TiradaDeReyes } from '../src/componentes/Reyes'
 import { CartasEnMesa } from '../src/componentes/CartasEnMesa'
+import { asientosDespuesDeReyes, planReyes } from '../src/tiradaReyes'
 import { ConexionLocal } from '../src/conexion/local'
 import type { MensajeServidor } from '../src/conexion/tipos'
 
@@ -77,14 +78,76 @@ describe('el corte en el mazo', () => {
     const { container, rerender } = render(<Mazo muestra={null} n={4} reparteRel={0} avisoCorte="Corta B" />)
     expect(container.querySelector('.mazo-esperando-corte')).not.toBeNull()
     expect(screen.getByRole('status').textContent).toBe('Corta B')
-    // Cortando: la muestra que ya llegó no se ve hasta que se da vuelta.
+    // Es un mazo de varias cartas, no una sola.
+    expect(container.querySelectorAll('.mazo-pila .mazo-capa').length).toBeGreaterThan(5)
+    // Cortando: la muestra que ya llegó no se ve hasta que se da vuelta; se separa la de arriba.
     const corte = { corte: 'darAlMano' as const, id: 1 }
     rerender(<Mazo muestra={c(3, 'copa')} n={4} reparteRel={0} corte={corte} fase="corte" />)
     expect(container.querySelector('.mazo-muestra')).toBeNull()
-    expect(container.querySelector('.mazo-cortado')).not.toBeNull()
+    expect(container.querySelectorAll('.mazo-grupo .mazo-capa')).toHaveLength(1)
+    // Repartiendo: tres cartas para cada uno, la primera desde abajo del mazo (se la dieron al mano).
+    rerender(<Mazo muestra={c(3, 'copa')} n={4} reparteRel={0} corte={corte} fase="reparto" manoRel={1} />)
+    expect(container.querySelector('.mazo-muestra')).toBeNull()
+    expect(container.querySelectorAll('.reparto-carta')).toHaveLength(12)
+    expect(container.querySelector('.reparto-carta')!.classList.contains('desde-abajo')).toBe(true)
     rerender(<Mazo muestra={c(3, 'copa')} n={4} reparteRel={0} corte={corte} fase="muestra" />)
     expect(container.querySelector('.mazo-muestra')).not.toBeNull()
+    expect(container.querySelector('.reparto-carta')).toBeNull()
     expect(container.querySelector('.mazo-esperando-corte')).toBeNull()
+  })
+
+  it('el convencional parte el mazo en dos; al sacar la muestra, sale en el mismo corte', () => {
+    const { container, rerender } = render(
+      <Mazo muestra={c(3, 'copa')} n={2} reparteRel={0} corte={{ corte: 'convencional', id: 1 }} fase="corte" />,
+    )
+    const grupos = container.querySelectorAll('.mazo-grupo')
+    expect(grupos).toHaveLength(2)
+    expect(grupos[0]!.querySelectorAll('.mazo-capa').length).toBe(grupos[1]!.querySelectorAll('.mazo-capa').length)
+    rerender(<Mazo muestra={c(3, 'copa')} n={2} reparteRel={0} corte={{ corte: 'sacarMuestra', id: 2 }} fase="corte" />)
+    expect(container.querySelector('.mazo-muestra')).not.toBeNull()
+  })
+})
+
+describe('la tirada de reyes en la mesa', () => {
+  const tiradas = [
+    { asiento: 0, carta: c(4, 'oro') },
+    { asiento: 1, carta: c(12, 'basto') },
+    { asiento: 2, carta: c(7, 'copa') },
+    { asiento: 3, carta: c(12, 'oro') },
+  ]
+
+  it('los tiempos: cada carta sale después de la anterior, el rey se deja ver y moverse alarga', () => {
+    const quieto = planReyes(tiradas, false)
+    expect(quieto.salidas).toHaveLength(4)
+    expect(quieto.salidas.every((t, i) => i === 0 || t > quieto.salidas[i - 1]!)).toBe(true)
+    // Después de un rey hay más espera que después de otra carta.
+    expect(quieto.salidas[2]! - quieto.salidas[1]!).toBeGreaterThan(quieto.salidas[1]! - quieto.salidas[0]!)
+    expect(quieto.mover).toBeNull()
+    const moviendo = planReyes(tiradas, true)
+    expect(moviendo.mover).not.toBeNull()
+    expect(moviendo.fin).toBeGreaterThan(quieto.fin)
+    // Una tirada larga (3 contra 3 con equipos) no se hace eterna.
+    const larga = Array.from({ length: 30 }, (_, i) => ({ asiento: i % 6, carta: c(i % 3 === 0 ? 12 : 4, 'oro') }))
+    expect(planReyes(larga, true).fin).toBeLessThan(14000)
+  })
+
+  it('reconoce a cada uno en su lugar nuevo, aunque se repita un apodo', () => {
+    const lugar = (asiento: number, apodo: string, avatar: string | null = null) => ({
+      asiento,
+      tipo: 'humano' as const,
+      apodo,
+      avatar,
+      conectado: true,
+      anfitrion: false,
+    })
+    const antes = [lugar(0, 'Ana', 'a'), lugar(1, 'Beto'), lugar(2, 'Ana', 'b'), lugar(3, 'Caro')]
+    // Se cambiaron Beto y la segunda Ana.
+    const ahora = [lugar(0, 'Ana', 'a'), lugar(1, 'Ana', 'b'), lugar(2, 'Beto'), lugar(3, 'Caro')]
+    expect(asientosDespuesDeReyes(['Ana', 'Beto', 'Ana', 'Caro'], antes, ahora)).toEqual([0, 2, 1, 3])
+    // Sin la sala de antes (contra la compu), por el apodo.
+    expect(asientosDespuesDeReyes(['Ana', 'Beto', 'Caro', 'Dani'], null, [lugar(0, 'Ana'), lugar(1, 'Caro'), lugar(2, 'Beto'), lugar(3, 'Dani')])).toEqual([
+      0, 2, 1, 3,
+    ])
   })
 })
 

@@ -831,3 +831,26 @@ Pedido del usuario: pipa, cosas de asado y más, bien criollo. Plan aprobado el 
 **Pendientes:**
 - Con mate (o mate y termo) y pipa juntos, la cazoleta queda encima de la bombilla.
 - En los círculos de la mesa (acercados a la cara) la tira de asado queda afuera del cuadro; se ve entera en el editor y sentados.
+
+---
+
+## Corte y tirada de reyes en la mesa — 2026-10-13
+
+Pedido del usuario: la animación del corte no convencía; que se vea el mazo partirse, y que la tirada de reyes se haga sobre la mesa (y no en un cuadro), con los avatares cambiando de lugar si los equipos salen de los reyes. Lo hizo un agente.
+
+- **El mazo** tiene cuerpo: diez dorsos apilados, cada uno un poco corrido. Mientras se elige el corte, la de arriba brilla con el aviso "Corta X", como antes.
+- **El corte** (`Mazo.tsx`, por fases: corte, reparto, muestra; cerca de 2 s en total):
+  - convencional: el mazo se parte en dos pilas; la de arriba se corre hacia el centro del paño, la de abajo pasa encima y vuelven juntas;
+  - sacar la muestra: la de arriba se levanta, se da vuelta y queda de muestra (no hay giro después);
+  - se la doy al mano: una sola se separa, pasa al fondo y queda asomando; en el reparto, esa sale primero, de abajo, hacia el mano.
+  - **Reparto:** tres vueltas desde el mano, en sentido antihorario; cada carta vuela hasta el lugar de cada uno (se mide en la pantalla, así sirve en círculos, sentados, celular y PC). Las tuyas llegan al borde de abajo del paño y de ahí bajan a tu mano. Después se da vuelta la muestra.
+- **Tirada de reyes** (`TiradaEnMesa` en `Reyes.tsx`, tiempos en `tiradaReyes.ts`): la mesa se arma con los lugares de antes; del mazo sale una carta boca arriba frente a cada uno, en orden (más rápido cuanto más larga: en 3 contra 3 con equipos puede pasar de 20 cartas); el rey se resalta y se deja ver un momento. Si los compañeros cambiaron, se levantan las cartas y los avatares se deslizan a sus lugares nuevos (se reconoce a cada uno por apodo y avatar). Al final, "Reparte Ana" (o "Repartís vos") y, con equipos, quiénes van juntos.
+  - La parte de abajo tiene el mismo alto que con la mano en juego: el paño no salta al arrancar.
+  - **La primera mano espera** en la cola de la pausa entre manos (la sala no: trae los lugares nuevos y online lleva a la mesa). Al terminar, lo que esperó se pasa de a poco (2,1 s después del corte, 0,9 s después de una carta), si no, el corte se pisaba con lo que los bots ya habían jugado. Si la mesa no avisa que terminó, sigue sola.
+  - Con movimiento reducido no se anima nada: queda el cuadro de antes.
+- **Revisado** cuadro a cuadro en 360×740 y 1280×800, en 1v1, 2v2 y 3v3, en círculos y sentados, contra la compu y online (dos personas, una en cada tamaño).
+- **`ojeo.spec.ts`:** esperaba el turno con los 5 s de siempre; si la compu cantaba envido, entre cantos y tantos a veces no llegaba. Ahora espera hasta 30 s.
+- **Tests:** web 257 (nuevos: el mazo partido en dos, el reparto con la del mano desde abajo, los tiempos de la tirada, reconocer a cada uno en su lugar nuevo, la mano que espera a los reyes y se pasa de a poco) y los 10 de punta a punta.
+
+**Pendientes:**
+- Online, el reloj del primer turno corre durante la tirada (el servidor no sabe que la mesa la está mostrando): si te toca cortar, tenés unos segundos menos.

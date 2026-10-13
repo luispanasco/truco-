@@ -7,6 +7,7 @@ import {
   TEXTO_CANTO,
   TEXTO_CORTE,
   type InfoSala,
+  type LugarPublico,
   type MensajeChat,
   type MensajesCliente,
   type MensajesServidor,
@@ -14,6 +15,7 @@ import {
 import type { Conexion, EstadoConexion, MensajeServidor } from './conexion/tipos'
 import { sonarEfecto, sonarEvento } from './sonido'
 import { aplicarTemaDeSala, aplicarTemaPropio } from './temaSala'
+import { planReyes } from './tiradaReyes'
 
 export interface Jugada {
   asiento: number
@@ -76,8 +78,11 @@ interface EstadoJuego {
   mostradas: Mostradas[]
   /** La última sugerencia del pie (la dijo en voz alta: la oyen todos). */
   sugerencia: { de: number; sugerencia: Sugerencia; id: number } | null
-  /** Los reyes que se tiraron antes de empezar, mientras se muestran. */
-  reyes: (MensajesServidor['reyes'] & { id: number }) | null
+  /**
+   * Los reyes que se tiraron antes de empezar, mientras se muestran: en la mesa (`enMesa`,
+   * con los lugares y tu asiento de antes de reacomodarse) o, con movimiento reducido, en un cuadro.
+   */
+  reyes: ReyesEnCurso | null
   /** Te sacaron de la mesa. */
   expulsado: string | null
   /** El último corte del mazo: la mesa lo anima antes de mostrar la muestra y repartir. */
@@ -87,6 +92,14 @@ interface EstadoJuego {
   conectar(conexion: Conexion): void
   enviar<K extends keyof MensajesCliente>(tipo: K, datos: MensajesCliente[K]): void
   salir(): void
+}
+
+export type ReyesEnCurso = MensajesServidor['reyes'] & {
+  id: number
+  enMesa: boolean
+  /** Los lugares y tu asiento al tirar (contra la compu no hay sala antes: null y 0). */
+  lugaresAntes: LugarPublico[] | null
+  yoAntes: number
 }
 
 const MESA_VACIA: MesaVisible = { jugadas: [], vueltas: [] }
@@ -103,6 +116,23 @@ let desuscribirEstado: (() => void) | null = null
 let enPausa = false
 let cola: MensajeServidor[] = []
 let timerPausa: ReturnType<typeof setTimeout> | null = null
+/**
+ * Mientras se tiran reyes en la mesa, la primera mano espera en la misma cola que la pausa entre
+ * manos (la sala no: trae los lugares nuevos). Si la mesa no avisa que terminó, se sigue igual.
+ */
+let enReyes = false
+let timerReyes: ReturnType<typeof setTimeout> | null = null
+let porReproducir: MensajeServidor[] = []
+
+/** Al pasar lo que esperó a los reyes: cuánto dejar ver cada tanda antes de la siguiente. */
+function esperaTras(eventos: Evento[]): number {
+  if (eventos.some((e) => e.tipo === 'corte')) return 2100
+  if (eventos.some((e) => e.tipo === 'cartaJugada')) return 900
+  return 700
+}
+
+const movimientoReducido = () =>
+  typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export const useJuego = create<EstadoJuego>()((set, get) => {
   const nombre = (a: number) => get().sala?.lugares[a]?.apodo ?? `Jugador ${a + 1}`
@@ -203,6 +233,41 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     }, PAUSA_ENTRE_MANOS)
   }
 
+  /**
+   * Lo que quedó esperando durante la tirada (el corte, el reparto y, si los bots fueron
+   * rápidos, las primeras jugadas) se pasa de a poco, como si recién pasara: si no, el corte
+   * se pisa con las cartas que ya tiraron. Lo que llega mientras tanto espera detrás.
+   */
+  const reproducir = () => {
+    timerReyes = null
+    porReproducir.push(...cola)
+    cola = []
+    enReyes = false
+    while (porReproducir.length > 0) {
+      const m = porReproducir.shift()!
+      alMensaje(m)
+      if (enPausa) {
+        // Terminó una mano: lo que falta va detrás de lo que dejó la pausa.
+        cola = [...cola, ...porReproducir]
+        porReproducir = []
+        return
+      }
+      if (m.tipo === 'eventos' && porReproducir.some((x) => x.tipo === 'eventos')) {
+        enReyes = true
+        timerReyes = setTimeout(reproducir, esperaTras(m.datos))
+        return
+      }
+    }
+  }
+
+  /** Terminó la tirada de reyes: sigue lo que quedó esperando. */
+  const terminarReyes = () => {
+    if (timerReyes) clearTimeout(timerReyes)
+    timerReyes = null
+    set({ reyes: null })
+    if (enReyes) reproducir()
+  }
+
   const alEventos = (eventos: Evento[]) => {
     const terminaPartida = eventos.some((ev) => ev.tipo === 'partidaTerminada')
     for (let i = 0; i < eventos.length; i++) {
@@ -221,7 +286,8 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
 
   const alMensaje = (m: MensajeServidor) => {
     // Durante la pausa, todo lo de la mano nueva espera (el chat y los errores no).
-    if (enPausa && m.tipo !== 'chat' && m.tipo !== 'error') {
+    // Mientras se tiran reyes, también; la sala no (trae los lugares nuevos y lleva a la mesa).
+    if ((enPausa || (enReyes && m.tipo !== 'sala')) && m.tipo !== 'chat' && m.tipo !== 'error') {
       cola.push(m)
       return
     }
@@ -272,9 +338,18 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         mostrarGlobo(de, sugerencia.tipo === 'veni' ? '¡Vení!' : `¡Vamos a ${nombre(sugerencia.asiento)}!`)
         break
       }
-      case 'reyes':
-        set({ reyes: { ...m.datos, id: ++contador } })
+      case 'reyes': {
+        // Se tiran en la mesa y la primera mano espera; con movimiento reducido, en un cuadro.
+        const enMesa = !movimientoReducido()
+        const sala = get().sala
+        set({ reyes: { ...m.datos, id: ++contador, enMesa, lugaresAntes: sala?.lugares ?? null, yoAntes: sala?.yo ?? 0 } })
+        if (enMesa) {
+          enReyes = true
+          if (timerReyes) clearTimeout(timerReyes)
+          timerReyes = setTimeout(terminarReyes, planReyes(m.datos.tiradas, true).fin + 4000)
+        }
         break
+      }
       case 'expulsado':
         set({ expulsado: m.datos.motivo })
         break
@@ -304,7 +379,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     corte: null,
 
     cerrarReyes() {
-      set({ reyes: null })
+      terminarReyes()
     },
 
     conectar(conexion) {
@@ -326,6 +401,10 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       if (timerPausa) clearTimeout(timerPausa)
       timerPausa = null
       enPausa = false
+      if (timerReyes) clearTimeout(timerReyes)
+      timerReyes = null
+      enReyes = false
+      porReproducir = []
       cola = []
       const conexion = get().conexion
       conexion?.salir()

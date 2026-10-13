@@ -24,16 +24,23 @@ async function cajaQuieta(l: Locator) {
   return antes
 }
 
-/** Espera su turno para jugar una carta, contestando que quiere si la compu canta algo. */
+/**
+ * Espera su turno para jugar una carta, contestando que quiere si la compu canta algo. Con
+ * tiempo: si la compu canta envido, cada canto y cada tanto le lleva hasta 1,8 s (con los 5 s
+ * de siempre, a veces no llegaba).
+ */
 async function esperarTurno(page: Page) {
   const jugable = cartasDeLaMano(page).and(page.locator(':enabled')).first()
-  const respuesta = page.getByRole('button', { name: /^(Quiero|Decir mi tanto: \d+|Son buenas|Flor|No pedir ver)$/ }).first()
+  const respuesta = page.getByRole('button', { name: /^(Quiero|Decir mi tanto: \d+|Son buenas|Flor|Con flor quiero|No pedir ver)$/ }).first()
   await expect
-    .poll(async () => {
-      if (await jugable.isVisible()) return true
-      if (await respuesta.isVisible()) await respuesta.click({ timeout: 1500 }).catch(() => {})
-      return false
-    })
+    .poll(
+      async () => {
+        if (await jugable.isVisible()) return true
+        if (await respuesta.isVisible()) await respuesta.click({ timeout: 1500 }).catch(() => {})
+        return false
+      },
+      { timeout: 30_000 },
+    )
     .toBe(true)
   return jugable
 }

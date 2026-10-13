@@ -9,9 +9,9 @@ import { explicarCarta, explicarTanto } from '../ayudas'
 import { GloboExplicacion, useExplicacion } from '../componentes/Ayudas'
 import { Acciones, BotonMazo } from '../componentes/Acciones'
 import { BotonPasar, BotonPie, PanelPie } from '../componentes/Pie'
-import { TiradaDeReyes } from '../componentes/Reyes'
+import { TiradaDeReyes, TiradaEnMesa } from '../componentes/Reyes'
 import { Asiento, Avatar, avatarDeLugar, MarcaMano } from '../componentes/Asiento'
-import { CartasEnMesa, direccion } from '../componentes/CartasEnMesa'
+import { CartasEnMesa } from '../componentes/CartasEnMesa'
 import { BotonChat, PanelChat, useNoLeidos } from '../componentes/Chat'
 import { EstadoConexion } from '../componentes/EstadoConexion'
 import { GloboDeChat, useGlobosChat } from '../componentes/GlobosChat'
@@ -102,6 +102,8 @@ export function Mesa() {
     if (error) mostrarAviso(`⚠ ${error.motivo}`)
   }, [error, mostrarAviso])
 
+  // Antes de la primera mano se tiran reyes en la mesa: la mano espera a que termine.
+  if (sala && reyes?.enMesa) return <TiradaEnMesa key={reyes.id} reyes={reyes} sala={sala} bustos={leerPerfil().mesaBustos} alTerminar={cerrarReyes} />
   if (!sala || !vista) return <div className="cargando">Repartiendo…</div>
 
   const yo = vista.yo.asiento
@@ -126,7 +128,8 @@ export function Mesa() {
   // En la pausa entre manos la vista todavía no trae la última jugada: no mostrar dos veces la carta.
   // Las que di vuelta al terminar (flor o envido) también quedan en la mesa y no en la mano.
   const misMostradas = mostradas.find((m) => m.asiento === yo)?.cartas ?? []
-  const repartiendo = faseCorte !== null
+  // Mientras se corta y se reparte, las cartas todavía no llegaron a las manos.
+  const repartiendo = faseCorte === 'corte' || faseCorte === 'reparto'
   const misCartas = (repartiendo ? [] : vista.mano.misCartas).filter(
     (c) => !mesa.jugadas.some((j) => j.asiento === yo && j.carta && mismaCarta(j.carta, c)) && !misMostradas.some((x) => mismaCarta(x, c)),
   )
@@ -303,7 +306,7 @@ export function Mesa() {
           avisoCorte={cortando === null || finDeMano ? null : cortando === yo ? 'Cortás vos' : `Corta ${sala.lugares[cortando]?.apodo ?? 'otro'}`}
           corte={corte}
           fase={faseCorte}
-          haciaMano={direccion(n, rel(vista.mano.mano))}
+          manoRel={rel(vista.mano.mano)}
         />
 
         <CartasEnMesa
@@ -499,7 +502,8 @@ export function Mesa() {
         />
       )}
 
-      {reyes && <TiradaDeReyes key={reyes.id} reyes={reyes} alCerrar={cerrarReyes} />}
+      {/* Con movimiento reducido, los reyes salen en un cuadro (en la mesa no se anima nada). */}
+      {reyes && !reyes.enMesa && <TiradaDeReyes key={reyes.id} reyes={reyes} alCerrar={cerrarReyes} />}
 
       {expulsado && (
         <div className="modal" role="dialog" aria-modal="true" aria-labelledby="expulsado-titulo">

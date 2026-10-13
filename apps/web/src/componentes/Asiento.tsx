@@ -152,6 +152,7 @@ export function Asiento({
   const pilaAbajo = [cercaAbajo, chatAbajo ? globoChat(!!cercaAbajo) : null]
   return (
     <div
+      data-asiento={lugar.asiento}
       className={`asiento pos-${posicion}${leToca ? ' le-toca' : ''}${conReloj ? ' con-reloj' : ''}${esCompaniero ? ' companiero' : ' rival'}${participa ? '' : ' fuera'}${desconectado ? ' desconectado' : ''}${globo || chat || gesto ? ' con-globo' : ''}${gesto ? ' con-gesto' : ''}`}
     >
       {arriba && ladoChat === 'abajo' && chat ? (
