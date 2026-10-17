@@ -1,0 +1,348 @@
+/*
+ * Mesa en perspectiva (se prende con `mesa-perspectiva`): como sentado frente a la mesa. El
+ * paño (.panio) es un plano inclinado con CSS 3D, con el punto de fuga arriba; encima se apoyan
+ * el mazo y las cartas jugadas. Los demás son recortes parados alrededor, de frente a la cámara
+ * y más chicos cuanto más lejos: su lugar lo proyecta el navegador (ver Perspectiva.tsx) y llega
+ * en --ancla-x / --ancla-y / --escala. Tu mano, los botones y los paneles quedan planos.
+ *
+ * (Todo va con .pantalla-mesa.mesa-perspectiva: estilos.css se carga después y pesa igual. El
+ * asiento, con .asiento.asiento: los lugares de cada posición de estilos.css pesan más.)
+ */
+.pantalla-mesa.mesa-perspectiva {
+  /* Cuánto se acuesta el paño y desde qué distancia se lo mira. */
+  --inclinacion: 44deg;
+  --distancia: max(460px, 62dvh);
+  /* Lo que se deja a los costados del paño (para los de los costados) y arriba (para el de enfrente). */
+  --panio-lado: 15cqw;
+  --panio-arriba: 10cqh;
+  /* El paño no se estira en una pantalla alta: a lo sumo así de hondo (por su ancho); lo que sobra va arriba. */
+  --panio-hondo: 1.6;
+  --borde: 7px;
+  /*
+   * El recorte de cada uno: su alto en el borde de cerca; lejos se achica con --escala. Con
+   * una mesa bajita (cuando abajo hay muchos botones) se achica, para que no se pisen.
+   */
+  --figura: clamp(72px, 22cqh, 104px);
+  --recorte-sombra: rgb(0 0 0 / 0.5);
+}
+.pantalla-mesa.mesa-perspectiva.n-4 {
+  --figura: clamp(64px, 19cqh, 96px);
+}
+.pantalla-mesa.mesa-perspectiva.n-6 {
+  --figura: clamp(54px, 15.5cqh, 84px);
+  --panio-lado: 17cqw;
+}
+
+/* ── La mesa: el .tapete es el lugar (con la perspectiva); el paño, el plano inclinado ── */
+
+.pantalla-mesa.mesa-perspectiva .tapete {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  perspective: var(--distancia);
+  perspective-origin: 50% 0;
+  /* Lo que vuela hacia tu mano (el reparto, la carta que tirás) pasa por encima de tu lugar. */
+  z-index: 1;
+}
+
+.pantalla-mesa.mesa-perspectiva .panio {
+  position: absolute;
+  left: var(--panio-lado);
+  right: var(--panio-lado);
+  top: max(var(--panio-arriba), 100cqh - var(--borde) * 3 - 12px - var(--panio-hondo) * (100cqw - 2 * var(--panio-lado)));
+  bottom: calc(var(--borde) + 12px);
+  border-radius: 26px;
+  background:
+    var(--tapete-textura),
+    radial-gradient(ellipse at 50% 60%, var(--tapete), var(--tapete-oscuro));
+  border: var(--borde) solid var(--madera-clara);
+  box-shadow:
+    inset 0 0 0 2px rgb(0 0 0 / 0.18),
+    inset 0 0 40px rgb(0 0 0 / 0.45),
+    0 18px 30px rgb(0 0 0 / 0.45);
+  transform-origin: 50% 100%;
+  transform: rotateX(var(--inclinacion));
+  transform-style: preserve-3d;
+  /* Las cartas y el mazo se miden contra el paño sin inclinar (unidades cq). */
+  container: mesa / size;
+  pointer-events: none;
+}
+/* El canto de madera de cerca: cuelga del borde del paño, para abajo (la mesa tiene espesor). */
+.mesa-perspectiva .panio-canto {
+  position: absolute;
+  left: calc(-1 * var(--borde));
+  right: calc(-1 * var(--borde));
+  top: calc(100% + var(--borde));
+  height: 22px;
+  border-radius: 0 0 14px 14px;
+  background: linear-gradient(var(--madera-clara), var(--madera) 70%, color-mix(in srgb, var(--madera) 70%, #000));
+  transform-origin: 50% 0;
+  transform: rotateX(-90deg);
+}
+/* Las marcas para medir: no se ven. */
+.mesa-perspectiva .esquina-panio,
+.mesa-perspectiva .ancla-asiento {
+  position: absolute;
+  width: 0;
+  height: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.mesa-perspectiva .ancla-asiento {
+  translate: -50% 0;
+}
+
+/* Lo que va arriba del paño, apoyado: el mazo y las cartas pueden levantarse en el aire (3D). */
+.mesa-perspectiva :is(.mazo, .mazo-pila, .mazo-grupo, .mazo-reparto, .cartas-en-mesa, .cartas-en-mesa .jugada, .jugada-vuelo) {
+  transform-style: preserve-3d;
+}
+
+/* Lo que es interfaz y cae sobre el paño se para de frente, para leerlo derecho. */
+.mesa-perspectiva .mazo-aviso {
+  transform-origin: 50% 100%;
+  transform: rotateX(calc(-1 * var(--inclinacion)));
+}
+.mesa-perspectiva .cartas-en-mesa .vueltas {
+  transform-origin: 50% 100%;
+  transform: translateX(-50%) rotateX(calc(-1 * var(--inclinacion)));
+}
+.mesa-perspectiva .mostradas-etiqueta {
+  transform-origin: 50% 100%;
+  transform: rotateX(calc(-1 * var(--inclinacion)));
+}
+
+/* El registro, sobre el borde de cerca: el paño queda libre para las cartas. */
+.pantalla-mesa.mesa-perspectiva .registro {
+  bottom: 2px;
+  width: 60%;
+}
+
+/* ── Las cartas jugadas: sin asientos encima, el paño entero es para las pilas ── */
+
+.mesa-perspectiva .cartas-en-mesa {
+  --libre-alto: calc(100cqh - 24px);
+  --centro-y: 0px;
+}
+.mesa-perspectiva.n-2 .cartas-en-mesa {
+  --w: clamp(40px, min(21cqw, var(--libre-alto) / 3.2), 74px);
+}
+.mesa-perspectiva.n-4 .cartas-en-mesa {
+  --w: clamp(36px, min((50cqw - 20px) / 1.9, var(--libre-alto) / 3.4), 64px);
+}
+.mesa-perspectiva.n-6 .cartas-en-mesa {
+  --w: clamp(32px, min((50cqw - 16px) / 1.8, var(--libre-alto) / 4.5), 58px);
+}
+
+/* ── Los demás: recortes parados alrededor del paño ── */
+
+.pantalla-mesa.mesa-perspectiva .asiento.asiento {
+  --fig: calc(var(--figura) * var(--escala, 0.75));
+  left: var(--ancla-x, 50%);
+  top: var(--ancla-y, 20%);
+  right: auto;
+  bottom: auto;
+  /* El pie del recorte (la cintura, a la altura de la mesa) cae justo en el borde del paño. */
+  transform: translate(-50%, calc(-1 * var(--fig)));
+  row-gap: 2px;
+}
+/*
+ * Los de los costados, corridos hacia afuera: se apoyan en el borde del paño pero casi todo el
+ * cuerpo queda fuera de la mesa (no tapan sus cartas jugadas).
+ */
+.pantalla-mesa.mesa-perspectiva :is(.n-4 .asiento.pos-1, .n-6 .asiento.pos-1, .n-6 .asiento.pos-2) {
+  transform: translate(-30%, calc(-1 * var(--fig)));
+}
+.pantalla-mesa.mesa-perspectiva :is(.n-4 .asiento.pos-3, .n-6 .asiento.pos-4, .n-6 .asiento.pos-5) {
+  transform: translate(-70%, calc(-1 * var(--fig)));
+}
+/* Antes de medir (o sin navegador de verdad): lugares aproximados. */
+.pantalla-mesa.mesa-perspectiva :is(.n-4 .asiento.pos-1, .n-6 .asiento.pos-1, .n-6 .asiento.pos-2) {
+  left: var(--ancla-x, 90%);
+}
+.pantalla-mesa.mesa-perspectiva :is(.n-4 .asiento.pos-3, .n-6 .asiento.pos-4, .n-6 .asiento.pos-5) {
+  left: var(--ancla-x, 10%);
+}
+.pantalla-mesa.mesa-perspectiva :is(.n-4 .asiento.pos-1, .n-4 .asiento.pos-3, .n-6 .asiento.pos-1, .n-6 .asiento.pos-5) {
+  top: var(--ancla-y, 60%);
+}
+.pantalla-mesa.mesa-perspectiva :is(.n-6 .asiento.pos-2, .n-6 .asiento.pos-4) {
+  top: var(--ancla-y, 34%);
+}
+
+/* El recorte: el avatar de medio cuerpo, cortado justo en el borde de la mesa. */
+.pantalla-mesa.mesa-perspectiva .asiento .avatar-busto {
+  width: var(--fig);
+  height: var(--fig);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  clip-path: inset(-80% -80% 0 -80%);
+}
+.pantalla-mesa.mesa-perspectiva .avatar-busto > .avatar-dibujo {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  border-radius: 0;
+  clip-path: none;
+  filter: drop-shadow(0 3px 4px var(--recorte-sombra));
+}
+.pantalla-mesa.mesa-perspectiva .avatar-busto > .avatar-inicial {
+  width: 70%;
+  aspect-ratio: 1;
+  margin: auto auto 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.35);
+}
+/* La sombra que el recorte deja sobre el paño, donde apoya. */
+.pantalla-mesa.mesa-perspectiva .asiento .asiento-avatar::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -5px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.45), transparent);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Anillo de turno (y reloj): alrededor de la cabeza, no de la caja. */
+.pantalla-mesa.mesa-perspectiva .asiento .asiento-avatar::before,
+.pantalla-mesa.mesa-perspectiva .asiento .anillo-reloj {
+  inset: auto;
+  left: 50%;
+  top: -4%;
+  width: 92%;
+  height: auto;
+  aspect-ratio: 1;
+  translate: -50% 0;
+}
+.pantalla-mesa.mesa-perspectiva .asiento .anillo-reloj {
+  rotate: -90deg;
+}
+.pantalla-mesa.mesa-perspectiva .le-toca .avatar-busto {
+  box-shadow: none;
+}
+.pantalla-mesa.mesa-perspectiva .le-toca .avatar-busto > .avatar-dibujo {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--turno) 75%, transparent));
+}
+/* La M de mano: una ficha al costado del recorte, sobre el borde. */
+.pantalla-mesa.mesa-perspectiva .asiento .marca-mano {
+  right: -6px;
+  bottom: -4px;
+  z-index: 5;
+}
+
+/* Las cartas que tiene en la mano: chiquitas, más chicas cuanto más lejos. */
+.pantalla-mesa.mesa-perspectiva .asiento-cartas .carta {
+  --ancho: calc(var(--carta-chica) * clamp(0.75, var(--escala, 0.8) * 1.15, 1.1));
+}
+.pantalla-mesa.mesa-perspectiva .asiento-nombre {
+  max-width: 96px;
+}
+
+/* El de enfrente: nombre y cartas en una fila, para tapar poco del paño. */
+.pantalla-mesa.mesa-perspectiva :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) {
+  grid-template-areas:
+    'avatar avatar'
+    'nombre cartas';
+  column-gap: 5px;
+  align-items: center;
+}
+.pantalla-mesa.mesa-perspectiva :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .asiento-avatar {
+  grid-area: avatar;
+}
+.pantalla-mesa.mesa-perspectiva :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .asiento-nombre {
+  grid-area: nombre;
+}
+.pantalla-mesa.mesa-perspectiva :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .asiento-cartas {
+  grid-area: cartas;
+}
+.pantalla-mesa.mesa-perspectiva :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .asiento-bot {
+  grid-column: 1 / -1;
+}
+
+/* Pica-pica: el que no juega el duelo se atenúa. */
+.pantalla-mesa.mesa-perspectiva .asiento.fuera {
+  opacity: 0.45;
+}
+
+/* ── La seña: el recorte se inclina sobre la mesa y crece un poco ── */
+
+.pantalla-mesa.mesa-perspectiva .avatar-busto.con-gesto {
+  animation-name: recorte-gesto;
+  box-shadow: none;
+  clip-path: none;
+  -webkit-mask: linear-gradient(to bottom, #000 80%, transparent);
+  mask: linear-gradient(to bottom, #000 80%, transparent);
+  transform-origin: 50% 100%;
+}
+.pantalla-mesa.mesa-perspectiva .avatar-busto.con-gesto > .avatar-dibujo {
+  --zoom-quieto: 1;
+  --zoom-gesto: 1.15;
+}
+.pantalla-mesa.mesa-perspectiva .asiento.con-gesto .asiento-avatar {
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 3px var(--acento),
+    0 0 14px 2px color-mix(in srgb, var(--acento) 70%, transparent);
+  transition: box-shadow 0.2s;
+}
+@keyframes recorte-gesto {
+  0% {
+    scale: 1;
+  }
+  9%,
+  88% {
+    scale: 1.25;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+/* ── Tu lugar: la mano, en primer plano y derecha ── */
+
+/* En una pantalla alta, tu mano grande aunque ya esté abierta: está en primer plano (el paño cede ese lugar). */
+@media (min-height: 800px) {
+  .pantalla-mesa.mesa-perspectiva {
+    --carta-mano: var(--carta-grande);
+  }
+}
+/* Abajo no hay franja oscura: la mesa sigue hasta tu mano. */
+.pantalla-mesa.mesa-perspectiva .mi-lugar {
+  background: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / 0.35) 40%);
+  border-top: 0;
+}
+.pantalla-mesa.mesa-perspectiva .mi-lugar.le-toca {
+  box-shadow: inset 0 3px 0 -1px color-mix(in srgb, var(--turno) 70%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pantalla-mesa.mesa-perspectiva .avatar-busto.con-gesto {
+    animation: none;
+    scale: 1.2;
+  }
+}
+
+/* Las pilas de los de los costados, un poco más adentro: ellos se apoyan sobre el borde. */
+.mesa-perspectiva.n-4 .cartas-en-mesa .jugada.pos-1 {
+  --ax: calc(var(--w) * 1.15);
+}
+.mesa-perspectiva.n-4 .cartas-en-mesa .jugada.pos-3 {
+  --ax: calc(var(--w) * -1.15);
+}
+
+/* El mazo, cerca de vos, se vería enorme: un poco más chico (el reparto mide esta escala). */
+.pantalla-mesa.mesa-perspectiva .mazo {
+  scale: 0.85;
+}
+.pantalla-mesa.mesa-perspectiva .mazo.mazo-chico {
+  scale: 0.72;
+}

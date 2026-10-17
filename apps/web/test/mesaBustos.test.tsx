@@ -3,7 +3,7 @@ import { act, cleanup, render, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { ConexionLocal } from '../src/conexion/local'
 import { useJuego } from '../src/estado'
-import { bustosDesdeUrl, leerPerfil } from '../src/perfil'
+import { leerPerfil, vistaDesdeUrl } from '../src/perfil'
 import { Mesa } from '../src/pantallas/Mesa'
 
 beforeEach(() => localStorage.clear())
@@ -14,7 +14,7 @@ afterEach(() => {
 
 /** Una mesa de 2 contra 2 contra bots quietos, con la variante de bustos prendida o no. */
 function mesa(bustos: boolean) {
-  localStorage.setItem('truco.perfil', JSON.stringify({ invitadoId: 'inv-bustos', apodo: 'Luis', ojear: false, mesaBustos: bustos }))
+  localStorage.setItem('truco.perfil', JSON.stringify({ invitadoId: 'inv-bustos', apodo: 'Luis', ojear: false, vistaMesa: bustos ? 'sentados' : 'circulos' }))
   act(() =>
     useJuego
       .getState()
@@ -28,15 +28,15 @@ function mesa(bustos: boolean) {
 }
 
 describe('mesa de bustos', () => {
-  it('viene apagada y se prende o se apaga con ?bustos= en la dirección', () => {
-    expect(leerPerfil().mesaBustos).toBe(false)
-    bustosDesdeUrl('?bustos=1')
-    expect(leerPerfil().mesaBustos).toBe(true)
+  it('viene apagada y se prende o se apaga con ?bustos= en la dirección (como cuando era una prueba)', () => {
+    expect(leerPerfil().vistaMesa).toBe('circulos')
+    vistaDesdeUrl('?bustos=1')
+    expect(leerPerfil().vistaMesa).toBe('sentados')
     // Otra cosa en la dirección no la toca.
-    bustosDesdeUrl('?otra=1')
-    expect(leerPerfil().mesaBustos).toBe(true)
-    bustosDesdeUrl('?bustos=0')
-    expect(leerPerfil().mesaBustos).toBe(false)
+    vistaDesdeUrl('?otra=1')
+    expect(leerPerfil().vistaMesa).toBe('sentados')
+    vistaDesdeUrl('?bustos=0')
+    expect(leerPerfil().vistaMesa).toBe('circulos')
   })
 
   it('prendida, la mesa lleva la clase y cada asiento dibuja el avatar de medio cuerpo', async () => {

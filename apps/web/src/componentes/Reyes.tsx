@@ -3,11 +3,14 @@ import { motion, useReducedMotion } from 'motion/react'
 import type { Carta as TCarta } from '@truco/engine'
 import type { InfoSala, LugarPublico, MensajesServidor } from '@truco/shared'
 import type { ReyesEnCurso } from '../estado'
+import type { VistaMesa } from '../perfil'
+import { aLocal, centro } from '../perspectiva'
 import { asientosDespuesDeReyes, MOVER_REYES_MS, planReyes, VUELO_REYES_MS } from '../tiradaReyes'
 import { Asiento, Avatar } from './Asiento'
 import { Carta } from './Carta'
 import { Fosforos } from './Fosforos'
 import { PilaMazo, posicionMazo } from './Mazo'
+import { estiloAsiento, PanioEnPerspectiva, useMesaEnPerspectiva } from './Perspectiva'
 import '../estilos-mesa-cartas.css'
 
 /** Cuánto tarda en salir cada carta de la tirada. */
@@ -87,15 +90,24 @@ function CartaDeReyes({ carta, giro }: { carta: TCarta; giro: number }) {
     const el = ref.current
     const pila = el?.closest('.tapete')?.querySelector('.mazo-reyes .mazo-pila')
     if (!el || !pila || typeof el.animate !== 'function') return
-    const a = pila.getBoundingClientRect()
-    const b = el.getBoundingClientRect()
-    const dx = a.left + a.width / 2 - (b.left + b.width / 2)
-    const dy = a.top + a.height / 2 - (b.top + b.height / 2)
+    // En perspectiva la carta está en el paño inclinado: el recorrido se mide en el paño sin
+    // inclinar, y la carta va por el aire (hacia la cámara) antes de caer.
+    const panio = el.closest<HTMLElement>('.panio')
+    const a = panio ? aLocal(panio, centro(pila)) : null
+    const b = panio ? aLocal(panio, centro(el)) : null
+    const [p, q] = a && b ? [a, b] : [centro(pila), centro(el)]
+    const [dx, dy] = [p[0] - q[0], p[1] - q[1]]
     const anim = el.animate(
-      [
-        { transform: `translate(${dx}px, ${dy}px) rotate(-8deg) scale(0.9)` },
-        { transform: `translate(0px, 0px) rotate(${giro}deg) scale(1)` },
-      ],
+      a && b
+        ? [
+            { transform: `translate3d(${dx}px, ${dy}px, 0px) rotate(-8deg) scale(0.9)` },
+            { transform: `translate3d(${dx * 0.45}px, ${dy * 0.45}px, 50px) rotate(${giro / 2}deg) scale(0.95)`, offset: 0.45 },
+            { transform: `translate3d(0px, 0px, 0px) rotate(${giro}deg) scale(1)` },
+          ]
+        : [
+            { transform: `translate(${dx}px, ${dy}px) rotate(-8deg) scale(0.9)` },
+            { transform: `translate(0px, 0px) rotate(${giro}deg) scale(1)` },
+          ],
       { duration: VUELO_REYES_MS, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)', fill: 'backwards' },
     )
     return () => anim.cancel()
@@ -114,7 +126,7 @@ interface PropsMesa {
   reyes: ReyesEnCurso
   /** La sala ya con los lugares nuevos. */
   sala: InfoSala
-  bustos: boolean
+  vistaMesa: VistaMesa
   alTerminar: () => void
 }
 
@@ -124,8 +136,10 @@ interface PropsMesa {
  * los que ya sacaron). Si con equipos al azar cambiaron los compañeros, los avatares se van a sus
  * lugares nuevos. Al final, quién reparte; y arranca la mano.
  */
-export function TiradaEnMesa({ reyes, sala, bustos, alTerminar }: PropsMesa) {
+export function TiradaEnMesa({ reyes, sala, vistaMesa, alTerminar }: PropsMesa) {
   const n = reyes.apodos.length
+  const perspectiva = vistaMesa === 'perspectiva'
+  const { ref: refTapete, medidas } = useMesaEnPerspectiva(perspectiva, n)
   const nuevo = useMemo(() => asientosDespuesDeReyes(reyes.apodos, reyes.lugaresAntes, sala.lugares), [reyes, sala.lugares])
   const yoViejo = reyes.yoAntes
   const yoNuevo = sala.yo ?? nuevo[yoViejo] ?? 0
@@ -151,7 +165,7 @@ export function TiradaEnMesa({ reyes, sala, bustos, alTerminar }: PropsMesa) {
   // Los avatares que cambian de lugar se deslizan de donde estaban al lugar nuevo (FLIP: se
   // mide antes y después de cambiar de posición, y se anima la diferencia).
   const movido = etapa === 'mover' || (etapa === 'aviso' && plan.mover !== null)
-  const tapete = useRef<HTMLElement>(null)
+  const tapete = useRef<HTMLElement | null>(null)
   const antes = useRef<Map<string, DOMRect>>(new Map())
   if (!movido && tapete.current) {
     antes.current = new Map(
@@ -167,15 +181,37 @@ export function TiradaEnMesa({ reyes, sala, bustos, alTerminar }: PropsMesa) {
       const r1 = el.getBoundingClientRect()
       const [dx, dy] = [r0.left - r1.left, r0.top - r1.top]
       if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return
+      const opciones = { duration: MOVER_REYES_MS, easing: 'cubic-bezier(0.45, 0, 0.25, 1)' }
+      const panio = perspectiva ? tapete.current!.querySelector('.panio')?.getBoundingClientRect() : undefined
+      if (!panio) {
+        animaciones.push(el.animate([{ translate: `${dx}px ${dy}px` }, { translate: '0px 0px' }], opciones))
+        return
+      }
+      // En perspectiva caminan alrededor de la mesa (no la cruzan): a mitad de camino pasan por
+      // afuera del paño. Y crecen o se achican según se acerquen o se alejen.
+      const [cx, cy] = [panio.left + panio.width / 2, panio.top + panio.height / 2]
+      const [x0, y0] = [r0.left + r0.width / 2, r0.top + r0.height / 2]
+      const [x1, y1] = [r1.left + r1.width / 2, r1.top + r1.height / 2]
+      const [mx, my] = [(x0 + x1) / 2 - cx, (y0 + y1) / 2 - cy]
+      const largo = Math.hypot(mx, my)
+      // Si cruzaban por el medio, dan la vuelta por el lado de lejos.
+      const [ux, uy] = largo > 20 ? [mx / largo, my / largo] : [0, -1]
+      const radio = Math.max(largo, Math.min(panio.width, panio.height) * 0.62)
+      const [px, py] = [cx + ux * radio - x1, cy + uy * radio - y1]
+      const escala = r0.height / Math.max(1, r1.height)
       animaciones.push(
-        el.animate([{ translate: `${dx}px ${dy}px` }, { translate: '0px 0px' }], {
-          duration: MOVER_REYES_MS,
-          easing: 'cubic-bezier(0.45, 0, 0.25, 1)',
-        }),
+        el.animate(
+          [
+            { translate: `${dx}px ${dy}px`, scale: `${escala}` },
+            { translate: `${px}px ${py}px`, scale: `${(escala + 1) / 2}`, offset: 0.5 },
+            { translate: '0px 0px', scale: '1' },
+          ],
+          opciones,
+        ),
       )
     })
     // Si el efecto se vuelve a correr, las animaciones siguen: no se cortan a mitad de camino.
-  }, [movido])
+  }, [movido, perspectiva])
 
   const lugarDe = (a: number): LugarPublico =>
     sala.lugares[nuevo[a]!] ?? { asiento: a, tipo: 'bot', apodo: reyes.apodos[a] ?? `Jugador ${a + 1}`, avatar: null, conectado: true, anfitrion: false }
@@ -191,9 +227,42 @@ export function TiradaEnMesa({ reyes, sala, bustos, alTerminar }: PropsMesa) {
   // Cuántas cartas lleva cada uno: las de abajo asoman un poco, como una pila.
   const delMismo = reyes.tiradas.map((t, i) => reyes.tiradas.slice(0, i).filter((x) => x.asiento === t.asiento).length)
   const aviso = etapa === 'aviso'
+  const mazoYTirada = (
+    <>
+      <motion.div
+        className={`mazo mazo-reyes${n === 6 ? ' mazo-chico' : ''}`}
+        style={posicionMazo(n, relViejo(tira), perspectiva)}
+        aria-label="Mazo"
+        initial={false}
+        animate={{ opacity: etapa === 'tirada' ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <PilaMazo />
+      </motion.div>
+
+      <motion.div
+        className="centro cartas-en-mesa tirada-reyes"
+        aria-label="Cartas de la tirada de reyes"
+        initial={false}
+        animate={{ opacity: etapa === 'tirada' ? 1 : 0, scale: etapa === 'tirada' ? 1 : 0.96 }}
+        transition={{ duration: 0.3 }}
+      >
+        {reyes.tiradas.slice(0, dadas).map((t, i) => (
+          <div
+            key={i}
+            className={`jugada pos-${relViejo(t.asiento)}`}
+            style={{ '--vuelta': 1 + Math.min(delMismo[i]!, 6) * 0.14, zIndex: i + 1 } as CSSProperties}
+            aria-label={`${reyes.apodos[t.asiento] ?? ''}: ${t.carta.numero === 12 ? 'rey' : 'carta'}`}
+          >
+            <CartaDeReyes carta={t.carta} giro={((i * 37) % 13) - 6} />
+          </div>
+        ))}
+      </motion.div>
+    </>
+  )
 
   return (
-    <div className={`pantalla-mesa n-${n}${bustos ? ' mesa-bustos' : ''} tirando-reyes`}>
+    <div className={`pantalla-mesa n-${n}${vistaMesa === 'sentados' ? ' mesa-bustos' : ''}${perspectiva ? ' mesa-perspectiva' : ''} tirando-reyes`}>
       <header className="marcador">
         <div className="marcador-filas">
           <div className="marcador-fila nosotros">
@@ -212,7 +281,13 @@ export function TiradaEnMesa({ reyes, sala, bustos, alTerminar }: PropsMesa) {
         </div>
       </header>
 
-      <main className="tapete" ref={tapete}>
+      <main
+        className="tapete"
+        ref={(el) => {
+          tapete.current = el
+          refTapete(el)
+        }}
+      >
         {reyes.apodos.map((_, a) =>
           a === yoViejo ? null : (
             <Asiento
@@ -225,40 +300,14 @@ export function TiradaEnMesa({ reyes, sala, bustos, alTerminar }: PropsMesa) {
               esMano={false}
               participa
               arriba={pos(a) * 2 === n}
-              busto={bustos}
+              busto={vistaMesa !== 'circulos'}
+              estilo={perspectiva ? estiloAsiento(medidas, pos(a)) : undefined}
             />
           ),
         )}
 
-        <motion.div
-          className={`mazo mazo-reyes${n === 6 ? ' mazo-chico' : ''}`}
-          style={posicionMazo(n, relViejo(tira))}
-          aria-label="Mazo"
-          initial={false}
-          animate={{ opacity: etapa === 'tirada' ? 1 : 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <PilaMazo />
-        </motion.div>
-
-        <motion.div
-          className="centro cartas-en-mesa tirada-reyes"
-          aria-label="Cartas de la tirada de reyes"
-          initial={false}
-          animate={{ opacity: etapa === 'tirada' ? 1 : 0, scale: etapa === 'tirada' ? 1 : 0.96 }}
-          transition={{ duration: 0.3 }}
-        >
-          {reyes.tiradas.slice(0, dadas).map((t, i) => (
-            <div
-              key={i}
-              className={`jugada pos-${relViejo(t.asiento)}`}
-              style={{ '--vuelta': 1 + Math.min(delMismo[i]!, 6) * 0.14, zIndex: i + 1 } as CSSProperties}
-              aria-label={`${reyes.apodos[t.asiento] ?? ''}: ${t.carta.numero === 12 ? 'rey' : 'carta'}`}
-            >
-              <CartaDeReyes carta={t.carta} giro={((i * 37) % 13) - 6} />
-            </div>
-          ))}
-        </motion.div>
+        {/* En perspectiva, el mazo y las cartas de la tirada se apoyan en el paño inclinado. */}
+        {perspectiva ? <PanioEnPerspectiva n={n}>{mazoYTirada}</PanioEnPerspectiva> : mazoYTirada}
 
         {aviso && (
           <motion.div

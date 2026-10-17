@@ -26,6 +26,7 @@ import { AvisoPedidoSenias, PanelCompaniero, seniasMarcadas } from '../component
 import type { ConexionOnline } from '../conexion/online'
 import { useJuego } from '../estado'
 import { leerPerfil } from '../perfil'
+import { estiloAsiento, haciaAsiento, PanioEnPerspectiva, useMesaEnPerspectiva } from '../componentes/Perspectiva'
 import '../estilos-mesa-online.css'
 import '../estilos-mesa-bustos.css'
 
@@ -85,6 +86,10 @@ export function Mesa() {
   const globosChat = useGlobosChat(chat, silenciados)
   // Ayudas: la explicación de una estrella o de la ficha del tanto, arriba de tu lugar.
   const { explicacion, explicar, cerrar: cerrarExplicacion } = useExplicacion()
+  // Cómo se ve la mesa. En perspectiva, dónde cae cada asiento alrededor del paño inclinado.
+  const { ojear, vistaMesa } = leerPerfil()
+  const perspectiva = vistaMesa === 'perspectiva'
+  const { ref: refTapete, medidas } = useMesaEnPerspectiva(perspectiva, vista?.jugadores.length ?? 0)
 
   useEffect(() => {
     if (!useJuego.getState().conexion) navegar('/')
@@ -103,7 +108,7 @@ export function Mesa() {
   }, [error, mostrarAviso])
 
   // Antes de la primera mano se tiran reyes en la mesa: la mano espera a que termine.
-  if (sala && reyes?.enMesa) return <TiradaEnMesa key={reyes.id} reyes={reyes} sala={sala} bustos={leerPerfil().mesaBustos} alTerminar={cerrarReyes} />
+  if (sala && reyes?.enMesa) return <TiradaEnMesa key={reyes.id} reyes={reyes} sala={sala} vistaMesa={vistaMesa} alTerminar={cerrarReyes} />
   if (!sala || !vista) return <div className="cargando">Repartiendo…</div>
 
   const yo = vista.yo.asiento
@@ -178,7 +183,6 @@ export function Mesa() {
     else if (!s) mostrarAviso('Esa carta no tiene seña')
     else hacerSenia(s)
   }
-  const { ojear, mesaBustos } = leerPerfil()
   const manoAbierta = !ojear || misCartas.length !== 3 || abiertaEn === vista.mano.numero
   const conTira = hayCompanieros && !finDeMano && misCartas.length > 0 && manoAbierta && muestra !== null
   // Menú de jugador: solo online y solo sobre otras personas.
@@ -212,8 +216,36 @@ export function Mesa() {
   const textoRevancha =
     !online || humanos <= 1 ? 'Revancha' : pediRevancha ? 'Esperando a los demás…' : `Revancha ${sala.revancha.length}/${humanos}`
 
+  const mazoYCartas = (
+    <>
+      <Mazo
+        muestra={vista.mano.muestra}
+        n={n}
+        reparteRel={rel(vista.mano.reparte)}
+        avisoCorte={cortando === null || finDeMano ? null : cortando === yo ? 'Cortás vos' : `Corta ${sala.lugares[cortando]?.apodo ?? 'otro'}`}
+        corte={corte}
+        fase={faseCorte}
+        manoRel={rel(vista.mano.mano)}
+        perspectiva={perspectiva}
+      />
+      <CartasEnMesa
+        n={n}
+        rel={rel}
+        mesa={mesa}
+        mostradas={mostradas}
+        apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
+        nuestro={nuestro}
+        levantar={sala.cartasJugadas === 'seLevantan'}
+        // Terminada la mano, lo último queda a la vista con el resultado y lo mostrado.
+        quieta={finDeMano !== null || mostradas.length > 0 || vista.ganador !== null}
+        // En perspectiva, las cartas llegan (y se van) desde el lugar de cada uno alrededor del paño.
+        desdeAsiento={perspectiva ? (pos) => haciaAsiento(medidas, n, pos) : undefined}
+      />
+    </>
+  )
+
   return (
-    <div className={`pantalla-mesa n-${n}${mesaBustos ? ' mesa-bustos' : ''}`}>
+    <div className={`pantalla-mesa n-${n}${vistaMesa === 'sentados' ? ' mesa-bustos' : ''}${perspectiva ? ' mesa-perspectiva' : ''}`}>
       <header className="marcador">
         <div className="marcador-filas">
           <div className="marcador-fila nosotros">
@@ -248,7 +280,7 @@ export function Mesa() {
       </header>
       <EstadoConexion alIrAlInicio={salirDeLaMesa} />
 
-      <main className="tapete">
+      <main className="tapete" ref={refTapete}>
         <div className="registro" aria-live="polite">
           {registro.slice(-3).map((l) => (
             <div key={l.id}>{l.texto.replace(/[━─]+/g, '').trim()}</div>
@@ -295,31 +327,13 @@ export function Mesa() {
               ladoChat={ladoChatArriba}
               // Y los de los costados de arriba hablan debajo de sus cartas: arriba está el de enfrente.
               chatAbajo={n === 6 && (rel(l.asiento) === 2 || rel(l.asiento) === 4)}
-              busto={mesaBustos}
+              busto={vistaMesa !== 'circulos'}
+              estilo={perspectiva ? estiloAsiento(medidas, rel(l.asiento)) : undefined}
             />
           ))}
 
-        <Mazo
-          muestra={vista.mano.muestra}
-          n={n}
-          reparteRel={rel(vista.mano.reparte)}
-          avisoCorte={cortando === null || finDeMano ? null : cortando === yo ? 'Cortás vos' : `Corta ${sala.lugares[cortando]?.apodo ?? 'otro'}`}
-          corte={corte}
-          fase={faseCorte}
-          manoRel={rel(vista.mano.mano)}
-        />
-
-        <CartasEnMesa
-          n={n}
-          rel={rel}
-          mesa={mesa}
-          mostradas={mostradas}
-          apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
-          nuestro={nuestro}
-          levantar={sala.cartasJugadas === 'seLevantan'}
-          // Terminada la mano, lo último queda a la vista con el resultado y lo mostrado.
-          quieta={finDeMano !== null || mostradas.length > 0 || vista.ganador !== null}
-        />
+        {/* En perspectiva, el mazo y las cartas jugadas se apoyan en el paño inclinado. */}
+        {perspectiva ? <PanioEnPerspectiva n={n}>{mazoYCartas}</PanioEnPerspectiva> : mazoYCartas}
       </main>
 
       <section className={`mi-lugar${meToca ? ' le-toca' : ''}${miReloj !== null ? ' con-reloj' : ''}${participa(yo) ? '' : ' fuera'}`}>

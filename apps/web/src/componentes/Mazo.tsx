@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import type { Carta as TCarta, TipoCorte } from '@truco/engine'
 import { Carta } from './Carta'
+import { aLocal, asientoEnPanio, centro } from '../perspectiva'
 
 /**
  * Dónde va el mazo (en % del paño), según la posición del que reparte relativa a quien
@@ -31,12 +32,39 @@ const POSICIONES: Record<number, [number, number][]> = {
   ],
 }
 
-export function lugarMazo(n: number, reparteRel: number): [number, number] {
-  return (POSICIONES[n] ?? POSICIONES[2]!)[reparteRel] ?? [50, 50]
+/**
+ * En la mesa en perspectiva (en % del paño inclinado): sin asientos encima, el mazo va a las
+ * esquinas. Las de cerca, un poco más adentro: abajo de todo está el registro y cerca se ve más grande.
+ */
+const POSICIONES_PERSPECTIVA: Record<number, [number, number][]> = {
+  2: [
+    [82, 72],
+    [18, 14],
+  ],
+  4: [
+    [83, 74],
+    [84, 18],
+    [16, 12],
+    [17, 72],
+  ],
+  // En 3 contra 3, las de cerca bien en la esquina: un poco más adentro están las pilas de los costados.
+  6: [
+    [85, 91],
+    [84, 46],
+    [76, 9],
+    [24, 9],
+    [16, 46],
+    [15, 91],
+  ],
 }
 
-export function posicionMazo(n: number, reparteRel: number): { left: string; top: string } {
-  const [x, y] = lugarMazo(n, reparteRel)
+export function lugarMazo(n: number, reparteRel: number, perspectiva = false): [number, number] {
+  const tabla = perspectiva ? POSICIONES_PERSPECTIVA : POSICIONES
+  return (tabla[n] ?? tabla[2]!)[reparteRel] ?? [50, 50]
+}
+
+export function posicionMazo(n: number, reparteRel: number, perspectiva = false): { left: string; top: string } {
+  const [x, y] = lugarMazo(n, reparteRel, perspectiva)
   return { left: `${x}%`, top: `${y}%` }
 }
 
@@ -130,10 +158,12 @@ const subir = (capas: number) => ({ x: capas * ESPESOR[0], y: capas * ESPESOR[1]
  * - sacar la muestra: la de arriba se levanta, se da vuelta y queda de muestra;
  * - se la doy al mano: una sola de arriba se separa y pasa al fondo (de ahí sale para el mano).
  */
-function CorteEnMazo({ tipo, hacia: [hx, hy] }: { tipo: TipoCorte; hacia: [number, number] }) {
+function CorteEnMazo({ tipo, hacia: [hx, hy], alto = 0 }: { tipo: TipoCorte; hacia: [number, number]; alto?: number }) {
   const s = CORTE_MS[tipo] / 1000
   const mitad = CAPAS / 2
   const L = 54
+  // En perspectiva lo que se separa se levanta del paño (hacia la cámara): `alto` px en lo más alto.
+  const z = (...k: number[]) => (alto ? { z: k.map((x) => x * alto) } : {})
   if (tipo === 'convencional') {
     const arriba = subir(-mitad)
     const abajo = subir(mitad)
@@ -147,6 +177,7 @@ function CorteEnMazo({ tipo, hacia: [hx, hy] }: { tipo: TipoCorte; hacia: [numbe
             x: [0, hx * L * 0.35, hx * L, hx * L, arriba.x],
             y: [0, hy * L * 0.35 - 12, hy * L, hy * L, arriba.y],
             rotate: [0, 4, 7, 7, 0],
+            ...z(0, 1, 0.6, 0.6, 0),
           }}
           transition={{ duration: s, times: [0, 0.18, 0.38, 0.72, 1], ease: 'easeInOut' }}
         >
@@ -160,6 +191,8 @@ function CorteEnMazo({ tipo, hacia: [hx, hy] }: { tipo: TipoCorte; hacia: [numbe
             y: [0, 0, hy * L * 0.5 - 16, hy * L + abajo.y, abajo.y],
             rotate: [0, 0, 4, 7, 0],
             zIndex: [0, 0, 2, 2, 2],
+            // Pasa por encima de la otra mitad: en perspectiva, más alta que ella.
+            ...z(0, 0, 1.4, 0.9, 0),
           }}
           transition={{ duration: s, times: [0, 0.38, 0.55, 0.72, 1], ease: 'easeInOut' }}
         >
@@ -176,7 +209,7 @@ function CorteEnMazo({ tipo, hacia: [hx, hy] }: { tipo: TipoCorte; hacia: [numbe
           className="mazo-grupo"
           style={{ transformPerspective: 500 }}
           initial={false}
-          animate={{ x: [0, 8 * hx, 26], y: [0, -20, -6], rotate: [0, 0, 50], rotateY: [0, 0, 90], opacity: [1, 1, 1, 0] }}
+          animate={{ x: [0, 8 * hx, 26], y: [0, -20, -6], rotate: [0, 0, 50], rotateY: [0, 0, 90], opacity: [1, 1, 1, 0], ...z(0, 1, 0.3) }}
           transition={{ duration: s * 0.6, times: [0, 0.45, 1], ease: 'easeInOut', opacity: { duration: s * 0.6, times: [0, 0.5, 0.98, 1] } }}
         >
           <Capas desde={CAPAS - 1} hasta={CAPAS} />
@@ -195,6 +228,7 @@ function CorteEnMazo({ tipo, hacia: [hx, hy] }: { tipo: TipoCorte; hacia: [numbe
           y: [0, hy * L * 0.75 - 10, hy * L * 0.75 - 10, subir(-(CAPAS - 1)).y + 7, subir(-(CAPAS - 1)).y + 7],
           rotate: [0, 6, 6, -3, -3],
           zIndex: [2, 2, -1, -1, -1],
+          ...z(0, 0.8, 0.8, 0, 0),
         }}
         transition={{ duration: s, times: [0, 0.3, 0.45, 0.8, 1], ease: 'easeInOut' }}
       >
@@ -223,6 +257,50 @@ function Reparto({ orden, desdeAbajo }: { orden: number[]; desdeAbajo: boolean }
     const escala = raiz.offsetWidth > 0 ? origen.width / raiz.offsetWidth : 1
     const cx = origen.left + origen.width / 2
     const cy = origen.top + origen.height / 2
+    // Mesa en perspectiva: el mazo está en el paño inclinado. Todo se mide en el paño sin inclinar
+    // y las cartas vuelan por el aire (hacia la cámara) hasta el lugar de cada uno.
+    const panio = raiz.closest<HTMLElement>('.panio')
+    if (panio) {
+      const mazo = raiz.closest<HTMLElement>('.mazo')
+      const escalaMazo = Number.parseFloat(mazo ? getComputedStyle(mazo).scale : '') || 1
+      const o = aLocal(panio, centro(raiz))
+      const mano = mesa.querySelector('.mi-lugar .mi-mano-zona')
+      const n = orden.length
+      const local = (pos: number): [number, number] => {
+        if (pos === 0 && mano) {
+          // Las tuyas, hasta tu mano (un poco más arriba del medio: ahí asoman las cartas).
+          const r = mano.getBoundingClientRect()
+          const p = aLocal(panio, [r.left + r.width / 2, r.top + r.height * 0.35])
+          if (p) return p
+        }
+        const [fx, fy] = asientoEnPanio(n, pos)
+        return [fx * panio.offsetWidth, fy * panio.offsetHeight]
+      }
+      if (!o) return
+      const animaciones: Animation[] = []
+      raiz.querySelectorAll<HTMLElement>('.reparto-carta').forEach((el, i) => {
+        if (typeof el.animate !== 'function') return
+        const pos = orden[i % n]!
+        const [tx, ty] = local(pos)
+        const [dx, dy] = [(tx - o[0]) / escalaMazo, (ty - o[1]) / escalaMazo]
+        const giro = (i % 2 ? 1 : -1) * 12
+        const [x0, y0] = i === 0 && desdeAbajo ? [5, 7] : [subir(CAPAS - 1).x, subir(CAPAS - 1).y]
+        // Las tuyas vienen hacia vos y quedan paradas, como en la mano; las de los demás bajan al borde y se van.
+        const tuya = pos === 0
+        animaciones.push(
+          el.animate(
+            [
+              { transform: `translate3d(${x0}px, ${y0}px, 0px) rotate(-8deg) rotateX(0deg)`, opacity: 1 },
+              { transform: `translate3d(${x0 + dx * 0.5}px, ${y0 + dy * 0.5}px, 46px) rotate(${giro / 2}deg) rotateX(${tuya ? -20 : 0}deg)`, opacity: 1, offset: 0.45 },
+              { transform: `translate3d(${dx}px, ${dy}px, ${tuya ? 30 : 10}px) rotate(${giro}deg) rotateX(${tuya ? -40 : 0}deg) scale(0.8)`, opacity: 1, offset: 0.85 },
+              { transform: `translate3d(${dx}px, ${dy}px, ${tuya ? 30 : 0}px) rotate(${giro}deg) rotateX(${tuya ? -40 : 0}deg) scale(0.7)`, opacity: 0 },
+            ],
+            { duration: VUELO_REPARTO_MS, delay: i * paso, easing: 'ease-out', fill: 'both' },
+          ),
+        )
+      })
+      return () => animaciones.forEach((a) => a.cancel())
+    }
     const destino = (pos: number) => {
       const el = pos === 0 ? mesa.querySelector('.mi-lugar .mi-mano-zona') : mesa.querySelector(`.tapete .asiento.pos-${pos} .asiento-avatar`)
       const r = el?.getBoundingClientRect()
@@ -274,6 +352,8 @@ interface Props {
   fase?: FaseCorte
   /** Posición del mano (relativa a quien mira): por él empieza el reparto. */
   manoRel?: number
+  /** Mesa en perspectiva: al cortar, lo que se separa se levanta del paño. */
+  perspectiva?: boolean
 }
 
 /**
@@ -281,10 +361,10 @@ interface Props {
  * muestra: el mazo brilla con el aviso de quién corta. Al cortar se ve el corte en el mazo,
  * las cartas salen hacia cada jugador y la muestra se da vuelta.
  */
-export function Mazo({ muestra, n, reparteRel, avisoCorte = null, corte = null, fase = null, manoRel = 0 }: Props) {
+export function Mazo({ muestra, n, reparteRel, avisoCorte = null, corte = null, fase = null, manoRel = 0, perspectiva = false }: Props) {
   const reducido = useReducedMotion()
   const esperando = avisoCorte !== null
-  const [x, y] = lugarMazo(n, reparteRel)
+  const [x, y] = lugarMazo(n, reparteRel, perspectiva)
   const tipo = corte?.corte ?? null
   // La muestra espera al giro del final; si se sacó en el corte, sale ahí mismo.
   const verMuestra = !!muestra && (fase === null || fase === 'muestra' || tipo === 'sacarMuestra')
@@ -295,7 +375,7 @@ export function Mazo({ muestra, n, reparteRel, avisoCorte = null, corte = null, 
   return (
     <div
       className={`mazo${n === 6 ? ' mazo-chico' : ''}${esperando ? ' mazo-esperando-corte' : ''}${fase ? ' mazo-cortando' : ''}`}
-      style={posicionMazo(n, reparteRel)}
+      style={posicionMazo(n, reparteRel, perspectiva)}
       aria-label={muestra ? 'Mazo y muestra' : 'Mazo sin cortar'}
       data-fase={fase ?? undefined}
     >
@@ -315,7 +395,7 @@ export function Mazo({ muestra, n, reparteRel, avisoCorte = null, corte = null, 
       )}
       {fase === 'corte' && tipo ? (
         // Hacia el centro del paño: del borde no se sale.
-        <CorteEnMazo key={corte!.id} tipo={tipo} hacia={haciaElCentro(x, y)} />
+        <CorteEnMazo key={corte!.id} tipo={tipo} hacia={haciaElCentro(x, y)} alto={perspectiva ? 26 : 0} />
       ) : (
         <PilaMazo />
       )}

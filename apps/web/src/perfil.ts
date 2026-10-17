@@ -57,8 +57,12 @@ export interface Perfil {
   baraja: Baraja
   /** Si las cartas jugadas quedan en la mesa o se levantan en cada vuelta (contra bots y al crear una sala). */
   cartasJugadas: CartasJugadas
-  /** Prueba: en la mesa, los demás sentados de medio cuerpo detrás del paño (en vez del círculo). */
-  mesaBustos: boolean
+  /**
+   * Cómo se ve la mesa: los demás en círculos, sentados de medio cuerpo detrás del paño, o la
+   * mesa entera en perspectiva, como sentado frente a ella. Antes era `mesaBustos` (sí o no):
+   * al leer el perfil se pasa a este campo (ver `vistaGuardada`).
+   */
+  vistaMesa: VistaMesa
   /** La mesa (paño y madera) con la que se ve la partida y el fondo de la app (cosmético). */
   mesa: IdMesa
   /** La letra de toda la app (cosmético). Es solo tuya: no viaja al servidor. */
@@ -71,6 +75,21 @@ export interface Perfil {
 }
 
 const CLAVE = 'truco.perfil'
+
+/** Las vistas de la mesa que se pueden elegir. */
+export const VISTAS_MESA = ['circulos', 'sentados', 'perspectiva'] as const
+export type VistaMesa = (typeof VISTAS_MESA)[number]
+
+const esVistaMesa = (v: unknown): v is VistaMesa => VISTAS_MESA.includes(v as VistaMesa)
+
+/**
+ * La vista de la mesa de un perfil guardado. Los de antes no tienen `vistaMesa` sino
+ * `mesaBustos`: prendido eran los sentados y apagado (o sin nada), los círculos.
+ */
+export function vistaGuardada(guardado: { vistaMesa?: unknown; mesaBustos?: unknown } | null | undefined): VistaMesa {
+  if (esVistaMesa(guardado?.vistaMesa)) return guardado.vistaMesa
+  return guardado?.mesaBustos === true ? 'sentados' : 'circulos'
+}
 
 function nuevoId(): string {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -102,15 +121,19 @@ export function leerPerfil(): Perfil {
     seniasHabilitadas: true,
     tiempos: TIEMPOS_SALA_DEFAULT,
     baraja: BARAJA_DEFAULT,
-    mesaBustos: false,
+    vistaMesa: 'circulos',
     cartasJugadas: CARTAS_JUGADAS_DEFAULT,
     mesa: MESA_DEFAULT,
     tipografia: TIPOGRAFIA_DEFAULT,
     tiendaDesbloqueada: false,
   }
   try {
-    const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as Partial<Perfil> | null
-    const perfil = { ...porDefecto, ...(guardado ?? {}) }
+    const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as (Partial<Perfil> & { mesaBustos?: unknown }) | null
+    const { mesaBustos: _vieja, ...sinVieja } = guardado ?? {}
+    const perfil: Perfil = { ...porDefecto, ...sinVieja }
+    perfil.vistaMesa = vistaGuardada(guardado)
+    // El campo viejo se reemplaza por el nuevo (una sola vez): la elección de cada uno se conserva.
+    const migrada = !!guardado && (guardado.vistaMesa !== perfil.vistaMesa || 'mesaBustos' in guardado)
     perfil.tiendaDesbloqueada = perfil.tiendaDesbloqueada === true
     perfil.cartasJugadas = normalizarCartasJugadas(perfil.cartasJugadas)
     perfil.tirarReyes = normalizarTirarReyes(perfil.tirarReyes)
@@ -119,7 +142,7 @@ export function leerPerfil(): Perfil {
     const cambio = (['avatar', 'mesa', 'baraja', 'tipografia'] as const).some((k) => cosmeticos[k] !== perfil[k])
     Object.assign(perfil, cosmeticos)
     // Se guarda enseguida: el perfil nuevo o migrado tiene que ser el mismo en todas las pantallas.
-    if (!guardado || cambio) guardarPerfil(perfil)
+    if (!guardado || cambio || migrada) guardarPerfil(perfil)
     return perfil
   } catch {
     return porDefecto
@@ -151,11 +174,14 @@ export function guardarPerfil(p: Perfil) {
 }
 
 /**
- * La mesa de bustos todavía es una prueba: se prende y se apaga desde Más opciones o con
- * `?bustos=1` / `?bustos=0` en la dirección (queda guardado, así sobrevive al ir a la mesa).
+ * La vista de la mesa se elige en Más opciones, y también con `?vista=circulos|sentados|perspectiva`
+ * en la dirección (queda guardada, así sobrevive al ir a la mesa). Sigue andando el `?bustos=1` /
+ * `?bustos=0` de cuando los sentados eran una prueba.
  */
-export function bustosDesdeUrl(busqueda: string) {
-  const valor = new URLSearchParams(busqueda).get('bustos')
-  if (valor !== '1' && valor !== '0') return
-  guardarPerfil({ ...leerPerfil(), mesaBustos: valor === '1' })
+export function vistaDesdeUrl(busqueda: string) {
+  const params = new URLSearchParams(busqueda)
+  const vista = params.get('vista')
+  const bustos = params.get('bustos')
+  const elegida: VistaMesa | null = esVistaMesa(vista) ? vista : bustos === '1' ? 'sentados' : bustos === '0' ? 'circulos' : null
+  if (elegida) guardarPerfil({ ...leerPerfil(), vistaMesa: elegida })
 }
