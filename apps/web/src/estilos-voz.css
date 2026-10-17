@@ -1,0 +1,178 @@
+/* ── Chat de voz: el botón del marcador, su panel, el botón Hablar y el anillo de quien habla ── */
+
+.boton-voz {
+  position: relative;
+}
+/* Apagada: el micrófono a medio tono, como invitando a activarla. */
+.boton-voz.voz-apagada {
+  opacity: 0.65;
+}
+.boton-voz.voz-abierta {
+  background: color-mix(in srgb, var(--en-linea) 35%, transparent);
+  border-color: var(--en-linea);
+}
+/* Micrófono cerrado o sin micrófono: el ícono tachado. */
+.boton-voz:is(.voz-cerrada, .voz-sin-microfono)::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70%;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--peligro);
+  translate: -50% -50%;
+  rotate: -45deg;
+}
+.boton-voz.pidiendo {
+  animation: voz-pidiendo 1s ease-in-out infinite;
+}
+@keyframes voz-pidiendo {
+  50% {
+    opacity: 0.4;
+  }
+}
+@media (max-width: 380px) {
+  .marcador-botones .boton-voz {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.panel-voz-fondo {
+  position: fixed;
+  z-index: 40;
+}
+.panel-voz {
+  width: min(100%, 300px);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--tapete), var(--tapete-oscuro));
+  box-shadow:
+    0 0 0 4px var(--madera-clara),
+    0 14px 34px rgb(0 0 0 / 0.5);
+  color: var(--texto-claro);
+  animation: modal-entra 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+.panel-voz-titulo {
+  margin: 0;
+  font-size: 1rem;
+}
+.panel-voz-aviso {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radio);
+  background: var(--peligro-fondo);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+.panel-voz-mute.cerrado {
+  background: var(--peligro);
+  color: #fff;
+}
+.panel-voz-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-size: 0.86rem;
+}
+.panel-voz-lista li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radio);
+  background: rgb(255 255 255 / 0.1);
+}
+.panel-voz-lista small {
+  opacity: 0.8;
+}
+.panel-voz-lista li[data-estado='conectado'] small {
+  color: var(--en-linea);
+  opacity: 1;
+}
+.panel-voz-lista .panel-voz-vacio {
+  justify-content: center;
+  background: none;
+  opacity: 0.75;
+}
+.panel-voz-botones {
+  display: grid;
+  gap: 6px;
+}
+.panel-voz-botones .menu-jugador-cancelar {
+  min-height: 40px;
+  border: 0;
+  border-radius: var(--radio);
+  background: rgb(255 255 255 / 0.12);
+  color: var(--texto-claro);
+  font-weight: 800;
+}
+
+/* Mantener apretado para hablar: a mano del pulgar, sobre el borde derecho de la mesa. */
+.boton-hablar {
+  position: fixed;
+  right: 12px;
+  bottom: calc(42vh + env(safe-area-inset-bottom, 0px));
+  z-index: 26;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  width: 68px;
+  height: 68px;
+  padding: 0;
+  border: 2px solid var(--panel-borde);
+  border-radius: 50%;
+  background: var(--panel-fuerte);
+  color: var(--texto-claro);
+  font-weight: 800;
+  font-size: 0.72rem;
+  box-shadow: var(--sombra);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.boton-hablar span {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.boton-hablar.pulsando {
+  background: var(--exito);
+  border-color: var(--en-linea);
+  scale: 1.08;
+}
+
+/* El anillo de quien habla: un halo alrededor del avatar que crece con el nivel del audio. */
+.anillo-voz {
+  --nivel: 0;
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 0 0 transparent;
+  transition:
+    box-shadow 0.12s ease-out,
+    opacity 0.2s;
+}
+.anillo-voz.hablando {
+  box-shadow:
+    0 0 0 calc(2px + var(--nivel) * 4px) var(--en-linea),
+    0 0 calc(6px + var(--nivel) * 14px) calc(var(--nivel) * 6px) color-mix(in srgb, var(--en-linea) 60%, transparent);
+}
+.anillo-voz-mute {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  font-size: 0.75rem;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.6));
+}
+@media (prefers-reduced-motion: reduce) {
+  .anillo-voz {
+    transition: none;
+  }
+}

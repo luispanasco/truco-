@@ -13,6 +13,7 @@ import { TiradaDeReyes, TiradaEnMesa } from '../componentes/Reyes'
 import { Asiento, Avatar, avatarDeLugar, MarcaMano } from '../componentes/Asiento'
 import { CartasEnMesa } from '../componentes/CartasEnMesa'
 import { BotonChat, PanelChat, useNoLeidos } from '../componentes/Chat'
+import { AnilloVoz, ControlesVoz } from '../componentes/ControlesVoz'
 import { EstadoConexion } from '../componentes/EstadoConexion'
 import { GloboDeChat, useGlobosChat } from '../componentes/GlobosChat'
 import { Fosforos } from '../componentes/Fosforos'
@@ -272,6 +273,7 @@ export function Mesa() {
           )}
         </div>
         <div className="marcador-botones">
+          <ControlesVoz />
           <BotonChat noLeidos={noLeidos} alTocar={() => setPanel('chat')} />
           <BotonSonido />
           <button type="button" className="boton-salir" onClick={() => setConfirmarSalida(true)} aria-label="Salir de la mesa">
@@ -352,6 +354,7 @@ export function Mesa() {
         <div className="mi-info">
           <div className="asiento-avatar">
             <Avatar lugar={lugarYo} tam="chico" />
+            <AnilloVoz asiento={yo} />
             {miReloj !== null && <AnilloReloj venceEn={miReloj} />}
             {e.mano === yo && <MarcaMano />}
           </div>
@@ -377,7 +380,8 @@ export function Mesa() {
             {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
             {hayCompanieros && <BotonSenias alTocar={() => setPanel('senias')} cerrado={seniasCerradas} />}
             {!finDeMano && <BotonPasar vista={vista} activo={pasando} alCambiar={setPasando} />}
-            {!finDeMano && <BotonPie vista={vista} abierto={pieAbierto} alCambiar={(a) => setPieAbiertoEn(a ? vista.mano.numero : null)} />}
+            {/* Con chat de voz, lo del pie se dice hablando. */}
+            {!finDeMano && !sala.voz && <BotonPie vista={vista} abierto={pieAbierto} alCambiar={(a) => setPieAbiertoEn(a ? vista.mano.numero : null)} />}
             {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
           </span>
         </div>

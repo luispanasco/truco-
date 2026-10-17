@@ -100,6 +100,7 @@ function salaDeEspera(tiempos: InfoSala['tiempos']): InfoSala {
     tiempos,
     cartasJugadas: 'quedan',
     tirarReyes: 'no',
+    voz: false,
     mesa: 'boliche',
     baraja: 'propia',
     chatEquipo: false,

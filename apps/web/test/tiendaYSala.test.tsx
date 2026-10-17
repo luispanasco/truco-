@@ -166,6 +166,7 @@ function salaDeAna(mesa: InfoSala['mesa'], baraja: InfoSala['baraja'], yo = 1): 
     tiempos: { turnoS: 30, primeraJugadaS: 60 },
     cartasJugadas: 'quedan',
     tirarReyes: 'no',
+    voz: false,
     mesa,
     baraja,
     chatEquipo: false,

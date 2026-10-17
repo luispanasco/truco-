@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { LugarPublico } from '@truco/shared'
 import { Avatar } from './Asiento'
+import { OpcionVozJugador } from './ControlesVoz'
 
 export const MOTIVOS_REPORTE = [
   { id: 'insultos', texto: 'Insultos' },
@@ -83,6 +84,7 @@ export function MenuJugador({
               <span aria-hidden="true">{silenciado ? '🔊' : '🔇'}</span>
               {silenciado ? 'Dejar de silenciar' : 'Silenciar'}
             </button>
+            <OpcionVozJugador asiento={lugar.asiento} alCerrar={alCerrar} />
             <button type="button" className="peligro" onClick={() => setPaso('reportar')}>
               <span aria-hidden="true">🚩</span>
               Reportar

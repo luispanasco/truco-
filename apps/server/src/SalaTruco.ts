@@ -72,6 +72,7 @@ import { pagarPartida } from './cuentas/monedas'
 import { actualizarElo } from './cuentas/elo'
 import { entrar } from './cuentas/cuentas'
 import { inventario } from './cuentas/tienda'
+import { VozDeSala } from './voz'
 
 export interface Tiempos {
   /**
@@ -243,6 +244,13 @@ export class SalaTruco extends Room {
   /** Por invitado: asientos que silenció. */
   private silenciados = new Map<string, Set<number>>()
   private historialChat: MensajeChat[] = []
+  /** Chat de voz (ver voz.ts): lo pide el anfitrión; la cola pública nunca lo tiene. */
+  private vozPedida = true
+  private voz = new VozDeSala({
+    activa: () => this.conVoz(),
+    asientoDe: (sessionId) => this.lugares.find((l) => l.sessionId === sessionId && this.humanoConectado(l.asiento))?.asiento ?? null,
+    clientes: () => this.clients,
+  })
 
   // ── Ciclo de vida ────────────────────────────────────────────────
 
@@ -320,6 +328,7 @@ export class SalaTruco extends Room {
   }
 
   override onDrop(client: Client) {
+    this.voz.salir(client)
     const lugar = this.lugarDe(client)
     if (lugar) {
       lugar.conectado = false
@@ -338,6 +347,7 @@ export class SalaTruco extends Room {
   }
 
   override onLeave(client: Client) {
+    this.voz.salir(client)
     const lugar = this.lugarDe(client)
     if (!lugar) return
     if (this.fase === 'esperando') {
@@ -465,6 +475,7 @@ export class SalaTruco extends Room {
       const e = enfrentamientoActual(this.estado)
       const equipo = equipoDe(asiento)
       if (liderDe(this.estado, e, equipo) !== asiento) throw new Rechazo('Sugiere el pie')
+      if (this.conVoz()) throw new Rechazo('Con chat de voz, el pie habla: no hay sugerencias')
       const valida: Sugerencia | null =
         sugerencia?.tipo === 'veni'
           ? { tipo: 'veni' }
@@ -547,6 +558,16 @@ export class SalaTruco extends Room {
       this.pedidosRevancha.add(asiento)
       if (!this.revisarRevancha()) this.enviarSala()
     })
+
+    manejar('voz', (client, _asiento, datos) => {
+      const motivo = this.voz.cambiar(client, datos)
+      if (motivo) throw new Rechazo(motivo)
+    })
+
+    manejar('senalVoz', (client, _asiento, datos) => {
+      const motivo = this.voz.reenviar(client, datos)
+      if (motivo) throw new Rechazo(motivo)
+    })
   }
 
   // ── Configuración y espera ───────────────────────────────────────
@@ -554,11 +575,13 @@ export class SalaTruco extends Room {
   private aplicarConfiguracion(op: Partial<OpcionesCrearSala>) {
     // El modo sucio se habilita recién en la fase 3. Las malas y el tramo del pica-pica salen del largo.
     const { puntosMalas: _malas, tramoPicaPica: _tramo, ...pedido } = { ...this.config, ...(op.config ?? {}) }
+    if (typeof op.voz === 'boolean') this.vozPedida = op.voz
     const puntosPartida = (LARGOS_PARTIDA as readonly number[]).includes(pedido.puntosPartida) ? pedido.puntosPartida : 30
     this.config = crearConfig({
       ...pedido,
       puntosPartida,
-      toquesYGritos: pedido.toquesYGritos === 'pie' ? 'pie' : 'cualquiera',
+      // Con chat de voz, lo del pie (mandar a tocar o a gritar) se dice hablando.
+      toquesYGritos: pedido.toquesYGritos === 'pie' && !this.conVoz() ? 'pie' : 'cualquiera',
       corte: pedido.corte === true,
       modoSucio: false,
     })
@@ -984,6 +1007,7 @@ export class SalaTruco extends Room {
       const asiento = (client.userData as DatosCliente | undefined)?.asiento ?? null
       this.enviar(client, 'sala', this.infoSala(asiento))
     }
+    this.voz.difundir()
   }
 
   private infoSala(yo: number | null): InfoSala {
@@ -1000,6 +1024,7 @@ export class SalaTruco extends Room {
       tiempos: this.configTiempos,
       cartasJugadas: this.cartasJugadas,
       tirarReyes: this.tirarReyes,
+      voz: this.conVoz(),
       mesa: this.delAnfitrion()?.mesa ?? MESA_DEFAULT,
       baraja: this.delAnfitrion()?.baraja ?? BARAJA_DEFAULT,
       chatEquipo: this.chatEquipo(),
@@ -1017,6 +1042,10 @@ export class SalaTruco extends Room {
   }
 
   // ── Utilidades ───────────────────────────────────────────────────
+
+  private conVoz(): boolean {
+    return !this.publica && this.vozPedida
+  }
 
   private chatEquipo(): boolean {
     return !this.publica && this.lugares.length > 2

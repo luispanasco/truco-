@@ -82,6 +82,7 @@ function partida2v2({
     tiempos: { turnoS: 30, primeraJugadaS: 60 },
     cartasJugadas: 'quedan',
     tirarReyes: 'no',
+    voz: false,
     mesa: 'boliche',
     baraja: 'propia',
     fase: 'jugando',

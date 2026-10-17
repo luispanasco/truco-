@@ -74,6 +74,8 @@ export interface Perfil {
    * lo acepta mientras tenga prendida la tienda de prueba. En la fase 2 se va: vale lo comprado.
    */
   tiendaDesbloqueada: boolean
+  /** Chat de voz: el micrófono se abre solo mientras mantenés apretado el botón para hablar. */
+  vozPulsar: boolean
 }
 
 const CLAVE = 'truco.perfil'
@@ -128,6 +130,7 @@ export function leerPerfil(): Perfil {
     mesa: MESA_DEFAULT,
     tipografia: TIPOGRAFIA_DEFAULT,
     tiendaDesbloqueada: false,
+    vozPulsar: false,
   }
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as (Partial<Perfil> & { mesaBustos?: unknown }) | null
