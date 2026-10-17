@@ -40,28 +40,28 @@ describe('formato del avatar', () => {
   it('las piezas criollas están al final de cada capa, con su precio', () => {
     const precios = (capa: keyof typeof CATALOGO_AVATAR, n: number) => CATALOGO_AVATAR[capa].slice(-n).map((p) => [p.nombre, p.precio])
     expect(precios('accesorio', 6)).toEqual([
-      ['Choripán', 200],
-      ['Tira de asado en el tenedor', 250],
-      ['Pinza de parrilla', 200],
-      ['Vaso de grappamiel', 200],
-      ['Facón de asador con vaina', 300],
-      ['Guitarra criolla', 400],
+      ['Choripán', 350],
+      ['Tira de asado en el tenedor', 350],
+      ['Pinza de parrilla', 350],
+      ['Vaso de grappamiel', 350],
+      ['Facón de asador con vaina', 350],
+      ['Guitarra criolla', 800],
     ])
     expect(precios('bufanda', 3)).toEqual([
       ['Pañuelo rojo', 150],
       ['Pañuelo celeste', 150],
       ['Pañuelo blanco', 150],
     ])
-    expect(precios('sombrero', 1)).toEqual([['Sombrero de gaucho', 300]])
+    expect(precios('sombrero', 1)).toEqual([['Sombrero de gaucho', 350]])
     expect(precios('ropa', 2)).toEqual([
-      ['Poncho', 350],
-      ['Chaleco de campo', 250],
+      ['Poncho', 800],
+      ['Chaleco de campo', 350],
     ])
     expect(CATALOGO_AVATAR.enBoca.map((p) => [p.nombre, p.precio])).toEqual([
       ['Nada en la boca', 0],
-      ['Pipa', 300],
-      ['Pajita de pasto', 100],
-      ['Escarbadientes', 100],
+      ['Pipa', 350],
+      ['Pajita de pasto', 150],
+      ['Escarbadientes', 150],
     ])
     // Lo que estaba antes no se movió.
     expect(CATALOGO_AVATAR.accesorio[9]!.nombre).toBe('Café')

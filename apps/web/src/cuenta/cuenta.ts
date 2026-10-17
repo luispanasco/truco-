@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { direccionServidor } from '../conexion/online'
 import { cosmeticosPermitidos, guardarPerfil, leerPerfil, observarPerfil, type Perfil } from '../perfil'
+import { fijarInventario } from './inventario'
 
 /** La cuenta como la guarda el servidor. */
 export interface DatosCuenta {
@@ -54,7 +55,7 @@ let iniciada = false
 
 /** Arranca una sola vez: averigua si hay cuentas y retoma la sesión guardada. */
 export async function iniciarCuenta(): Promise<void> {
-  if (iniciada) return
+  if (iniciada || useCuenta.getState().estado === 'adentro') return
   iniciada = true
   let estado: { cuentas: boolean; loginDePrueba: boolean }
   try {
@@ -106,8 +107,29 @@ export async function entrarConEmail(email: string) {
 
 export async function salir() {
   borrar(CLAVE_PRUEBA)
+  fijarInventario([])
   await supabase?.auth.signOut()
   useCuenta.setState({ estado: 'afuera', cuenta: null, token: null, linkEnviado: null, saldo: null })
+}
+
+/** Compra un cosmético de la vitrina de hoy. Devuelve el motivo si no se pudo. */
+export async function comprarEnTienda(item: string): Promise<string | null> {
+  const token = useCuenta.getState().token
+  if (!token) return 'Entrá a tu cuenta para comprar.'
+  try {
+    const r = await fetch(`${direccionApi()}/tienda/comprar`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+      body: JSON.stringify({ item }),
+    })
+    const datos = (await r.json()) as { saldo: number; inventario: string[] } | { motivo: string }
+    if ('motivo' in datos) return datos.motivo
+    fijarInventario(datos.inventario)
+    useCuenta.setState({ saldo: datos.saldo })
+    return null
+  } catch {
+    return 'No se pudo comprar. Probá de nuevo.'
+  }
 }
 
 /**
@@ -124,7 +146,9 @@ async function entrar(token: string) {
       body: JSON.stringify({ invitadoId: perfil.invitadoId, apodo: perfil.apodo, avatar: perfil.avatar, preferencias: preferenciasDe(perfil) }),
     })
     if (!r.ok) throw new Error(String(r.status))
-    const { saldo, ...cuenta } = (await r.json()) as DatosCuenta & { saldo: number }
+    const { saldo, inventario, ...cuenta } = (await r.json()) as DatosCuenta & { saldo: number; inventario: string[] }
+    // Primero lo comprado: así lo pago que tenga puesto la cuenta no vuelve a lo gratis.
+    fijarInventario(inventario ?? [])
     if (!cuenta.nueva) guardarPerfil(perfilDeCuenta(perfil, cuenta), 'cuenta')
     useCuenta.setState({ estado: 'adentro', cuenta, token, linkEnviado: null, saldo })
   } catch {

@@ -9,7 +9,9 @@ import {
   leerAvatar,
   type Avatar as TAvatar,
   type CapaAvatar,
+  idPieza,
 } from '@truco/shared'
+import { useInventario } from '../cuenta/inventario'
 import { GESTO, SENIAS, type Senia } from '@truco/bots'
 import { Avatar } from './Avatar'
 import { DURACION_GESTO } from '../gestos'
@@ -67,9 +69,15 @@ const CERCA: readonly CapaAvatar[] = ['ojos', 'cejas', 'nariz', 'boca', 'pecas',
  * El código con otra pieza en una capa, o null si la pieza es de la tienda (todavía no se puede
  * usar, salvo con la tienda de prueba desbloqueada).
  */
-export function conPieza(codigo: string, capa: CapaAvatar, pieza: number, tiendaDesbloqueada = false): string | null {
+export function conPieza(
+  codigo: string,
+  capa: CapaAvatar,
+  pieza: number,
+  tiendaDesbloqueada = false,
+  tenes: ReadonlySet<string> = new Set(),
+): string | null {
   const a = leerAvatar(codigo)
-  if (!a || !(tiendaDesbloqueada || esGratis(capa, pieza))) return null
+  if (!a || !(tiendaDesbloqueada || esGratis(capa, pieza) || tenes.has(idPieza(capa, pieza)))) return null
   return codificarAvatar({ ...a, [capa]: pieza })
 }
 
@@ -124,6 +132,7 @@ function Opciones({
   tiendaDesbloqueada: boolean
 }) {
   const colores = COLORES[capa]
+  const tenes = useInventario()
   return (
     <div
       className={`piezas ${colores ? 'piezas-colores' : 'piezas-miniaturas'}`}
@@ -134,8 +143,8 @@ function Opciones({
       {ordenGratisPrimero(capa).map(([pieza, i]) => {
         const elegida = avatar[capa] === i
         const deTienda = pieza.precio > 0
-        const paga = deTienda && !tiendaDesbloqueada
-        const etiqueta = paga ? `${pieza.nombre}: ${pieza.precio} monedas, pronto en la tienda` : pieza.nombre
+        const paga = deTienda && !tiendaDesbloqueada && !tenes.has(idPieza(capa, i))
+        const etiqueta = paga ? `${pieza.nombre}: ${pieza.precio} monedas, en la tienda` : pieza.nombre
         return (
           <button
             key={i}
@@ -144,7 +153,7 @@ function Opciones({
             aria-checked={elegida}
             aria-disabled={paga || undefined}
             aria-label={etiqueta}
-            title={paga ? `${pieza.precio} monedas · Pronto en la tienda` : pieza.nombre}
+            title={paga ? `${pieza.precio} monedas · Buscala en la tienda` : pieza.nombre}
             className={`pieza${elegida ? ' elegida' : ''}${paga ? ' paga' : ''}`}
             // Las pagas no se eligen, pero se pueden tocar: avisan cuánto cuestan.
             onClick={() => (paga ? alTocarPaga(pieza.nombre, pieza.precio) : alElegir(i))}
@@ -185,6 +194,7 @@ export function EditorAvatar({
   const avatar = leerAvatar(codigo) ?? avatarAlAzar(apodo)
   const [pestania, setPestania] = useState(PESTANIAS_AVATAR[0]!.id)
   const [aviso, setAviso] = useState<string | null>(null)
+  const tenes = useInventario()
   const [senia, setSenia] = useState<{ senia: Senia; id: number } | null>(null)
   const proximaSenia = useRef(0)
 
@@ -199,7 +209,7 @@ export function EditorAvatar({
   const hayPagas = actual.capas.some((c) => CATALOGO_AVATAR[c].some((p) => p.precio > 0))
 
   const elegir = (capa: CapaAvatar, pieza: number) => {
-    const nuevo = conPieza(codificarAvatar(avatar), capa, pieza, tiendaDesbloqueada)
+    const nuevo = conPieza(codificarAvatar(avatar), capa, pieza, tiendaDesbloqueada, tenes)
     setAviso(null)
     if (nuevo) alCambiar(nuevo)
   }
@@ -264,7 +274,7 @@ export function EditorAvatar({
                 avatar={avatar}
                 apodo={apodo}
                 alElegir={(i) => elegir(capa, i)}
-                alTocarPaga={(nombre, precio) => setAviso(`${nombre} cuesta ${precio} monedas. Pronto en la tienda.`)}
+                alTocarPaga={(nombre, precio) => setAviso(`${nombre} cuesta ${precio} monedas. Buscala en la tienda.`)}
                 tiendaDesbloqueada={tiendaDesbloqueada}
               />
             </section>
@@ -273,7 +283,7 @@ export function EditorAvatar({
             <p className="editor-tienda">
               {tiendaDesbloqueada
                 ? 'Tienda de prueba desbloqueada: las del candado abierto son de la tienda.'
-                : 'Las que tienen candado se compran con monedas. Pronto en la tienda.'}
+                : 'Las que tienen candado se compran con monedas en la tienda.'}
             </p>
           )}
         </div>

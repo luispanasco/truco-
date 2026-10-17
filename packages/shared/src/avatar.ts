@@ -6,6 +6,8 @@
  * así que reordenar o borrar piezas cambiaría los avatares ya armados.
  */
 
+import { conRareza, type Rareza } from './rarezas'
+
 export const CAPAS_AVATAR = [
   'piel',
   'cabeza',
@@ -45,10 +47,13 @@ export type Avatar = Record<CapaAvatar, number>
 export interface PiezaAvatar {
   nombre: string
   precio: number
+  /** Las pagas tienen rareza, que fija su precio en la tienda. */
+  rareza?: Rareza
 }
 
 const gratis = (nombre: string): PiezaAvatar => ({ nombre, precio: 0 })
-const paga = (nombre: string, precio: number): PiezaAvatar => ({ nombre, precio })
+/** `nivel` es el precio de la fase 1: de ahí sale la rareza (y el precio, el de la rareza). */
+const paga = (nombre: string, nivel: number): PiezaAvatar => conRareza({ nombre, precio: nivel })
 /** `n` piezas numeradas: las primeras `libres` gratis y el resto al precio dado. */
 function numeradas(nombre: string, n: number, libres: number, precio: number): PiezaAvatar[] {
   return Array.from({ length: n }, (_, i) => (i < libres ? gratis(`${nombre} ${i + 1}`) : paga(`${nombre} ${i + 1}`, precio)))

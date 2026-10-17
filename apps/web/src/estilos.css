@@ -315,7 +315,71 @@ input {
 .fin-elo {
   font-weight: 700;
 }
-.tarjeta.cuenta a.boton {
+.cuenta-enlaces {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+/* Tienda: la vitrina del día, con el color de la rareza en el borde. */
+.vitrina {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vitrina-item {
+  --rareza: #9aa3ad;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  align-content: start;
+  padding: 12px 10px;
+  border-radius: 16px;
+  border: 2px solid var(--rareza);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--rareza) 22%, transparent), rgb(0 0 0 / 0.25));
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.3);
+  text-align: center;
+}
+.vitrina-item.rareza-rara {
+  --rareza: #4f8fe8;
+}
+.vitrina-item.rareza-epica {
+  --rareza: #a15be0;
+}
+.vitrina-item.rareza-legendaria {
+  --rareza: #e8b33a;
+}
+.vitrina-rareza {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rareza);
+}
+.vitrina-muestra {
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+}
+.vitrina-muestra .muestra-mesa {
+  width: 96px;
+}
+.vitrina-letra {
+  font-size: 1.5rem;
+}
+.vitrina-nombre {
+  min-height: 2.4em;
+  overflow-wrap: anywhere;
+}
+.tienda-cabecera .cuenta-saldo,
+.tienda-cabecera .nota-izq {
+  margin: 0;
+}
+.tarjeta.cuenta a.boton,
+.cuenta-enlaces a.boton {
   text-align: center;
   text-decoration: none;
 }

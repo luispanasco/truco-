@@ -5,6 +5,8 @@
  * El id queda guardado en el perfil: no se cambia ni se reusa. Los colores los pone la web.
  */
 
+import { conRarezas, type Rareza } from './rarezas'
+
 /** Una mesa del catálogo. `precio` en monedas de juego: 0 es gratis; las demás, en la tienda (fase 2). */
 export interface Mesa {
   id: string
@@ -12,10 +14,12 @@ export interface Mesa {
   /** El paño y la madera, en pocas palabras (para la muestra del selector). */
   detalle: string
   precio: number
+  rareza?: Rareza
 }
 
-/** Precios provisorios: se ajustan en la fase 2 con la economía. */
-export const MESAS = [
+/** `precio` acá es el de la fase 1: dice la rareza, y el precio final es el de la rareza. */
+export const MESAS = conRarezas(
+  [
   { id: 'boliche', nombre: 'Boliche', detalle: 'Paño verde y madera', precio: 0 },
   { id: 'azul', nombre: 'Azul', detalle: 'Paño azul y madera oscura', precio: 0 },
   { id: 'bordo', nombre: 'Bordó', detalle: 'Paño rojo vino y madera casi negra', precio: 400 },
@@ -23,7 +27,8 @@ export const MESAS = [
   { id: 'celeste', nombre: 'Celeste', detalle: 'Paño celeste y madera clara', precio: 400 },
   { id: 'parrillero', nombre: 'Parrillero', detalle: 'Arpillera y madera rústica', precio: 500 },
   { id: 'cantina', nombre: 'Cantina', detalle: 'Mantel a cuadros y madera clara', precio: 600 },
-] as const satisfies readonly Mesa[]
+  ] as const satisfies readonly Mesa[]
+)
 
 export type IdMesa = (typeof MESAS)[number]['id']
 

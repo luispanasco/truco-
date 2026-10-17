@@ -26,6 +26,7 @@ import { aplicarMesa } from './temaMesa'
 import { aplicarTipografia } from './temaTipografia'
 import './estilos.css'
 import { Ranking } from './pantallas/Ranking'
+import { Tienda } from './pantallas/Tienda'
 import './estilos-online.css'
 
 escucharInstalacion()
@@ -56,6 +57,7 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/sala" element={<Sala />} />
           <Route path="/buscar" element={<Buscar />} />
           <Route path="/ranking" element={<Ranking />} />
+          <Route path="/tienda" element={<Tienda />} />
         </Routes>
       </BrowserRouter>
     </MotionConfig>

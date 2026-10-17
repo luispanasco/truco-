@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { TIPOGRAFIAS, type IdTipografia } from '@truco/shared'
+import { TIPOGRAFIAS, idTipografia, type IdTipografia } from '@truco/shared'
+import { useInventario } from '../cuenta/inventario'
 import { cargarTipografia } from '../temaTipografia'
 import { CandadoAbierto, Precio } from './EditorAvatar'
 import '../estilos-tipografias.css'
@@ -19,6 +20,7 @@ export function SelectorTipografia({
   tiendaDesbloqueada?: boolean
 }) {
   const [aviso, setAviso] = useState<string | null>(null)
+  const tenes = useInventario()
   const elegida = TIPOGRAFIAS.find((t) => t.id === valor) ?? TIPOGRAFIAS[0]
   // Para las muestras hace falta el CSS de todas (es chico). Cada letra se baja recién cuando
   // su muestra se ve, o sea, al abrir Más opciones.
@@ -31,7 +33,7 @@ export function SelectorTipografia({
       <div className="tipografias" role="radiogroup" aria-label="Tipografía">
         {TIPOGRAFIAS.map((t) => {
           const deTienda = t.precio > 0
-          const paga = deTienda && !tiendaDesbloqueada
+          const paga = deTienda && !tiendaDesbloqueada && !tenes.has(idTipografia(t.id))
           return (
             <button
               key={t.id}
@@ -39,12 +41,12 @@ export function SelectorTipografia({
               role="radio"
               aria-checked={valor === t.id}
               aria-disabled={paga || undefined}
-              aria-label={paga ? `${t.nombre}: ${t.precio} monedas, pronto en la tienda` : t.nombre}
-              title={paga ? `${t.precio} monedas · Pronto en la tienda` : t.detalle}
+              aria-label={paga ? `${t.nombre}: ${t.precio} monedas, en la tienda` : t.nombre}
+              title={paga ? `${t.precio} monedas · Buscala en la tienda` : t.detalle}
               className={`tipografia-opcion${valor === t.id ? ' elegida' : ''}${paga ? ' paga' : ''}`}
               // Las pagas no se eligen, pero se pueden tocar: avisan cuánto cuestan.
               onClick={() => {
-                if (paga) return setAviso(`La tipografía ${t.nombre} cuesta ${t.precio} monedas. Pronto en la tienda.`)
+                if (paga) return setAviso(`La tipografía ${t.nombre} cuesta ${t.precio} monedas. Buscala en la tienda.`)
                 setAviso(null)
                 alCambiar(t.id)
               }}

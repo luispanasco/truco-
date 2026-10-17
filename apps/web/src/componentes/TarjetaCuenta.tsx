@@ -26,9 +26,14 @@ export function TarjetaCuenta() {
             <span aria-hidden="true">🪙</span> <strong>{saldo}</strong> {saldo === 1 ? 'moneda' : 'monedas'}
           </p>
         )}
-        <Link className="boton boton-secundario" to="/ranking">
-          Ver el ranking
-        </Link>
+        <div className="cuenta-enlaces">
+          <Link className="boton" to="/tienda">
+            Tienda
+          </Link>
+          <Link className="boton boton-secundario" to="/ranking">
+            Ranking
+          </Link>
+        </div>
         <button type="button" className="boton boton-secundario" onClick={() => void salir()}>
           Salir de la cuenta
         </button>
@@ -78,9 +83,14 @@ export function TarjetaCuenta() {
         </form>
       )}
       {error && <MensajeError>{error}</MensajeError>}
-      <Link className="boton boton-secundario" to="/ranking">
-        Ver el ranking
-      </Link>
+      <div className="cuenta-enlaces">
+        <Link className="boton boton-secundario" to="/tienda">
+          Tienda
+        </Link>
+        <Link className="boton boton-secundario" to="/ranking">
+          Ranking
+        </Link>
+      </div>
     </section>
   )
 }

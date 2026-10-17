@@ -98,7 +98,7 @@ describe('desbloquear la tienda (prueba)', () => {
     expect(leerPerfil().tiendaDesbloqueada).toBe(false)
     expect(leerPerfil().mesa).toBe('boliche')
     expect(document.documentElement.dataset.mesa).toBe('boliche')
-    expect(within(mesas()).getByRole('radio', { name: /Bordó: 400 monedas/ }).getAttribute('aria-disabled')).toBe('true')
+    expect(within(mesas()).getByRole('radio', { name: /Bordó: 800 monedas/ }).getAttribute('aria-disabled')).toBe('true')
   })
 
   it('al apagarlo, las piezas pagas del avatar vuelven a las gratis', () => {

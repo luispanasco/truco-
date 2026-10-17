@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { TIPOGRAFIA_DEFAULT, TIPOGRAFIAS, TODO_PERMITIDO, normalizarTipografia, tipografiaGratis } from '@truco/shared'
+import { PRECIO_RAREZA } from '@truco/shared'
 import { SelectorTipografia } from '../src/componentes/SelectorTipografia'
 import { Inicio } from '../src/pantallas/Inicio'
 import { datosUnirse } from '../src/componentes/Online'
@@ -29,7 +30,7 @@ describe('catálogo de tipografías', () => {
     for (const t of TIPOGRAFIAS) {
       expect(t.nombre.length).toBeGreaterThan(0)
       expect(Number.isInteger(t.precio) && t.precio >= 0).toBe(true)
-      if (t.precio > 0) expect(t.precio >= 200 && t.precio <= 500).toBe(true)
+      if (t.precio > 0) expect(t.rareza && PRECIO_RAREZA[t.rareza]).toBe(t.precio)
       // La familia nombra su letra y, mientras baja, cae en Nunito.
       expect(t.familia).toContain(`'${t.id === 'nunito' ? 'Nunito' : t.nombre}'`)
       expect(t.familia).toContain("'Nunito'")
@@ -112,12 +113,12 @@ describe('selector de tipografías', () => {
       expect(muestra.style.fontFamily).toContain(t.id === 'nunito' ? 'Nunito' : t.nombre)
     }
 
-    const press = within(grupo).getByRole('radio', { name: /Press Start 2P: 500 monedas/ })
+    const press = within(grupo).getByRole('radio', { name: /Press Start 2P: 800 monedas/ })
     expect(press.getAttribute('aria-disabled')).toBe('true')
     expect(press.querySelector('.candado')).toBeTruthy()
     fireEvent.click(press)
     expect(elegidas).toEqual([])
-    expect(screen.getByRole('status').textContent).toMatch(/500 monedas\. Pronto en la tienda/)
+    expect(screen.getByRole('status').textContent).toMatch(/800 monedas\. Buscala en la tienda/)
 
     fireEvent.click(within(grupo).getByRole('radio', { name: 'Alfa Slab One' }))
     expect(elegidas).toEqual(['alfa-slab'])

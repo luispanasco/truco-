@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { MESAS, type IdMesa } from '@truco/shared'
+import { MESAS, idMesa, type IdMesa } from '@truco/shared'
+import { useInventario } from '../cuenta/inventario'
 import { Carta } from './Carta'
 import { CandadoAbierto, Precio } from './EditorAvatar'
 import '../estilos-mesas.css'
@@ -19,6 +20,7 @@ export function SelectorMesa({
   tiendaDesbloqueada?: boolean
 }) {
   const [aviso, setAviso] = useState<string | null>(null)
+  const tenes = useInventario()
   const elegida = MESAS.find((m) => m.id === valor) ?? MESAS[0]
   return (
     <div className="campo">
@@ -26,7 +28,7 @@ export function SelectorMesa({
       <div className="mesas" role="radiogroup" aria-label="Mesa">
         {MESAS.map((m) => {
           const deTienda = m.precio > 0
-          const paga = deTienda && !tiendaDesbloqueada
+          const paga = deTienda && !tiendaDesbloqueada && !tenes.has(idMesa(m.id))
           return (
             <button
               key={m.id}
@@ -34,12 +36,12 @@ export function SelectorMesa({
               role="radio"
               aria-checked={valor === m.id}
               aria-disabled={paga || undefined}
-              aria-label={paga ? `${m.nombre}: ${m.precio} monedas, pronto en la tienda` : m.nombre}
-              title={paga ? `${m.precio} monedas · Pronto en la tienda` : m.detalle}
+              aria-label={paga ? `${m.nombre}: ${m.precio} monedas, en la tienda` : m.nombre}
+              title={paga ? `${m.precio} monedas · Buscala en la tienda` : m.detalle}
               className={`mesa-opcion${valor === m.id ? ' elegida' : ''}${paga ? ' paga' : ''}`}
               // Las pagas no se eligen, pero se pueden tocar: avisan cuánto cuestan.
               onClick={() => {
-                if (paga) return setAviso(`La mesa ${m.nombre} cuesta ${m.precio} monedas. Pronto en la tienda.`)
+                if (paga) return setAviso(`La mesa ${m.nombre} cuesta ${m.precio} monedas. Buscala en la tienda.`)
                 setAviso(null)
                 alCambiar(m.id)
               }}

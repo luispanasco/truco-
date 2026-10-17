@@ -82,12 +82,12 @@ describe('selector de mesas', () => {
     expect(opciones).toHaveLength(MESAS.length)
     for (const m of MESAS) expect(grupo.querySelector(`.muestra-mesa[data-mesa="${m.id}"]`)).toBeTruthy()
 
-    const cantina = within(grupo).getByRole('radio', { name: /Cantina: 600 monedas/ })
+    const cantina = within(grupo).getByRole('radio', { name: /Cantina: 800 monedas/ })
     expect(cantina.getAttribute('aria-disabled')).toBe('true')
     expect(cantina.querySelector('.candado')).toBeTruthy()
     fireEvent.click(cantina)
     expect(elegidas).toEqual([])
-    expect(screen.getByRole('status').textContent).toMatch(/600 monedas\. Pronto en la tienda/)
+    expect(screen.getByRole('status').textContent).toMatch(/800 monedas\. Buscala en la tienda/)
 
     fireEvent.click(within(grupo).getByRole('radio', { name: 'Azul' }))
     expect(elegidas).toEqual(['azul'])

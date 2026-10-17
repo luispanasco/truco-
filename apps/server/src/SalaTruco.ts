@@ -31,6 +31,7 @@ import {
   TODO_PERMITIDO,
   LIMITES,
   normalizarAvatar,
+  permisosDe,
   ESPERA_PEDIR_SENIAS_MS,
   MOTIVO_SENIA_TARDE,
   MOTIVO_SIN_SENIAS,
@@ -70,6 +71,7 @@ import type { Usuario } from './cuentas/auth'
 import { pagarPartida } from './cuentas/monedas'
 import { actualizarElo } from './cuentas/elo'
 import { entrar } from './cuentas/cuentas'
+import { inventario } from './cuentas/tienda'
 
 export interface Tiempos {
   /**
@@ -126,6 +128,8 @@ interface Lugar {
   invitadoId: string | null
   /** La cuenta con la que entró (fase 2), o null si juega como invitado. */
   cuentaId: string | null
+  /** Lo que compró en la tienda (vacío para los invitados). */
+  inventario: string[]
   apodo: string
   avatar: string | null
   sessionId: string | null
@@ -157,6 +161,7 @@ function lugarLibre(asiento: number): Lugar {
     tipo: 'libre',
     invitadoId: null,
     cuentaId: null,
+    inventario: [],
     apodo: '',
     avatar: null,
     sessionId: null,
@@ -260,18 +265,19 @@ export class SalaTruco extends Room {
   }
 
   /** Con un token de sesión, se verifica la cuenta; sin token se entra como invitado. */
-  override async onAuth(_client: Client, opciones: OpcionesUnirse): Promise<Usuario | true> {
+  override async onAuth(_client: Client, opciones: OpcionesUnirse): Promise<(Usuario & { inventario: string[] }) | true> {
     const token = typeof opciones?.token === 'string' ? opciones.token : null
     if (!token || !this.cuentas) return true
     const usuario = await this.cuentas.verificar(token)
     if (!usuario) throw new Error('La sesión venció: volvé a entrar a tu cuenta')
     // Si nunca entró por la API (otra app, una sesión vieja), la cuenta se crea acá.
     await entrar(this.cuentas.base, usuario, { invitadoId: opciones.invitadoId, apodo: opciones.apodo, avatar: opciones.avatar })
-    return usuario
+    return { ...usuario, inventario: await inventario(this.cuentas.base, usuario.id) }
   }
 
   override onJoin(client: Client, opciones: OpcionesUnirse) {
-    const cuentaId = typeof client.auth === 'object' && client.auth ? (client.auth as Usuario).id : null
+    const auth = typeof client.auth === 'object' && client.auth ? (client.auth as Usuario & { inventario: string[] }) : null
+    const cuentaId = auth?.id ?? null
     const invitadoId = texto(opciones?.invitadoId, 64)
     const apodo = texto(opciones?.apodo, LIMITES.largoApodo)
     if (!invitadoId || invitadoId.length < 8) throw new Error('Falta el ID de invitado')
@@ -291,11 +297,13 @@ export class SalaTruco extends Room {
       lugar.invitadoId = invitadoId
     }
     lugar.cuentaId = cuentaId
+    lugar.inventario = auth?.inventario ?? []
     lugar.apodo = filtrarTexto(apodo)
     lugar.tienda = this.tiendaDePrueba && opciones?.tiendaDesbloqueada === true
     // Un avatar inválido o con piezas que no tiene se reemplaza por uno armado desde el apodo.
     lugar.avatar =
-      normalizarAvatar(opciones?.avatar, lugar.tienda ? TODO_PERMITIDO : undefined) ?? codificarAvatar(avatarAlAzar(lugar.apodo))
+      normalizarAvatar(opciones?.avatar, lugar.tienda ? TODO_PERMITIDO : permisosDe(lugar.inventario).avatar) ??
+      codificarAvatar(avatarAlAzar(lugar.apodo))
     this.elegirMesaYBaraja(lugar, opciones ?? {})
     lugar.sessionId = client.sessionId
     lugar.conectado = true
@@ -570,7 +578,7 @@ export class SalaTruco extends Room {
    */
   private elegirMesaYBaraja(lugar: Lugar, op: { mesa?: unknown; baraja?: unknown }) {
     const puede = lugar.tienda ? TODO_PERMITIDO : undefined
-    if (op.mesa !== undefined) lugar.mesa = normalizarMesa(op.mesa, puede)
+    if (op.mesa !== undefined) lugar.mesa = normalizarMesa(op.mesa, puede ?? permisosDe(lugar.inventario).mesa)
     if (op.baraja !== undefined) lugar.baraja = normalizarBaraja(op.baraja, puede)
   }
 

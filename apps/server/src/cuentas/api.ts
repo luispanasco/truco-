@@ -4,6 +4,7 @@ import type { Usuario, Verificador } from './auth'
 import { entrar, guardarPerfil } from './cuentas'
 import { saldo, ultimosMovimientos } from './monedas'
 import { ranking } from './elo'
+import { comprar, CompraRechazada, inventario, vitrina } from './tienda'
 
 export interface Cuentas {
   base: Base
@@ -42,7 +43,7 @@ export function rutasCuentas(c: Cuentas | null): Router {
     '/entrar',
     conSesion(async (req, res, c, u) => {
       const cuenta = await entrar(c.base, u, req.body ?? {})
-      res.json({ ...cuenta, saldo: await saldo(c.base, u.id) })
+      res.json({ ...cuenta, saldo: await saldo(c.base, u.id), inventario: await inventario(c.base, u.id) })
     }),
   )
 
@@ -50,6 +51,23 @@ export function rutasCuentas(c: Cuentas | null): Router {
     '/monedas',
     conSesion(async (_req, res, c, u) => {
       res.json({ saldo: await saldo(c.base, u.id), movimientos: await ultimosMovimientos(c.base, u.id) })
+    }),
+  )
+
+  // La vitrina de hoy la ve cualquiera; comprar pide la sesión.
+  r.get('/tienda', (_req, res) => {
+    res.json(vitrina())
+  })
+
+  r.post(
+    '/tienda/comprar',
+    conSesion(async (req, res, c, u) => {
+      try {
+        res.json(await comprar(c.base, u.id, (req.body as { item?: unknown } | undefined)?.item))
+      } catch (e) {
+        if (!(e instanceof CompraRechazada)) throw e
+        res.status(409).json({ motivo: e.message })
+      }
     }),
   )
 

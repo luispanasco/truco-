@@ -67,18 +67,18 @@ describe('editor de avatar', () => {
     const cambios: string[] = []
     render(<Editor cambios={cambios} />)
     fireEvent.click(screen.getByRole('tab', { name: 'Pelo' }))
-    const paga = screen.getByRole('radio', { name: /^Peinado 13: 100 monedas/ })
+    const paga = screen.getByRole('radio', { name: /^Peinado 13: 150 monedas/ })
     expect(paga.getAttribute('aria-disabled')).toBe('true')
-    expect(paga.textContent).toContain('100')
+    expect(paga.textContent).toContain('150')
     expect(paga.querySelector('.candado')).toBeTruthy()
     fireEvent.click(paga)
     expect(cambios).toHaveLength(0)
-    expect(screen.getByRole('status').textContent).toContain('Pronto en la tienda')
-    expect(screen.getByText(/Pronto en la tienda\.$/, { selector: '.editor-tienda' })).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toContain('Buscala en la tienda')
+    expect(screen.getByText(/monedas en la tienda\.$/, { selector: '.editor-tienda' })).toBeTruthy()
 
     // El mate (accesorio) también es de la tienda.
     fireEvent.click(screen.getByRole('tab', { name: 'Accesorio' }))
-    fireEvent.click(screen.getByRole('radio', { name: /^Mate: 300 monedas/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /^Mate: 350 monedas/ }))
     expect(cambios).toHaveLength(0)
   })
 

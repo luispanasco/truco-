@@ -23,7 +23,9 @@ export interface OpcionesServidor {
  * así se puede probar todo lo pago; '0' la apaga. En la fase 2 se apaga y solo vale lo comprado.
  */
 export function tiendaDePruebaDelEntorno(env: Record<string, string | undefined> = process.env): boolean {
-  return env.TRUCO_TIENDA_DE_PRUEBA !== '0'
+  if (env.TRUCO_TIENDA_DE_PRUEBA !== undefined) return env.TRUCO_TIENDA_DE_PRUEBA !== '0'
+  // Fase 2: con la tienda de verdad, la de prueba queda solo para desarrollar.
+  return env.NODE_ENV !== 'production'
 }
 
 export function crearServidor(op: OpcionesServidor = {}) {

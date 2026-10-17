@@ -6,6 +6,8 @@
  * @fontsource, así andan sin internet. El id queda guardado en el perfil: no se cambia ni se reusa.
  */
 
+import { conRarezas, type Rareza } from './rarezas'
+
 /** Una tipografía del catálogo. `precio` en monedas de juego: 0 es gratis; las demás, en la tienda (fase 2). */
 export interface Tipografia {
   id: string
@@ -24,12 +26,14 @@ export interface Tipografia {
   /** Si trae negrita propia. Si no, el navegador no la inventa (queda más prolija). */
   negrita: boolean
   precio: number
+  rareza?: Rareza
 }
 
 const RESPALDO = "'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
 
-/** Precios provisorios: se ajustan en la fase 2 con la economía. */
-export const TIPOGRAFIAS = [
+/** `precio` acá es el de la fase 1: dice la rareza, y el precio final es el de la rareza. */
+export const TIPOGRAFIAS = conRarezas(
+  [
   {
     id: 'nunito',
     nombre: 'Nunito',
@@ -57,7 +61,8 @@ export const TIPOGRAFIAS = [
   { id: 'permanent-marker', nombre: 'Permanent Marker', detalle: 'De marcador, como en la pizarra', familia: `'Permanent Marker', ${RESPALDO}`, escala: 0.88, negrita: false, precio: 400 },
   { id: 'pacifico', nombre: 'Pacifico', detalle: 'Cursiva redonda, playera', familia: `'Pacifico', ${RESPALDO}`, escala: 0.82, negrita: false, precio: 500 },
   { id: 'press-start', nombre: 'Press Start 2P', detalle: 'De videojuego de los ochenta', familia: `'Press Start 2P', ${RESPALDO}`, escala: 0.58, negrita: false, precio: 500 },
-] as const satisfies readonly Tipografia[]
+  ] as const satisfies readonly Tipografia[]
+)
 
 export type IdTipografia = (typeof TIPOGRAFIAS)[number]['id']
 

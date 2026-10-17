@@ -61,4 +61,14 @@ export const MIGRACIONES: string[] = [
     primary key (cuenta_id, partida)
   );
   `,
+  // 4. Inventario: lo comprado en la tienda, para siempre (lo que se pagó queda en movimientos).
+  `
+  create table inventario (
+    cuenta_id uuid not null references cuentas (id),
+    item text not null,
+    precio integer not null,
+    comprado timestamptz not null default now(),
+    primary key (cuenta_id, item)
+  );
+  `,
 ]

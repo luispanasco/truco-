@@ -935,3 +935,27 @@ El usuario aprobó el plan de la fase 2 en cinco etapas: **2A** cuentas, **2B** 
 - **Tests:** server 75 (6 de Elo, con dos partidas reales: entre dos cuentas, y contra un invitado sin Elo), web 260.
 
 **Falta de la 2D:** la lista de amigos.
+
+## Etapa 2C: tienda con rarezas y vitrina diaria — 2026-10-17
+
+Decisiones del usuario: los precios por rareza propuestos, la vitrina es la misma para todos y la mesa en perspectiva va gratis.
+
+- **Rarezas** (`shared/rarezas.ts`):
+  - cuatro rarezas, cada una con su precio: común 60, rara 150, épica 350 y legendaria 800;
+  - la rareza sale del precio de la fase 1: hasta 50 es común, hasta 150 rara, hasta 300 épica y lo demás legendaria;
+  - los catálogos (avatar, mesas y tipografías) ya traen la rareza y el precio nuevo.
+- **Tienda** (`shared/tienda.ts`):
+  - ids estables (`avatar:<capa>:<pieza>`, `mesa:<id>` y `tipografia:<id>`) y `CATALOGO_TIENDA` con todo lo pago;
+  - **la vitrina del día** es la misma para todos, sale al azar con el día como semilla, no repite y cambia a la medianoche de Uruguay. Tiene 6 lugares: 3 comunes, 2 raras o épicas y 1 épica o legendaria;
+  - `permisosDe(inventario)` dice qué se puede usar: lo gratis y lo comprado.
+- **El servidor:**
+  - la tabla `inventario` (migración 4);
+  - `comprar` descuenta las monedas con un movimiento `compra` y suma el cosmético al inventario, todo en una transacción. Solo vende lo de la vitrina de hoy, si alcanza el saldo y si todavía no lo tenés;
+  - la API: `GET /api/tienda` (pública) y `POST /api/tienda/comprar`. `/entrar` también devuelve el inventario;
+  - en la sala, el avatar y la mesa de quien entra con cuenta se validan contra lo que compró.
+- **La tienda de prueba:** sin `TRUCO_TIENDA_DE_PRUEBA`, ahora va prendida en desarrollo y apagada en producción.
+- **La web:**
+  - la pantalla `/tienda`: cada cosmético muestra cómo te queda (la pieza en tu avatar, la mesa con una carta o la letra escrita), el borde del color de su rareza, el precio, "Usar" o "Puesto", y cuánto falta para que cambie la vitrina;
+  - "Tienda" y "Ranking" se abren desde "Tu cuenta";
+  - lo comprado se desbloquea en el editor del avatar y en los selectores de mesa y tipografía. El inventario se recuerda en el navegador, para que al recargar no se pierda lo puesto.
+- **Tests:** server 83 (8 de la tienda), web 262. Se actualizaron los precios que esperaban los tests de la fase 1.

@@ -11,6 +11,7 @@ import {
   codificarAvatar,
   normalizarAvatar,
   normalizarBaraja,
+  permisosDe,
   normalizarCartasJugadas,
   normalizarMesa,
   normalizarTipografia,
@@ -22,6 +23,7 @@ import {
   type IdTipografia,
 } from '@truco/shared'
 import type { Baraja } from './baraja'
+import { inventarioGuardado } from './cuenta/inventario'
 
 /** Datos que se recuerdan en este navegador. Si el almacenamiento falla, se usan los valores por defecto. */
 export interface Perfil {
@@ -133,12 +135,14 @@ export function leerPerfil(): Perfil {
  * salvo con la tienda de prueba desbloqueada. La tipografía no viaja, pero sigue la misma regla.
  */
 export function cosmeticosPermitidos(p: Perfil): Pick<Perfil, 'avatar' | 'mesa' | 'baraja' | 'tipografia'> {
-  const puede = p.tiendaDesbloqueada ? TODO_PERMITIDO : undefined
+  const todo = p.tiendaDesbloqueada
+  // Lo comprado en la tienda (fase 2) también se puede usar.
+  const tenes = permisosDe(inventarioGuardado())
   return {
-    avatar: normalizarAvatar(p.avatar, puede) ?? avatarDe(p.apodo || p.invitadoId),
-    mesa: normalizarMesa(p.mesa, puede),
-    baraja: normalizarBaraja(p.baraja, puede),
-    tipografia: normalizarTipografia(p.tipografia, puede),
+    avatar: normalizarAvatar(p.avatar, todo ? TODO_PERMITIDO : tenes.avatar) ?? avatarDe(p.apodo || p.invitadoId),
+    mesa: normalizarMesa(p.mesa, todo ? TODO_PERMITIDO : tenes.mesa),
+    baraja: normalizarBaraja(p.baraja, todo ? TODO_PERMITIDO : undefined),
+    tipografia: normalizarTipografia(p.tipografia, todo ? TODO_PERMITIDO : tenes.tipografia),
   }
 }
 
