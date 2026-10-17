@@ -856,3 +856,31 @@ Pedido del usuario: la animación del corte no convencía; que se vea el mazo pa
 - Online, el reloj del primer turno corre durante la tirada (el servidor no sabe que la mesa la está mostrando): si te toca cortar, tenés unos segundos menos.
 
 **Arreglado después (2026-10-13):** online, el reloj del primer turno ya no corre mientras la mesa muestra la tirada de reyes: el plan de tiempos (`planReyes`) pasó a `@truco/shared` y el servidor espera lo que dura la tirada (con el cambio de lugares, si lo hubo) antes de arrancarlo.
+
+---
+
+## Chat de voz (etapa 2E) — 2026-10-17
+
+Primera parte de la fase 2 que no depende de las cuentas: hablar en la mesa. Lo hizo un agente, en la rama `voz` (aparte de las cuentas y de la vista nueva de la mesa, que van en paralelo).
+
+- **WebRTC en malla** (como mucho 6 en la voz): cada par de personas que la activó se conecta directo; el audio nunca pasa por el servidor. Entre dos, la oferta la hace siempre el que entró después a la voz (número más alto), así nunca se cruzan dos ofertas. Si una conexión falla, el que la armó la vuelve a armar.
+- **Servidor** (`apps/server/src/voz.ts`, enganchado con pocas líneas en `SalaTruco.ts`): lleva quién está en la voz y reenvía la señalización (oferta, respuesta y candidatos ICE) **solo al destinatario**, si los dos están en la sala y en la voz, la sala tiene voz y la señal es válida (tamaños topeados); con límite de 150 señales cada 10 s y de 6 cambios de voz cada 10 s por persona. Cada vez que cambia la sala manda a todos quién está en la voz (con los asientos de ahora) y los servidores ICE.
+  - **Servidores ICE:** por defecto un STUN público; con `TRUCO_ICE_SERVERS` (JSON de RTCIceServer[]) se reemplazan. En `voz.ts` está explicado cómo sumar un TURN (coturn).
+  - **Desconexión:** al cortarse la conexión con el servidor (o al irse, o si lo sacan) sale de la voz y los demás cierran su conexión; al volver, la web entra de nuevo sola (con número nuevo, así se arma todo de cero).
+- **Opción de sala `voz`:** prendida por defecto en las privadas (interruptor "Chat de voz" en el formulario); en la cola pública no existe y se rechaza.
+  - **Con voz, lo del pie se dice hablando:** la sala fuerza "toca y grita cualquiera" (el selector de toques y gritos se esconde), el servidor rechaza las sugerencias y en la mesa no aparece el botón "Pie".
+- **En la mesa** (`componentes/ControlesVoz.tsx`, estado en `voz/estado.ts`, la malla en `voz/malla.ts`):
+  - Un botón de micrófono en el marcador. El micrófono se pide **recién al activar la voz**. Si no lo dan (o no hay), se entra igual para escuchar, con un aviso claro de cómo habilitarlo.
+  - El panel de la voz: cerrar y abrir el micrófono (mute propio), "Mantener apretado para hablar" (preferencia propia, `vozPulsar` en el perfil: aparece un botón Hablar a mano del pulgar), quién está en la voz y cómo va la conexión ("conectando…", "se escucha"), y salir de la voz.
+  - **Silenciar la voz de otro** desde su menú (tocando su nombre): solo para vos.
+  - **Quién habla:** un halo verde sobre el avatar que crece con el nivel del audio (AnalyserNode, medido cada 100 ms en escalones), también sobre el tuyo. A quien silenciaste se le ve un 🔇.
+  - Al salir de la sala (o al entrar a otra) se cierran las conexiones y se suelta el micrófono. Contra la compu no hay voz.
+- **Tests:** servidor 68 (nuevos: la señalización llega solo al destinatario y con el número de quien la manda; se rechaza con la voz apagada, en la cola pública, a quien no está en la voz y lo que no es una señal; apagarla saca a todos; quien se va sale de la voz; con voz se fuerza "cualquiera" y no hay sugerencias; los servidores ICE del entorno), web 269 (nuevos: la malla con un WebRTC de mentira: quién ofrece, candidatos que esperan, cerrar al irse, cortarse y volver, mute, mantener para hablar, silenciar a otro, sin micrófono solo escucha; los controles: el permiso recién al activar, el aviso, la preferencia guardada, el menú del jugador, el anillo y el pie escondido con voz). De punta a punta, `voz.spec.ts`: dos Chromium con micrófono de mentira activan la voz, se conectan, a cada uno le llega el audio del otro (el anillo se prende con el pitido), al cerrar el micrófono deja de llegar y al salir de la voz el otro se entera.
+- Los tests del pie (servidor) ahora crean la sala sin voz.
+
+**Pendientes:**
+- **Un TURN de verdad** (coturn) para redes que no dejan conectarse directo; con solo STUN, algunas redes de oficina y de datos móviles no van a conectar. Después, credenciales que vencen (`use-auth-secret`) armadas por el servidor.
+- Probado en Chromium; falta probar en celulares de verdad (Safari en iPhone, sobre todo: permisos y audio que no arranca sin un toque).
+- La voz es solo en la mesa: en la sala de espera todavía no se habla.
+- En la mesa de bustos el halo es redondo aunque el busto no lo sea.
+- Si la voz crece (más de 6, o salas grandes), pasar a un SFU como LiveKit, como dice la especificación.

@@ -300,6 +300,8 @@ export class ConexionLocal implements Conexion {
       tiempos: TIEMPOS_SALA_DEFAULT,
       cartasJugadas: normalizarCartasJugadas(this.op.cartasJugadas),
       tirarReyes: normalizarTirarReyes(this.op.tirarReyes),
+      // Contra la compu no hay chat de voz.
+      voz: false,
       mesa: this.op.mesa ?? MESA_DEFAULT,
       baraja: this.op.baraja ?? BARAJA_DEFAULT,
       fase: this.terminada ? 'terminada' : 'jugando',

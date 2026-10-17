@@ -6,6 +6,7 @@ import type { Accion, Carta, ConfigSala, Evento, Formato, VistaPartida } from '@
 import type { Nivel, Senia, Sugerencia } from '@truco/bots'
 import type { IdBaraja } from './barajas'
 import type { IdMesa } from './mesas'
+import type { EstadoVoz, SenalVoz } from './voz'
 
 /** Nombres de las salas registradas en el servidor. */
 export const SALAS = {
@@ -169,6 +170,8 @@ export interface OpcionesCrearSala extends OpcionesUnirse {
   cartasJugadas?: CartasJugadas
   /** Tirar reyes para ver quién reparte (y, si se pide, para armar los equipos). */
   tirarReyes?: TirarReyes
+  /** Chat de voz (solo salas privadas; prendido si no se dice nada). Con voz, lo del pie se dice hablando. */
+  voz?: boolean
 }
 
 export type CanalChat = 'general' | 'equipo'
@@ -201,6 +204,10 @@ export interface MensajesCliente {
   jugarContraBot: Record<string, never>
   /** Terminada la partida, pedir jugar otra con la misma mesa. */
   revancha: Record<string, never>
+  /** Entrar o salir del chat de voz. */
+  voz: { activa: boolean }
+  /** Señalización de voz para otra persona (`a` es su número en la voz). */
+  senalVoz: { a: number; senal: SenalVoz }
 }
 
 // ── Servidor → cliente ──────────────────────────────────────────────
@@ -231,6 +238,8 @@ export interface InfoSala {
   tiempos: ConfigTiempos
   cartasJugadas: CartasJugadas
   tirarReyes: TirarReyes
+  /** Si la sala tiene chat de voz (en la cola pública, nunca). */
+  voz: boolean
   /**
    * La mesa y la baraja con las que todos ven la partida: las del anfitrión (en la cola
    * pública, que no tiene, las de siempre).
@@ -289,6 +298,10 @@ export interface MensajesServidor {
   error: { motivo: string }
   /** Cola pública: hace rato que no aparece nadie. */
   ofrecerBot: Record<string, never>
+  /** Quién está en el chat de voz (llega cada vez que cambia algo de la sala). */
+  voz: EstadoVoz
+  /** Señalización de voz que te manda otra persona (`de` es su número en la voz). */
+  senalVoz: { de: number; senal: SenalVoz }
 }
 
 export type TipoMensajeCliente = keyof MensajesCliente
@@ -300,3 +313,4 @@ export * from './mesas'
 export * from './barajas'
 export * from './reyes'
 export * from './tipografias'
+export * from './voz'

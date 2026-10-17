@@ -13,7 +13,8 @@ beforeEach(async () => colyseus.cleanup())
 
 describe('opciones nuevas de la sala', () => {
   it('largo del partido, toques y gritos y corte: se validan y las malas salen de la mitad', async () => {
-    const a = await Jugador.crear(colyseus, { config: { formato: '2v2', puntosPartida: 20, toquesYGritos: 'pie', corte: true } })
+    // Sin voz: con voz, toques y gritos quedan para cualquiera (ver voz.test.ts).
+    const a = await Jugador.crear(colyseus, { config: { formato: '2v2', puntosPartida: 20, toquesYGritos: 'pie', corte: true }, voz: false })
     await a.esperar(() => a.sala !== null)
     expect(a.sala!.config).toMatchObject({ puntosPartida: 20, puntosMalas: 10, tramoPicaPica: { desde: 0, hasta: 10 }, toquesYGritos: 'pie', corte: true })
     a.enviar('configurar', { config: { puntosPartida: 25, puntosMalas: 3, toquesYGritos: 'nadie' } as unknown as Partial<ConfigSala> })
@@ -58,7 +59,7 @@ describe('tirar reyes', () => {
 
 describe('el pie y sus sugerencias', () => {
   it('sugiere el que lidera, y lo oyen todos', async () => {
-    const a = await Jugador.crear(colyseus, { config: { formato: '2v2' }, botsEnVacios: true })
+    const a = await Jugador.crear(colyseus, { config: { formato: '2v2' }, botsEnVacios: true, voz: false })
     await a.esperar(() => a.sala !== null)
     a.enviar('iniciar', {})
     await a.esperar(() => a.vista !== null)

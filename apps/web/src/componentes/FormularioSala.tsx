@@ -52,6 +52,8 @@ export interface OpcionesSala {
   cartasJugadas: CartasJugadas
   /** Tirar reyes antes de la primera partida. */
   tirarReyes: TirarReyes
+  /** Chat de voz (prendido por defecto). Con voz, lo del pie se dice hablando. */
+  voz: boolean
 }
 
 function reglasDe(c: ConfigSala): ReglasSala {
@@ -91,6 +93,7 @@ export function opcionesIniciales(p: Perfil): OpcionesSala {
     tiempos: normalizarTiempos(p.tiempos),
     cartasJugadas: normalizarCartasJugadas(p.cartasJugadas),
     tirarReyes: normalizarTirarReyes(p.tirarReyes),
+    voz: true,
   }
 }
 
@@ -105,6 +108,7 @@ export function opcionesDeSala(s: InfoSala): OpcionesSala {
     tiempos: s.tiempos ?? TIEMPOS_SALA_DEFAULT,
     cartasJugadas: s.cartasJugadas ?? CARTAS_JUGADAS_DEFAULT,
     tirarReyes: s.tirarReyes ?? TIRAR_REYES_DEFAULT,
+    voz: s.voz ?? true,
   }
 }
 
@@ -119,6 +123,7 @@ export function opcionesParaServidor(o: OpcionesSala): MensajesCliente['configur
     tiempos: o.tiempos,
     cartasJugadas: o.cartasJugadas,
     tirarReyes: o.tirarReyes,
+    voz: o.voz,
   }
 }
 
@@ -319,6 +324,16 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
         alCambiar={(tirarReyes) => cambiar({ tirarReyes })}
         detalle={TEXTO_REYES[valor.tirarReyes][1]}
       />
+      <Interruptor
+        activo={valor.voz}
+        alCambiar={(voz) => cambiar({ voz })}
+        titulo="Chat de voz"
+        detalle={
+          valor.formato === '1v1'
+            ? 'Cada uno lo activa en la mesa y recién ahí se pide el micrófono'
+            : 'Cada uno lo activa en la mesa. Con voz, el pie no manda ni sugiere: se dice hablando'
+        }
+      />
 
       <h3 className="reglas-subtitulo">Tiempos</h3>
       <Segmentado
@@ -357,7 +372,7 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
             titulo="Mazo con envido pendiente"
             detalle="Si te vas al mazo sin contestar un envido, o en la primera sin que se haya tocado, el rival cobra el envido no querido"
           />
-          {valor.formato !== '1v1' && (
+          {valor.formato !== '1v1' && !valor.voz && (
             <Segmentado
               titulo="Toques y gritos"
               valor={r.toquesYGritos}
@@ -461,7 +476,10 @@ export function resumenSala(o: OpcionesSala): string[] {
     r.mazoCobraEnvidoPendiente ? 'Mazo con envido pendiente lo cobra el rival' : 'Mazo con envido pendiente no se cobra',
     `Flor con piezas: ${TEXTO_FLOR[r.florConPiezas][0].toLowerCase()}`,
   )
-  if (o.formato !== '1v1') partes.push(r.toquesYGritos === 'pie' ? 'Toques y gritos del pie' : 'Toca y grita cualquiera')
+  partes.push(o.voz ? 'Con chat de voz' : 'Sin chat de voz')
+  if (o.formato !== '1v1') {
+    partes.push(o.voz ? 'Toca y grita cualquiera (lo del pie se dice hablando)' : r.toquesYGritos === 'pie' ? 'Toques y gritos del pie' : 'Toca y grita cualquiera')
+  }
   if (r.corte) partes.push('Se corta el mazo')
   if (o.tirarReyes !== 'no') partes.push(o.tirarReyes === 'reparte' ? 'Se tiran reyes para repartir' : 'Se tiran reyes para repartir y armar los equipos')
   if (o.formato !== '1v1') {

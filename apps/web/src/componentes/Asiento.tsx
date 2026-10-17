@@ -3,6 +3,7 @@ import { GESTO, SIGNIFICADO } from '../senias'
 import type { GestoActivo } from '../gestos'
 import { Avatar as Dibujo } from './Avatar'
 import { Carta } from './Carta'
+import { AnilloVoz } from './ControlesVoz'
 import { AnilloReloj } from './Reloj'
 import type { Globo } from '../estado'
 import '../estilos-senias.css'
@@ -189,6 +190,7 @@ export function Asiento({
       )}
       <div className="asiento-avatar">
         <Avatar lugar={lugar} gesto={gesto} busto={busto} />
+        <AnilloVoz asiento={lugar.asiento} />
         {conReloj && <AnilloReloj venceEn={venceEn} />}
         {esMano && <MarcaMano />}
         {alTocarAvatar && (
