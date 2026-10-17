@@ -288,6 +288,30 @@ input {
   display: grid;
   gap: 10px;
 }
+.cuenta-saldo {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.fin-monedas {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  font-size: 0.9rem;
+}
+.fin-monedas p,
+.fin-monedas ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+}
+.fin-monedas-total {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+.fin-monedas-saldo {
+  opacity: 0.8;
+}
 .cuenta-quien {
   margin: 0;
   overflow-wrap: anywhere;

@@ -16,6 +16,7 @@ import type { Conexion, EstadoConexion, MensajeServidor } from './conexion/tipos
 import { sonarEfecto, sonarEvento } from './sonido'
 import { aplicarTemaDeSala, aplicarTemaPropio } from './temaSala'
 import { planReyes } from './tiradaReyes'
+import { useCuenta } from './cuenta/cuenta'
 
 export interface Jugada {
   asiento: number
@@ -85,6 +86,8 @@ interface EstadoJuego {
   reyes: ReyesEnCurso | null
   /** Te sacaron de la mesa. */
   expulsado: string | null
+  /** Fase 2: lo que cobraste por la partida que terminó (solo con tu cuenta). */
+  monedas: MensajesServidor['monedas'] | null
   /** El último corte del mazo: la mesa lo anima antes de mostrar la muestra y repartir. */
   corte: { asiento: number; corte: TipoCorte; id: number } | null
   cerrarReyes(): void
@@ -295,7 +298,12 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       case 'sala':
         // Online, la mesa y la baraja son las del anfitrión; contra la compu, las tuyas (como siempre).
         if (get().conexion?.tipo === 'online') aplicarTemaDeSala(m.datos)
-        set({ sala: m.datos, ...(m.datos.fase !== 'esperando' ? { ofrecerBot: false } : {}) })
+        set({
+          sala: m.datos,
+          ...(m.datos.fase !== 'esperando' ? { ofrecerBot: false } : {}),
+          // En la revancha, lo cobrado en la partida anterior ya no se muestra.
+          ...(m.datos.fase === 'jugando' ? { monedas: null } : {}),
+        })
         break
       case 'vista':
         // El primer reparto no llega como evento: la partida arranca con la primera vista.
@@ -353,6 +361,10 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       case 'expulsado':
         set({ expulsado: m.datos.motivo })
         break
+      case 'monedas':
+        set({ monedas: m.datos })
+        useCuenta.setState({ saldo: m.datos.saldo })
+        break
     }
   }
 
@@ -376,6 +388,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     sugerencia: null,
     reyes: null,
     expulsado: null,
+    monedas: null,
     corte: null,
 
     cerrarReyes() {
@@ -430,6 +443,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         sugerencia: null,
         reyes: null,
         expulsado: null,
+        monedas: null,
         corte: null,
       })
     },

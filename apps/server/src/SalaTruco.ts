@@ -17,6 +17,7 @@ import {
   type Accion,
   type ConfigSala,
   type EstadoPartida,
+  type Equipo,
   type Evento,
 } from '@truco/engine'
 import { crearBot, NIVELES_BOT, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibidas, type Sugerencia } from '@truco/bots'
@@ -66,6 +67,8 @@ import { generarCodigoUnico } from './codigos'
 import { Archivo, type RegistroPartida } from './registro'
 import type { Cuentas } from './cuentas/api'
 import type { Usuario } from './cuentas/auth'
+import { pagarPartida } from './cuentas/monedas'
+import { entrar } from './cuentas/cuentas'
 
 export interface Tiempos {
   /**
@@ -261,6 +264,8 @@ export class SalaTruco extends Room {
     if (!token || !this.cuentas) return true
     const usuario = await this.cuentas.verificar(token)
     if (!usuario) throw new Error('La sesión venció: volvé a entrar a tu cuenta')
+    // Si nunca entró por la API (otra app, una sesión vieja), la cuenta se crea acá.
+    await entrar(this.cuentas.base, usuario, { invitadoId: opciones.invitadoId, apodo: opciones.apodo, avatar: opciones.avatar })
     return usuario
   }
 
@@ -732,6 +737,7 @@ export class SalaTruco extends Room {
       this.registro.fin = new Date().toISOString()
       this.registro.resultado = { ganador: this.estado.ganador!, puntos: this.estado.puntos }
       this.guardarRegistro()
+      void this.pagarMonedas(this.registro, this.estado.ganador!)
     }
     this.broadcast('turno', { asientos: [], venceEn: null })
     this.enviarSala()
@@ -1025,6 +1031,27 @@ export class SalaTruco extends Room {
     this.revisarCierre()
     // Si esperábamos a quien se fue, ahora juega su bot (o viceversa).
     if (this.fase === 'jugando') this.programar()
+  }
+
+  /**
+   * Fase 2: cobran los que entraron con su cuenta y siguen en la mesa (quien abandonó no cobra).
+   * Contra gente es si todos los rivales fueron personas de punta a punta.
+   */
+  private async pagarMonedas(registro: RegistroPartida, ganador: Equipo) {
+    if (!this.cuentas) return
+    const partida = `${registro.sala}:${registro.inicio}`
+    for (const l of this.lugares) {
+      if (l.tipo !== 'humano' || !l.cuentaId || l.sessionId === null) continue
+      const equipo = equipoDe(l.asiento)
+      const rivales = [...registro.jugadores, ...this.lugares].filter((o) => equipoDe(o.asiento) !== equipo)
+      const contraGente = rivales.every((o) => o.tipo === 'humano')
+      try {
+        const r = await pagarPartida(this.cuentas.base, partida, { cuentaId: l.cuentaId, gano: ganador === equipo, contraGente })
+        this.enviarA(l.asiento, 'monedas', r)
+      } catch (e) {
+        console.error('No se pudieron pagar las monedas:', e)
+      }
+    }
   }
 
   private revisarCierre() {

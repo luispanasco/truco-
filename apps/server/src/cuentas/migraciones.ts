@@ -22,4 +22,21 @@ export const MIGRACIONES: string[] = [
   );
   create index invitados_cuenta on invitados (cuenta_id);
   `,
+  // 2. Monedas: cada movimiento es un registro que no se cambia ni se borra; el saldo es la suma.
+  //    Una partida paga una sola vez cada concepto a cada cuenta (el índice único lo asegura).
+  `
+  create table movimientos (
+    id bigint generated always as identity primary key,
+    cuenta_id uuid not null references cuentas (id),
+    monto integer not null,
+    tipo text not null check (tipo in ('partida', 'victoria', 'bonusDiario', 'compra', 'ajuste')),
+    partida text,
+    detalle jsonb not null default '{}',
+    creado timestamptz not null default now()
+  );
+  create index movimientos_cuenta on movimientos (cuenta_id, creado);
+  create unique index movimientos_una_vez on movimientos (cuenta_id, partida, tipo) where partida is not null;
+  create function movimientos_inmutables() returns trigger language plpgsql as $$ begin raise exception 'Los movimientos de monedas no se cambian ni se borran'; end $$;
+  create trigger movimientos_inmutables before update or delete on movimientos for each row execute function movimientos_inmutables();
+  `,
 ]

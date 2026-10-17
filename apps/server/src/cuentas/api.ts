@@ -2,6 +2,7 @@ import express, { type Request, type Response, type Router } from 'express'
 import type { Base } from './base'
 import type { Usuario, Verificador } from './auth'
 import { entrar, guardarPerfil } from './cuentas'
+import { saldo, ultimosMovimientos } from './monedas'
 
 export interface Cuentas {
   base: Base
@@ -39,7 +40,15 @@ export function rutasCuentas(c: Cuentas | null): Router {
   r.post(
     '/entrar',
     conSesion(async (req, res, c, u) => {
-      res.json(await entrar(c.base, u, req.body ?? {}))
+      const cuenta = await entrar(c.base, u, req.body ?? {})
+      res.json({ ...cuenta, saldo: await saldo(c.base, u.id) })
+    }),
+  )
+
+  r.get(
+    '/monedas',
+    conSesion(async (_req, res, c, u) => {
+      res.json({ saldo: await saldo(c.base, u.id), movimientos: await ultimosMovimientos(c.base, u.id) })
     }),
   )
 

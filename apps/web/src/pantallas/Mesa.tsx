@@ -27,6 +27,7 @@ import type { ConexionOnline } from '../conexion/online'
 import { useJuego } from '../estado'
 import { leerPerfil } from '../perfil'
 import '../estilos-mesa-online.css'
+import { MonedasGanadas } from '../componentes/MonedasGanadas'
 import '../estilos-mesa-bustos.css'
 
 export function Mesa() {
@@ -439,6 +440,7 @@ export function Mesa() {
                 <strong>{pe}</strong>
               </div>
             </div>
+            <MonedasGanadas />
             <div className="modal-botones">
               <button type="button" className="boton boton-grande" onClick={() => enviar('revancha', {})} disabled={online && pediRevancha}>
                 {textoRevancha}

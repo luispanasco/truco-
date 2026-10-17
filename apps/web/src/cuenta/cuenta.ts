@@ -29,6 +29,8 @@ interface Cuenta {
   error: string | null
   /** Si se mandó el link por email (hay que abrirlo desde el correo). */
   linkEnviado: string | null
+  /** Tus monedas (las cuenta el servidor; acá solo se muestran). */
+  saldo: number | null
 }
 
 export const useCuenta = create<Cuenta>(() => ({
@@ -38,6 +40,7 @@ export const useCuenta = create<Cuenta>(() => ({
   modo: null,
   error: null,
   linkEnviado: null,
+  saldo: null,
 }))
 
 /** La API de cuentas: la misma dirección del servidor de juego, por http, bajo /api. */
@@ -104,7 +107,7 @@ export async function entrarConEmail(email: string) {
 export async function salir() {
   borrar(CLAVE_PRUEBA)
   await supabase?.auth.signOut()
-  useCuenta.setState({ estado: 'afuera', cuenta: null, token: null, linkEnviado: null })
+  useCuenta.setState({ estado: 'afuera', cuenta: null, token: null, linkEnviado: null, saldo: null })
 }
 
 /**
@@ -121,9 +124,9 @@ async function entrar(token: string) {
       body: JSON.stringify({ invitadoId: perfil.invitadoId, apodo: perfil.apodo, avatar: perfil.avatar, preferencias: preferenciasDe(perfil) }),
     })
     if (!r.ok) throw new Error(String(r.status))
-    const cuenta = (await r.json()) as DatosCuenta
+    const { saldo, ...cuenta } = (await r.json()) as DatosCuenta & { saldo: number }
     if (!cuenta.nueva) guardarPerfil(perfilDeCuenta(perfil, cuenta), 'cuenta')
-    useCuenta.setState({ estado: 'adentro', cuenta, token, linkEnviado: null })
+    useCuenta.setState({ estado: 'adentro', cuenta, token, linkEnviado: null, saldo })
   } catch {
     borrar(CLAVE_PRUEBA)
     useCuenta.setState({ estado: 'afuera', cuenta: null, token: null, error: 'No se pudo entrar a tu cuenta. Probá de nuevo.' })

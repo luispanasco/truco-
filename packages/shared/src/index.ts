@@ -256,8 +256,16 @@ export interface MensajeChat {
   hora: number
 }
 
+/** Un movimiento de monedas, como lo ve el jugador. */
+export interface MovimientoMonedas {
+  tipo: 'partida' | 'victoria' | 'bonusDiario' | 'compra' | 'ajuste'
+  monto: number
+}
+
 export interface MensajesServidor {
   sala: InfoSala
+  /** Fase 2, solo a quien entró con su cuenta: lo que cobró por la partida y su saldo. */
+  monedas: { movimientos: MovimientoMonedas[]; saldo: number }
   /** Lo que ve este jugador: nunca incluye cartas ajenas sin jugar. */
   vista: VistaPartida
   /** Lo que acaba de pasar en la mesa (público). */

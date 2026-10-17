@@ -899,3 +899,23 @@ El usuario aprobó el plan de la fase 2 en cinco etapas: **2A** cuentas, **2B** 
 - **Tests:** server 63 (6 nuevos de cuentas), web 258 (1 nuevo).
 
 **Pendiente:** probar con el Supabase real, cuando el usuario cargue los `.env`.
+
+## Etapa 2B: monedas — 2026-10-17
+
+- **Movimientos** (`movimientos`, migración 2):
+  - cada movimiento es una fila que un trigger de la base impide cambiar o borrar;
+  - el saldo es la suma de los movimientos;
+  - un índice único asegura que una partida pague cada concepto una sola vez a cada cuenta.
+- **El cobro** (`cuentas/monedas.ts`, montos en `ECONOMIA`):
+  - 10 por terminar la partida y 10 más por ganarla;
+  - contra bots se cobra el 30 % de eso (3 y 3). Cuenta como contra bots si algún rival fue bot, en algún momento de la partida;
+  - 30 de bonus en la primera partida del día, entero aunque sea contra bots;
+  - el tope es de 300 por día. El día va de medianoche a medianoche de Uruguay (UTC−3).
+- **Quién cobra:** al terminar, quienes entraron con su cuenta y siguen en la sala. Quien abandonó no cobra.
+- **Lo que recibe el jugador:** el mensaje `monedas`, con lo cobrado y el saldo.
+- **La API:** `GET /api/monedas` devuelve el saldo y los últimos movimientos; `/entrar` ahora también trae el saldo.
+- **Robustez:** si alguien entra a una sala con un token válido pero sin haber pasado por la API, la cuenta se crea en ese momento.
+- **La web:**
+  - el saldo aparece en "Tu cuenta";
+  - en el cartel del final se ve lo que cobraste, renglón por renglón, y tu saldo. Si ya llegaste al tope, lo avisa.
+- **Tests:** server 69 (6 de monedas, incluida una partida entera contra la compu), web 259.

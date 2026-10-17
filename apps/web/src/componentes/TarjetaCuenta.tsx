@@ -3,11 +3,11 @@ import { entrarConEmail, entrarConGoogle, iniciarCuenta, salir, useCuenta } from
 import { MensajeError } from './Online'
 
 /**
- * Tu cuenta: entrar guarda tus cosas (y, más adelante, tus monedas) para cualquier dispositivo.
+ * Tu cuenta: entrar guarda tu perfil y tus monedas para cualquier dispositivo.
  * Si el servidor no tiene cuentas, no se muestra y se juega como invitado.
  */
 export function TarjetaCuenta() {
-  const { estado, cuenta, modo, error, linkEnviado } = useCuenta()
+  const { estado, cuenta, modo, error, linkEnviado, saldo } = useCuenta()
   const [email, setEmail] = useState('')
   useEffect(() => void iniciarCuenta(), [])
 
@@ -20,6 +20,11 @@ export function TarjetaCuenta() {
         <p className="cuenta-quien">
           Entraste como <strong>{cuenta.email ?? cuenta.apodo}</strong>. Tu perfil se guarda en la cuenta.
         </p>
+        {saldo !== null && (
+          <p className="cuenta-saldo">
+            <span aria-hidden="true">🪙</span> <strong>{saldo}</strong> {saldo === 1 ? 'moneda' : 'monedas'}
+          </p>
+        )}
         <button type="button" className="boton boton-secundario" onClick={() => void salir()}>
           Salir de la cuenta
         </button>
