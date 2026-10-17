@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import { datosUnirse } from '../src/componentes/Online'
+import { Ranking } from '../src/pantallas/Ranking'
 import { TarjetaCuenta } from '../src/componentes/TarjetaCuenta'
 import { leerPerfil, guardarPerfil } from '../src/perfil'
 import { useCuenta } from '../src/cuenta/cuenta'
@@ -15,6 +17,10 @@ function servidorFalso(nueva: boolean) {
     vi.fn(async (url: string, init?: RequestInit) => {
       pedidos.push({ url, metodo: init?.method ?? 'GET', cuerpo: init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : null })
       if (url.endsWith('/estado')) return Response.json({ cuentas: true, loginDePrueba: true })
+      if (url.includes('/ranking?formato=')) {
+        const fila = (posicion: number, apodo: string, puntos: number) => ({ posicion, cuentaId: apodo, apodo, avatar: null, puntos, partidas: 9, ganadas: 6 })
+        return Response.json({ formato: url.slice(-3), minimo: 5, filas: [fila(1, 'Tito', 1310), fila(2, 'Bea', 1250)], yo: { ...fila(7, 'Ana', 1180), enRanking: true } })
+      }
       if (url.endsWith('/entrar')) {
         return Response.json({ id: 'c1', email: 'ana@ejemplo.com', apodo: 'Ana de la cuenta', avatar: null, preferencias: { formato: '3v3' }, nueva, saldo: 120 })
       }
@@ -36,7 +42,11 @@ afterEach(() => {
 describe('tu cuenta', () => {
   it('con el login de prueba se entra con el email, y lo de la cuenta pasa a este navegador', async () => {
     const pedidos = servidorFalso(false)
-    render(<TarjetaCuenta />)
+    render(
+      <MemoryRouter>
+        <TarjetaCuenta />
+      </MemoryRouter>,
+    )
     fireEvent.change(await screen.findByPlaceholderText('vos@ejemplo.com'), { target: { value: 'ana@ejemplo.com' } })
     fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
     expect(await screen.findByText(/Entraste como/)).toBeTruthy()
@@ -69,5 +79,20 @@ describe('tu cuenta', () => {
     expect(screen.getByText('Tenés 140 monedas')).toBeTruthy()
     act(() => useJuego.setState({ monedas: { movimientos: [], saldo: 300 } }))
     expect(screen.getByText(/ya juntaste todas las monedas/)).toBeTruthy()
+  })
+
+  it('el ranking muestra los mejores del formato y dónde estás vos', async () => {
+    const pedidos = servidorFalso(false)
+    render(
+      <MemoryRouter>
+        <Ranking />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByText('Tito')).toBeTruthy()
+    expect(screen.getByText('1310')).toBeTruthy()
+    expect(screen.getByText('Ana')).toBeTruthy()
+    fireEvent.click(screen.getByRole('radio', { name: '3 vs 3' }))
+    await screen.findByText('Tito')
+    expect(pedidos.some((p) => p.url.endsWith('/ranking?formato=3v3'))).toBe(true)
   })
 })

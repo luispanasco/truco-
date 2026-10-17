@@ -312,6 +312,55 @@ input {
 .fin-monedas-saldo {
   opacity: 0.8;
 }
+.fin-elo {
+  font-weight: 700;
+}
+.tarjeta.cuenta a.boton {
+  text-align: center;
+  text-decoration: none;
+}
+
+/* Ranking */
+.ranking {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ranking-fila {
+  display: grid;
+  grid-template-columns: 2.2em 40px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: var(--radio);
+  background: rgb(0 0 0 / 0.18);
+}
+.ranking-fila.propia {
+  outline: 2px solid var(--acento);
+}
+.ranking-posicion {
+  font-weight: 800;
+  text-align: center;
+}
+.ranking-avatar {
+  width: 40px;
+  height: 40px;
+}
+.ranking-apodo {
+  display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+.ranking-apodo small {
+  font-weight: 400;
+  opacity: 0.75;
+}
+.ranking-puntos {
+  font-size: 1.15rem;
+}
 .cuenta-quien {
   margin: 0;
   overflow-wrap: anywhere;

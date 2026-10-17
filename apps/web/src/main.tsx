@@ -25,6 +25,7 @@ import { prepararSonido } from './sonido'
 import { aplicarMesa } from './temaMesa'
 import { aplicarTipografia } from './temaTipografia'
 import './estilos.css'
+import { Ranking } from './pantallas/Ranking'
 import './estilos-online.css'
 
 escucharInstalacion()
@@ -54,6 +55,7 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/s/:codigo" element={<Compartido />} />
           <Route path="/sala" element={<Sala />} />
           <Route path="/buscar" element={<Buscar />} />
+          <Route path="/ranking" element={<Ranking />} />
         </Routes>
       </BrowserRouter>
     </MotionConfig>

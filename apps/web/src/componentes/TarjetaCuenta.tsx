@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { entrarConEmail, entrarConGoogle, iniciarCuenta, salir, useCuenta } from '../cuenta/cuenta'
 import { MensajeError } from './Online'
 
@@ -25,6 +26,9 @@ export function TarjetaCuenta() {
             <span aria-hidden="true">🪙</span> <strong>{saldo}</strong> {saldo === 1 ? 'moneda' : 'monedas'}
           </p>
         )}
+        <Link className="boton boton-secundario" to="/ranking">
+          Ver el ranking
+        </Link>
         <button type="button" className="boton boton-secundario" onClick={() => void salir()}>
           Salir de la cuenta
         </button>
@@ -74,6 +78,9 @@ export function TarjetaCuenta() {
         </form>
       )}
       {error && <MensajeError>{error}</MensajeError>}
+      <Link className="boton boton-secundario" to="/ranking">
+        Ver el ranking
+      </Link>
     </section>
   )
 }

@@ -266,6 +266,8 @@ export interface MensajesServidor {
   sala: InfoSala
   /** Fase 2, solo a quien entró con su cuenta: lo que cobró por la partida y su saldo. */
   monedas: { movimientos: MovimientoMonedas[]; saldo: number }
+  /** Fase 2, en partidas entre personas con cuenta: cómo se movió tu Elo en ese formato. */
+  elo: { formato: Formato; antes: number; despues: number }
   /** Lo que ve este jugador: nunca incluye cartas ajenas sin jugar. */
   vista: VistaPartida
   /** Lo que acaba de pasar en la mesa (público). */

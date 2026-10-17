@@ -88,6 +88,8 @@ interface EstadoJuego {
   expulsado: string | null
   /** Fase 2: lo que cobraste por la partida que terminó (solo con tu cuenta). */
   monedas: MensajesServidor['monedas'] | null
+  /** Fase 2: cómo se movió tu Elo en la partida que terminó (solo entre personas con cuenta). */
+  elo: MensajesServidor['elo'] | null
   /** El último corte del mazo: la mesa lo anima antes de mostrar la muestra y repartir. */
   corte: { asiento: number; corte: TipoCorte; id: number } | null
   cerrarReyes(): void
@@ -302,7 +304,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
           sala: m.datos,
           ...(m.datos.fase !== 'esperando' ? { ofrecerBot: false } : {}),
           // En la revancha, lo cobrado en la partida anterior ya no se muestra.
-          ...(m.datos.fase === 'jugando' ? { monedas: null } : {}),
+          ...(m.datos.fase === 'jugando' ? { monedas: null, elo: null } : {}),
         })
         break
       case 'vista':
@@ -361,6 +363,9 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       case 'expulsado':
         set({ expulsado: m.datos.motivo })
         break
+      case 'elo':
+        set({ elo: m.datos })
+        break
       case 'monedas':
         set({ monedas: m.datos })
         useCuenta.setState({ saldo: m.datos.saldo })
@@ -389,6 +394,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     reyes: null,
     expulsado: null,
     monedas: null,
+    elo: null,
     corte: null,
 
     cerrarReyes() {
@@ -444,6 +450,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         reyes: null,
         expulsado: null,
         monedas: null,
+        elo: null,
         corte: null,
       })
     },

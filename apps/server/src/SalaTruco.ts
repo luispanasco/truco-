@@ -68,6 +68,7 @@ import { Archivo, type RegistroPartida } from './registro'
 import type { Cuentas } from './cuentas/api'
 import type { Usuario } from './cuentas/auth'
 import { pagarPartida } from './cuentas/monedas'
+import { actualizarElo } from './cuentas/elo'
 import { entrar } from './cuentas/cuentas'
 
 export interface Tiempos {
@@ -738,6 +739,7 @@ export class SalaTruco extends Room {
       this.registro.resultado = { ganador: this.estado.ganador!, puntos: this.estado.puntos }
       this.guardarRegistro()
       void this.pagarMonedas(this.registro, this.estado.ganador!)
+      void this.contarElo(this.registro, this.estado.ganador!)
     }
     this.broadcast('turno', { asientos: [], venceEn: null })
     this.enviarSala()
@@ -1037,6 +1039,28 @@ export class SalaTruco extends Room {
    * Fase 2: cobran los que entraron con su cuenta y siguen en la mesa (quien abandonó no cobra).
    * Contra gente es si todos los rivales fueron personas de punta a punta.
    */
+  /**
+   * Fase 2: el Elo solo se mueve si en todos los lugares arrancaron personas con cuenta (y cada
+   * cuenta una sola vez). Quien abandonó también cuenta: pierde con su equipo.
+   */
+  private async contarElo(registro: RegistroPartida, ganador: Equipo) {
+    if (!this.cuentas) return
+    const js = registro.jugadores
+    const ids = js.map((j) => j.cuentaId ?? null)
+    if (js.some((j) => j.tipo !== 'humano') || ids.some((id) => id === null) || new Set(ids).size !== ids.length) return
+    const equipos: [string[], string[]] = [[], []]
+    for (const j of js) equipos[equipoDe(j.asiento)].push(j.cuentaId!)
+    try {
+      const cambios = await actualizarElo(this.cuentas.base, `${registro.sala}:${registro.inicio}`, registro.config.formato, equipos, ganador)
+      for (const c of cambios) {
+        const l = this.lugares.find((x) => x.cuentaId === c.cuentaId)
+        if (l) this.enviarA(l.asiento, 'elo', { formato: registro.config.formato, antes: c.antes, despues: c.despues })
+      }
+    } catch (e) {
+      console.error('No se pudo actualizar el Elo:', e)
+    }
+  }
+
   private async pagarMonedas(registro: RegistroPartida, ganador: Equipo) {
     if (!this.cuentas) return
     const partida = `${registro.sala}:${registro.inicio}`

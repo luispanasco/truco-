@@ -39,4 +39,26 @@ export const MIGRACIONES: string[] = [
   create function movimientos_inmutables() returns trigger language plpgsql as $$ begin raise exception 'Los movimientos de monedas no se cambian ni se borran'; end $$;
   create trigger movimientos_inmutables before update or delete on movimientos for each row execute function movimientos_inmutables();
   `,
+  // 3. Elo por formato (solo partidas entre personas con cuenta) y su historial por partida.
+  `
+  create table elo (
+    cuenta_id uuid not null references cuentas (id),
+    formato text not null,
+    puntos integer not null,
+    partidas integer not null default 0,
+    ganadas integer not null default 0,
+    actualizada timestamptz not null default now(),
+    primary key (cuenta_id, formato)
+  );
+  create index elo_ranking on elo (formato, puntos desc);
+  create table elo_partidas (
+    cuenta_id uuid not null references cuentas (id),
+    partida text not null,
+    formato text not null,
+    antes integer not null,
+    despues integer not null,
+    creado timestamptz not null default now(),
+    primary key (cuenta_id, partida)
+  );
+  `,
 ]

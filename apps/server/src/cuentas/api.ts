@@ -3,6 +3,7 @@ import type { Base } from './base'
 import type { Usuario, Verificador } from './auth'
 import { entrar, guardarPerfil } from './cuentas'
 import { saldo, ultimosMovimientos } from './monedas'
+import { ranking } from './elo'
 
 export interface Cuentas {
   base: Base
@@ -51,6 +52,21 @@ export function rutasCuentas(c: Cuentas | null): Router {
       res.json({ saldo: await saldo(c.base, u.id), movimientos: await ultimosMovimientos(c.base, u.id) })
     }),
   )
+
+  // El ranking lo ve cualquiera; con sesión, también dónde estás vos.
+  r.get('/ranking', async (req, res) => {
+    if (!c) return void res.status(503).json({ motivo: 'Las cuentas no están configuradas' })
+    const formato = req.query.formato
+    if (formato !== '1v1' && formato !== '2v2' && formato !== '3v3') return void res.status(400).json({ motivo: 'Formato inválido' })
+    const token = /^Bearer (.+)$/.exec(req.get('authorization') ?? '')?.[1]
+    const u = token ? await c.verificar(token) : null
+    try {
+      res.json(await ranking(c.base, formato, u?.id ?? null))
+    } catch (e) {
+      console.error(e)
+      res.status(500).json({ motivo: 'Falló la base de datos' })
+    }
+  })
 
   r.put(
     '/perfil',

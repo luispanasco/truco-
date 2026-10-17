@@ -919,3 +919,19 @@ El usuario aprobó el plan de la fase 2 en cinco etapas: **2A** cuentas, **2B** 
   - el saldo aparece en "Tu cuenta";
   - en el cartel del final se ve lo que cobraste, renglón por renglón, y tu saldo. Si ya llegaste al tope, lo avisa.
 - **Tests:** server 69 (6 de monedas, incluida una partida entera contra la compu), web 259.
+
+## Etapa 2D (primera parte): Elo y ranking — 2026-10-17
+
+- **Elo por formato** (`cuentas/elo.ts`, migración 3):
+  - se arranca en 1200;
+  - K es 40 en las primeras 20 partidas, para ubicar rápido, y 24 después;
+  - en parejas y tríos, cada equipo vale el promedio de los suyos, y todos los del equipo suben o bajan lo mismo;
+  - el historial queda por partida (`elo_partidas`), que se cuenta una sola vez.
+- **Cuándo cuenta:** solo si en todos los lugares arrancaron personas con cuenta, sin bots ni invitados, y cada cuenta aparece una sola vez. Quien abandona igual pierde con su equipo, así irse no sirve para salvarse.
+- **Lo que recibe el jugador:** el mensaje `elo`, con el formato y el puntaje de antes y de después. Se ve en el cartel del final, debajo de las monedas.
+- **Ranking:**
+  - `GET /api/ranking?formato=…` es público. Hay que jugar 5 partidas para aparecer. Con sesión, también te dice tu posición;
+  - en la web hay una pantalla nueva, `/ranking`, con los tres formatos, a la que se llega con "Ver el ranking" desde "Tu cuenta".
+- **Tests:** server 75 (6 de Elo, con dos partidas reales: entre dos cuentas, y contra un invitado sin Elo), web 260.
+
+**Falta de la 2D:** la lista de amigos.
