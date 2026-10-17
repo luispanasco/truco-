@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
-import { seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
+import { envidoParaSenia, seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
 import { ESPERA_PEDIR_SENIAS_MS, MOTIVO_SENIA_TARDE, yaJugoEnLaMano } from '@truco/shared'
 import { BotonSonido } from '../componentes/AjustesSonido'
 import { esPiezaOMata } from '../senias'
@@ -23,10 +23,10 @@ import { MenuJugador, useSilenciados } from '../componentes/MenuJugador'
 import { AnilloReloj, RelojPropio } from '../componentes/Reloj'
 import { useGestos } from '../gestos'
 import { AvisoSeniaHecha, BotonSenias, PanelSenias, seniasRapidas, TiraSenias } from '../componentes/Senias'
-import { AvisoPedidoSenias, PanelCompaniero, seniasMarcadas } from '../componentes/PanelCompaniero'
+import { AvisoPedidoSenias, envidoMarcado, PanelCompaniero, resumenDe, ResumenSenias, seniasMarcadas } from '../componentes/PanelCompaniero'
 import type { ConexionOnline } from '../conexion/online'
 import { useJuego } from '../estado'
-import { leerPerfil } from '../perfil'
+import { guardarPerfil, leerPerfil } from '../perfil'
 import { estiloAsiento, haciaAsiento, PanioEnPerspectiva, useMesaEnPerspectiva } from '../componentes/Perspectiva'
 import '../estilos-mesa-online.css'
 import { MonedasGanadas } from '../componentes/MonedasGanadas'
@@ -77,6 +77,12 @@ export function Mesa() {
   // (mientras está apilada para ojear, la tira no delata tus cartas).
   const [hechas, setHechas] = useState<{ mano: number; senias: Senia[] }>({ mano: 0, senias: [] })
   const [abiertaEn, setAbiertaEn] = useState<number | null>(null)
+  // Preferencia propia: el resumen de lo que te marcó cada compañero, arriba de su avatar.
+  const [conResumen, setConResumen] = useState(() => leerPerfil().resumenSenias)
+  const cambiarResumen = (v: boolean) => {
+    guardarPerfil({ ...leerPerfil(), resumenSenias: v })
+    setConResumen(v)
+  }
   // Las señas de compañeros y las pescadas a rivales se ven como gestos en sus avatares.
   const llegadasSenias = useMemo(() => [...senias, ...pescadas].sort((x, y) => x.id - y.id), [senias, pescadas])
   const gestos = useGestos(llegadasSenias)
@@ -208,6 +214,19 @@ export function Mesa() {
     sala.senias.momento === 'antesDeJugar' && yaJugoEnLaMano(vista.mano, a)
       ? `${sala.lugares[a]?.apodo ?? 'Tu compañero'} ya jugó su carta: en esta sala las señas se hacen antes`
       : null
+  // El resumen sobre cada compañero: lo de esta mano (en la mano nueva arranca vacío). Si el
+  // mazo con la muestra quedó justo donde va (repartió ese compañero, o en 3v3 el de enfrente
+  // para el de la izquierda), se pasa al otro lado.
+  const reparteRel = rel(vista.mano.reparte)
+  const ladoResumen = (pos: number): 'derecha' | 'abajo' | undefined => {
+    if (n === 4 && pos === 2 && reparteRel === 2) return 'derecha'
+    if (n === 6 && ((pos === 2 && reparteRel === 2) || (pos === 4 && reparteRel === 3))) return 'abajo'
+    return undefined
+  }
+  const resumenPara = (a: number) =>
+    conResumen && hayCompanieros && a !== yo && a % 2 === yo % 2 && participa(a) ? (
+      <ResumenSenias marcas={resumenDe(senias, a, vista.mano.numero)} apodo={sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`} lado={ladoResumen(rel(a))} />
+    ) : undefined
   const pieAbierto = pieAbiertoEn === vista.mano.numero && !finDeMano
   const misHechas = hechas.mano === vista.mano.numero ? hechas.senias : []
   // Reloj del turno (solo online, cuando el juego espera a una persona).
@@ -332,6 +351,7 @@ export function Mesa() {
               chatAbajo={n === 6 && (rel(l.asiento) === 2 || rel(l.asiento) === 4)}
               busto={vistaMesa !== 'circulos'}
               estilo={perspectiva ? estiloAsiento(medidas, rel(l.asiento)) : undefined}
+              resumen={resumenPara(l.asiento)}
             />
           ))}
 
@@ -494,6 +514,7 @@ export function Mesa() {
           sugeridas={sala.ayudas && muestra ? seniasDeMano(vista.mano.misCartas, muestra) : null}
           config={sala.senias}
           cerrado={seniasCerradas}
+          envido={envidoParaSenia(vista.mano.miTanto)}
         />
       )}
       {lugarCompaniero && (
@@ -501,6 +522,9 @@ export function Mesa() {
           key={lugarCompaniero.asiento}
           lugar={lugarCompaniero}
           marcadas={seniasMarcadas(senias, lugarCompaniero.asiento, vista.mano.numero)}
+          envido={envidoMarcado(senias, lugarCompaniero.asiento, vista.mano.numero)}
+          resumen={conResumen}
+          alCambiarResumen={cambiarResumen}
           esBot={lugarCompaniero.tipo !== 'humano' || !lugarCompaniero.conectado}
           cerrado={pedidoCerrado(lugarCompaniero.asiento)}
           pedido={pedidos.has(lugarCompaniero.asiento)}

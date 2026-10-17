@@ -7,8 +7,9 @@ import { MOTIVO_SENIA_TARDE, SENIAS_DEFAULT, type ConfigSenias, type InfoSala, t
 import type { Conexion, MensajeServidor } from '../src/conexion/tipos'
 import { DURACION_GESTO } from '../src/gestos'
 import { MANTENER_MS } from '../src/componentes/ManoOjeable'
-import { seniasRapidas } from '../src/componentes/Senias'
+import { PanelSenias, seniasRapidas } from '../src/componentes/Senias'
 import { useJuego } from '../src/estado'
+import { guardarPerfil, leerPerfil } from '../src/perfil'
 import { Mesa } from '../src/pantallas/Mesa'
 
 function App() {
@@ -408,5 +409,106 @@ describe('señas de un compañero (tocando su avatar)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Repetir' }))
     expect(enviados.filter((e) => e.tipo === 'repetirSenias')).toHaveLength(1)
     expect(screen.queryByText(/te pidió que le repitas las señas/)).toBeNull()
+  })
+})
+
+describe('seña de envido', () => {
+  const sinFlor = (v: VistaPartida) => v.mano.miTanto.flor === null
+  const botonEnvido = (cara: HTMLElement) => within(cara).queryByRole('button', { name: nombre('envido') })
+
+  it('la cara la ofrece con tu número y manda solo la seña (el número lo pone el servidor)', async () => {
+    const datos = partida2v2({ requisito: sinFlor })
+    const { enviados } = await entrar(datos)
+    const cara = abrir()
+    const boton = botonEnvido(cara)!
+    expect(boton.textContent).toContain(`Marcar tu envido: ${datos.vista.mano.miTanto.envido}`)
+    fireEvent.click(boton)
+    expect(enviados.filter((e) => e.tipo === 'senia').map((e) => e.datos)).toEqual([{ senia: 'envido' }])
+    expect(cara.querySelector('.senias-hecha')!.textContent).toContain(`envido ${datos.vista.mano.miTanto.envido}`)
+  })
+
+  it('con flor no se ofrece: se marca la flor', () => {
+    render(<PanelSenias avatar="🧉" alElegir={() => {}} alCerrar={() => {}} envido={null} />)
+    expect(botonEnvido(screen.getByRole('dialog', { name: 'Señas' }))).toBeNull()
+  })
+
+  it('la del compañero se ve con su número en el globo y en su panel', async () => {
+    const datos = partida2v2()
+    const { llegar } = await entrar(datos)
+    const companiero = (datos.yo + 2) % 4
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'envido', mano: datos.vista.mano.numero, tanto: 31 } })
+    const asiento = document.querySelector(`.asiento[data-asiento="${companiero}"]`)!
+    expect(asiento.querySelector('.avatar')!.getAttribute('data-gesto')).toBe('envido')
+    expect(asiento.querySelector('.globo-senia')!.textContent).toContain('envido 31')
+    fireEvent.click(screen.getByRole('button', { name: `Señas de ${APODOS[companiero]}` }))
+    const panel = screen.getByRole('dialog', { name: `Señas de ${APODOS[companiero]}` })
+    expect([...panel.querySelectorAll('.companiero-lista b')].map((b) => b.textContent)).toEqual(['envido 31'])
+  })
+})
+
+describe('resumen de señas sobre los compañeros', () => {
+  afterEach(() => localStorage.clear())
+  const prender = (v: boolean) => guardarPerfil({ ...leerPerfil(), resumenSenias: v })
+  const resumenDe = (asiento: number) => document.querySelector(`.asiento[data-asiento="${asiento}"] .resumen-senias`)
+
+  it('viene apagado: aunque el compañero te marque, no hay cartelito', async () => {
+    expect(leerPerfil().resumenSenias).toBe(false)
+    const datos = partida2v2()
+    const { llegar } = await entrar(datos)
+    const companiero = (datos.yo + 2) % 4
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'perico', mano: datos.vista.mano.numero } })
+    expect(resumenDe(companiero)).toBeNull()
+    expect(document.querySelector('.resumen-senias')).toBeNull()
+  })
+
+  it('prendido: lo que te marcó en la mano, envido primero con su número; nunca sobre un rival; se borra en la mano nueva', async () => {
+    prender(true)
+    const datos = partida2v2({ senias: { ...SENIAS_DEFAULT, pescar: 'gestoYCarta' } })
+    const { llegar } = await entrar(datos)
+    const companiero = (datos.yo + 2) % 4
+    const rival = (datos.yo + 1) % 4
+    const mano = datos.vista.mano.numero
+    // Sin señas todavía, no hay cartelito.
+    expect(resumenDe(companiero)).toBeNull()
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'unoBravo', mano: mano - 1 } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'flor', mano } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'pieza4', mano } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'envido', mano, tanto: 27 } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'pieza4', mano, repetida: true } })
+    llegar({ tipo: 'seniaPescada', datos: { de: rival, senia: 'tres' } })
+    const resumen = resumenDe(companiero)!
+    const textos = [...resumen.querySelectorAll('.resumen-senia')].map((e) => e.textContent!.replace(e.querySelector('.resumen-icono')!.textContent!, ''))
+    expect(textos).toEqual([
+      'Envido 27',
+      'Pieza 4',
+      'Flor',
+    ])
+    expect(resumen.getAttribute('aria-label')).toBe(`${APODOS[companiero]} te marcó: envido 27, ${SIGNIFICADO.pieza4}, ${SIGNIFICADO.flor}`)
+    expect(resumenDe(rival)).toBeNull()
+    // Mano nueva: arranca vacío.
+    llegar({ tipo: 'vista', datos: { ...datos.vista, mano: { ...datos.vista.mano, numero: mano + 1 } } })
+    expect(resumenDe(companiero)).toBeNull()
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'tres', mano: mano + 1 } })
+    expect(resumenDe(companiero)!.textContent).toContain('Un 3')
+  })
+
+  it('se prende y se apaga desde el panel del compañero, y queda guardado', async () => {
+    const datos = partida2v2()
+    const { llegar } = await entrar(datos)
+    const companiero = (datos.yo + 2) % 4
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'perica', mano: datos.vista.mano.numero } })
+    const interruptor = () => {
+      fireEvent.click(screen.getByRole('button', { name: `Señas de ${APODOS[companiero]}` }))
+      const panel = screen.getByRole('dialog', { name: `Señas de ${APODOS[companiero]}` })
+      return within(panel).getByRole('switch', { name: /Resumen de señas sobre los compañeros/ }) as HTMLInputElement
+    }
+    const sw = interruptor()
+    expect(sw.checked).toBe(false)
+    fireEvent.click(sw)
+    expect(leerPerfil().resumenSenias).toBe(true)
+    expect(resumenDe(companiero)!.textContent).toContain('Perica')
+    fireEvent.click(interruptor())
+    expect(leerPerfil().resumenSenias).toBe(false)
+    expect(resumenDe(companiero)).toBeNull()
   })
 })

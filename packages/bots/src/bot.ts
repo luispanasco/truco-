@@ -1,6 +1,6 @@
 import { equipoDe, type Accion, type Carta, type CantoEnvido, type CantoFlor, type QueManda, type TipoCorte, type VistaPartida } from '@truco/engine'
 import { Aleatorio, crearContexto, f, mejorDeLaVuelta, ordenadas, pendiente, type Contexto } from './contexto'
-import { seniasDeMano, type Senia, type SeniasRecibidas } from './senias'
+import { ENVIDO_PARA_SENIAR, envidoParaSenia, seniasDeMano, type Senia, type SeniasRecibidas } from './senias'
 import { crearFacil } from './facil'
 import { crearMedio } from './medio'
 import { crearDificil } from './dificil'
@@ -21,7 +21,10 @@ export interface Bot {
    * sugerencia del pie. Las órdenes del pie (tocar, gritar) vienen en la vista y las cumple.
    */
   decidir(vista: VistaPartida, senias?: SeniasRecibidas, sugerencia?: Sugerencia): Accion
-  /** Señas que hace a su equipo al empezar la mano (después del corte). */
+  /**
+   * Señas que hace a su equipo al empezar la mano (después del corte): las de sus cartas, la
+   * flor y, con buen envido (sin flor), la de envido. El número lo agrega el servidor.
+   */
   hacerSenias(vista: VistaPartida): Senia[]
   /** Como pie: si manda al compañero a tocar o a gritar antes de que juegue. */
   ordenar(vista: VistaPartida, senias: SeniasRecibidas | undefined, companiero: number): QueManda | null
@@ -89,7 +92,10 @@ export function crearBotCon(nivel: Nivel, estrategia: Estrategia, semilla: numbe
       return validas.find((a) => a.tipo !== 'irseAlMazo') ?? validas[0]!
     },
     hacerSenias(vista) {
-      return vista.mano.muestra ? seniasDeMano(vista.mano.misCartas, vista.mano.muestra) : []
+      if (!vista.mano.muestra) return []
+      const senias = seniasDeMano(vista.mano.misCartas, vista.mano.muestra)
+      const envido = envidoParaSenia(vista.mano.miTanto)
+      return envido !== null && envido >= ENVIDO_PARA_SENIAR ? [...senias, 'envido'] : senias
     },
     ordenar(vista, senias, companiero) {
       if (!vista.mano.muestra) return null

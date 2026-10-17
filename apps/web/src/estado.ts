@@ -61,12 +61,15 @@ interface EstadoJuego {
   globos: Record<number, Globo>
   registro: LineaRegistro[]
   chat: MensajeChat[]
-  /** Señas de tus compañeros, con la mano en que te las hicieron (y si fue una repetición). */
-  senias: { de: number; senia: Senia; mano: number; repetida?: boolean; id: number }[]
+  /**
+   * Señas de tus compañeros, con la mano en que te las hicieron (y si fue una repetición).
+   * La de envido trae el número (`tanto`), que pone el servidor.
+   */
+  senias: { de: number; senia: Senia; mano: number; repetida?: boolean; tanto?: number; id: number }[]
   /** El último compañero que te pidió que le repitas las señas. */
   pedidoSenias: { de: number; id: number } | null
   /** Señas de los rivales que alcanzaste a ver (sin la carta si la sala no la deja ver). */
-  pescadas: { de: number; senia: Senia | null; id: number }[]
+  pescadas: { de: number; senia: Senia | null; tanto?: number; id: number }[]
   turno: { asientos: number[]; venceEn: number | null }
   error: { motivo: string; id: number } | null
   /** Solo online: si hay conexión con el servidor. */

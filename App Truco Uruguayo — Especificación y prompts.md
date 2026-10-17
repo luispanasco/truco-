@@ -252,8 +252,11 @@ Las señas son parte del juego y van en fase 1; el chat de texto también, y la 
 | Un 2 que no es pieza | Abrir la boca |
 | 1 de copas o 1 de oros | Sacar la lengua |
 | Flor | Inflar la boca como un sapo |
+| Envido (con el número: "envido 27") | Mirar para arriba, sacando la cuenta |
 
 - El resto de las cartas no tiene seña.
+- La seña de envido le dice al compañero cuánto tenés, con el número exacto. El número no lo elige quien seña: lo pone el servidor con el tanto real (con muestra y piezas). Con flor no se ofrece (con flor no hay envido: se marca la flor).
+- Resumen sobre los compañeros (opción de cada jugador, apagada de entrada): un cartelito arriba de cada compañero con lo que te marcó en la mano ("Envido 27 · Pieza 4 · Flor").
 - Se muestran como animación en el avatar del que la hace, y solo las recibe su compañero. El servidor nunca se las manda al equipo rival.
 - Los bots hacen señas según su mano y las leen para decidir.
 

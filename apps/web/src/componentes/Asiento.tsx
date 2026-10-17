@@ -1,6 +1,6 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { avatarAlAzar, codificarAvatar, leerAvatar, type LugarPublico } from '@truco/shared'
-import { GESTO, SIGNIFICADO } from '../senias'
+import { GESTO, significadoDe } from '../senias'
 import type { GestoActivo } from '../gestos'
 import { Avatar as Dibujo } from './Avatar'
 import { Carta } from './Carta'
@@ -45,6 +45,8 @@ interface Props {
   busto?: boolean
   /** Mesa en perspectiva: dónde pararlo y a qué escala (variables CSS, ver Perspectiva.tsx). */
   estilo?: CSSProperties
+  /** Solo compañeros, con la preferencia prendida: el resumen de lo que te marcó en la mano. */
+  resumen?: ReactNode
 }
 
 /**
@@ -91,11 +93,11 @@ export function Avatar({
  */
 function GloboSenia({ gesto, esCompaniero }: { gesto: GestoActivo; esCompaniero: boolean }) {
   const g = gesto.gesto
-  const titulo = g === 'disimulo' ? undefined : `${GESTO[g]}: ${SIGNIFICADO[g]}`
+  const titulo = g === 'disimulo' ? undefined : `${GESTO[g]}: ${significadoDe(g, gesto.tanto)}`
   return (
     <div className={`globo globo-senia${esCompaniero ? '' : ' pescada'}`} role="status" title={titulo}>
       <span aria-hidden="true">{esCompaniero ? '👀 ' : '🕵 '}</span>
-      {g === 'disimulo' ? 'le hizo una seña a su compañero' : <b>{SIGNIFICADO[g]}</b>}
+      {g === 'disimulo' ? 'le hizo una seña a su compañero' : <b>{significadoDe(g, gesto.tanto)}</b>}
     </div>
   )
 }
@@ -129,6 +131,7 @@ export function Asiento({
   chatAbajo = false,
   busto = false,
   estilo,
+  resumen,
 }: Props) {
   // Una persona que se desconectó conserva el lugar; mientras tanto juega un bot por ella.
   const desconectado = lugar.tipo === 'humano' && !lugar.conectado
@@ -193,6 +196,7 @@ export function Asiento({
           )}
         </>
       )}
+      {resumen}
       <div className="asiento-avatar">
         <Avatar lugar={lugar} gesto={gesto} busto={busto} />
         <AnilloVoz asiento={lugar.asiento} />

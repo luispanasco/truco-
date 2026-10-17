@@ -6,6 +6,8 @@ import type { GestoAvatar } from './avatares/gestos'
 export interface GestoActivo {
   gesto: GestoAvatar
   id: number
+  /** Con la seña de envido: el número que marcó. */
+  tanto?: number
 }
 
 /**
@@ -20,7 +22,7 @@ export const DURACION_GESTO = 2300
  * A cada gesto se le fija la hora de inicio al llegar, así el estado no depende de
  * timers sueltos (y no se traba si React monta los efectos dos veces).
  */
-export function useGestos(llegadas: readonly { de: number; senia: Senia | null; id: number }[]): Record<number, GestoActivo> {
+export function useGestos(llegadas: readonly { de: number; senia: Senia | null; tanto?: number; id: number }[]): Record<number, GestoActivo> {
   const [gestos, setGestos] = useState<(GestoActivo & { de: number; inicio: number })[]>([])
   const [ahora, setAhora] = useState(() => Date.now())
   const ultimo = useRef(0)
@@ -34,7 +36,7 @@ export function useGestos(llegadas: readonly { de: number; senia: Senia | null; 
       ultimo.current = l.id
       const inicio = Math.max(t, libreDesde.current.get(l.de) ?? 0)
       libreDesde.current.set(l.de, inicio + DURACION_GESTO)
-      nuevos.push({ de: l.de, gesto: l.senia ?? 'disimulo', id: l.id, inicio })
+      nuevos.push({ de: l.de, gesto: l.senia ?? 'disimulo', id: l.id, inicio, ...(l.tanto !== undefined ? { tanto: l.tanto } : {}) })
     }
     if (nuevos.length === 0) return
     setGestos((s) => [...s.filter((g) => g.inicio + DURACION_GESTO > t), ...nuevos])
@@ -50,6 +52,8 @@ export function useGestos(llegadas: readonly { de: number; senia: Senia | null; 
   }, [gestos, ahora])
 
   const activos: Record<number, GestoActivo> = {}
-  for (const g of gestos) if (g.inicio <= ahora && ahora < g.inicio + DURACION_GESTO) activos[g.de] = { gesto: g.gesto, id: g.id }
+  for (const g of gestos) {
+    if (g.inicio <= ahora && ahora < g.inicio + DURACION_GESTO) activos[g.de] = { gesto: g.gesto, id: g.id, ...(g.tanto !== undefined ? { tanto: g.tanto } : {}) }
+  }
   return activos
 }

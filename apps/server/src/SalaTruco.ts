@@ -33,9 +33,11 @@ import {
   normalizarAvatar,
   permisosDe,
   ESPERA_PEDIR_SENIAS_MS,
+  MOTIVO_ENVIDO_CON_FLOR,
   MOTIVO_SENIA_TARDE,
   MOTIVO_SIN_SENIAS,
   SENIAS_DEFAULT,
+  envidoDeSenia,
   normalizarSenias,
   normalizarTiempos,
   normalizarCartasJugadas,
@@ -428,6 +430,8 @@ export class SalaTruco extends Room {
       if (this.configSenias.momento === 'antesDeJugar' && yaJugoEnLaMano(this.estado!.mano, asiento)) {
         throw new Rechazo(MOTIVO_SENIA_TARDE)
       }
+      // La de envido va sin número: el número lo pone entregarSenias con el tanto real.
+      if (senia === 'envido' && envidoDeSenia(this.estado!.mano, asiento) === null) throw new Rechazo(MOTIVO_ENVIDO_CON_FLOR)
       this.entregarSenias(asiento, [senia])
     })
 
@@ -948,13 +952,22 @@ export class SalaTruco extends Room {
    * Las señas se les hacen a los compañeros. Cada rival, según la sala, puede pescar
    * cada una con cierta probabilidad: la sortea el servidor, nunca el cliente. Una seña
    * repetida no se anota de nuevo (ya la tienen), pero se puede pescar como cualquiera.
+   * La de envido sale con el número del tanto real de quien la hace (con flor no se hace).
    */
   private entregarSenias(de: number, senias: Senia[], repetida = false) {
     const mano = this.estado!.mano.numero
+    const envido = envidoDeSenia(this.estado!.mano, de)
+    if (envido === null) senias = senias.filter((s) => s !== 'envido')
+    if (senias.length === 0) return
+    const conNumero = (senia: Senia) => (senia === 'envido' ? { tanto: envido! } : {})
+    const anotarEnvido = (a: number) => (this.senias[a]!.envido = { ...this.senias[a]!.envido, [de]: envido! })
     for (const b of this.companierosDe(de)) {
-      if (!repetida) this.senias[b]![de] = [...(this.senias[b]![de] ?? []), ...senias]
+      if (!repetida) {
+        this.senias[b]![de] = [...(this.senias[b]![de] ?? []), ...senias]
+        if (senias.includes('envido')) anotarEnvido(b)
+      }
       if (this.humanoConectado(b)) {
-        for (const senia of senias) this.enviarA(b, 'senia', { de, senia, mano, ...(repetida ? { repetida } : {}) })
+        for (const senia of senias) this.enviarA(b, 'senia', { de, senia, mano, ...conNumero(senia), ...(repetida ? { repetida } : {}) })
       }
     }
     const { pescar, probabilidadPescar } = this.configSenias
@@ -963,10 +976,11 @@ export class SalaTruco extends Room {
       for (const senia of senias) {
         if (!(Math.random() < probabilidadPescar)) continue
         const vista = pescar === 'gestoYCarta' ? senia : null
-        if (this.humanoConectado(r)) this.enviarA(r, 'seniaPescada', { de, senia: vista })
+        if (this.humanoConectado(r)) this.enviarA(r, 'seniaPescada', { de, senia: vista, ...(vista ? conNumero(vista) : {}) })
         // Los bots (y los reemplazos) usan lo que pescaron para imaginar la mano del rival.
         else if (vista && !(repetida && this.senias[r]![de]?.includes(vista))) {
           this.senias[r]![de] = [...(this.senias[r]![de] ?? []), vista]
+          if (vista === 'envido') anotarEnvido(r)
         }
       }
     }

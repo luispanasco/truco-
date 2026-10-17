@@ -1,6 +1,6 @@
 import { fuerza, type Carta } from '@truco/engine'
 
-export { GESTO, SIGNIFICADO } from '@truco/bots'
+export { GESTO, SIGNIFICADO, significadoDe } from '@truco/bots'
 
 /** Piezas y matas: las cartas que las ayudas resaltan. */
 export function esPiezaOMata(c: Carta, muestra: Carta): boolean {

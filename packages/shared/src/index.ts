@@ -3,7 +3,7 @@
  * cambio en el protocolo no compila hasta que ambos lo acompañan.
  */
 import type { Accion, Carta, ConfigSala, Evento, Formato, VistaPartida } from '@truco/engine'
-import type { Nivel, Senia, Sugerencia } from '@truco/bots'
+import { envidoParaSenia, type Nivel, type Senia, type Sugerencia } from '@truco/bots'
 import type { IdBaraja } from './barajas'
 import type { IdMesa } from './mesas'
 import type { EstadoVoz, SenalVoz } from './voz'
@@ -126,6 +126,19 @@ export function yaJugoEnLaMano(mano: { enfrentamientos: { vueltas: { jugadas: { 
 
 /** Texto del rechazo cuando ya pasó el momento de hacer señas. */
 export const MOTIVO_SENIA_TARDE = 'En esta sala las señas se hacen antes de jugar tu primera carta'
+
+/** Texto del rechazo de la seña de envido con flor: con flor el envido no se juega. */
+export const MOTIVO_ENVIDO_CON_FLOR = 'Con flor no hay envido: marcale la flor'
+
+/**
+ * El envido que anuncia la seña de envido de `asiento`: su tanto real, con muestra y piezas,
+ * como lo cuenta el motor. null si tiene flor. Lo calculan el servidor y la conexión local,
+ * nunca el cliente (así nadie puede marcar un número que no tiene).
+ */
+export function envidoDeSenia(mano: { tantos: readonly { envidoReal: number; florReal: number | null }[] }, asiento: number): number | null {
+  const t = mano.tantos[asiento]
+  return t ? envidoParaSenia({ envido: t.envidoReal, flor: t.florReal }) : null
+}
 
 /** Texto del rechazo cuando la mesa se juega sin señas. */
 export const MOTIVO_SIN_SENIAS = 'En esta mesa no se hacen señas'
@@ -286,16 +299,18 @@ export interface MensajesServidor {
   chat: MensajeChat
   /**
    * Seña de un compañero, con el número de mano en que la hizo. `repetida` si la volvió a
-   * hacer porque se la pidieron.
+   * hacer porque se la pidieron. Con la seña de envido, `tanto` es su envido: lo pone el
+   * servidor con el tanto real (el cliente manda solo la seña).
    */
-  senia: { de: number; senia: Senia; mano: number; repetida?: boolean }
+  senia: { de: number; senia: Senia; mano: number; repetida?: boolean; tanto?: number }
   /** Un compañero te pide que le repitas las señas de esta mano. */
   pidenSenias: { de: number }
   /**
    * Seña de un rival a su compañero que este jugador alcanzó a ver. `senia` es null
-   * si la sala solo deja ver que se hizo una (no cuál).
+   * si la sala solo deja ver que se hizo una (no cuál). Si deja ver cuál y es la de
+   * envido, también se ve el número (`tanto`).
    */
-  seniaPescada: { de: number; senia: Senia | null }
+  seniaPescada: { de: number; senia: Senia | null; tanto?: number }
   /** El pie le sugirió algo a su equipo, en voz alta. */
   sugerencia: { de: number; sugerencia: Sugerencia }
   /**

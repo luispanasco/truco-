@@ -170,7 +170,8 @@ export function crearExperto(aj: AjustesExperto): Estrategia {
         for (const a of ctx.e.participantes) {
           if (ctx.e.retirados.includes(a)) continue
           const cartas = m.completas.get(a) ?? []
-          const t = a === ctx.yo ? ctx.miTanto.envido : (declarados.get(a) ?? calcularEnvido(cartas, ctx.muestra))
+          const t =
+            a === ctx.yo ? ctx.miTanto.envido : (declarados.get(a) ?? ctx.envidoMarcado.get(a) ?? calcularEnvido(cartas, ctx.muestra))
           if (!mejor || t > mejor.t) mejor = { a, t }
           if (equipoDe(a) !== ctx.equipo) tantoRival = Math.max(tantoRival, t)
           if (cantaronFlor.has(a)) {

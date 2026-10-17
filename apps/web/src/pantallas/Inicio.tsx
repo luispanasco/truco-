@@ -300,6 +300,12 @@ export function Inicio() {
                 titulo="Señas antes de jugar"
                 detalle="Las señas se hacen solo hasta tirar tu primera carta de la mano"
               />
+              <Interruptor
+                activo={perfil.resumenSenias}
+                alCambiar={(v) => cambiar({ resumenSenias: v })}
+                titulo="Resumen de señas sobre los compañeros"
+                detalle="Un cartelito arriba de cada compañero con lo que te marcó en la mano (también online). Solo lo ves vos"
+              />
             </>
           )}
           <Interruptor

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { nombreCarta, piezaDe, type Carta as TCarta } from '@truco/engine'
 import { seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
 import type { ConfigSenias } from '@truco/shared'
-import { GESTO, SIGNIFICADO } from '../senias'
+import { GESTO, SIGNIFICADO, significadoDe } from '../senias'
 import type { ParteCara, ZonaCara, ZonasCara } from '../avatares/gestos'
 import { Avatar } from './Avatar'
 import { Hoja } from './Hoja'
@@ -38,6 +38,7 @@ const ROTULO: Record<Senia, string> = {
   dosComun: 'un 2',
   unoFalso: '1 cop/oro',
   flor: 'flor',
+  envido: 'envido',
 }
 
 /** Las señas de la boca, en el menú corto que se abre al tocarla. */
@@ -105,6 +106,7 @@ export function PanelSenias({
   sugeridas = null,
   config,
   cerrado = null,
+  envido,
 }: {
   /** Tu avatar (el código, como viaja en tu lugar de la mesa). */
   avatar: string
@@ -116,6 +118,12 @@ export function PanelSenias({
   config?: ConfigSenias
   /** Motivo por el que ya no se pueden hacer señas en esta mano, o null. */
   cerrado?: string | null
+  /**
+   * Tu envido, para marcárselo a tus compañeros: el número es el que les llega (lo pone el
+   * servidor). null si tenés flor: con flor no hay envido, se marca la flor. Sin dato, el
+   * botón va sin número.
+   */
+  envido?: number | null
 }) {
   const [boca, setBoca] = useState(false)
   const [hecha, setHecha] = useState<{ senia: Senia; id: number } | null>(null)
@@ -177,10 +185,28 @@ export function PanelSenias({
           )
         })}
       </div>
+      {/* El envido no es una parte de la cara: va aparte, con tu número (el que les llega). */}
+      {envido !== null && !hecha && (
+        <button
+          type="button"
+          className="senia-envido"
+          disabled={!!cerrado}
+          aria-label={etiqueta('envido')}
+          onClick={() => hacer('envido')}
+        >
+          <span className="senia-boca-icono" aria-hidden="true">
+            {CORTO.envido.icono}
+          </span>
+          <span aria-hidden="true">
+            Marcar tu envido{envido !== undefined && <>: <b>{envido}</b></>}
+            <small>{GESTO.envido.toLowerCase()}</small>
+          </span>
+        </button>
+      )}
       <div className="senias-pie" aria-live="polite">
         {hecha ? (
           <p className="senias-hecha">
-            {GESTO[hecha.senia]} → <b>{SIGNIFICADO[hecha.senia]}</b>
+            {GESTO[hecha.senia]} → <b>{significadoDe(hecha.senia, envido)}</b>
           </p>
         ) : boca ? (
           <div className="senias-boca" role="group" aria-label="Señas con la boca">
@@ -231,6 +257,7 @@ export const CORTO: Record<Senia, { icono: string; nombre: string; espejo?: bool
   dosComun: { icono: '😮', nombre: 'Boca' },
   unoFalso: { icono: '😛', nombre: 'Lengua' },
   flor: { icono: '🐸', nombre: 'Sapo' },
+  envido: { icono: '🤔', nombre: 'Cuenta' },
 }
 
 export interface SeniaRapida {
