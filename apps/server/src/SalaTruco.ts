@@ -64,6 +64,8 @@ import {
 import { LimiteFrecuencia, filtrarTexto, prepararMensaje } from './chat'
 import { generarCodigoUnico } from './codigos'
 import { Archivo, type RegistroPartida } from './registro'
+import type { Cuentas } from './cuentas/api'
+import type { Usuario } from './cuentas/auth'
 
 export interface Tiempos {
   /**
@@ -118,6 +120,8 @@ interface Lugar {
   asiento: number
   tipo: 'libre' | 'humano' | 'bot'
   invitadoId: string | null
+  /** La cuenta con la que entró (fase 2), o null si juega como invitado. */
+  cuentaId: string | null
   apodo: string
   avatar: string | null
   sessionId: string | null
@@ -148,6 +152,7 @@ function lugarLibre(asiento: number): Lugar {
     asiento,
     tipo: 'libre',
     invitadoId: null,
+    cuentaId: null,
     apodo: '',
     avatar: null,
     sessionId: null,
@@ -181,6 +186,8 @@ export class SalaTruco extends Room {
    * (`TRUCO_TIENDA_DE_PRUEBA`). En la fase 2 se apaga y solo vale lo que compró cada uno.
    */
   tiendaDePrueba = false
+  /** Cuentas (fase 2): si está, quien manda un token de sesión entra con su cuenta. */
+  cuentas: Cuentas | null = null
 
   override maxMessagesPerSecond = 30
 
@@ -248,13 +255,24 @@ export class SalaTruco extends Room {
     this.revisarCierre()
   }
 
+  /** Con un token de sesión, se verifica la cuenta; sin token se entra como invitado. */
+  override async onAuth(_client: Client, opciones: OpcionesUnirse): Promise<Usuario | true> {
+    const token = typeof opciones?.token === 'string' ? opciones.token : null
+    if (!token || !this.cuentas) return true
+    const usuario = await this.cuentas.verificar(token)
+    if (!usuario) throw new Error('La sesión venció: volvé a entrar a tu cuenta')
+    return usuario
+  }
+
   override onJoin(client: Client, opciones: OpcionesUnirse) {
+    const cuentaId = typeof client.auth === 'object' && client.auth ? (client.auth as Usuario).id : null
     const invitadoId = texto(opciones?.invitadoId, 64)
     const apodo = texto(opciones?.apodo, LIMITES.largoApodo)
     if (!invitadoId || invitadoId.length < 8) throw new Error('Falta el ID de invitado')
     if (!apodo) throw new Error('Falta el apodo')
 
-    let lugar = this.lugares.find((l) => l.invitadoId === invitadoId)
+    // Con cuenta, el lugar se recupera también desde otro dispositivo.
+    let lugar = this.lugares.find((l) => l.invitadoId === invitadoId || (cuentaId !== null && l.cuentaId === cuentaId))
     if (lugar) {
       // Vuelve alguien que ya tenía lugar (otra pestaña o reconexión tardía).
       const anterior = lugar.sessionId ? this.clients.get(lugar.sessionId) : undefined
@@ -266,6 +284,7 @@ export class SalaTruco extends Room {
       lugar.tipo = 'humano'
       lugar.invitadoId = invitadoId
     }
+    lugar.cuentaId = cuentaId
     lugar.apodo = filtrarTexto(apodo)
     lugar.tienda = this.tiendaDePrueba && opciones?.tiendaDesbloqueada === true
     // Un avatar inválido o con piezas que no tiene se reemplaza por uno armado desde el apodo.
@@ -640,6 +659,7 @@ export class SalaTruco extends Room {
         apodo: l.apodo,
         tipo: l.tipo === 'bot' ? 'bot' : 'humano',
         invitadoId: l.invitadoId,
+        cuentaId: l.cuentaId,
       })),
       acciones: [],
       resultado: null,

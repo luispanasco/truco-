@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react'
-import { guardarPerfil, leerPerfil, type Perfil } from '../perfil'
+import { useCallback, useEffect, useState } from 'react'
+import { guardarPerfil, leerPerfil, observarPerfil, type Perfil } from '../perfil'
 import { Avatar } from './Avatar'
 import { EditorAvatar } from './EditorAvatar'
 import { Hoja } from './Hoja'
@@ -8,6 +8,8 @@ import { SelectorBaraja } from './SelectorBaraja'
 /** El perfil de este navegador; se guarda mientras se edita, así sobrevive a recargar la página. */
 export function usePerfil(): [Perfil, (p: Partial<Perfil>) => void] {
   const [perfil, setPerfil] = useState(leerPerfil)
+  // Al entrar a la cuenta, lo guardado en ella reemplaza lo de este navegador.
+  useEffect(() => observarPerfil((p, origen) => origen === 'cuenta' && setPerfil(p)), [])
   const cambiar = (p: Partial<Perfil>) =>
     setPerfil((x) => {
       const nuevo = { ...x, ...p }

@@ -283,6 +283,16 @@ input {
   color: var(--tinta);
   font-size: 0.75rem;
 }
+/* Tu cuenta (fase 2) */
+.cuenta-email {
+  display: grid;
+  gap: 10px;
+}
+.cuenta-quien {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .perfil-apodo {
   display: grid;
   gap: 4px;

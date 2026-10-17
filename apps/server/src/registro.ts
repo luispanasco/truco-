@@ -15,7 +15,7 @@ export interface RegistroPartida {
   /** Asiento que repartió la primera mano (en las revanchas va rotando). */
   reparte: number
   config: ConfigSala
-  jugadores: { asiento: number; apodo: string; tipo: 'humano' | 'bot'; invitadoId: string | null }[]
+  jugadores: { asiento: number; apodo: string; tipo: 'humano' | 'bot'; invitadoId: string | null; cuentaId?: string | null }[]
   acciones: { ms: number; asiento: number; accion: Accion; porBot: boolean }[]
   resultado: { ganador: Equipo; puntos: [number, number] } | { abandonada: true } | null
 }

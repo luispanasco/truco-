@@ -856,3 +856,46 @@ Pedido del usuario: la animación del corte no convencía; que se vea el mazo pa
 - Online, el reloj del primer turno corre durante la tirada (el servidor no sabe que la mesa la está mostrando): si te toca cortar, tenés unos segundos menos.
 
 **Arreglado después (2026-10-13):** online, el reloj del primer turno ya no corre mientras la mesa muestra la tirada de reyes: el plan de tiempos (`planReyes`) pasó a `@truco/shared` y el servidor espera lo que dura la tirada (con el cambio de lugares, si lo hubo) antes de arrancarlo.
+
+---
+
+## Fase 2: plan y decisiones — 2026-10-17
+
+El usuario aprobó el plan de la fase 2 en cinco etapas: **2A** cuentas, **2B** monedas, **2C** tienda e inventario, **2D** ranking y amigos, **2E** voz. La voz la hace un agente en paralelo, en la rama `voz`. Otro agente hace la **mesa en perspectiva** (una tercera vista, 2.5D con CSS 3D; círculos y sentados quedan como están), en la rama `mesa-perspectiva`.
+
+**Decisiones:**
+- **Supabase** para la base (PostgreSQL, São Paulo) y para el login (Google y link por email). El usuario crea el proyecto y la credencial de Google con `INSTRUCTIVO-CUENTAS.md`.
+- **Monedas:**
+  - 10 por partida terminada, más 10 por ganarla, más 30 en la primera del día;
+  - contra bots se cobra el 30 %; si abandonás, nada;
+  - hay un tope diario.
+- **La tienda es diaria:** cada día ofrece una selección al azar de productos. **Los cosméticos tienen rareza.**
+- **Elo y ranking por formato:** el Elo solo cambia en partidas contra otra gente, nunca contra bots.
+- **Hosting:** la web en Cloudflare Pages y el servidor en Fly.io (São Paulo), al final de la fase.
+
+## Etapa 2A: cuentas — 2026-10-17
+
+- **La base** (`apps/server/src/cuentas/base.ts`):
+  - con `DATABASE_URL` es PostgreSQL (`pg`);
+  - sin ella, en desarrollo, es PGlite: el mismo Postgres compilado a WebAssembly, guardado en `apps/server/datos/base`. Los tests la usan en memoria;
+  - las migraciones van numeradas en `migraciones.ts` y se aplican solas al arrancar.
+- **Las sesiones** (`auth.ts`):
+  - el JWT de Supabase se verifica con las claves públicas del proyecto (JWKS), así que el servidor solo necesita `SUPABASE_URL`;
+  - sin Supabase, en desarrollo hay un **login de prueba** (`prueba:<email>`, sin contraseña) para ir probando monedas y tienda. En producción no existe.
+- **La API** (`/api`, desde la web en `/juego/api`):
+  - `GET /estado`;
+  - `POST /entrar`: la primera vez crea la cuenta con el apodo, el avatar y las preferencias del invitado, y vincula su ID. Las veces siguientes, lo de la cuenta pasa al navegador;
+  - `PUT /perfil`, con todo validado.
+- **En la sala:**
+  - quien manda `token` entra con su cuenta (`onAuth`). Un token vencido no entra; sin token se juega como invitado, como siempre;
+  - con cuenta, el lugar se recupera también desde otro dispositivo;
+  - el registro de la partida guarda la `cuentaId`.
+- **La web:**
+  - "Tu cuenta" en el inicio, con "Entrar con Google" y el link por email (o el email del login de prueba) y "Salir";
+  - lo que se cambia del perfil se sube a la cuenta a los 1,5 s;
+  - el token viaja al entrar a las salas.
+
+  Si el servidor no tiene cuentas, la tarjeta no aparece.
+- **Tests:** server 63 (6 nuevos de cuentas), web 258 (1 nuevo).
+
+**Pendiente:** probar con el Supabase real, cuando el usuario cargue los `.env`.

@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import type { OpcionesUnirse } from '@truco/shared'
 import { useJuego } from '../estado'
+import { useCuenta } from '../cuenta/cuenta'
 import type { Perfil } from '../perfil'
 
 /**
@@ -16,6 +17,7 @@ export function datosUnirse(p: Perfil): OpcionesUnirse {
     mesa: p.mesa,
     baraja: p.baraja,
     ...(p.tiendaDesbloqueada ? { tiendaDesbloqueada: true } : {}),
+    ...(useCuenta.getState().token ? { token: useCuenta.getState().token! } : {}),
   }
 }
 

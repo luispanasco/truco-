@@ -9,3 +9,5 @@ capturas/
 test-results/
 playwright-report/
 __pycache__/
+.env
+.env.local

@@ -142,12 +142,24 @@ export function cosmeticosPermitidos(p: Perfil): Pick<Perfil, 'avatar' | 'mesa' 
   }
 }
 
-export function guardarPerfil(p: Perfil) {
+/** Quién guardó el perfil: la persona (desde la app) o la cuenta (al entrar desde otro dispositivo). */
+export type OrigenPerfil = 'app' | 'cuenta'
+
+const oyentesPerfil = new Set<(p: Perfil, origen: OrigenPerfil) => void>()
+
+/** Avisa cada vez que se guarda el perfil (la cuenta lo sube; la pantalla toma lo que bajó la cuenta). */
+export function observarPerfil(oyente: (p: Perfil, origen: OrigenPerfil) => void): () => void {
+  oyentesPerfil.add(oyente)
+  return () => void oyentesPerfil.delete(oyente)
+}
+
+export function guardarPerfil(p: Perfil, origen: OrigenPerfil = 'app') {
   try {
     localStorage.setItem(CLAVE, JSON.stringify(p))
   } catch {
     // Sin almacenamiento (modo privado): no se recuerda, pero la app sigue funcionando.
   }
+  for (const o of oyentesPerfil) o(p, origen)
 }
 
 /**

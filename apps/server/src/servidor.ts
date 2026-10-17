@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { defineRoom, defineServer, playground, type ServerOptions } from 'colyseus'
 import { SALAS } from '@truco/shared'
 import { Archivo } from './registro'
+import { rutasCuentas, type Cuentas } from './cuentas/api'
 import { SalaTruco, TIEMPOS_DEFAULT, type Tiempos } from './SalaTruco'
 
 export interface OpcionesServidor {
@@ -13,6 +14,8 @@ export interface OpcionesServidor {
   playground?: boolean
   /** Aceptar lo pago a quien desbloqueó la tienda de prueba; por defecto, según el entorno. */
   tiendaDePrueba?: boolean
+  /** Cuentas, monedas y tienda (fase 2); sin esto se juega solo como invitado. */
+  cuentas?: Cuentas | null
 }
 
 /**
@@ -33,13 +36,17 @@ export function crearServidor(op: OpcionesServidor = {}) {
     override tiempos = tiempos
     override archivo = archivo
     override tiendaDePrueba = tiendaDePrueba
+    override cuentas = op.cuentas ?? null
   }
   class SalaPublica extends SalaPrivada {
     override publica = true
   }
 
   return defineServer({
-    ...(op.playground ? { express: (app: Parameters<NonNullable<ServerOptions['express']>>[0]) => void app.use('/playground', playground()) } : {}),
+    express: (app: Parameters<NonNullable<ServerOptions['express']>>[0]) => {
+      app.use('/api', rutasCuentas(op.cuentas ?? null))
+      if (op.playground) app.use('/playground', playground())
+    },
     rooms: {
       [SALAS.privada]: defineRoom(SalaPrivada),
       [SALAS.publica]: defineRoom(SalaPublica),

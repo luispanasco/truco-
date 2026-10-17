@@ -140,6 +140,8 @@ export interface OpcionesUnirse {
   invitadoId: string
   apodo: string
   avatar?: string
+  /** Fase 2: el token de la sesión (Supabase), si entró a su cuenta. Sin él, juega como invitado. */
+  token?: string
   /**
    * Prueba de la tienda (fase 1): el cliente avisa que tiene la tienda desbloqueada y el
    * servidor, si lo permite (`TRUCO_TIENDA_DE_PRUEBA`), le acepta las piezas, mesas y barajas

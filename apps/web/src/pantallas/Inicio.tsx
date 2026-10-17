@@ -18,6 +18,7 @@ import { useEnLinea } from '../enLinea'
 import { useJuego } from '../estado'
 import { cosmeticosPermitidos } from '../perfil'
 import { aplicarMesa } from '../temaMesa'
+import { TarjetaCuenta } from '../componentes/TarjetaCuenta'
 import { aplicarTipografia } from '../temaTipografia'
 
 /** Una opción del menú online: ícono, título y una línea que explica. */
@@ -190,6 +191,7 @@ export function Inicio() {
       <PartidaEnCurso apodo={apodo.length > 0} enLinea={enLinea} alVolver={volverALaPartida} />
 
       <TarjetaPerfil perfil={perfil} cambiar={cambiar} />
+      <TarjetaCuenta />
       <AjustesSonido />
 
       <section className="tarjeta">
