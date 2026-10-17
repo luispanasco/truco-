@@ -29,7 +29,7 @@ function ganaMiEquipo(ctx: Contexto, tantos: { asiento: number; tanto: number }[
 
 /** Probabilidad de que el equipo del bot gane el envido. */
 export function probEnvido(ctx: Contexto, op: OpcionesEstimacion): number {
-  return memo(ctx, `env:${op.muestras}:${op.declarado}:${op.pesos}`, () => {
+  return memo(ctx, `env:${op.muestras}:${op.declarado}:${op.pesos}:${op.senias}`, () => {
     const muestras = muestrasDe(ctx, op)
     if (muestras.length === 0) return 0.5
     const declarados = new Map(
@@ -42,7 +42,10 @@ export function probEnvido(ctx: Contexto, op: OpcionesEstimacion): number {
         tanto:
           a === ctx.yo
             ? ctx.miTanto.envido
-            : (declarados.get(a) ?? calcularEnvido(m.completas.get(a) ?? [], ctx.muestra)),
+            : (declarados.get(a) ??
+              // El que lo marcó con la seña ya dijo cuánto tiene (por si el muestreo se relajó).
+              (op.senias ? ctx.envidoMarcado.get(a) : undefined) ??
+              calcularEnvido(m.completas.get(a) ?? [], ctx.muestra)),
       }))
       if (ganaMiEquipo(ctx, tantos)) gana++
     }

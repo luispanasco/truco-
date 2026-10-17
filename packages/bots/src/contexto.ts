@@ -46,6 +46,8 @@ export interface Contexto {
   companeros: number[]
   rivales: number[]
   senias: Map<number, Senia[]>
+  /** El envido que le marcó cada uno con la seña de envido (compañeros, o rivales pescados). */
+  envidoMarcado: Map<number, number>
   rng: Aleatorio
   cache: Map<string, unknown>
 }
@@ -82,7 +84,12 @@ export function crearContexto(vista: VistaPartida, senias: SeniasRecibidas | und
     otros,
     companeros: otros.filter((a) => equipoDe(a) === equipo),
     rivales: otros.filter((a) => equipoDe(a) !== equipo),
-    senias: new Map(Object.entries(senias ?? {}).map(([a, s]) => [Number(a), s])),
+    senias: new Map(
+      Object.entries(senias ?? {})
+        .filter(([a]) => a !== 'envido')
+        .map(([a, s]) => [Number(a), s as Senia[]]),
+    ),
+    envidoMarcado: new Map(Object.entries(senias?.envido ?? {}).map(([a, t]) => [Number(a), t])),
     rng,
     cache: new Map(),
   }

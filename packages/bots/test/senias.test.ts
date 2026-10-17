@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Carta, Numero, Palo } from '@truco/engine'
-import { mismasSenias, seniaDeCarta, seniasDeMano } from '../src'
+import { envidoParaSenia, mismasSenias, seniaDeCarta, seniasDeMano, SENIAS, significadoDe, SIGNIFICADO } from '../src'
 
 const PALOS: Record<string, Palo> = { e: 'espada', b: 'basto', o: 'oro', c: 'copa' }
 const c = (t: string): Carta => ({ numero: Number(t.slice(0, -1)) as Numero, palo: PALOS[t.slice(-1)]! })
@@ -49,5 +49,16 @@ describe('señas', () => {
   it('compara señas sin importar el orden', () => {
     expect(mismasSenias(['tres', 'flor'], ['flor', 'tres'])).toBe(true)
     expect(mismasSenias(['tres'], ['tres', 'tres'])).toBe(false)
+  })
+
+  it('la de envido anuncia un número, y con flor no se marca', () => {
+    // Va al final de la lista: las de antes no cambian de lugar.
+    expect(SENIAS.at(-1)).toBe('envido')
+    expect(significadoDe('envido', 27)).toBe('envido 27')
+    expect(significadoDe('envido')).toBe(SIGNIFICADO.envido)
+    expect(significadoDe('tres', 27)).toBe(SIGNIFICADO.tres)
+    expect(envidoParaSenia({ envido: 31, flor: null })).toBe(31)
+    expect(envidoParaSenia({ envido: 31, flor: 35 })).toBeNull()
+    expect(envidoParaSenia(null)).toBeNull()
   })
 })

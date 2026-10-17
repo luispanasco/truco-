@@ -223,6 +223,25 @@
 }
 
 /*
+ * Envido: mira para arriba, de costado, sacando la cuenta (las cejas suben un poco, torcidas,
+ * y la boca se aprieta hacia un lado). Distinto de las cejas del 2 (que suben derechas y abren
+ * los ojos) y del disimulo (que mira a los costados).
+ */
+.avatar-dibujo[data-gesto='envido'] .ojo-mitad {
+  --t: calc(var(--u) * 3px) calc(var(--u) * -4px);
+  --s: 1 0.85;
+}
+.avatar-dibujo[data-gesto='envido'] .capa-cejas {
+  --t: 0 calc(var(--u) * -3px);
+  --r: 6deg;
+}
+.avatar-dibujo[data-gesto='envido'] :is(.capa-boca, .capa-enBoca) {
+  --t: calc(var(--u) * 5px) 0;
+  --s: 0.6 0.8;
+  --r: -8deg;
+}
+
+/*
  * Lo que va en la boca (pipa, pajita, escarbadientes): en las muecas de la pera se va con la
  * boca (arriba); cuando la boca se abre, se frunce, se muerde o saca la lengua, se guarda.
  */

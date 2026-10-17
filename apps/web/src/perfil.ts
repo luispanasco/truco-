@@ -53,6 +53,11 @@ export interface Perfil {
   pescarSenias: boolean
   /** Contra bots: señas solo antes de jugar la primera carta de la mano. */
   seniasAntesDeJugar: boolean
+  /**
+   * Un cartelito arriba de cada compañero con lo que te marcó en la mano (envido, cartas y flor).
+   * Es solo tuyo (no cambia la sala). Apagado de entrada; también se cambia desde la mesa.
+   */
+  resumenSenias: boolean
   /** Tiempos de la última sala que armó (por jugada y primera jugada del mano). */
   tiempos: ConfigTiempos
   /** Dibujo de las cartas (cosmético): la baraja propia en SVG o la clásica de Fournier (1878). */
@@ -123,6 +128,7 @@ export function leerPerfil(): Perfil {
     pescarSenias: true,
     seniasAntesDeJugar: false,
     seniasHabilitadas: true,
+    resumenSenias: false,
     tiempos: TIEMPOS_SALA_DEFAULT,
     baraja: BARAJA_DEFAULT,
     vistaMesa: 'circulos',

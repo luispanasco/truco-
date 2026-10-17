@@ -9,7 +9,7 @@ import { createInterface } from 'node:readline'
 import { stdin, stdout } from 'node:process'
 import { Client } from '@colyseus/sdk'
 import { nombreCarta, type Evento, type Formato, type VistaPartida } from '@truco/engine'
-import { GESTO, SENIAS, SIGNIFICADO, type Nivel, type Senia } from '@truco/bots'
+import { GESTO, SENIAS, SIGNIFICADO, significadoDe, type Nivel, type Senia } from '@truco/bots'
 import { SALAS, type InfoSala, type MensajeChat, type MensajesCliente, type MensajesServidor } from '@truco/shared'
 import { describirAccion, describirEvento } from '@truco/shared'
 
@@ -139,7 +139,7 @@ async function main() {
       console.log(`  💬 [${m.canal}] ${m.de === yo() ? 'vos' : m.apodo}: ${m.texto}`)
     } else if (t === 'senia') {
       const s = datos as MensajesServidor['senia']
-      console.log(`  👀 ${nombre(s.de)} te hace una seña: ${GESTO[s.senia].toLowerCase()} (${SIGNIFICADO[s.senia]})`)
+      console.log(`  👀 ${nombre(s.de)} te hace una seña: ${GESTO[s.senia].toLowerCase()} (${significadoDe(s.senia, s.tanto)})`)
     } else if (t === 'error') {
       console.log(`  ⚠ ${(datos as MensajesServidor['error']).motivo}`)
       // Se puede volver a elegir: se muestran de nuevo las opciones.

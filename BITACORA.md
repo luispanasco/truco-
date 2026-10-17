@@ -1015,3 +1015,40 @@ Primera parte de la fase 2 que no depende de las cuentas: hablar en la mesa. Lo 
 - La voz es solo en la mesa: en la sala de espera todavía no se habla.
 - En la mesa de bustos el halo es redondo aunque el busto no lo sea.
 - Si la voz crece (más de 6, o salas grandes), pasar a un SFU como LiveKit, como dice la especificación.
+
+---
+
+## Seña de envido y resumen de señas sobre los compañeros — 2026-10-17
+
+Dos pedidos del usuario, con el plan aprobado. Lo hizo un agente en la rama `resumen-companiero` (sin merge a main).
+
+- **La seña de envido** (`envido`, al final de `SENIAS`: la lista solo crece al final). Le marca al compañero cuánto tenés de envido, con el número ("envido 27").
+  - **El número lo pone el servidor**, no el cliente. El cliente manda `{ senia: 'envido' }` como cualquier otra seña (si agrega un número, no se mira). El servidor (y la conexión local) lo sacan del tanto real de quien seña, como lo cuenta el motor, con muestra y piezas (`envidoDeSenia` en `@truco/shared`). Viaja en el mensaje `senia` como `tanto`, solo a los compañeros.
+  - **Representación del tipo** (lo menos invasivo): `Senia` sigue siendo una unión de strings, con `'envido'` de más. El número va aparte: `tanto?` en los mensajes `senia` y `seniaPescada`, y `envido?: Record<asiento, número>` en `SeniasRecibidas` (que pasó a ser una interfaz con el índice numérico de siempre). Las listas de señas no cambian, y los tests de antes siguen igual.
+  - **Con flor no se ofrece.** En el truco uruguayo, con flor no hay envido (la flor lo tapa): se marca la flor. En la cara de señas no aparece el botón, y si igual llega, el servidor la rechaza con "Con flor no hay envido: marcale la flor".
+  - **Reglas de siempre:** solo en equipos y fuera del pica-pica; "antes de jugar" la cierra igual; se puede pedir que la repitan (repetida trae el mismo número); y el rival la puede pescar. Con "gesto", ve que hubo una seña pero no cuál; con "gesto y carta", la ve con el número (y el bot rival lo usa).
+  - **Gesto:** "Mirar para arriba, sacando la cuenta": los ojos van para arriba y de costado, las cejas suben un poco, torcidas, y la boca se aprieta hacia un lado (`gestos.css`). En la cara de señas va un botón aparte, debajo de la cara ("🤔 Marcar tu envido: 27"), porque no es una parte de la cara. No está en la tira de señas rápidas: esa tira es la de tus cartas y a 360 px no sobra lugar.
+  - En el globo y en el panel del compañero se ve "envido 27" (`significadoDe`). El cliente de terminal también lo muestra.
+- **Bots:**
+  - marcan su envido al empezar la mano, después de las señas de sus cartas, desde 30 y sin flor (`ENVIDO_PARA_SENIAR`). Con 27 lo hacían en 6 de cada 10 manos: con muestra, las piezas dan envidos altos seguido y la seña perdía valor.
+  - Los que leen señas (difícil, muy difícil y master) imaginan al compañero con ese envido exacto y sin flor (`muestreo.ts`), y lo usan para cantar y querer el envido en equipo (`probEnvido` y los escenarios del experto). El medio no lo usa: no mira señas para calcular, para no acercarse al difícil.
+  - Difícil contra medio en 2v2, 400 partidas: 67,8 % ± 4,6 % (antes, 64–66 %).
+- **El resumen sobre los compañeros:**
+  - un cartelito arriba del avatar de cada compañero, con lo que te marcó en la mano: una pila de fichitas con ícono y texto corto ("🤔 Envido 27", "💋 Pieza 4", "🐸 Flor"), el envido primero y resaltado, después las cartas y la flor al final. El texto completo va en la etiqueta para lectores de pantalla.
+  - Se arma con lo que te llegó (`resumenDe`); se actualiza con cada seña y en la mano nueva arranca vacío. Solo de tus compañeros (lo que pescás de los rivales no entra). En 1v1, en el pica-pica y sin señas no aparece.
+  - **Es una preferencia de cada jugador** (`resumenSenias` en el perfil, apagada de entrada): en Más opciones, "Resumen de señas sobre los compañeros", y en la mesa, en la hoja que se abre al tocar el avatar de un compañero ("Señas de X"). Esa hoja es el lugar natural: no hay un menú general de la mesa, y el de los jugadores (`MenuJugador`) es sobre otra persona, solo online.
+  - **Dónde va:** arriba del avatar; el de enfrente lo lleva a su izquierda (arriba está el borde). No corre el asiento ni se toca. Si el mazo con la muestra queda donde va (repartió ese compañero, o en 3v3 el de enfrente, para el de la izquierda), se pasa al otro lado: el de enfrente a la derecha y los de los costados debajo de sus cartas.
+  - Revisado con capturas a 360×740 en círculos, sentados y en perspectiva, en 2v2 y 3v3, varias manos cada una (`capturas-resumen/`, sin commitear).
+- **Tests:** 575 (motor 162, bots 24, servidor 97, web 292). Nuevos:
+  - bots: qué señas hace cada mano (con flor, sin envido); el difícil imagina al compañero con el envido marcado; con un envido alto marcado espera ganar mucho más; en las partidas simuladas el número llega con la seña;
+  - servidor: el número es el real aunque el cliente mande otro; con flor se rechaza; el rival lo pesca con número solo con "gesto y carta"; los compañeros bot lo anotan; repetir manda el mismo; los bots lo marcan solo a su equipo;
+  - web: lo mismo en la conexión local; el botón de la cara manda solo la seña y no está con flor; globo y panel con el número; el resumen apagado de entrada, prendido (orden, sin rivales, se limpia en la mano nueva) y el interruptor del panel del compañero.
+  - De punta a punta, `senias.spec.ts` y `local.spec.ts` siguen pasando.
+
+**Pendientes:**
+- En perspectiva, con cuatro señas el resumen del de enfrente baja hasta su nombre (lo roza un poco).
+- Los globos de canto y de chat pueden tapar el resumen un momento (el globo va encima: dura poco).
+- Al recargar la página se pierden las señas recibidas en la mano, y con ellas el resumen (como el panel del compañero): vuelven pidiéndole que repita.
+- Un humano que seña solo el envido (sin las de sus cartas) hace que su compañero bot crea que no tiene cartas con seña, como pasaba con cualquier seña suelta.
+- Falta probarlo online con personas de verdad y en celulares reales.
+

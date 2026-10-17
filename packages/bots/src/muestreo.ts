@@ -1,6 +1,6 @@
 import { calcularEnvido, equipoDe, fuerza, tieneFlor, type CantoEnvido, type Carta } from '@truco/engine'
 import { jugoEnPrimera, memo, type Contexto } from './contexto'
-import { mismasSenias, seniasDeMano, type Senia } from './senias'
+import { deCartas, mismasSenias, seniasDeMano, type Senia } from './senias'
 
 /** Qué información usa el bot para imaginar las manos ajenas. */
 export interface OpcionesMuestreo {
@@ -70,10 +70,12 @@ function potencia(ctx: Contexto, cartas: readonly Carta[]): number {
 
 /**
  * Las señas del compañero son todas las que tiene (salvo que mienta). De un rival solo
- * se conocen las que se le pescaron: alcanza con que la mano las incluya.
+ * se conocen las que se le pescaron: alcanza con que la mano las incluya. La de envido no
+ * sale de una carta: se mira aparte, con su número.
  */
 function cuadranSenias(deLaMano: Senia[], conocidas: Senia[], esRival: boolean): boolean {
-  return esRival ? conocidas.every((s) => deLaMano.includes(s)) : mismasSenias(deLaMano, conocidas)
+  const deLasCartas = deCartas(conocidas)
+  return esRival ? deLasCartas.every((s) => deLaMano.includes(s)) : mismasSenias(deLaMano, deLasCartas)
 }
 
 function filtroYPeso(ctx: Contexto, asiento: number, op: OpcionesMuestreo) {
@@ -85,6 +87,8 @@ function filtroYPeso(ctx: Contexto, asiento: number, op: OpcionesMuestreo) {
     normal && config.florObligatoria && !cantoFlor && jugoEnPrimera(e, asiento) && e.flor.estado !== 'noQuerida'
   const declaro = e.envido.declaraciones.find((d) => d.asiento === asiento)
   const senias = ctx.senias.get(asiento)
+  // El envido que marcó con la seña (es el real: lo calcula el servidor). Con flor no se marca.
+  const envidoMarcado = ctx.envidoMarcado.get(asiento)
   const esRival = equipoDe(asiento) !== ctx.equipo
 
   const cantosEnvido = e.envido.cantos.filter((c) => c.asiento === asiento).map((c) => c.canto)
@@ -108,6 +112,9 @@ function filtroYPeso(ctx: Contexto, asiento: number, op: OpcionesMuestreo) {
     if (normal && cantoFlor && !tieneFlor(completa, muestra)) return false
     if (noTieneFlor && tieneFlor(completa, muestra)) return false
     if (op.senias && senias && !cuadranSenias(seniasDeMano(completa, muestra), senias, esRival)) return false
+    if (op.senias && envidoMarcado !== undefined) {
+      if (tieneFlor(completa, muestra) || calcularEnvido(completa, muestra) !== envidoMarcado) return false
+    }
     if (op.declarado && normal && declaro && declaro.tanto !== null && calcularEnvido(completa, muestra) !== declaro.tanto) {
       return false
     }

@@ -14,7 +14,7 @@ import {
   type Formato,
 } from '@truco/engine'
 import { crearBot, type Bot, type Nivel } from './bot'
-import type { SeniasRecibidas } from './senias'
+import { envidoParaSenia, type SeniasRecibidas } from './senias'
 
 export interface ResultadoPartida {
   ganador: Equipo
@@ -54,7 +54,13 @@ export function jugarPartida(op: OpcionesPartidaBots): ResultadoPartida {
       if (n > 2 && !estado.mano.picaPica) {
         for (let a = 0; a < n; a++) {
           const hechas = op.bots[a]!.hacerSenias(vistaPara(estado, `j${a}`))
-          for (let b = a % 2; b < n; b += 2) if (b !== a) senias[b]![a] = hechas
+          // La de envido va con el número real, como la manda el servidor.
+          const envido = hechas.includes('envido') ? envidoParaSenia(vistaPara(estado, `j${a}`).mano.miTanto) : null
+          for (let b = a % 2; b < n; b += 2) {
+            if (b === a) continue
+            senias[b]![a] = hechas
+            if (envido !== null) senias[b]!.envido = { ...senias[b]!.envido, [a]: envido }
+          }
         }
       }
     }

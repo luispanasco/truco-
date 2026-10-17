@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   accionesValidas,
   apply,
+  calcularEnvido,
+  tieneFlor,
   crearPartida,
   esperandoA,
   vistaPara,
@@ -14,9 +16,10 @@ import {
   type Numero,
   type Palo,
 } from '@truco/engine'
-import { crearBot, jugarPartida, NIVELES_BOT, seniasDeMano, type Nivel, type SeniasRecibidas } from '../src'
+import { crearBot, ENVIDO_PARA_SENIAR, jugarPartida, NIVELES_BOT, seniasDeMano, type Nivel, type SeniasRecibidas } from '../src'
 import { Aleatorio, crearContexto } from '../src/contexto'
 import { muestrear } from '../src/muestreo'
+import { probEnvido } from '../src/estimaciones'
 
 const PALOS: Record<string, Palo> = { e: 'espada', b: 'basto', o: 'oro', c: 'copa' }
 const c = (t: string): Carta => ({ numero: Number(t.slice(0, -1)) as Numero, palo: PALOS[t.slice(-1)]! })
@@ -215,6 +218,66 @@ describe('bots', () => {
     for (const nivel of NIVELES) {
       const accion = crearBot(nivel, 1).decidir(vistaPara(p, 'a'), {}, { tipo: 'veni' })
       if (accion.tipo === 'jugarCarta') expect(accion.carta).toEqual(c('4b'))
+    }
+  })
+})
+
+describe('la seña de envido', () => {
+  it('el bot marca su envido desde 30 y sin flor, después de las señas de sus cartas', () => {
+    // Muestra 6 de oros. a: 7 y 6 de espadas (33 de envido); b: nada de envido; c y d: flor.
+    const estado = partidaCon(['7e 6e 4b', '4c 5b 12e', '1e 3e 5e', '10c 11c 2c'], '6o')
+    const senias = (j: string) => crearBot('medio', 1).hacerSenias(vistaPara(estado, j))
+    expect(senias('a')).toEqual(['sieteBravo', 'envido'])
+    expect(senias('b')).toEqual([])
+    // Con flor no hay envido: marca la flor.
+    expect(senias('c')).toEqual(['unoBravo', 'tres', 'flor'])
+    expect(senias('d')).toEqual(['dosComun', 'flor'])
+  })
+
+  it('el difícil imagina al compañero con el envido que le marcó (y sin flor)', () => {
+    // Muestra 6 de oros. d le marcó un uno bravo y su envido (el real, como lo manda el servidor).
+    let estado = partidaCon(['7c 12e 10c', '3e 4b 6c', '12b 11e 4e', '1e 7b 6b'], '6o')
+    estado = aplicar(estado, { tipo: 'jugarCarta', jugador: 'a', carta: c('7c') })
+    const envido = calcularEnvido([c('1e'), c('7b'), c('6b')], c('6o'))
+    const ctx = crearContexto(vistaPara(estado, 'b'), { 3: ['unoBravo', 'envido'], envido: { 3: envido } }, new Aleatorio(1))
+    expect(ctx.senias.get(3)).toEqual(['unoBravo', 'envido'])
+    const muestras = muestrear(ctx, 50, { declarado: true, pesos: true, senias: true })
+    expect(muestras.length).toBeGreaterThan(40)
+    for (const m of muestras) {
+      const d = m.completas.get(3)!
+      expect(calcularEnvido(d, c('6o'))).toBe(envido)
+      expect(tieneFlor(d, c('6o'))).toBe(false)
+      // La de envido no sale de una carta: las de las cartas siguen siendo solo el uno bravo.
+      expect(seniasDeMano(d, c('6o'))).toEqual(['unoBravo'])
+    }
+  })
+
+  it('con el envido alto que marcó el compañero, el equipo espera ganar el envido mucho más que con uno bajo', () => {
+    // b tiene poco envido (4 y 3 de distinto palo); d le marca su envido.
+    const estado = partidaCon(['7c 12e 10c', '3e 4b 6c', '12b 11e 4e', '1e 7b 6b'], '6o')
+    const p = (envido: number) => {
+      const ctx = crearContexto(vistaPara(estado, 'b'), { 3: ['envido'], envido: { 3: envido } }, new Aleatorio(3))
+      return probEnvido(ctx, { muestras: 80, metodo: 'golosa', declarado: true, pesos: true, senias: true })
+    }
+    // Con muestra, un rival con pieza llega fácil a 33: no es seguro, pero es mucho más que con 7.
+    expect(p(33)).toBeGreaterThan(0.5)
+    expect(p(33)).toBeGreaterThan(p(7) + 0.3)
+  })
+
+  it('en las partidas simuladas, el número llega con la seña a los compañeros', () => {
+    const vistas: SeniasRecibidas[] = []
+    const espia = (nivel: Nivel, semilla: number) => {
+      const bot = crearBot(nivel, semilla)
+      return { ...bot, decidir: (v: Parameters<typeof bot.decidir>[0], s?: SeniasRecibidas) => (s && vistas.push(s), bot.decidir(v, s)) }
+    }
+    jugarPartida({ semilla: 4, bots: [0, 1, 2, 3].map((i) => espia('medio', i)), config: { formato: '2v2', puntosPartida: 20 } })
+    const conEnvido = vistas.filter((s) => s.envido && Object.keys(s.envido).length > 0)
+    expect(conEnvido.length).toBeGreaterThan(0)
+    for (const s of conEnvido) {
+      for (const [a, t] of Object.entries(s.envido!)) {
+        expect(s[Number(a)]).toContain('envido')
+        expect(t).toBeGreaterThanOrEqual(ENVIDO_PARA_SENIAR)
+      }
     }
   })
 })

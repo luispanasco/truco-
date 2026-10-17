@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import { mismaCarta, siguienteAleatorio, type Carta, type Formato, type VistaPartida } from '@truco/engine'
-import { MOTIVO_SENIA_TARDE, MOTIVO_SIN_SENIAS, yaJugoEnLaMano } from '@truco/shared'
+import { MOTIVO_ENVIDO_CON_FLOR, MOTIVO_SENIA_TARDE, MOTIVO_SIN_SENIAS, yaJugoEnLaMano, type MensajesCliente } from '@truco/shared'
+import { ENVIDO_PARA_SENIAR } from '@truco/bots'
 import { ConexionLocal, type OpcionesLocal } from '../src/conexion/local'
 import type { MensajeServidor } from '../src/conexion/tipos'
 
@@ -220,4 +221,54 @@ describe('conexión local', () => {
     c.salir()
     expect(error).toBe('No hay nada que responder')
   })
+
+  it('la seña de envido: el número sale del tanto real (no del que manda la persona) y con flor se rechaza', async () => {
+    /** La primera mano de un 2v2: la persona marca el envido (con un número falso) y se mira qué pasó. */
+    const marcar = async (semilla: number) => {
+      const c = new ConexionLocal({ apodo: 'Test', avatar: null, formato: '2v2', nivelBots: 'medio', demoraBots: [60_000, 60_000], semilla, senias: { pescar: 'gestoYCarta', probabilidadPescar: 1 }, azar: () => 0 })
+      const errores: string[] = []
+      let vista: VistaPartida | null = null
+      await new Promise<void>((resolve) => {
+        c.escuchar((m) => {
+          if (m.tipo === 'error') errores.push(m.datos.motivo)
+          if (!vista && m.tipo === 'vista') {
+            vista = m.datos
+            c.enviar('senia', { senia: 'envido', tanto: 40 } as MensajesCliente['senia'])
+            setTimeout(resolve, 20)
+          }
+        })
+      })
+      const interno = c as unknown as { senias: { [a: number]: string[]; envido?: Record<number, number> }[] }
+      c.salir()
+      return { tanto: vista!.mano.miTanto, errores, compa: interno.senias[2]!, rival: interno.senias[1]! }
+    }
+    let sinFlor = false
+    let conFlor = false
+    for (let semilla = 1; semilla < 80 && !(sinFlor && conFlor); semilla++) {
+      const r = await marcar(semilla)
+      if (r.tanto.flor === null) {
+        sinFlor = true
+        expect(r.errores).toEqual([])
+        expect(r.compa[0]).toEqual(['envido'])
+        expect(r.compa.envido?.[0]).toBe(r.tanto.envido)
+        // El rival bot que la pescó entera también tiene el número.
+        expect(r.rival.envido?.[0]).toBe(r.tanto.envido)
+      } else {
+        conFlor = true
+        expect(r.errores).toEqual([MOTIVO_ENVIDO_CON_FLOR])
+        expect(r.compa[0]).toBeUndefined()
+      }
+    }
+    expect(sinFlor && conFlor).toBe(true)
+  })
+
+  it('el compañero bot marca su envido con el número, y la persona pesca el de los rivales con su número', async () => {
+    const { mensajes } = await jugarPartida('2v2', 5, { senias: { pescar: 'gestoYCarta', probabilidadPescar: 1 } })
+    const envidos = mensajes.flatMap((m) => (m.tipo === 'senia' && m.datos.senia === 'envido' ? [m.datos] : []))
+    const pescados = mensajes.flatMap((m) => (m.tipo === 'seniaPescada' && m.datos.senia === 'envido' ? [m.datos] : []))
+    expect(envidos.length + pescados.length).toBeGreaterThan(0)
+    for (const s of [...envidos, ...pescados]) expect(s.tanto).toBeGreaterThanOrEqual(ENVIDO_PARA_SENIAR)
+    // Las demás señas no llevan número.
+    expect(mensajes.some((m) => (m.tipo === 'senia' || m.tipo === 'seniaPescada') && m.datos.senia !== 'envido' && 'tanto' in m.datos)).toBe(false)
+  }, 30_000)
 })

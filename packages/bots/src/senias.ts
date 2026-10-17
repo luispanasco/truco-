@@ -1,6 +1,9 @@
 import { piezaDe, tieneFlor, type Carta } from '@truco/engine'
 
-/** Qué significa cada seña. El gesto animado se asigna en la etapa 1E. */
+/**
+ * Qué significa cada seña. El gesto animado se asigna en la etapa 1E. La lista solo crece al
+ * final: `envido` (cuánto tenés de envido) vino después de las de las cartas.
+ */
 export const SENIAS = [
   'pieza2',
   'pieza4',
@@ -13,6 +16,7 @@ export const SENIAS = [
   'dosComun',
   'unoFalso',
   'flor',
+  'envido',
 ] as const
 export type Senia = (typeof SENIAS)[number]
 
@@ -28,9 +32,13 @@ export const GESTO: Record<Senia, string> = {
   dosComun: 'Abrir la boca',
   unoFalso: 'Sacar la lengua',
   flor: 'Inflar la boca como un sapo',
+  envido: 'Mirar para arriba, sacando la cuenta',
 }
 
-/** Qué carta anuncia cada seña. */
+/**
+ * Qué carta anuncia cada seña. La de envido anuncia un número: el que la recibe lo ve con
+ * `significadoDe` ("envido 27").
+ */
 export const SIGNIFICADO: Record<Senia, string> = {
   pieza2: '2 de la muestra',
   pieza4: '4 de la muestra',
@@ -43,7 +51,28 @@ export const SIGNIFICADO: Record<Senia, string> = {
   dosComun: 'un 2',
   unoFalso: '1 de copas o de oros',
   flor: 'flor',
+  envido: 'el envido',
 }
+
+/** Lo que anuncia una seña, con el número si es la de envido y llegó con él. */
+export function significadoDe(senia: Senia, tanto?: number | null): string {
+  return senia === 'envido' && tanto != null ? `envido ${tanto}` : SIGNIFICADO[senia]
+}
+
+/**
+ * El envido que se marca con la seña, o null si no se puede marcar: con flor el envido no
+ * se juega (la flor lo tapa), así que se marca la flor. El número nunca lo dice quien seña:
+ * lo saca el servidor (o la conexión local) del tanto real, con muestra y piezas.
+ */
+export function envidoParaSenia(tanto: { envido: number; flor: number | null } | null | undefined): number | null {
+  return !tanto || tanto.flor !== null ? null : tanto.envido
+}
+
+/**
+ * Desde cuánto de envido los bots se lo marcan al compañero. Con muestra, las piezas dan envidos
+ * altos seguido: con menos de 30 la seña no le cambia mucho al compañero y sería un gesto más.
+ */
+export const ENVIDO_PARA_SENIAR = 30
 
 const SENIA_PIEZA = { 2: 'pieza2', 4: 'pieza4', 5: 'pieza5', 11: 'perico', 10: 'perica' } as const
 
@@ -79,6 +108,14 @@ export function mismasSenias(a: readonly Senia[], b: readonly Senia[]): boolean 
 /**
  * Señas que conoce un jugador en la mano actual, por asiento de quien las hizo: las de
  * sus compañeros y, si la sala lo permite, las que les pescó a los rivales (solo esas,
- * no todas las que hicieron).
+ * no todas las que hicieron). Con la seña de envido, el número va aparte, en `envido`
+ * (por asiento): así las listas de señas siguen siendo las de siempre.
  */
-export type SeniasRecibidas = Record<number, Senia[]>
+export interface SeniasRecibidas {
+  [asiento: number]: Senia[]
+  /** El envido que marcó cada uno con la seña de envido (lo pone el servidor). */
+  envido?: Record<number, number>
+}
+
+/** Las señas de las cartas y la flor, sin la de envido (esa no sale de una carta). */
+export const deCartas = (senias: readonly Senia[]): Senia[] => senias.filter((s) => s !== 'envido')

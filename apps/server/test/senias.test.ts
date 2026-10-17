@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { ColyseusTestServer } from '@colyseus/testing'
 import type { Accion } from '@truco/engine'
-import { MOTIVO_SENIA_TARDE, yaJugoEnLaMano, type ConfigSenias } from '@truco/shared'
+import { ENVIDO_PARA_SENIAR } from '@truco/bots'
+import { MOTIVO_ENVIDO_CON_FLOR, MOTIVO_SENIA_TARDE, yaJugoEnLaMano, type ConfigSenias, type MensajesCliente } from '@truco/shared'
 import { esperarMs, Jugador, levantar, salaEnServidor } from './helpers'
 
 let colyseus: ColyseusTestServer
@@ -192,6 +193,90 @@ describe('pedir que te repitan las señas', () => {
     ])
     // Repetir tiene el riesgo de siempre: el rival la puede pescar.
     await b.esperar(() => b.de('seniaPescada').filter((p) => p.de === 2).length === 4, 5_000, 'las pescadas')
+    expect(b.de('senia').some((s) => s.de === 2)).toBe(false)
+  })
+})
+
+describe('seña de envido', () => {
+  /** a (asiento 0) y c (2) son compañeros, b (1) es rival; el 3 es un bot rival. */
+  async function trio(senias: Partial<ConfigSenias>) {
+    const a = await Jugador.crear(colyseus, { config: { formato: '2v2' }, senias })
+    await a.esperar(() => a.sala !== null)
+    const codigo = a.sala!.codigo!
+    const b = await Jugador.unirse(colyseus, codigo)
+    const c = await Jugador.unirse(colyseus, codigo)
+    await c.esperar(() => c.sala?.yo === 2)
+    a.enviar('iniciar', {})
+    await a.esperar(() => a.vista !== null, 5_000, 'la vista de a')
+    await b.esperar(() => b.vista !== null)
+    await c.esperar(() => c.vista !== null)
+    return { a, b, c, sala: salaEnServidor(colyseus, a.room.roomId) }
+  }
+  const salir = (...js: Jugador[]) => js.forEach((j) => j.room.leave())
+
+  it('el número lo pone el servidor con el tanto real: el cliente no puede mandar otro, y con flor se rechaza', async () => {
+    let probada = false
+    for (let intento = 0; intento < 12 && !probada; intento++) {
+      const { a, b, c, sala } = await trio({ pescar: 'gestoYCarta', probabilidadPescar: 1 })
+      const { envido, flor } = a.vista!.mano.miTanto
+      // Un cliente tramposo manda un número: el servidor no lo mira.
+      a.enviar('senia', { senia: 'envido', tanto: 40 } as MensajesCliente['senia'])
+      if (flor !== null) {
+        await a.esperar(() => a.de('error').length > 0, 5_000, 'el rechazo')
+        expect(a.de('error')[0]!.motivo).toBe(MOTIVO_ENVIDO_CON_FLOR)
+        await esperarMs(100)
+        expect(c.de('senia').some((s) => s.de === 0)).toBe(false)
+        salir(a, b, c)
+        continue
+      }
+      await c.esperar(() => c.de('senia').some((s) => s.de === 0), 5_000, 'la seña de envido')
+      expect(c.de('senia').filter((s) => s.de === 0)).toEqual([{ de: 0, senia: 'envido', mano: a.vista!.mano.numero, tanto: envido }])
+      // Al rival no le llega como seña de compañero; con "gestoYCarta" la pesca entera, número incluido.
+      await b.esperar(() => b.de('seniaPescada').some((p) => p.de === 0), 5_000, 'la pescada')
+      expect(b.de('senia').some((s) => s.de === 0)).toBe(false)
+      expect(b.de('seniaPescada').filter((p) => p.de === 0)).toEqual([{ de: 0, senia: 'envido', tanto: envido }])
+      // El bot rival (3) la anota con el número, para imaginar la mano de a.
+      expect(sala.seniasParaTests()[3]![0]).toEqual(['envido'])
+      expect(sala.seniasParaTests()[3]!.envido).toEqual({ 0: envido })
+      // Repetirla manda el mismo número.
+      a.enviar('repetirSenias', {})
+      await c.esperar(() => c.de('senia').filter((s) => s.de === 0).length === 2, 5_000, 'la repetición')
+      expect(c.de('senia').filter((s) => s.de === 0)[1]).toMatchObject({ senia: 'envido', tanto: envido, repetida: true })
+      probada = true
+      salir(a, b, c)
+    }
+    expect(probada).toBe(true)
+  })
+
+  it('con "gesto" el rival ve que hubo una seña pero ni cuál ni el número; el compañero bot anota el envido', async () => {
+    for (let intento = 0; intento < 12; intento++) {
+      const { a, b, sala } = await mesa({ pescar: 'gesto', probabilidadPescar: 1 })
+      const { envido, flor } = a.vista!.mano.miTanto
+      if (flor !== null) {
+        salir(a, b)
+        continue
+      }
+      a.enviar('senia', { senia: 'envido' })
+      await b.esperar(() => b.de('seniaPescada').some((p) => p.de === 0), 5_000, 'la seña pescada')
+      expect(b.de('seniaPescada').filter((p) => p.de === 0)).toEqual([{ de: 0, senia: null }])
+      expect(sala.seniasParaTests()[2]![0]).toEqual(['envido'])
+      expect(sala.seniasParaTests()[2]!.envido).toEqual({ 0: envido })
+      expect(sala.seniasParaTests()[3]!.envido).toBeUndefined()
+      return
+    }
+    throw new Error('Doce manos seguidas con flor')
+  })
+
+  it('los bots marcan su envido al empezar la mano, con el número real, solo a sus compañeros', async () => {
+    // a y su compañero bot (2); b y su compañero bot (3). Se juegan manos hasta que el 2 marque el envido.
+    const { a, b } = await mesa({ pescar: 'nunca' })
+    a.autoJugar(5)
+    b.autoJugar(6)
+    await a.esperar(() => a.de('senia').some((s) => s.de === 2 && s.senia === 'envido'), 20_000, 'el envido del bot')
+    for (const s of a.de('senia').filter((x) => x.senia === 'envido')) {
+      expect(s.de).toBe(2)
+      expect(s.tanto).toBeGreaterThanOrEqual(ENVIDO_PARA_SENIAR)
+    }
     expect(b.de('senia').some((s) => s.de === 2)).toBe(false)
   })
 })
