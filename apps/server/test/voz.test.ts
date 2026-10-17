@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { ColyseusTestServer } from '@colyseus/testing'
 import { ICE_DEFAULT, MOTIVO_SIN_VOZ, type EstadoVoz } from '@truco/shared'
-import { servidoresIceDelEntorno, validarSenal } from '../src/voz'
+import { olvidarTurnParaTests, prenderTurnCloudflare, servidoresIceActuales, servidoresIceDelEntorno, validarSenal } from '../src/voz'
 import { Jugador, levantar } from './helpers'
 
 let colyseus: ColyseusTestServer
@@ -178,5 +178,25 @@ describe('servidores ICE', () => {
     } finally {
       console.error = errores
     }
+  })
+})
+
+describe('TURN de Cloudflare', () => {
+  it('pide credenciales con la clave del entorno y saca el puerto 53', async () => {
+    const pedidos: { url: string; init: RequestInit | undefined }[] = []
+    const pedir = (async (url: string, init?: RequestInit) => {
+      pedidos.push({ url, init })
+      return Response.json({
+        iceServers: { urls: ['stun:stun.cloudflare.com:3478', 'turn:turn.cloudflare.com:3478?transport=udp', 'turn:turn.cloudflare.com:53?transport=udp'], username: 'u', credential: 'c' },
+      })
+    }) as typeof fetch
+    expect(await prenderTurnCloudflare({}, pedir)).toBe(false)
+    expect(await prenderTurnCloudflare({ TRUCO_TURN_ID: 'clave', TRUCO_TURN_TOKEN: 'secreto' }, pedir)).toBe(true)
+    expect(pedidos[0]!.url).toBe('https://rtc.live.cloudflare.com/v1/turn/keys/clave/credentials/generate-ice-servers')
+    expect((pedidos[0]!.init!.headers as Record<string, string>).authorization).toBe('Bearer secreto')
+    expect(servidoresIceActuales()).toEqual([
+      { urls: ['stun:stun.cloudflare.com:3478', 'turn:turn.cloudflare.com:3478?transport=udp'], username: 'u', credential: 'c' },
+    ])
+    olvidarTurnParaTests()
   })
 })

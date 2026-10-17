@@ -37,7 +37,7 @@ function useControles() {
 const TEXTO_PAR: Record<EstadoPar, string> = {
   conectando: 'conectando…',
   conectado: 'conectado',
-  cortado: 'sin conexión',
+  cortado: 'no se pudo conectar',
 }
 
 /**

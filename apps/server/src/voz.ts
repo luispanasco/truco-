@@ -46,6 +46,65 @@ export function servidoresIceDelEntorno(env: Record<string, string | undefined> 
   }
 }
 
+/**
+ * Los servidores ICE de ahora: los del entorno, o los del TURN de Cloudflare cuando está
+ * configurado (ver `prenderTurnCloudflare`). Cada sala los lee al avisar quién está en la voz.
+ */
+let iceActual: ServidorIce[] | null = null
+
+export function servidoresIceActuales(): ServidorIce[] {
+  return iceActual ?? servidoresIceDelEntorno()
+}
+
+/** Cada cuánto se piden credenciales nuevas al TURN de Cloudflare (duran el doble). */
+const RENOVAR_TURN_MS = 12 * 60 * 60 * 1000
+
+/**
+ * TURN de Cloudflare (Realtime → TURN Server en el panel de Cloudflare; 1000 GB por mes gratis):
+ * con `TRUCO_TURN_ID` y `TRUCO_TURN_TOKEN` el servidor pide credenciales que vencen a las 24 h
+ * y las renueva cada 12 h. Así la voz anda aunque la red no deje conectarse directo (datos
+ * móviles, redes de oficina, Wi-Fi que aísla a los dispositivos). Devuelve si quedó prendido.
+ */
+export async function prenderTurnCloudflare(
+  env: Record<string, string | undefined> = process.env,
+  pedir: typeof fetch = fetch,
+): Promise<boolean> {
+  const id = env.TRUCO_TURN_ID
+  const token = env.TRUCO_TURN_TOKEN
+  if (!id || !token) return false
+  const renovar = async () => {
+    try {
+      const r = await pedir(`https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(id)}/credentials/generate-ice-servers`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ ttl: 2 * RENOVAR_TURN_MS / 1000 }),
+      })
+      if (!r.ok) throw new Error(`respondió ${r.status}`)
+      const { iceServers } = (await r.json()) as { iceServers?: unknown }
+      const lista = (Array.isArray(iceServers) ? iceServers : [iceServers]).filter(esServidorIce).map((s) => ({
+        // Cloudflare también ofrece el puerto 53, que los navegadores bloquean y solo demora.
+        urls: (Array.isArray(s.urls) ? s.urls : [s.urls]).filter((u) => !/:53(\?|$)/.test(u)),
+        ...(typeof s.username === 'string' ? { username: s.username } : {}),
+        ...(typeof s.credential === 'string' ? { credential: s.credential } : {}),
+      }))
+      if (lista.length === 0) throw new Error('no vino ningún servidor')
+      iceActual = lista
+      return true
+    } catch (e) {
+      console.error(`No se pudieron pedir credenciales al TURN de Cloudflare (${e instanceof Error ? e.message : e}); la voz sigue con STUN`)
+      return false
+    }
+  }
+  const ok = await renovar()
+  setInterval(() => void renovar(), RENOVAR_TURN_MS).unref()
+  return ok
+}
+
+/** Solo para tests: vuelve a los servidores del entorno. */
+export function olvidarTurnParaTests() {
+  iceActual = null
+}
+
 function esServidorIce(x: unknown): x is ServidorIce {
   if (!x || typeof x !== 'object') return false
   const urls = (x as { urls?: unknown }).urls
@@ -100,8 +159,13 @@ export class VozDeSala {
 
   constructor(
     private readonly sala: AccesoSala,
-    readonly servidoresIce: ServidorIce[] = servidoresIceDelEntorno(),
+    /** Fijos (para tests); si no, los de ahora (`servidoresIceActuales`). */
+    private readonly iceFijos: ServidorIce[] | null = null,
   ) {}
+
+  get servidoresIce(): ServidorIce[] {
+    return this.iceFijos ?? servidoresIceActuales()
+  }
 
   /** Entrar o salir de la voz. Devuelve el motivo si se rechaza. */
   cambiar(client: Client, { activa }: MensajesCliente['voz']): string | null {

@@ -66,3 +66,20 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_…
 Cuando estén, avisame "listo". No me pases las claves: yo reinicio el servidor y lo pruebo. Al arrancar, el servidor crea solo las tablas.
 
 **Mientras tanto** el juego no se rompe: sin `DATABASE_URL`, el servidor usa una base local de prueba en `apps/server/datos/base`. Sin las variables de Supabase, la web muestra un "login de prueba" que solo existe en desarrollo.
+
+## 4. TURN de Cloudflare, para el chat de voz
+
+Sin TURN, la voz solo anda si los dos celulares pueden conectarse directo. Con datos móviles, en redes de oficina o en una Wi-Fi que aísla a los dispositivos, se queda en "conectando…". Cloudflare da 1000 GB por mes gratis, y para una charla de truco sobra.
+
+1. Entrá a https://dash.cloudflare.com. Si no tenés cuenta, creá una: es gratis y no pide tarjeta.
+2. En el menú de la izquierda, entrá a **Realtime → TURN Server**. Según la versión puede figurar como **Calls → TURN**.
+3. Tocá **Create**, ponele de nombre `truco` y confirmá.
+4. Te muestra dos datos: el **Turn Token ID** y el **API Token**. Copiá el API Token en el momento, porque después no se vuelve a ver.
+5. Agregalos al final de `apps/server/.env`, que si no existe se crea:
+
+```
+TRUCO_TURN_ID=el-turn-token-id
+TRUCO_TURN_TOKEN=el-api-token
+```
+
+Cuando estén, avisame. Reinicio el servidor y al arrancar tiene que decir "Voz: con el TURN de Cloudflare."

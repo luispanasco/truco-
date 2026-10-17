@@ -73,6 +73,8 @@ interface Par {
 const CADA_MS_NIVELES = 100
 /** Si una conexión que armaste falla, se vuelve a intentar al rato. */
 const REINTENTO_MS = 1500
+/** Después de tantos intentos fallidos con la misma persona, se deja de intentar: la red no deja. */
+const MAX_INTENTOS = 3
 
 /** Nivel en escalones de un cuarto: de -55 dB (nada) a -15 dB (lleno). */
 export function nivelDeRms(rms: number): number {
@@ -98,6 +100,8 @@ export class MallaVoz {
   private niveles: Record<number, number> = {}
   private timerNiveles: ReturnType<typeof setInterval> | null = null
   private reintentos = new Set<ReturnType<typeof setTimeout>>()
+  /** Por persona en la voz: cuántas veces falló la conexión. */
+  private fallos = new Map<number, number>()
   private activa = false
 
   constructor(
@@ -297,7 +301,12 @@ export class MallaVoz {
       const s = pc.connectionState
       par.estado = s === 'connected' ? 'conectado' : s === 'failed' || s === 'closed' ? 'cortado' : 'conectando'
       // Si falla la que armaste vos, se vuelve a armar (el otro la cierra al llegar la oferta nueva).
-      if (s === 'failed' && par.oferente) this.reintentar(par)
+      if (s === 'connected') this.fallos.delete(par.id)
+      if (s === 'failed') {
+        const fallos = (this.fallos.get(par.id) ?? 0) + 1
+        this.fallos.set(par.id, fallos)
+        if (par.oferente && fallos < MAX_INTENTOS) this.reintentar(par)
+      }
       this.emitir()
     }
     return par
