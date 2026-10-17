@@ -1052,3 +1052,10 @@ Dos pedidos del usuario, con el plan aprobado. Lo hizo un agente en la rama `res
 - Un humano que seña solo el envido (sin las de sus cartas) hace que su compañero bot crea que no tiene cartas con seña, como pasaba con cualquier seña suelta.
 - Falta probarlo online con personas de verdad y en celulares reales.
 
+
+## Voz con TURN de Cloudflare — 2026-10-17
+
+- Con solo STUN, la voz se quedaba en "conectando…" entre celulares que no podían conectarse directo (redes distintas, datos móviles, o una Wi-Fi que aísla a los dispositivos).
+- El usuario creó la clave del TURN de Cloudflare (tope de 1000 GB por mes) y la cargó en `apps/server/.env` (`TRUCO_TURN_ID` y `TRUCO_TURN_TOKEN`).
+- El servidor pide credenciales de 24 h y las renueva cada 12 h.
+- **El usuario lo probó: el chat de voz anda.**
