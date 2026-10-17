@@ -7,6 +7,7 @@ import { useJuego } from '../src/estado'
 import { leerPerfil, vistaDesdeUrl, vistaGuardada } from '../src/perfil'
 import { aplicar, homografia, invertir, type Punto } from '../src/perspectiva'
 import { Mesa } from '../src/pantallas/Mesa'
+import { lugarMazo } from '../src/componentes/Mazo'
 
 beforeEach(() => localStorage.clear())
 afterEach(() => {
@@ -95,6 +96,29 @@ function mesa(formato: Formato) {
     </MemoryRouter>,
   ).container
 }
+
+describe('el mazo en la mesa en perspectiva', () => {
+  it('en 3 contra 3 va siempre a una esquina: a los costados están las dos pilas de cada lado', () => {
+    for (let rel = 0; rel < 6; rel++) {
+      const [x, y] = lugarMazo(6, rel, true)
+      expect(x < 20 || x > 80).toBe(true)
+      expect(y < 20 || y > 80).toBe(true)
+    }
+  })
+
+  it('en 2 contra 2 queda en las esquinas, afuera del medio donde van las pilas', () => {
+    for (let rel = 0; rel < 4; rel++) {
+      const [x, y] = lugarMazo(4, rel, true)
+      expect(x < 20 || x > 80).toBe(true)
+      expect(y < 25 || y > 75).toBe(true)
+    }
+  })
+
+  it('las otras vistas no cambian', () => {
+    expect(lugarMazo(6, 1)).toEqual([86, 50])
+    expect(lugarMazo(4, 3)).toEqual([16, 83])
+  })
+})
 
 describe('mesa en perspectiva', () => {
   it.each([

@@ -27,10 +27,14 @@
 }
 .pantalla-mesa.mesa-perspectiva.n-4 {
   --figura: clamp(64px, 19cqh, 96px);
+  /* Con gente a los costados el paño igual va ancho: ellos se paran afuera, más chicos (--figura-lado). */
+  --panio-lado: 8cqw;
+  --figura-lado: 0.8;
 }
 .pantalla-mesa.mesa-perspectiva.n-6 {
   --figura: clamp(54px, 15.5cqh, 84px);
-  --panio-lado: 17cqw;
+  --panio-lado: 10cqw;
+  --figura-lado: 0.82;
 }
 
 /* ── La mesa: el .tapete es el lugar (con la perspectiva); el paño, el plano inclinado ── */
@@ -125,14 +129,18 @@
   --libre-alto: calc(100cqh - 24px);
   --centro-y: 0px;
 }
+/* Con cuatro o seis, las pilas un poco hacia vos: lo de cerca se ve más grande y lejos queda lugar para el de enfrente. */
+.mesa-perspectiva:is(.n-4, .n-6) .cartas-en-mesa {
+  --centro-y: 3cqh;
+}
 .mesa-perspectiva.n-2 .cartas-en-mesa {
   --w: clamp(40px, min(21cqw, var(--libre-alto) / 3.2), 74px);
 }
 .mesa-perspectiva.n-4 .cartas-en-mesa {
-  --w: clamp(36px, min((50cqw - 20px) / 1.9, var(--libre-alto) / 3.4), 64px);
+  --w: clamp(34px, min((50cqw - 16px) / 2.5, var(--libre-alto) / 4), 58px);
 }
 .mesa-perspectiva.n-6 .cartas-en-mesa {
-  --w: clamp(32px, min((50cqw - 16px) / 1.8, var(--libre-alto) / 4.5), 58px);
+  --w: clamp(30px, min((50cqw - 16px) / 2.4, var(--libre-alto) / 5.3), 52px);
 }
 
 /* ── Los demás: recortes parados alrededor del paño ── */
@@ -148,14 +156,47 @@
   row-gap: 2px;
 }
 /*
- * Los de los costados, corridos hacia afuera: se apoyan en el borde del paño pero casi todo el
- * cuerpo queda fuera de la mesa (no tapan sus cartas jugadas).
+ * Los de los costados, más chicos y corridos hacia afuera: se apoyan en el borde del paño pero
+ * casi todo el cuerpo queda fuera de la mesa (no tapan sus cartas jugadas, ni con una seña).
  */
+.pantalla-mesa.mesa-perspectiva :is(.n-4 .asiento:is(.pos-1, .pos-3), .n-6 .asiento:is(.pos-1, .pos-2, .pos-4, .pos-5)) {
+  --fig: calc(var(--figura) * var(--escala, 0.75) * var(--figura-lado));
+  /* Cuánto se corre hacia afuera (en altos del recorte; el nombre, más ancho, no lo empuja más). */
+  --afuera: 0.36;
+}
+/* En 3 contra 3 los de cerca tienen menos lugar afuera (el paño ahí es más ancho): se corren menos. */
+.pantalla-mesa.mesa-perspectiva.n-6 .asiento:is(.pos-1, .pos-5) {
+  --afuera: 0.32;
+}
+.pantalla-mesa.mesa-perspectiva.n-6 .asiento:is(.pos-2, .pos-4) {
+  --afuera: 0.55;
+}
 .pantalla-mesa.mesa-perspectiva :is(.n-4 .asiento.pos-1, .n-6 .asiento.pos-1, .n-6 .asiento.pos-2) {
-  transform: translate(-30%, calc(-1 * var(--fig)));
+  transform: translate(calc(-50% + var(--afuera) * var(--fig)), calc(-1 * var(--fig)));
 }
 .pantalla-mesa.mesa-perspectiva :is(.n-4 .asiento.pos-3, .n-6 .asiento.pos-4, .n-6 .asiento.pos-5) {
-  transform: translate(-70%, calc(-1 * var(--fig)));
+  transform: translate(calc(-50% - var(--afuera) * var(--fig)), calc(-1 * var(--fig)));
+}
+/* En el celular, sus nombres un poco más chicos: afuera del paño no sobra lugar. */
+@media (max-width: 719px) {
+  .pantalla-mesa.mesa-perspectiva.n-6 .asiento:is(.pos-1, .pos-2, .pos-4, .pos-5) .asiento-nombre {
+    max-width: 90px;
+    font-size: 0.76rem;
+  }
+  /* El registro, más angosto: el mazo puede estar en las esquinas de cerca. */
+  .pantalla-mesa.mesa-perspectiva.n-6 .registro {
+    width: 52%;
+  }
+}
+/*
+ * En un paño bajito (escritorio) los de los costados en 3 contra 3 van acostados en las otras
+ * vistas (estilos.css); acá quedan parados, con las cartas abajo: si no, caen arriba del paño.
+ */
+.pantalla-mesa.mesa-perspectiva.n-6 .asiento:is(.pos-1, .pos-2, .pos-4, .pos-5) {
+  grid-template-areas:
+    'avatar'
+    'nombre'
+    'cartas';
 }
 /* Antes de medir (o sin navegador de verdad): lugares aproximados. */
 .pantalla-mesa.mesa-perspectiva :is(.n-4 .asiento.pos-1, .n-6 .asiento.pos-1, .n-6 .asiento.pos-2) {
@@ -331,12 +372,33 @@
   }
 }
 
-/* Las pilas de los de los costados, un poco más adentro: ellos se apoyan sobre el borde. */
+/*
+ * Las pilas, separadas: entre la tuya y la de enfrente (que crecen de costado) y las de los
+ * costados (que crecen hacia abajo) queda paño libre, y ninguna llega a los recortes.
+ */
+.mesa-perspectiva.n-4 .cartas-en-mesa .jugada.pos-0 {
+  --ay: calc(var(--w) * 1.05);
+}
+.mesa-perspectiva.n-4 .cartas-en-mesa .jugada.pos-2 {
+  --ay: calc(var(--w) * -1.05);
+}
 .mesa-perspectiva.n-4 .cartas-en-mesa .jugada.pos-1 {
-  --ax: calc(var(--w) * 1.15);
+  --ax: calc(var(--w) * 1.6);
 }
 .mesa-perspectiva.n-4 .cartas-en-mesa .jugada.pos-3 {
-  --ax: calc(var(--w) * -1.15);
+  --ax: calc(var(--w) * -1.6);
+}
+.mesa-perspectiva.n-6 .cartas-en-mesa .jugada.pos-0 {
+  --ay: calc(var(--w) * 1.15);
+}
+.mesa-perspectiva.n-6 .cartas-en-mesa .jugada.pos-3 {
+  --ay: calc(var(--w) * -1.15);
+}
+.mesa-perspectiva.n-6 .cartas-en-mesa .jugada:is(.pos-1, .pos-2) {
+  --ax: calc(var(--w) * 1.7);
+}
+.mesa-perspectiva.n-6 .cartas-en-mesa .jugada:is(.pos-4, .pos-5) {
+  --ax: calc(var(--w) * -1.7);
 }
 
 /* El mazo, cerca de vos, se vería enorme: un poco más chico (el reparto mide esta escala). */
@@ -345,4 +407,35 @@
 }
 .pantalla-mesa.mesa-perspectiva .mazo.mazo-chico {
   scale: 0.72;
+}
+
+/* Escritorio: la mesa en perspectiva se ve mejor ancha (como sentado frente a una mesa de verdad), sin tanto vacío a los lados. */
+@media (min-width: 720px) and (min-height: 640px) {
+  .pantalla-mesa.mesa-perspectiva {
+    max-width: min(900px, 100vw - 32px);
+  }
+  .pantalla-mesa.mesa-perspectiva.n-6 {
+    --panio-lado: 16cqw;
+  }
+}
+/* En 3 contra 3 con un paño bajito y ancho (escritorio), los de los costados con sus cartas hacia afuera (sobra lugar): el paño queda libre. */
+@container mesa (max-height: 480px) and (min-width: 480px) {
+  .pantalla-mesa.mesa-perspectiva.n-6 .asiento:is(.pos-1, .pos-2) {
+    grid-template-areas:
+      'avatar cartas'
+      'nombre cartas';
+    column-gap: 6px;
+    transform: translate(calc(-1 * var(--adentro, 0.2) * var(--fig)), calc(-1 * var(--fig)));
+  }
+  .pantalla-mesa.mesa-perspectiva.n-6 .asiento:is(.pos-4, .pos-5) {
+    grid-template-areas:
+      'cartas avatar'
+      'cartas nombre';
+    column-gap: 6px;
+    transform: translate(calc(-100% + var(--adentro, 0.2) * var(--fig)), calc(-1 * var(--fig)));
+  }
+  /* Los de cerca, con menos lugar afuera: el recorte se apoya un poco más sobre el borde. */
+  .pantalla-mesa.mesa-perspectiva.n-6 .asiento:is(.pos-1, .pos-5) {
+    --adentro: 0.5;
+  }
 }

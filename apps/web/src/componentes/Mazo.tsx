@@ -42,19 +42,20 @@ const POSICIONES_PERSPECTIVA: Record<number, [number, number][]> = {
     [18, 14],
   ],
   4: [
-    [83, 74],
-    [84, 18],
-    [16, 12],
-    [17, 72],
+    [86, 80],
+    [87, 19],
+    [13, 19],
+    [14, 80],
   ],
-  // En 3 contra 3, las de cerca bien en la esquina: un poco más adentro están las pilas de los costados.
+  // En 3 contra 3, siempre en una esquina (del lado del mano): a los costados, entre las dos
+  // pilas de cada lado, no entra. Las de cerca, bien en la punta y arriba del registro.
   6: [
-    [85, 91],
-    [84, 46],
-    [76, 9],
-    [24, 9],
-    [16, 46],
-    [15, 91],
+    [91, 87],
+    [88, 14],
+    [88, 14],
+    [12, 14],
+    [9, 87],
+    [9, 87],
   ],
 }
 
