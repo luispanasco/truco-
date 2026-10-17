@@ -230,7 +230,7 @@ export function Inicio() {
             titulo="Ojear cartas"
             detalle="Al repartir, descubrís tus cartas de a poco, como en la mesa (también online)"
           />
-          <SelectorVistaMesa valor={perfil.mesaBustos} alCambiar={(mesaBustos) => cambiar({ mesaBustos })} />
+          <SelectorVistaMesa valor={perfil.vistaMesa} alCambiar={(vistaMesa) => cambiar({ vistaMesa })} />
           <SelectorCartasJugadas valor={perfil.cartasJugadas} alCambiar={(cartasJugadas) => cambiar({ cartasJugadas })} />
           <SelectorLargo valor={perfil.puntosPartida} alCambiar={(puntosPartida) => cambiar({ puntosPartida })} />
           <Segmentado

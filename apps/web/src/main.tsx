@@ -19,7 +19,7 @@ import { Mesa } from './pantallas/Mesa'
 import { PruebaOjeo } from './pantallas/PruebaOjeo'
 import { Sala } from './pantallas/Sala'
 import { Unirme } from './pantallas/Unirme'
-import { bustosDesdeUrl, leerPerfil } from './perfil'
+import { leerPerfil, vistaDesdeUrl } from './perfil'
 import { escucharInstalacion } from './pwa'
 import { prepararSonido } from './sonido'
 import { aplicarMesa } from './temaMesa'
@@ -31,7 +31,7 @@ import './estilos-online.css'
 
 escucharInstalacion()
 prepararSonido()
-bustosDesdeUrl(location.search)
+vistaDesdeUrl(location.search)
 // La mesa elegida pinta toda la app (también el inicio y las salas), antes de dibujar nada.
 aplicarMesa(leerPerfil().mesa)
 // La tipografía también, y es siempre la tuya. El perfil ya trae solo la que se puede usar.

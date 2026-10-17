@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { avatarAlAzar, codificarAvatar, leerAvatar, type LugarPublico } from '@truco/shared'
 import { GESTO, SIGNIFICADO } from '../senias'
 import type { GestoActivo } from '../gestos'
@@ -39,8 +40,10 @@ interface Props {
   ladoChat?: 'derecha' | 'izquierda' | 'abajo'
   /** El chat va debajo de sus cartas (arriba se toparía con el de enfrente y el marcador). */
   chatAbajo?: boolean
-  /** Mesa de bustos: se lo ve de medio cuerpo, asomando detrás del paño. */
+  /** Mesa de bustos (o en perspectiva): se lo ve de medio cuerpo, asomando detrás del paño. */
   busto?: boolean
+  /** Mesa en perspectiva: dónde pararlo y a qué escala (variables CSS, ver Perspectiva.tsx). */
+  estilo?: CSSProperties
 }
 
 /**
@@ -124,6 +127,7 @@ export function Asiento({
   ladoChat = 'derecha',
   chatAbajo = false,
   busto = false,
+  estilo,
 }: Props) {
   // Una persona que se desconectó conserva el lugar; mientras tanto juega un bot por ella.
   const desconectado = lugar.tipo === 'humano' && !lugar.conectado
@@ -153,6 +157,7 @@ export function Asiento({
   return (
     <div
       data-asiento={lugar.asiento}
+      style={estilo}
       className={`asiento pos-${posicion}${leToca ? ' le-toca' : ''}${conReloj ? ' con-reloj' : ''}${esCompaniero ? ' companiero' : ' rival'}${participa ? '' : ' fuera'}${desconectado ? ' desconectado' : ''}${globo || chat || gesto ? ' con-globo' : ''}${gesto ? ' con-gesto' : ''}`}
     >
       {arriba && ladoChat === 'abajo' && chat ? (

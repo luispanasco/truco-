@@ -959,3 +959,31 @@ Decisiones del usuario: los precios por rareza propuestos, la vitrina es la mism
   - "Tienda" y "Ranking" se abren desde "Tu cuenta";
   - lo comprado se desbloquea en el editor del avatar y en los selectores de mesa y tipografía. El inventario se recuerda en el navegador, para que al recargar no se pierda lo puesto.
 - **Tests:** server 83 (8 de la tienda), web 262. Se actualizaron los precios que esperaban los tests de la fase 1.
+
+---
+
+## Mesa en perspectiva — 2026-10-17
+
+Pedido: una tercera vista de la mesa, "En perspectiva", como si estuvieras sentado frente a ella. Lo hizo un agente, en la rama `mesa-perspectiva` (sin merge a main).
+
+- **La preferencia** pasó de `mesaBustos` (sí o no) a `vistaMesa`: `circulos`, `sentados` o `perspectiva`. Al leer el perfil se migra lo guardado (prendido eran los sentados; apagado o sin nada, los círculos) y se guarda sin el campo viejo: nadie pierde su elección. Se elige donde estaba (Más opciones → "Jugadores en la mesa") y también con `?vista=…` en la dirección; `?bustos=1` / `?bustos=0` siguen andando.
+- **El paño** (`PanioEnPerspectiva` en `componentes/Perspectiva.tsx`, estilos en `estilos-mesa-perspectiva.css`) es un plano inclinado con CSS 3D (`perspective` en el `.tapete`, `rotateX` en el paño, punto de fuga arriba), con el borde de madera y el canto de cerca colgando (la mesa tiene espesor). Encima van el mazo y las cartas jugadas; en una pantalla alta el paño no se estira más de 1,6 veces su ancho. Sin librerías 3D.
+- **Los demás** son recortes de medio cuerpo (los avatares por capas, con sus cosméticos), de frente a la cámara, cortados en el borde de la mesa: el de enfrente detrás del borde de lejos y los de los costados contra los bordes de los lados. Dónde cae cada uno lo proyecta el navegador: el paño marca el lugar de cada asiento (`perspectiva.ts`) y se mide en la pantalla, así también sale la escala (más chicos cuanto más lejos). En 3v3 entran los cinco a 360 px; con una mesa bajita (muchos botones abajo) los recortes se achican.
+- **Lo que es interfaz** queda plano: tu mano (grande, derecha y en primer plano; en pantallas altas no se achica al abrirla), la botonera, el pie, chat, señas, relojes, globos y el registro. El aviso "Corta X", las vueltas y la etiqueta de lo mostrado se paran de frente sobre el paño.
+- **Animaciones rehechas para la perspectiva:**
+  - para pasar un punto de la pantalla al paño inclinado se usa una homografía con las cuatro esquinas del paño (`aLocal` en `perspectiva.ts`);
+  - reparto: cada carta va por el aire (hacia la cámara) hasta el lugar de cada uno; las tuyas vienen hacia vos y llegan a tu mano;
+  - jugar carta: sale de la mano de quien la tira (la tuya, desde tu mano), en el aire y casi parada, y cae acostada en su pila;
+  - levantar la vuelta: se levanta y va por el aire hacia el que la ganó;
+  - corte: lo que se separa se levanta del paño;
+  - tirada de reyes: las cartas salen del mazo por el aire; los avatares que cambian de lugar caminan alrededor de la mesa (no la cruzan) y crecen o se achican según se acerquen o se alejen.
+  - Con movimiento reducido, lo mismo que en las otras vistas (nada se anima y los reyes salen en el cuadro).
+- **Círculos y sentados quedan igual:** el paño inclinado solo se arma en perspectiva y todos los estilos nuevos cuelgan de `.mesa-perspectiva`.
+- **Revisado** con capturas a 360×740 y 412×915 (y una de 1280×800) en 1v1, 2v2 y 3v3, durante el reparto y con cartas en la mesa, con las mesas boliche, cantina, celeste y bordo, y con movimiento reducido.
+- **Tests:** web 265 (nuevos: la migración de la preferencia, `?vista=`, la homografía y la vista en 1v1, 2v2 y 3v3) y los 10 de punta a punta.
+
+**Pendientes:**
+- Las pilas de cartas jugadas de los de los costados quedan cerca de su recorte: en 2v2 se corrieron un poco hacia adentro, pero con una seña (el recorte crece) pueden taparse un poco.
+- El mazo de cerca se achicó (se veía enorme); en 3v3 bajito puede rozar el registro.
+- En escritorio la mesa queda angosta respecto del lugar que sobra a los costados: se podría ensanchar el paño en pantallas anchas.
+- Falta probarla online con dos personas (los relojes y el reloj de turno se ven en los recortes, pero no se revisó en vivo).

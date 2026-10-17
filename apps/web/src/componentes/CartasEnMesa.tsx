@@ -38,7 +38,17 @@ interface Props {
   levantar?: boolean
   /** Terminó la mano (o el duelo): lo que está en la mesa queda quieto hasta que se levanta todo. */
   quieta?: boolean
+  /**
+   * Mesa en perspectiva: hacia dónde queda cada asiento desde el centro del paño (px del paño
+   * sin inclinar), o null si todavía no se midió. Las cartas llegan desde ahí por el aire y caen
+   * acostadas; al levantar la vuelta, se van hacia el que la ganó.
+   */
+  desdeAsiento?: (pos: number) => [number, number] | null
 }
+
+/** En perspectiva: desde qué altura (px, hacia la cámara) cae una carta tirada, y cuánto viene parada. */
+const ALTURA_TIRO = 70
+const PARADA_TIRO = 30
 
 /** Una carta en la pila de un jugador: tirada en una vuelta, o mostrada al terminar. */
 interface EnPila {
@@ -56,7 +66,7 @@ interface EnPila {
  * vuelta va resaltada y las de vueltas ya cerradas quedan un poco apagadas. Al terminar,
  * quien cantó flor o ganó el envido da vuelta las que le quedaron, a continuación de su pila.
  */
-export function CartasEnMesa({ n, rel, mesa, mostradas, apodo, nuestro, levantar = false, quieta = false }: Props) {
+export function CartasEnMesa({ n, rel, mesa, mostradas, apodo, nuestro, levantar = false, quieta = false, desdeAsiento }: Props) {
   const reducido = useReducedMotion()
   const cerradas = mesa.vueltas.length
   // Con la opción de levantar: cuántas vueltas ya se levantaron. La recién cerrada queda un
@@ -101,14 +111,27 @@ export function CartasEnMesa({ n, rel, mesa, mostradas, apodo, nuestro, levantar
         {pila.map((c) => {
           const pos = rel(c.asiento)
           const [dx, dy] = direccion(n, pos)
+          // En perspectiva: el lugar de verdad de quien la tiró (si ya se midió la mesa).
+          const desde = desdeAsiento?.(pos) ?? null
           const vuelta = c.lugar + fuera
           const cerrada = c.mostrada ? undefined : mesa.vueltas[vuelta]
           const ganadora = cerrada?.ganador === c.asiento
           const pasada = !c.mostrada && vuelta < viva
           // Una vuelta cerrada que se levanta se va hacia quien la ganó (si fue parda, al centro).
           const [gx, gy] = levantar && cerrada && cerrada.ganador !== null ? direccion(n, rel(cerrada.ganador)) : [0, 0]
+          const hacia = levantar && cerrada && cerrada.ganador !== null ? (desdeAsiento?.(rel(cerrada.ganador)) ?? null) : null
           const salida = reducido
             ? { opacity: 0, transition: { duration: 0 } }
+            : levantar && cerrada && desdeAsiento?.(0)
+              ? {
+                  // En perspectiva: se levanta del paño y va por el aire hasta el que la ganó (parda: se junta en el medio).
+                  x: hacia ? hacia[0] * 0.85 : 0,
+                  y: hacia ? hacia[1] * 0.85 : 0,
+                  z: 40,
+                  scale: 0.6,
+                  opacity: 0,
+                  transition: { duration: 0.45, ease: 'easeIn' as const, opacity: { duration: 0.45, ease: [0.6, 0, 1, 1] as const } },
+                }
             : levantar && cerrada
               ? {
                   x: gx * VUELO * 0.8,
@@ -141,13 +164,23 @@ export function CartasEnMesa({ n, rel, mesa, mostradas, apodo, nuestro, levantar
                     ? false
                     : c.mostrada
                     ? { rotateY: 90, opacity: 0 }
-                    : { x: dx * VUELO, y: dy * VUELO, rotate: (dx || 1) * 14, opacity: 0 }
+                    : desde
+                      ? // En perspectiva: sale de la mano de quien la tira, en el aire y casi parada, y cae acostada.
+                        // La tuya arranca a la vista (sale de tu mano); las de los demás aparecen al salir.
+                        { x: desde[0] * 0.85, y: desde[1] * 0.85, z: ALTURA_TIRO, rotateX: -PARADA_TIRO, rotate: (dx || 1) * 14, opacity: pos === 0 ? 1 : 0 }
+                      : { x: dx * VUELO, y: dy * VUELO, rotate: (dx || 1) * 14, opacity: 0 }
                 }
-                animate={c.mostrada ? { rotateY: 0, opacity: 1 } : { x: 0, y: 0, rotate: 0, opacity: 1 }}
+                animate={c.mostrada ? { rotateY: 0, opacity: 1 } : desde ? { x: 0, y: 0, z: 0, rotateX: 0, rotate: 0, opacity: 1 } : { x: 0, y: 0, rotate: 0, opacity: 1 }}
                 // Al levantar la mesa se achica y se va hacia el centro. Se apaga enseguida: si
                 // en ese lugar ya cae una carta nueva, la vieja no se ve asomando por debajo.
                 exit={salida}
-                transition={{ duration: DURACION, ease: 'easeOut', delay: c.mostrada ? 0.1 + c.mostrada.orden * 0.12 : 0 }}
+                transition={{
+                  duration: desde && !c.mostrada ? DURACION * 1.3 : DURACION,
+                  ease: 'easeOut',
+                  delay: c.mostrada ? 0.1 + c.mostrada.orden * 0.12 : 0,
+                  // La de los demás se ve enseguida de salir de su mano.
+                  ...(desde && !c.mostrada ? { opacity: { duration: 0.12 } } : {}),
+                }}
               >
                 {c.carta ? <Carta carta={c.carta} tam="mesa" ganadora={ganadora} /> : <Carta oculta tam="mesa" ganadora={ganadora} />}
                 {c.mostrada?.etiqueta && (
