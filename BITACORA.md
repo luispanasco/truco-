@@ -1059,3 +1059,29 @@ Dos pedidos del usuario, con el plan aprobado. Lo hizo un agente en la rama `res
 - El usuario creó la clave del TURN de Cloudflare (tope de 1000 GB por mes) y la cargó en `apps/server/.env` (`TRUCO_TURN_ID` y `TRUCO_TURN_TOKEN`).
 - El servidor pide credenciales de 24 h y las renueva cada 12 h.
 - **El usuario lo probó: el chat de voz anda.**
+
+---
+
+## Mesa en perspectiva más aireada — 2026-10-17
+
+Pedido: "la mesa con perspectiva no quedó mal, pero quedó muy apretada", en 2 contra 2 y 3 contra 3. Lo hizo un agente, en la rama `perspectiva-aire` (sin merge a main). Todo bajo `.mesa-perspectiva` y la tabla del mazo en perspectiva: círculos y sentados no cambian, y 1 contra 1 queda igual (salvo el ancho en escritorio).
+
+- **El paño más ancho:** con gente a los costados deja 8 % del ancho a cada lado en 2 contra 2 y 10 % en 3 contra 3 (antes 15 % y 17 %).
+- **Los de los costados más chicos y más afuera:** el recorte, al 80 % (`--figura-lado`). Se corren hacia afuera según su propio alto (`--afuera`), así el nombre (más ancho) no los saca de la pantalla. En 3 contra 3:
+  - los de cerca se corren menos y los de lejos más;
+  - en el celular, sus nombres van un poco más chicos.
+- **Las cartas jugadas:**
+  - un poco más chicas;
+  - las pilas más separadas: en 2 contra 2, las de los costados a 1,6 cartas del medio (antes 1,15); en 3 contra 3, a 1,7;
+  - corridas un poco hacia vos (`--centro-y: 3cqh`).
+  - Ya no se pisan entre ellas ni con los recortes, tampoco durante una seña (era el pendiente de 2 contra 2).
+- **El mazo** (`POSICIONES_PERSPECTIVA` en `Mazo.tsx`): en 3 contra 3 va siempre a una esquina, del lado del mano. A los costados no entra entre las dos pilas de cada lado. Las esquinas de cerca quedan arriba del registro, que en 3 contra 3 se angostó al 52 % (era el pendiente de 3 contra 3). En 2 contra 2, más a las puntas.
+- **En escritorio:**
+  - la pantalla de la mesa en perspectiva llega a 900 px de ancho (las otras vistas siguen en 620);
+  - en 3 contra 3 el paño deja 16 % a los lados. Con el paño bajito y ancho, los de los costados van con sus cartas hacia afuera: antes caían arriba del paño.
+- **Revisado con capturas:** antes y después, en `capturas-aire/` (sin commitear). Fueron a 360×740, 390×844, 412×915 y 1280×800 (y una de 768×1024), en 2 contra 2 y 3 contra 3, durante el reparto, con una seña y con 4 a 14 cartas en la mesa. 1 contra 1, a 360 y 1280. Cada captura se midió además con un script que busca cajas pisadas y cosas fuera de la pantalla.
+- **Tests:** web 285 (nuevos: el mazo de la perspectiva va a las esquinas en 2 y 3 contra 3, y las otras vistas no cambian).
+
+**Pendientes:**
+- Con 360 de ancho, en 3 contra 3 la esquina de lejos queda justa: durante el reparto el mazo roza las cartas del de enfrente.
+- De punta a punta, `anfitrion.spec.ts` y `avatar.spec.ts` fallan, también en main. Esperan los precios de antes de la tienda (por ejemplo "Bordó: 400 monedas"); hay que actualizarlos.

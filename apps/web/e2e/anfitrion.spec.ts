@@ -18,7 +18,7 @@ test('la mesa y la baraja de la sala son las del anfitrión', async ({ browser }
   const ana = await persona(browser, 'Ana')
   await ana.getByText('Más opciones').click()
   // Con la tienda cerrada, Bordó tiene candado.
-  await expect(ana.getByRole('radio', { name: /^Bordó: 400 monedas/ })).toHaveAttribute('aria-disabled', 'true')
+  await expect(ana.getByRole('radio', { name: /^Bordó: 800 monedas/ })).toHaveAttribute('aria-disabled', 'true')
   await ana.getByText('Desbloquear la tienda (prueba)').click()
   await expect(ana.getByRole('switch', { name: /Desbloquear la tienda/ })).toBeChecked()
   const bordo = ana.getByRole('radiogroup', { name: 'Mesa' }).getByRole('radio', { name: 'Bordó' })

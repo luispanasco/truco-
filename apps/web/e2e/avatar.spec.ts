@@ -20,11 +20,11 @@ test('el avatar armado en el perfil es el que ven los demás en la sala', async 
   await expect(editor.getByRole('radio', { name: 'Remera roja' })).toHaveAttribute('aria-checked', 'true')
 
   // Una prenda de la tienda no se puede elegir: avisa el precio.
-  const camiseta = editor.getByRole('radio', { name: /^Camiseta celeste: 200 monedas/ })
+  const camiseta = editor.getByRole('radio', { name: /^Camiseta celeste: 350 monedas/ })
   await expect(camiseta).toHaveAttribute('aria-disabled', 'true')
   // Se puede tocar igual (para ver el precio): Playwright no toca lo que está aria-disabled sin force.
   await camiseta.click({ force: true })
-  await expect(editor.getByRole('status')).toContainText('Pronto en la tienda')
+  await expect(editor.getByRole('status')).toContainText('Buscala en la tienda')
   await expect(editor.getByRole('radio', { name: 'Remera roja' })).toHaveAttribute('aria-checked', 'true')
 
   // La seña se ve en el avatar grande.
