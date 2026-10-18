@@ -47,7 +47,7 @@ Son tres partes: el proyecto de Supabase, la credencial de Google, y pegar los d
 
 ## 3. Los archivos `.env`
 
-Creá estos dos archivos en la carpeta del repo, con tus datos.
+Los dos archivos ya están creados y tienen los renglones vacíos: completá cada uno después del `=`.
 
 `apps/server/.env`:
 
