@@ -23,6 +23,18 @@ export interface Cuentas {
  */
 export function rutasCuentas(c: Cuentas | null): Router {
   const r = express.Router()
+  // Publicada, la web está en otro dominio (Cloudflare Pages) que el servidor (Fly.io). La sesión
+  // va en un encabezado, no en cookies, así que se puede aceptar cualquier origen.
+  r.use((req, res, siguiente) => {
+    res.set({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'authorization, content-type',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+      'Access-Control-Max-Age': '86400',
+    })
+    if (req.method === 'OPTIONS') return void res.sendStatus(204)
+    siguiente()
+  })
   r.use(express.json({ limit: '16kb' }))
 
   r.get('/estado', (_req, res) => {

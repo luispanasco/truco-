@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/dist-pwa
+**/.env
+**/.env.local
+secretos
+.git
+.claude
+apps/server/datos
+apps/web/test-results
+apps/web/playwright-report
+capturas*

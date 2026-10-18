@@ -1,0 +1,32 @@
+# Servidor de juego en Fly.io (ver INSTRUCTIVO-PUBLICAR.md). Las salas viven en la memoria del
+# servidor: tiene que haber UNA sola máquina, siempre prendida.
+app = "truco-uy"
+primary_region = "gru"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "2567"
+
+[http_service]
+  internal_port = 2567
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    soft_limit = 500
+    hard_limit = 1000
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "30s"
+    timeout = "5s"
+    method = "GET"
+    path = "/api/estado"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
