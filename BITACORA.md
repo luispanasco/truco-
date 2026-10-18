@@ -1085,3 +1085,25 @@ Pedido: "la mesa con perspectiva no quedó mal, pero quedó muy apretada", en 2 
 **Pendientes:**
 - Con 360 de ancho, en 3 contra 3 la esquina de lejos queda justa: durante el reparto el mazo roza las cartas del de enfrente.
 - De punta a punta, `anfitrion.spec.ts` y `avatar.spec.ts` fallan, también en main. Esperan los precios de antes de la tienda (por ejemplo "Bordó: 400 monedas"); hay que actualizarlos.
+
+## Supabase andando — 2026-10-18
+
+- El usuario creó el proyecto de Supabase (São Paulo) y la credencial de Google, y cargó los `.env`.
+- El servidor arranca con "Cuentas: PostgreSQL, Supabase." y crea solo las tablas. El login con Google anda.
+- Dos tropiezos en el camino, que quedan anotados para la próxima:
+  - Google tiró `redirect_uri_mismatch` porque la credencial no tenía la "Authorized redirect URI" `https://<ref>.supabase.co/auth/v1/callback`;
+  - después Supabase mandaba a `localhost:3000` porque la Site URL era la que trae por defecto y el comodín estaba mal escrito. Tiene que ser `https://*.trycloudflare.com/**`.
+- La credencial descargada de Google quedó en `secretos/`, que git ignora.
+
+## Etapa 2D (segunda parte): amigos — 2026-10-18
+
+- **Código de amigo** (migración 5): cada cuenta tiene uno de 6 letras y números, uno más que los códigos de sala para no confundirlos. Se crea la primera vez que se pide.
+- **Amistades:** cada amistad es una fila que va de quien la pidió a quien la recibe, pendiente hasta que la aceptan. Si los dos se piden, quedan amigos de una. Se puede rechazar, cancelar una que mandaste o borrar un amigo.
+- **Presencia** (`cuentas/presencia.ts`, en memoria):
+  - con la cuenta abierta, la web late cada 25 s;
+  - las salas anotan quién está sentado y en qué sala privada;
+  - cada amigo figura como "conectado", "en una sala, esperando" (con el código, para "Unirme"), "jugando" o "desconectado".
+- **Invitaciones:** desde la sala de espera de una sala privada, "Invitar amigos" muestra los amigos conectados. Al amigo le llega en el próximo latido, que se la entrega una sola vez y dura 5 minutos, y en cualquier pantalla le aparece "Beto te invita a su sala", con los botones Entrar y Ahora no. En plena partida, el aviso espera a que salga de la mesa.
+- **La API:** `GET /api/amigos` y `POST /api/amigos/{latido,agregar,responder,borrar,invitar}`.
+- **La web:** pantalla `/amigos`, con tu código para copiar, agregar por código, las solicitudes, la lista con un punto de color por estado y "Unirme". Se llega desde "Tu cuenta".
+- **Tests:** server 103 (5 de amigos, con sala e invitación reales), web 297.

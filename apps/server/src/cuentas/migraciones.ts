@@ -71,4 +71,17 @@ export const MIGRACIONES: string[] = [
     primary key (cuenta_id, item)
   );
   `,
+  // 5. Amigos: cada cuenta tiene un código para que la agreguen; la amistad es una fila (de quien
+  //    la pidió a quien la recibe), pendiente hasta que la acepta.
+  `
+  alter table cuentas add column codigo text unique;
+  create table amistades (
+    de uuid not null references cuentas (id),
+    a uuid not null references cuentas (id),
+    estado text not null check (estado in ('pendiente', 'aceptada')),
+    creada timestamptz not null default now(),
+    primary key (de, a)
+  );
+  create index amistades_a on amistades (a);
+  `,
 ]

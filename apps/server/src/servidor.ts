@@ -4,6 +4,7 @@ import { defineRoom, defineServer, playground, type ServerOptions } from 'colyse
 import { SALAS } from '@truco/shared'
 import { Archivo } from './registro'
 import { rutasCuentas, type Cuentas } from './cuentas/api'
+import { Presencia } from './cuentas/presencia'
 import { SalaTruco, TIEMPOS_DEFAULT, type Tiempos } from './SalaTruco'
 
 export interface OpcionesServidor {
@@ -29,6 +30,8 @@ export function tiendaDePruebaDelEntorno(env: Record<string, string | undefined>
 }
 
 export function crearServidor(op: OpcionesServidor = {}) {
+  // La API y las salas comparten la presencia (quién está conectado y dónde).
+  const cuentas = op.cuentas ? { ...op.cuentas, presencia: op.cuentas.presencia ?? new Presencia() } : null
   const tiempos = { ...TIEMPOS_DEFAULT, ...op.tiempos }
   const tiendaDePrueba = op.tiendaDePrueba ?? tiendaDePruebaDelEntorno()
   // Por defecto, apps/server/datos, sin importar desde qué carpeta se arranque el servidor.
@@ -38,7 +41,7 @@ export function crearServidor(op: OpcionesServidor = {}) {
     override tiempos = tiempos
     override archivo = archivo
     override tiendaDePrueba = tiendaDePrueba
-    override cuentas = op.cuentas ?? null
+    override cuentas = cuentas
   }
   class SalaPublica extends SalaPrivada {
     override publica = true
@@ -46,7 +49,7 @@ export function crearServidor(op: OpcionesServidor = {}) {
 
   return defineServer({
     express: (app: Parameters<NonNullable<ServerOptions['express']>>[0]) => {
-      app.use('/api', rutasCuentas(op.cuentas ?? null))
+      app.use('/api', rutasCuentas(cuentas))
       if (op.playground) app.use('/playground', playground())
     },
     rooms: {

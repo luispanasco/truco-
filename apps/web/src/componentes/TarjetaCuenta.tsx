@@ -30,6 +30,9 @@ export function TarjetaCuenta() {
           <Link className="boton" to="/tienda">
             Tienda
           </Link>
+          <Link className="boton boton-secundario" to="/amigos">
+            Amigos
+          </Link>
           <Link className="boton boton-secundario" to="/ranking">
             Ranking
           </Link>

@@ -5,12 +5,16 @@ import { entrar, guardarPerfil } from './cuentas'
 import { saldo, ultimosMovimientos } from './monedas'
 import { ranking } from './elo'
 import { comprar, CompraRechazada, inventario, vitrina } from './tienda'
+import { agregarAmigo, AmigosRechazo, borrarAmigo, invitarAmigo, listaDeAmigos, responderSolicitud } from './amigos'
+import { Presencia } from './presencia'
 
 export interface Cuentas {
   base: Base
   verificar: Verificador
   /** Si se acepta el login de prueba (`prueba:<email>`): solo en desarrollo, sin Supabase. */
   loginDePrueba: boolean
+  /** Quién está conectado y las invitaciones (la comparten la API y las salas; ver servidor.ts). */
+  presencia?: Presencia
 }
 
 /**
@@ -69,6 +73,66 @@ export function rutasCuentas(c: Cuentas | null): Router {
         res.status(409).json({ motivo: e.message })
       }
     }),
+  )
+
+  // Amigos. El latido avisa que la app sigue abierta y trae las invitaciones a una sala.
+  const presencia = c?.presencia ?? new Presencia()
+  const conRechazo =
+    (fn: (req: Request, res: Response, c: Cuentas, u: Usuario) => Promise<void>) => (req: Request, res: Response, c: Cuentas, u: Usuario) =>
+      fn(req, res, c, u).catch((e) => {
+        if (!(e instanceof AmigosRechazo)) throw e
+        res.status(409).json({ motivo: e.message })
+      })
+  const cuerpo = (req: Request) => (req.body ?? {}) as { codigo?: unknown; id?: unknown; aceptar?: unknown }
+
+  r.post(
+    '/amigos/latido',
+    conSesion(async (_req, res, _c, u) => {
+      presencia.latido(u.id)
+      res.json({ invitaciones: presencia.tomarInvitaciones(u.id) })
+    }),
+  )
+  r.get(
+    '/amigos',
+    conSesion(async (_req, res, c, u) => {
+      presencia.latido(u.id)
+      res.json(await listaDeAmigos(c.base, presencia, u.id))
+    }),
+  )
+  r.post(
+    '/amigos/agregar',
+    conSesion(
+      conRechazo(async (req, res, c, u) => {
+        res.json(await agregarAmigo(c.base, u.id, cuerpo(req).codigo))
+      }),
+    ),
+  )
+  r.post(
+    '/amigos/responder',
+    conSesion(
+      conRechazo(async (req, res, c, u) => {
+        await responderSolicitud(c.base, u.id, cuerpo(req).id, cuerpo(req).aceptar === true)
+        res.json({ ok: true })
+      }),
+    ),
+  )
+  r.post(
+    '/amigos/borrar',
+    conSesion(
+      conRechazo(async (req, res, c, u) => {
+        await borrarAmigo(c.base, u.id, cuerpo(req).id)
+        res.json({ ok: true })
+      }),
+    ),
+  )
+  r.post(
+    '/amigos/invitar',
+    conSesion(
+      conRechazo(async (req, res, c, u) => {
+        await invitarAmigo(c.base, presencia, u.id, cuerpo(req).id)
+        res.json({ ok: true })
+      }),
+    ),
   )
 
   // El ranking lo ve cualquiera; con sesión, también dónde estás vos.

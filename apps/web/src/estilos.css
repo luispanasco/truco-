@@ -317,7 +317,7 @@ input {
 }
 .cuenta-enlaces {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
   gap: 10px;
 }
 /* Tienda: la vitrina del día, con el color de la rareza en el borde. */
@@ -382,6 +382,106 @@ input {
 .cuenta-enlaces a.boton {
   text-align: center;
   text-decoration: none;
+}
+
+/* Amigos */
+.codigo-amigo {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0;
+  font-size: 1.8rem;
+  letter-spacing: 0.15em;
+}
+.amigos-agregar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 10px;
+}
+.amigos {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.amigo {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: var(--radio);
+  background: rgb(0 0 0 / 0.18);
+}
+.amigo.amigo-chico {
+  grid-template-columns: 1fr auto;
+}
+.amigo-avatar {
+  width: 40px;
+  height: 40px;
+}
+.amigo-nombre {
+  display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+.amigo-acciones {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.amigo-acciones .boton {
+  width: auto;
+  padding: 8px 12px;
+}
+.amigo.amigo-chico .boton {
+  width: auto;
+  padding: 8px 14px;
+}
+.amigo-estado {
+  font-weight: 400;
+  opacity: 0.85;
+}
+.amigo-punto {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8a8f96;
+}
+.estado-conectado .amigo-punto,
+.estado-enSala .amigo-punto {
+  background: #3fc46b;
+}
+.estado-jugando .amigo-punto {
+  background: #e8b33a;
+}
+.aviso-invitacion {
+  position: fixed;
+  z-index: 60;
+  left: 16px;
+  right: 16px;
+  top: max(12px, env(safe-area-inset-top));
+  max-width: 480px;
+  margin: 0 auto;
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--tapete-oscuro);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
+}
+.aviso-invitacion p {
+  margin: 0;
+}
+.aviso-invitacion-botones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 /* Ranking */

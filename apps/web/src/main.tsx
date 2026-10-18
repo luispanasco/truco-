@@ -27,6 +27,8 @@ import { aplicarTipografia } from './temaTipografia'
 import './estilos.css'
 import { Ranking } from './pantallas/Ranking'
 import { Tienda } from './pantallas/Tienda'
+import { Amigos } from './pantallas/Amigos'
+import { AvisoInvitacion } from './componentes/Amistad'
 import './estilos-online.css'
 
 escucharInstalacion()
@@ -45,6 +47,7 @@ createRoot(document.getElementById('raiz')!).render(
     <MotionConfig reducedMotion="user">
       <BrowserRouter>
         <AvisoActualizacion />
+        <AvisoInvitacion />
         <Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/mesa" element={<Mesa />} />
@@ -58,6 +61,7 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/buscar" element={<Buscar />} />
           <Route path="/ranking" element={<Ranking />} />
           <Route path="/tienda" element={<Tienda />} />
+          <Route path="/amigos" element={<Amigos />} />
         </Routes>
       </BrowserRouter>
     </MotionConfig>

@@ -74,6 +74,7 @@ import { pagarPartida } from './cuentas/monedas'
 import { actualizarElo } from './cuentas/elo'
 import { entrar } from './cuentas/cuentas'
 import { inventario } from './cuentas/tienda'
+import type { EnSala } from './cuentas/presencia'
 import { VozDeSala } from './voz'
 
 export interface Tiempos {
@@ -265,6 +266,7 @@ export class SalaTruco extends Room {
     } else {
       this.aplicarConfiguracion(opciones)
       this.codigo = await generarCodigoUnico(async (c) => (await matchMaker.getRoomById(c)) !== undefined)
+      this.enSala.codigo = this.codigo
       this.roomId = this.codigo
       await this.setPrivate(true)
     }
@@ -306,7 +308,9 @@ export class SalaTruco extends Room {
       lugar.tipo = 'humano'
       lugar.invitadoId = invitadoId
     }
+    if (lugar.cuentaId && lugar.cuentaId !== cuentaId) this.cuentas?.presencia?.salirDeSala(lugar.cuentaId, this.enSala)
     lugar.cuentaId = cuentaId
+    if (cuentaId) this.cuentas?.presencia?.entrarASala(cuentaId, this.enSala)
     lugar.inventario = auth?.inventario ?? []
     lugar.apodo = filtrarTexto(apodo)
     lugar.tienda = this.tiendaDePrueba && opciones?.tiendaDesbloqueada === true
@@ -352,6 +356,7 @@ export class SalaTruco extends Room {
     this.voz.salir(client)
     const lugar = this.lugarDe(client)
     if (!lugar) return
+    if (lugar.cuentaId) this.cuentas?.presencia?.salirDeSala(lugar.cuentaId, this.enSala)
     if (this.fase === 'esperando') {
       // Antes de empezar, irse libera el lugar.
       const eraAnfitrion = lugar.invitadoId === this.anfitrion
@@ -369,7 +374,11 @@ export class SalaTruco extends Room {
     this.alCambiarConexion()
   }
 
+  /** Lo que la presencia de los amigos sabe de esta sala (ver cuentas/presencia.ts). */
+  private enSala: EnSala = { codigo: null, jugando: () => this.fase !== 'esperando' }
+
   override onDispose() {
+    for (const l of this.lugares) if (l.cuentaId) this.cuentas?.presencia?.salirDeSala(l.cuentaId, this.enSala)
     this.limpiarTimer('timerJuego')
     this.limpiarTimer('timerCierre')
     this.limpiarTimer('timerOfrecer')

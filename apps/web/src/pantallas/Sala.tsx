@@ -10,6 +10,7 @@ import { SelectorBaraja } from '../componentes/SelectorBaraja'
 import { SelectorMesa } from '../componentes/SelectorMesa'
 import { usePerfil } from '../componentes/TarjetaPerfil'
 import { useJuego } from '../estado'
+import { InvitarAmigos } from '../componentes/Amistad'
 import '../estilos-avatar.css'
 
 const linkDe = (codigo: string) => `${location.origin}/s/${codigo}`
@@ -284,6 +285,7 @@ export function Sala() {
       <CabeceraOnline titulo="Sala de espera" alVolver={salir} />
       <AvisoConexion />
       {sala.codigo && <Invitar codigo={sala.codigo} />}
+      {sala.codigo && <InvitarAmigos />}
       <Lugares sala={sala} />
       <MesaYBaraja sala={sala} esAnfitrion={esAnfitrion} />
       <Configuracion sala={sala} esAnfitrion={esAnfitrion} />
