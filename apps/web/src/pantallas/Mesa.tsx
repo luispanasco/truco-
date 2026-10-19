@@ -12,6 +12,7 @@ import { BotonPasar, BotonPie, PanelPie } from '../componentes/Pie'
 import { TiradaDeReyes, TiradaEnMesa } from '../componentes/Reyes'
 import { Asiento, Avatar, avatarDeLugar, MarcaMano } from '../componentes/Asiento'
 import { CartasEnMesa } from '../componentes/CartasEnMesa'
+import { CantaLaMesa } from '../componentes/CantaLaMesa'
 import { BotonChat, PanelChat, useNoLeidos } from '../componentes/Chat'
 import { AnilloVoz, ControlesVoz } from '../componentes/ControlesVoz'
 import { EstadoConexion } from '../componentes/EstadoConexion'
@@ -58,6 +59,16 @@ export function Mesa() {
   } = useJuego()
   // Pasar en la tercera: la próxima carta que toques va tapada.
   const [pasando, setPasando] = useState(false)
+  // La contraflor al resto querida termina el partido de golpe: el cartel del final espera un
+  // poco, así se ven las flores (o la mesa cantada) antes.
+  const porFlor = vista?.ganador != null && vista.mano.enfrentamientos.some((x) => x.resultado?.motivo === 'contraflorAlResto')
+  const [finVisible, setFinVisible] = useState(true)
+  useEffect(() => {
+    if (!porFlor) return void setFinVisible(true)
+    setFinVisible(false)
+    const t = setTimeout(() => setFinVisible(true), 3500)
+    return () => clearTimeout(t)
+  }, [porFlor])
   // Lo del pie se abre con su botón (en la mano en que lo abriste) y sale flotando: no empuja los cantos.
   const [pieAbiertoEn, setPieAbiertoEn] = useState<number | null>(null)
   // El corte del mazo se ve antes de la muestra y del reparto: mientras tanto, las cartas esperan.
@@ -128,6 +139,9 @@ export function Mesa() {
   const meToca = vista.esperandoA.includes(yo) && vista.ganador === null && !finDeMano
   const jugar = (a: Accion) => enviar('accion', { accion: a })
   const jugarCarta = (c: TCarta) => {
+    // "Canta la mesa": tocar una carta la tira sobre la mesa.
+    const mostrar = vista.accionesValidas.find((x) => x.tipo === 'mostrarFlor' && mismaCarta(x.carta, c))
+    if (mostrar) return jugar(mostrar)
     const a = vista.accionesValidas.find((x) => x.tipo === 'jugarCarta' && mismaCarta(x.carta, c) && !!x.tapada === pasando)
     setPasando(false)
     if (a) jugar(a)
@@ -137,10 +151,10 @@ export function Mesa() {
   const cortando = vista.mano.cortando
   const puedeJugar = (c: TCarta) =>
     !finDeMano &&
-    vista.accionesValidas.some((x) => x.tipo === 'jugarCarta' && mismaCarta(x.carta, c))
+    vista.accionesValidas.some((x) => (x.tipo === 'jugarCarta' || x.tipo === 'mostrarFlor') && mismaCarta(x.carta, c))
   // En la pausa entre manos la vista todavía no trae la última jugada: no mostrar dos veces la carta.
   // Las que di vuelta al terminar (flor o envido) también quedan en la mesa y no en la mano.
-  const misMostradas = mostradas.find((m) => m.asiento === yo)?.cartas ?? []
+  const misMostradas = [...(mostradas.find((m) => m.asiento === yo)?.cartas ?? []), ...(e.flor.mesa?.mostradas[yo] ?? [])]
   // Mientras se corta y se reparte, las cartas todavía no llegaron a las manos.
   const repartiendo = faseCorte === 'corte' || faseCorte === 'reparto'
   const misCartas = (repartiendo ? [] : vista.mano.misCartas).filter(
@@ -151,7 +165,9 @@ export function Mesa() {
     if (repartiendo) return 0
     const enVista = e.vueltas.reduce((t, v) => t + v.jugadas.filter((j) => j.asiento === a).length, 0)
     const sinVista = Math.max(0, mesa.jugadas.filter((j) => j.asiento === a).length - enVista)
-    const dadas = mostradas.find((m) => m.asiento === a)?.cartas.length ?? 0
+    // Las dadas vuelta al terminar y las tiradas al cantar la mesa (sin contar la ya jugada).
+    const enMesaFlor = (e.flor.mesa?.mostradas[a] ?? []).filter((c) => !e.vueltas.some((v) => v.jugadas.some((j) => j.asiento === a && j.carta && mismaCarta(j.carta, c)))).length
+    const dadas = (mostradas.find((m) => m.asiento === a)?.cartas.length ?? 0) + enMesaFlor
     return Math.max(0, vista.jugadores[a]!.cartasEnMano - sinVista - dadas)
   }
   // En 3 contra 3, el chat del de enfrente sale hacia el costado donde no canta nadie: los
@@ -249,6 +265,7 @@ export function Mesa() {
         manoRel={rel(vista.mano.mano)}
         perspectiva={perspectiva}
       />
+      <CantaLaMesa vista={vista} apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`} />
       <CartasEnMesa
         n={n}
         rel={rel}
@@ -457,7 +474,7 @@ export function Mesa() {
         {explicacion && <GloboExplicacion key={explicacion.id} explicacion={explicacion} alCerrar={cerrarExplicacion} />}
       </section>
 
-      {vista.ganador !== null && (
+      {vista.ganador !== null && finVisible && (
         <div className="modal" role="dialog" aria-modal="true" aria-labelledby="fin-titulo">
           <div className={`modal-caja fin-caja ${ganamos ? 'fin-ganada' : 'fin-perdida'}`}>
             <div className="fin-emblema" aria-hidden="true">

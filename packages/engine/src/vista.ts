@@ -96,7 +96,7 @@ export function vistaPara(estado: EstadoPartida, jugadorId: string): VistaPartid
           vueltas: e.vueltas.map((v) => ({ ...v, jugadas: v.jugadas.map((j) => (oculta(j) ? { ...j, carta: null } : j)) })),
           flor: {
             ...e.flor,
-            cantadas: e.flor.cantadas.map((f) => ({ ...f, tantoDeclarado: e.resultado ? f.tantoDeclarado : null })),
+            cantadas: e.flor.cantadas.map((f) => ({ ...f, tantoDeclarado: e.resultado || e.flor.ganador !== null ? f.tantoDeclarado : null })),
           },
           resultado: e.resultado && ajeno ? sinPiezas(e.resultado, mano.muestra) : e.resultado,
           lideres: [liderDe(estado, e, 0), liderDe(estado, e, 1)],

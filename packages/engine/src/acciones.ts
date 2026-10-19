@@ -1,5 +1,5 @@
 import { enfrentamientoActual, floresPorCantar, florSinCantarDelEquipo, validar } from './apply'
-import { equipoDe, equipoQueCanto, liderDe, otroEquipo, pendienteActual, siguienteDeclarante } from './reglas'
+import { equipoDe, equipoQueCanto, liderDe, otroEquipo, pendienteActual, siguienteDeclarante, siguienteEnMesa } from './reglas'
 import type { Accion, CantoEnvido, CantoFlor, EstadoPartida, QueManda, TipoCorte } from './tipos'
 
 const CANTOS_ENVIDO: CantoEnvido[] = ['envido', 'realEnvido', 'faltaEnvido']
@@ -22,6 +22,8 @@ export function accionesValidas(estado: EstadoPartida, jugadorId: string): Accio
     ...CORTES.map((corte) => ({ tipo: 'cortar' as const, ...jugadorAccion, corte })),
     { tipo: 'responder', ...jugadorAccion, respuesta: 'quiero' },
     { tipo: 'responder', ...jugadorAccion, respuesta: 'noQuiero' },
+    { tipo: 'responder', ...jugadorAccion, respuesta: 'quiero', cantaLaMesa: true },
+    ...misCartas.map((carta) => ({ tipo: 'mostrarFlor' as const, ...jugadorAccion, carta })),
     { tipo: 'declararTanto', ...jugadorAccion, tanto: estado.mano.tantos[jugador.asiento]?.envidoReal ?? 0 },
     { tipo: 'declararTanto', ...jugadorAccion, tanto: 'sonBuenas' },
     { tipo: 'pedirVer', ...jugadorAccion },
@@ -50,6 +52,8 @@ export function esperandoA(estado: EstadoPartida): number[] {
   const e = enfrentamientoActual(estado)
   const v = estado.mano.verificacion
   if (v) return e.participantes.filter((a) => v.pendientes.includes(equipoDe(a)))
+  const enMesa = siguienteEnMesa(e)
+  if (enMesa !== null) return [enMesa]
   const porCantar = floresPorCantar(estado, e)
   if (porCantar.length > 0) return [porCantar[0]!]
   const pend = pendienteActual(e)
@@ -59,12 +63,16 @@ export function esperandoA(estado: EstadoPartida): number[] {
   }
   if (pend) {
     const responde = otroEquipo(equipoQueCanto(e, pend))
+    // A la contraflor contesta solo el que tiene flor (en orden desde el mano); los demás esperan.
+    if (pend === 'flor') {
+      return e.participantes.filter((a) => equipoDe(a) === responde && !e.retirados.includes(a) && e.flor.cantadas.some((f) => f.asiento === a))
+    }
     // Al envido no lo contesta el equipo: lo anula el que tiene flor, cantándola.
     const conFlor = pend === 'envido' ? florSinCantarDelEquipo(estado, e, responde) : []
     if (conFlor.length > 0) return conFlor
     // Con "toques y gritos del pie", al truco y al envido contesta el pie.
     const lider = liderDe(estado, e, responde)
-    if (estado.config.toquesYGritos === 'pie' && lider !== null && pend !== 'flor') return [lider]
+    if (estado.config.toquesYGritos === 'pie' && lider !== null) return [lider]
     return e.participantes.filter((a) => equipoDe(a) === responde && !e.retirados.includes(a))
   }
   return e.turno === null ? [] : [e.turno]

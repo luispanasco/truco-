@@ -112,8 +112,10 @@ Dos cartas de igual orden empatan la vuelta (parda).
 - La flor vale 3 puntos; se sube con contraflor y contraflor al resto.
 - Si varios jugadores del mismo equipo tienen flor, cada flor suma 3.
 - Si los dos equipos tienen flor y nadie canta contraflor, gana la flor más grande (empate: la del más cercano al mano) y su equipo suma 3 por cada flor suya mayor que la mejor del rival; el otro equipo no suma nada.
-- A la contraflor se contesta "con flor quiero" o "con flor me achico". No querida, el que la cantó cobra 3 por cada flor de su equipo más 1.
-- La contraflor al resto es el partido: querida, el que la gana gana la partida.
+- A la contraflor y a la contraflor al resto contesta solo el que tiene flor ("con flor quiero" o "con flor me achico"); los demás del equipo esperan. No querida, el que la cantó cobra 3 por cada flor de su equipo.
+- La contraflor querida se compara en el momento, como el envido: cada uno con flor dice la suya en orden desde el mano. Vale 6 fijos, que se suman al terminar la mano.
+- La contraflor al resto es el partido: querida, se dicen las flores en el momento, en orden desde el mano, y el que la gana gana la partida ahí, sin seguir jugando la mano.
+- "Canta la mesa": el que quiere la contraflor al resto puede decir "quiero, canta la mesa". En vez de decir los números, los que tienen flor tiran sus cartas de a una (la que elijan), en orden desde el mano, hasta mostrar las tres, y la suma se va viendo. La carta que ya jugaron en la primera cuenta como tirada.
 - "Flor y truco": el que tiene flor puede cantar las dos cosas juntas en su turno; primero se resuelve la flor y después se contesta el truco.
 - La flor que alguien no llegó a cantar porque el rival se fue al mazo se cobra igual.
 

@@ -221,6 +221,13 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       case 'tantoDeclarado':
         mostrarGlobo(ev.asiento, ev.tanto === null ? 'Son buenas' : String(ev.tanto))
         break
+      case 'florMostrada':
+        mostrarGlobo(ev.asiento, String(ev.suma))
+        break
+      case 'florResuelta':
+        // Querida la contraflor, cada uno dice su flor en el momento.
+        for (const t of ev.tantos) mostrarGlobo(t.asiento, t.tanto < 0 ? 'No tenía flor' : `Flor de ${t.tanto}`)
+        break
       case 'alMazo':
         mostrarGlobo(ev.asiento, 'Me voy al mazo')
         break

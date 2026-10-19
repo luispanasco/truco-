@@ -44,7 +44,7 @@ export function nuevoEnfrentamiento(participantes: number[], mano: number): Enfr
     turno: mano,
     truco: { valor: 1, puedeSubir: null, pendiente: null },
     envido: { estado: 'libre', cantos: [], declaraciones: [], porDeclarar: [], ganador: null },
-    flor: { estado: 'libre', cantadas: [], contra: [], noQuerida: null },
+    flor: { estado: 'libre', cantadas: [], contra: [], noQuerida: null, ganador: null, mesa: null },
     alMazo: null,
     retirados: [],
     ordenes: [],

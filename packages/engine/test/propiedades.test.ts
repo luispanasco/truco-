@@ -117,7 +117,11 @@ describe('propiedades', () => {
             expect(vista).not.toHaveProperty('rng')
             expect(vista).not.toHaveProperty('semilla')
             // Las que se dieron vuelta al terminar un enfrentamiento (flor o envido ganado) son públicas.
-            const mostradas = estado.mano.enfrentamientos.flatMap((e) => e.resultado?.mostradas ?? [])
+            // También las que se tiraron al cantar la mesa.
+            const mostradas = estado.mano.enfrentamientos.flatMap((e) => [
+              ...(e.resultado?.mostradas ?? []),
+              ...Object.entries(e.flor.mesa?.mostradas ?? {}).map(([asiento, cartas]) => ({ asiento: Number(asiento), cartas })),
+            ])
             const ocultas = estado.mano.cartas.flatMap((cs, asiento) =>
               asiento === j.asiento
                 ? []

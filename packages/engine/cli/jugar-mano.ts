@@ -47,7 +47,9 @@ function describirAccion(estado: EstadoPartida, a: Accion): string {
     case 'cantarFlor':
       return a.tipo === 'cantarFlor' && a.yTruco ? 'Flor y truco' : TEXTO_CANTO[a.canto]!
     case 'responder':
-      return a.respuesta === 'quiero' ? 'Quiero' : 'No quiero'
+      return a.cantaLaMesa ? 'Quiero, ¡canta la mesa!' : a.respuesta === 'quiero' ? 'Quiero' : 'No quiero'
+    case 'mostrarFlor':
+      return `Tirar el ${nombreCarta(a.carta)}`
     case 'declararTanto':
       return a.tanto === 'sonBuenas' ? 'Son buenas' : `Decir mi tanto: ${a.tanto}`
     case 'irseAlMazo':

@@ -65,6 +65,14 @@ export function calcularFlor(
   regla: ReglaFlorConPiezas,
 ): number | null {
   if (!tieneFlor(cartas, muestra)) return null
+  return sumaFlor(cartas, muestra, regla)
+}
+
+/**
+ * Lo que suma la flor con las cartas dadas, aunque falten (para "canta la mesa": la suma
+ * que se ve a medida que se tiran las cartas). Con las tres, es el tanto de la flor.
+ */
+export function sumaFlor(cartas: readonly Carta[], muestra: Carta, regla: ReglaFlorConPiezas): number {
   const { piezas, comunes } = separarPiezas(cartas, muestra)
   const [mayor, ...otrasPiezas] = piezas
   if (!mayor) return 20 + comunes.reduce((s, c) => s + valorComun(c), 0)

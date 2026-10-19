@@ -1,4 +1,4 @@
-import { equipoDe, type Accion, type Carta, type CantoEnvido, type CantoFlor, type QueManda, type TipoCorte, type VistaPartida } from '@truco/engine'
+import { equipoDe, valorEnvido, type Accion, type Carta, type CantoEnvido, type CantoFlor, type QueManda, type TipoCorte, type VistaPartida } from '@truco/engine'
 import { Aleatorio, crearContexto, f, mejorDeLaVuelta, ordenadas, pendiente, type Contexto } from './contexto'
 import { ENVIDO_PARA_SENIAR, envidoParaSenia, seniasDeMano, type Senia, type SeniasRecibidas } from './senias'
 import { crearFacil } from './facil'
@@ -118,6 +118,12 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[], sugerencia?: 
   const envidos = validas.flatMap((a) => (a.tipo === 'cantarEnvido' ? [a.canto] : []))
   const responder = (respuesta: 'quiero' | 'noQuiero'): Accion => ({ tipo: 'responder', jugador, respuesta })
 
+  // "Canta la mesa": tira primero las que menos suman y deja la mejor para el final.
+  const aMostrar = validas.filter((a): a is Extract<Accion, { tipo: 'mostrarFlor' }> => a.tipo === 'mostrarFlor')
+  if (aMostrar.length > 0) {
+    return [...aMostrar].sort((x, y) => valorEnvido(x.carta, ctx.vista.mano.muestra!) - valorEnvido(y.carta, ctx.vista.mano.muestra!))[0]!
+  }
+
   if (hay((a) => a.tipo === 'pedirVer' || a.tipo === 'noPedirVer')) {
     return { tipo: est.pedirVer(ctx) ? 'pedirVer' : 'noPedirVer', jugador }
   }
@@ -143,6 +149,9 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[], sugerencia?: 
 
   if (pend === 'flor') {
     const r = est.responderContraflor(ctx, !!flor('contraflorAlResto'))
+    // Al querer la contraflor al resto, a veces "canta la mesa", que tiene más gracia.
+    const mesa = hay((a) => a.tipo === 'responder' && a.cantaLaMesa === true)
+    if (r === 'quiero' && mesa && ctx.rng.sig() < 0.5) return mesa
     return r === 'subir' ? { tipo: 'cantarFlor', jugador, canto: 'contraflorAlResto' } : responder(r)
   }
 

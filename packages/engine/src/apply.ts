@@ -1,5 +1,6 @@
 import { mismaCarta } from './cartas'
 import { esPieza } from './jerarquia'
+import { calcularFlor, sumaFlor } from './tanto'
 import { cortarYRepartir, nuevoEnfrentamiento, participantesDuelo, repartir } from './partida'
 import {
   equipoDe,
@@ -15,6 +16,7 @@ import {
   resolverVuelta,
   ganadorPorVueltas,
   siguienteDeclarante,
+  siguienteEnMesa,
   supera,
   ultimo,
   valorFalta,
@@ -123,6 +125,17 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
   if (!e.participantes.includes(a)) return 'No jugás en este duelo'
   if (e.retirados.includes(a)) return 'Te fuiste al mazo'
 
+  // "Canta la mesa": hasta que se tiren todas las cartas de las flores, no se hace otra cosa.
+  const enMesa = siguienteEnMesa(e)
+  if (accion.tipo === 'mostrarFlor') {
+    if (enMesa === null) return 'No se está cantando la mesa'
+    if (enMesa !== a) return 'Le toca tirar a otro'
+    if (!mano.cartas[a]!.some((c) => mismaCarta(c, accion.carta))) return 'Esa carta no la tenés'
+    if (e.flor.mesa!.mostradas[a]!.some((c) => mismaCarta(c, accion.carta))) return 'Esa ya la tiraste'
+    return null
+  }
+  if (enMesa !== null) return 'Están cantando la mesa'
+
   // El pie: con "toques y gritos del pie", toca y grita él o el compañero que manda, y contesta él.
   const conPie = cfg.toquesYGritos === 'pie' && e.participantes.length > 2
   const lider = liderDe(estado, e, eq)
@@ -223,6 +236,7 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if (accion.canto === 'contraflorAlResto' && f.estado === 'pendiente') {
         const ult = ultimo(f.contra)
         if (ult.equipo === eq) return 'Esperá la respuesta del rival'
+        if (!cantoFlor) return 'Contesta el que tiene flor'
         if (ult.canto !== 'contraflor') return 'No se puede subir más'
         return null
       }
@@ -250,6 +264,8 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if (accion.canto === 'flor') return null
       if (f.contra.length > 0) return 'Ya se cantó contraflor'
       if (!f.cantadas.some((x) => x.equipo !== eq)) return 'El rival no cantó flor'
+      // Contesta el que tiene flor: si los del rival se fueron al mazo, no hay a quién cantarle.
+      if (!f.cantadas.some((x) => x.equipo !== eq && !e.retirados.includes(x.asiento))) return 'Las flores del rival se fueron al mazo'
       return null
     }
 
@@ -259,6 +275,13 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if ((pend === 'truco' || pend === 'envido') && !esLider) return 'Contesta el pie'
       if (pend === 'envido' && debeCantar) return 'Tenés flor: cantala'
       if (pend === 'envido' && florDelEquipo.length > 0) return motivoFlorDelEquipo
+      // A la contraflor contesta solo el que tiene flor; los demás esperan.
+      if (pend === 'flor' && !cantoFlor) return 'Contesta el que tiene flor'
+      if (accion.cantaLaMesa) {
+        if (pend !== 'flor' || accion.respuesta !== 'quiero' || ultimo(e.flor.contra).canto !== 'contraflorAlResto') {
+          return '"Canta la mesa" es al querer la contraflor al resto'
+        }
+      }
       return null
     }
 
@@ -421,6 +444,7 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
         asiento: a,
         a: pend === 'truco' ? 'truco' : pend === 'envido' ? 'envido' : 'flor',
         respuesta: accion.respuesta,
+        ...(accion.cantaLaMesa ? { cantaLaMesa: true } : {}),
       })
       if (pend === 'truco') {
         const p = e.truco.pendiente!
@@ -440,8 +464,16 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
           e.envido.ganador = ultimo(e.envido.cantos).equipo
         }
       } else {
-        rechazarOQuererFlor(estado, e, quiere)
+        rechazarOQuererFlor(estado, e, quiere, accion.cantaLaMesa === true, eventos)
       }
+      return
+    }
+
+    case 'mostrarFlor': {
+      const mesa = e.flor.mesa!
+      mesa.mostradas[a]!.push(accion.carta)
+      eventos.push({ tipo: 'florMostrada', asiento: a, carta: accion.carta, suma: sumaFlor(mesa.mostradas[a]!, mano.muestra, cfg.florConPiezas) })
+      if (siguienteEnMesa(e) === null) resolverContraflorAlResto(estado, e, eventos)
       return
     }
 
@@ -469,6 +501,12 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
         mano.cartas[a] = []
         e.ordenes = e.ordenes.filter((o) => o.asiento !== a)
         eventos.push({ tipo: 'alMazo', asiento: a, equipo: eq, solo: true })
+        // Si con la contraflor pendiente se fue el último de su equipo con flor, es "me achico".
+        const f = e.flor
+        if (f.estado === 'pendiente' && ultimo(f.contra).equipo !== eq) {
+          const quedan = f.cantadas.some((x) => x.equipo === eq && !e.retirados.includes(x.asiento))
+          if (!quedan) rechazarOQuererFlor(estado, e, false, false, eventos)
+        }
         avanzarVuelta(estado, e, eventos)
         return
       }
@@ -505,7 +543,7 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
       }
       if (f.estado === 'pendiente') {
         if (ultimo(f.contra).equipo !== eq) {
-          rechazarOQuererFlor(estado, e, false)
+          rechazarOQuererFlor(estado, e, false, false, eventos)
         } else {
           // Se va el que cantó: queda lo aceptado antes de su canto.
           f.contra.pop()
@@ -592,16 +630,59 @@ function sePodiaTocar(e: Enfrentamiento): boolean {
   return e.truco.pendiente === null || e.truco.pendiente.nivel === 2
 }
 
-function rechazarOQuererFlor(estado: EstadoPartida, e: Enfrentamiento, quiere: boolean) {
+function rechazarOQuererFlor(estado: EstadoPartida, e: Enfrentamiento, quiere: boolean, cantaLaMesa: boolean, eventos: Evento[]) {
   const f = e.flor
-  if (quiere) {
-    f.estado = 'querida'
+  if (!quiere) {
+    // "Con flor me achico": el que la cantó cobra 3 por cada flor de su equipo.
+    const equipo = ultimo(f.contra).equipo
+    f.estado = 'noQuerida'
+    f.noQuerida = { equipo, puntos: 3 * f.cantadas.filter((x) => x.equipo === equipo).length }
     return
   }
-  // El que la cantó cobra 3 por cada flor de su equipo, más 1 por la contra no querida.
-  const equipo = ultimo(f.contra).equipo
-  f.estado = 'noQuerida'
-  f.noQuerida = { equipo, puntos: 3 * f.cantadas.filter((x) => x.equipo === equipo).length + 1 }
+  f.estado = 'querida'
+  if (ultimo(f.contra).canto === 'contraflor') {
+    // La contraflor querida se compara en el momento, como el envido; los puntos van al final de la mano.
+    f.ganador = ganadorFlor(e)
+    eventos.push({ tipo: 'florResuelta', ganador: f.ganador, tantos: floresEnOrden(e), alResto: false })
+    return
+  }
+  if (cantaLaMesa) {
+    // "Canta la mesa": los que tienen flor tiran sus cartas de a una, en orden desde el mano. La
+    // que ya jugaron en la primera ya está a la vista: cuenta como tirada.
+    const orden = floresEnOrden(e)
+      .map((x) => x.asiento)
+      .filter((x) => !e.retirados.includes(x))
+    const jugadas = (x: number) => e.vueltas[0]!.jugadas.filter((j) => j.asiento === x && j.carta && !j.tapada).map((j) => j.carta!)
+    f.mesa = { orden, mostradas: Object.fromEntries(orden.map((x) => [x, jugadas(x)])) }
+    if (siguienteEnMesa(e) === null) resolverContraflorAlResto(estado, e, eventos)
+    return
+  }
+  resolverContraflorAlResto(estado, e, eventos)
+}
+
+/** Las flores cantadas, en orden desde el mano. */
+function floresEnOrden(e: Enfrentamiento): { asiento: number; tanto: number }[] {
+  return [...e.flor.cantadas]
+    .sort((x, y) => e.participantes.indexOf(x.asiento) - e.participantes.indexOf(y.asiento))
+    .map((x) => ({ asiento: x.asiento, tanto: x.tantoDeclarado }))
+}
+
+/**
+ * La contraflor al resto querida es el partido: se comparan las flores y termina ahí. Si se cantó
+ * la mesa, vale lo que se vio: una flor que no era flor (modo sucio) no cuenta.
+ */
+function resolverContraflorAlResto(estado: EstadoPartida, e: Enfrentamiento, eventos: Evento[]) {
+  const mesa = e.flor.mesa
+  if (mesa) {
+    for (const f of e.flor.cantadas) {
+      const cartas = mesa.mostradas[f.asiento]
+      if (cartas) f.tantoDeclarado = calcularFlor(cartas, estado.mano.muestra, estado.config.florConPiezas) ?? -1
+    }
+  }
+  const g = ganadorFlor(e)
+  e.flor.ganador = g
+  eventos.push({ tipo: 'florResuelta', ganador: g, tantos: floresEnOrden(e), alResto: true })
+  terminarJuego(estado, 'contraflorAlResto', g, 0, eventos)
 }
 
 /** Termina el juego de cartas del enfrentamiento y pasa a la verificación. */
@@ -679,7 +760,7 @@ function calcularPuntosTanto(estado: EstadoPartida, e: Enfrentamiento): [number,
   } else if (f.cantadas.length > 0) {
     const equipos = new Set(f.cantadas.map((x) => x.equipo))
     if (f.estado === 'querida') {
-      const g = ganadorFlor(e)
+      const g = f.ganador ?? ganadorFlor(e)
       puntos[g] += ultimo(f.contra).canto === 'contraflor' ? estado.config.valorContraflor : valorResto(estado, g)
     } else if (equipos.size === 2) {
       const g = ganadorFlor(e)

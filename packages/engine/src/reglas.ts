@@ -173,3 +173,13 @@ export function equipoQueCanto(e: Enfrentamiento, p: Exclude<Pendiente, 'declara
   if (p === 'envido') return ultimo(e.envido.cantos).equipo
   return ultimo(e.flor.contra).equipo
 }
+
+/** "Canta la mesa": a quién le toca tirar (de a una carta por vuelta, en orden), o null si terminó. */
+export function siguienteEnMesa(e: Enfrentamiento): number | null {
+  const mesa = e.flor.mesa
+  if (!mesa) return null
+  for (let ronda = 0; ronda < 3; ronda++) {
+    for (const a of mesa.orden) if ((mesa.mostradas[a]?.length ?? 0) === ronda) return a
+  }
+  return null
+}

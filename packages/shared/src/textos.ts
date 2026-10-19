@@ -32,6 +32,7 @@ export function describirAccion(vista: VistaPartida, a: Accion): string {
     case 'responder': {
       // A la contraflor se contesta "con flor quiero" o "con flor me achico".
       const e = vista.mano.enfrentamientos[vista.mano.actual]!
+      if (a.cantaLaMesa) return 'Quiero, ¡canta la mesa!'
       if (e.flor.estado === 'pendiente') return a.respuesta === 'quiero' ? 'Con flor quiero' : 'Con flor me achico'
       return a.respuesta === 'quiero' ? 'Quiero' : 'No quiero'
     }
@@ -47,6 +48,8 @@ export function describirAccion(vista: VistaPartida, a: Accion): string {
       return a.que === 'tocar' ? 'Mandar a tocar' : 'Mandar a gritar'
     case 'cortar':
       return TEXTO_CORTE[a.corte]
+    case 'mostrarFlor':
+      return `Tirar el ${nombreCarta(a.carta)}`
   }
 }
 
@@ -84,12 +87,19 @@ export function describirEvento(
     case 'cantoEnvido':
       return `  ${nombre(ev.asiento)}: ${ev.primeroEstaElEnvido ? 'Envido va primero. ' : ''}¡${TEXTO_CANTO[ev.canto]}!`
     case 'respuesta':
+      if (ev.cantaLaMesa) return `  ${nombre(ev.asiento)}: Quiero, ¡canta la mesa!`
       if (ev.a === 'flor') return `  ${nombre(ev.asiento)}: ${ev.respuesta === 'quiero' ? 'Con flor quiero' : 'Con flor me achico'}`
       return `  ${nombre(ev.asiento)}: ${ev.respuesta === 'quiero' ? 'Quiero' : 'No quiero'}`
     case 'tantoDeclarado':
       return `  ${nombre(ev.asiento)}: ${ev.tanto === null ? 'Son buenas' : ev.tanto}`
     case 'envidoResuelto':
       return `  → El envido ${gana(ev.ganador, 'lo')}`
+    case 'florMostrada':
+      return `  ${nombre(ev.asiento)} tira el ${nombreCarta(ev.carta)}: ${ev.suma}`
+    case 'florResuelta': {
+      const tantos = ev.tantos.map((t) => `${nombre(t.asiento)} ${t.tanto < 0 ? 'sin flor' : t.tanto}`).join(', ')
+      return `  → ${tantos}. La ${ev.alResto ? 'contraflor al resto' : 'contraflor'} ${gana(ev.ganador, 'la')}`
+    }
     case 'envidoAnulado':
       return '  → Con flor, el envido queda anulado'
     case 'alMazo':

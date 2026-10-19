@@ -90,6 +90,20 @@ export interface EstadoFlor {
   /** Cadena de contraflor / contraflor al resto. */
   contra: CantoHecho<'contraflor' | 'contraflorAlResto'>[]
   noQuerida: { equipo: Equipo; puntos: number } | null
+  /** Querida la contraflor, se compara en el momento (como el envido): el equipo que la ganó. */
+  ganador: Equipo | null
+  /** "Canta la mesa": querida la contraflor al resto, los de flor tiran sus cartas de a una. */
+  mesa: MesaFlor | null
+}
+
+/**
+ * "Canta la mesa": los que cantaron flor, en orden desde el mano, tiran de a una carta (la que
+ * elijan) hasta mostrar las tres, y la suma se ve en el momento.
+ */
+export interface MesaFlor {
+  orden: number[]
+  /** Por asiento, las cartas que ya tiró. */
+  mostradas: Record<number, Carta[]>
 }
 
 export interface TantoRevelado {
@@ -99,7 +113,7 @@ export interface TantoRevelado {
 }
 
 export interface ResultadoEnfrentamiento {
-  motivo: 'vueltas' | 'noQuiero' | 'mazo'
+  motivo: 'vueltas' | 'noQuiero' | 'mazo' | 'contraflorAlResto'
   ganador: Equipo
   puntosTruco: number
   /** Puntos de envido o flor por equipo, ya con la verificación aplicada. */
@@ -196,7 +210,10 @@ export type Accion =
   /** El pie manda a un compañero a tocar o a gritar. */
   | { tipo: 'mandar'; jugador: string; a: number; que: QueManda }
   | { tipo: 'cortar'; jugador: string; corte: TipoCorte }
-  | { tipo: 'responder'; jugador: string; respuesta: Respuesta }
+  /** `cantaLaMesa`: al querer la contraflor al resto, en vez de decir las flores se tiran las cartas. */
+  | { tipo: 'responder'; jugador: string; respuesta: Respuesta; cantaLaMesa?: boolean }
+  /** "Canta la mesa": tirar una carta de la flor (la que quiera). */
+  | { tipo: 'mostrarFlor'; jugador: string; carta: Carta }
   | { tipo: 'declararTanto'; jugador: string; tanto: number | 'sonBuenas' }
   | { tipo: 'irseAlMazo'; jugador: string }
   | { tipo: 'pedirVer'; jugador: string }
@@ -218,7 +235,11 @@ export type Evento =
   | { tipo: 'cantoEnvido'; asiento: number; canto: CantoEnvido; primeroEstaElEnvido: boolean }
   | { tipo: 'cantoFlor'; asiento: number; canto: CantoFlor; yTruco?: boolean }
   | { tipo: 'orden'; asiento: number; a: number; que: QueManda }
-  | { tipo: 'respuesta'; asiento: number; a: 'truco' | 'envido' | 'flor'; respuesta: Respuesta }
+  | { tipo: 'respuesta'; asiento: number; a: 'truco' | 'envido' | 'flor'; respuesta: Respuesta; cantaLaMesa?: boolean }
+  /** "Canta la mesa": una carta de la flor sobre la mesa y lo que suma la flor hasta ahí. */
+  | { tipo: 'florMostrada'; asiento: number; carta: Carta; suma: number }
+  /** Querida la contraflor, las flores se comparan en el momento (en orden desde el mano). */
+  | { tipo: 'florResuelta'; ganador: Equipo; tantos: { asiento: number; tanto: number }[]; alResto: boolean }
   | { tipo: 'tantoDeclarado'; asiento: number; tanto: number | null }
   | { tipo: 'envidoResuelto'; ganador: Equipo }
   | { tipo: 'envidoAnulado' }

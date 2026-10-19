@@ -278,5 +278,6 @@ describe('seña de envido', () => {
       expect(s.tanto).toBeGreaterThanOrEqual(ENVIDO_PARA_SENIAR)
     }
     expect(b.de('senia').some((s) => s.de === 2)).toBe(false)
-  })
+    // Que un bot tenga 30 de envido puede tardar varias manos.
+  }, 30_000)
 })

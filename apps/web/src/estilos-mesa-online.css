@@ -713,3 +713,68 @@ button.asiento-nombre:focus-visible {
 .asiento.fuera.con-globo > :not(.asiento-globos, .globo-chat) {
   opacity: 0.4;
 }
+
+/* "Canta la mesa": las flores que se van tirando, en el medio de la mesa. */
+.canta-la-mesa {
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 420px);
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgb(0 0 0 / 0.72);
+  border: 2px solid #e8b33a;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.5);
+}
+.canta-la-mesa-titulo {
+  margin: 0;
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: #f3cf6b;
+}
+.canta-la-mesa ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.canta-la-mesa li {
+  display: grid;
+  grid-template-columns: 5.5em 1fr 2.6em;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 10px;
+}
+.canta-la-mesa li.tirando {
+  background: rgb(232 179 58 / 0.18);
+}
+.canta-la-mesa-nombre {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.canta-la-mesa-cartas {
+  display: flex;
+  gap: 4px;
+  min-height: 52px;
+}
+.canta-la-mesa-cartas .carta {
+  width: 36px;
+}
+.canta-la-mesa-suma {
+  font-size: 1.4rem;
+  text-align: right;
+}
+.canta-la-mesa-turno {
+  margin: 0;
+  text-align: center;
+  font-size: 0.9rem;
+}

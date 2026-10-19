@@ -1107,3 +1107,22 @@ Pedido: "la mesa con perspectiva no quedó mal, pero quedó muy apretada", en 2 
 - **La API:** `GET /api/amigos` y `POST /api/amigos/{latido,agregar,responder,borrar,invitar}`.
 - **La web:** pantalla `/amigos`, con tu código para copiar, agregar por código, las solicitudes, la lista con un punto de color por estado y "Unirme". Se llega desde "Tu cuenta".
 - **Tests:** server 103 (5 de amigos, con sala e invitación reales), web 297.
+
+## Flor: quién contesta, sin el +1, comparación en el momento y "canta la mesa" — 2026-10-18
+
+Pedido del usuario: en 2v2, una contraflor al resto querida "se buggeaba y no se jugaba". El motor solo no se trababa, pero la contraflor la podía contestar cualquiera del equipo: si la flor era del bot y la persona no tenía, el servidor esperaba a la persona. Reglas nuevas, definidas por el usuario:
+
+- **A la contraflor (y a la contraflor al resto) contesta solo el que tiene flor;** los demás del equipo esperan. El que sube a contraflor al resto también tiene que tener flor.
+- **No querida:** el que la cantó cobra 3 por cada flor de su equipo, sin el +1. Vale igual para la contraflor y para la contraflor al resto.
+- **Contraflor querida:** se compara en el momento, como el envido. El evento `florResuelta` lleva las flores en orden desde el mano y cada uno muestra la suya en el globo. Vale 6 fijos, que se suman al terminar la mano, y la mano sigue.
+- **Contraflor al resto querida:** se comparan las flores en el momento y **termina el partido ahí**, también en un duelo de pica-pica (motivo `contraflorAlResto`). El cartel del final espera 3,5 s, así se ven las flores.
+- **"Canta la mesa":**
+  - el que quiere la contraflor al resto puede responder "quiero, canta la mesa" (`responder` con `cantaLaMesa`);
+  - los que tienen flor tiran sus cartas de a una (`mostrarFlor`, la que elijan), en orden desde el mano, ronda por ronda, hasta mostrar las tres. Mientras tanto no se puede hacer otra cosa;
+  - cada carta muestra la suma hasta ahí (`sumaFlor`; con las tres es el tanto de la flor). La carta que ya jugaron en la primera cuenta como tirada;
+  - al final gana la flor que se vio. En modo sucio, una "flor" que no era flor no cuenta;
+  - en la web, un panel en el medio de la mesa muestra lo que tiró cada uno y la suma, y para tirar se toca la carta de la mano;
+  - los bots la dicen la mitad de las veces que quieren la contraflor al resto, y tiran primero las cartas que menos suman.
+- **Un caso que trababa la partida, encontrado con las partidas al azar:** el de la flor se iba al mazo solo y le cantaban contraflor. Ahora no se puede cantar contraflor si las flores del rival se fueron, y si el que tenía que contestar se va solo con la contraflor pendiente, cuenta como "me achico".
+- **Tests:** engine 165 (nuevos: comparación en el momento, al resto termina el partido, canta la mesa paso a paso, contesta solo el de flor), bots 24, server 103, web 298 (nuevo: el panel de canta la mesa).
+- **Pendiente:** `reglasNuevas` "pica-pica, piezas de otro duelo" sigue fallando de vez en cuando, como antes.

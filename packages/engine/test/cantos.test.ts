@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { enfrentamientoActual, esperandoA } from '../src'
-import { jugar, partidaCon, rechaza } from './helpers'
+import { apply, enfrentamientoActual, esperandoA } from '../src'
+import { c, jugar, partidaCon, rechaza } from './helpers'
 
 // Muestra 3 de copas. "a" es mano (equipo 0), "b" es pie (equipo 1).
 // a: envido 7, b: envido 6. Ninguno tiene flor.
@@ -317,22 +317,66 @@ describe('flor', () => {
       expect(estado.puntos).toEqual([6 + 1, 0])
     })
 
-    it('no querida ("con flor me achico"): el que la cantó cobra 3 por su flor y 1 por la contra', () => {
+    it('no querida ("con flor me achico"): el que la cantó cobra 3 por su flor', () => {
       const { estado } = jugar(antesDeContra(), ['contraflor', 'b'], ['noQuiero', 'a'], ['mazo', 'b'])
-      expect(estado.puntos).toEqual([1, 3 + 1])
+      expect(estado.puntos).toEqual([1, 3])
     })
 
-    it('al resto no querida: igual, 3 por cada flor y 1 por la contra', () => {
+    it('al resto no querida: igual, 3 por cada flor', () => {
       const { estado } = jugar(antesDeContra(), ['contraflor', 'b'], ['contraflorAlResto', 'a'], ['noQuiero', 'b'], ['mazo', 'b'])
-      expect(estado.puntos).toEqual([3 + 1 + 1, 0])
+      expect(estado.puntos).toEqual([3 + 1, 0])
     })
 
-    it('al resto querida es el partido: el que la gana, gana', () => {
+    it('querida: se compara en el momento y la mano sigue', () => {
+      const { estado, eventos } = jugar(antesDeContra(), ['contraflor', 'b'], ['quiero', 'a'])
+      expect(eventos.at(-1)).toEqual({ tipo: 'florResuelta', ganador: 0, tantos: [{ asiento: 0, tanto: 38 }, { asiento: 1, tanto: 37 }], alResto: false })
+      expect(enfrentamientoActual(estado).flor.ganador).toBe(0)
+      expect(estado.mano.numero).toBe(1)
+    })
+
+    it('al resto querida es el partido: se comparan en el momento y termina ahí', () => {
       const p = antesDeContra()
       p.puntos = [10, 20]
-      const { estado } = jugar(p, ['contraflorAlResto', 'b'], ['quiero', 'a'], ['mazo', 'b'])
+      const { estado, eventos } = jugar(p, ['contraflorAlResto', 'b'], ['quiero', 'a'])
+      expect(eventos.some((ev) => ev.tipo === 'florResuelta' && ev.alResto && ev.ganador === 0)).toBe(true)
       expect(estado.puntos).toEqual([30, 20])
       expect(estado.ganador).toBe(0)
+    })
+
+    it('"canta la mesa": cada uno tira sus cartas de a una, en orden, y la suma se ve; la ya jugada cuenta', () => {
+      const p = antesDeContra()
+      p.puntos = [10, 20]
+      // a ya jugó el 7 de espadas en la primera: está a la vista.
+      let { estado } = jugar(p, ['contraflorAlResto', 'b'])
+      rechaza(estado, ['quiero', 'b'])
+      const r = apply(estado, { tipo: 'responder', jugador: 'a', respuesta: 'quiero', cantaLaMesa: true })
+      if (!r.ok) throw new Error(r.motivo)
+      estado = r.estado
+      expect(esperandoA(estado)).toEqual([1])
+      rechaza(estado, ['jugar', 'b', '7b'], 'cantando la mesa')
+      const tirar = (jugador: string, carta: string) => {
+        const res = apply(estado, { tipo: 'mostrarFlor', jugador, carta: c(carta) })
+        if (!res.ok) throw new Error(res.motivo)
+        estado = res.estado
+        return res.eventos
+      }
+      expect(tirar('b', '4b')).toEqual([{ tipo: 'florMostrada', asiento: 1, carta: c('4b'), suma: 24 }])
+      expect(esperandoA(estado)).toEqual([0])
+      tirar('a', '6e')
+      tirar('b', '6b')
+      tirar('a', '5e')
+      const fin = tirar('b', '7b')
+      expect(fin.some((ev) => ev.tipo === 'florResuelta' && ev.alResto)).toBe(true)
+      expect(estado.ganador).toBe(0)
+    })
+
+    it('a la contraflor contesta solo el que tiene flor', () => {
+      // 2v2: a y b tienen flor; c (compañero de a) no.
+      const q = partidaCon(['7e 6e 5e', '7b 6b 4b', '1o 2e 3b', '1b 5o 3e'], '12c')
+      const { estado } = jugar(q, ['flor', 'a'], ['flor', 'b'], ['contraflor', 'b'])
+      expect(esperandoA(estado)).toEqual([0])
+      rechaza(estado, ['quiero', 'c'], 'Contesta el que tiene flor')
+      rechaza(jugar(q, ['flor', 'a'], ['flor', 'b'], ['contraflor', 'b']).estado, ['contraflorAlResto', 'c'], 'Contesta el que tiene flor')
     })
 
     it('no se puede cantar contraflor sin flor del rival, ni subir más allá del resto', () => {
