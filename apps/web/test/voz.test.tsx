@@ -380,8 +380,8 @@ describe('los controles de la voz', () => {
   })
 })
 
-describe('con voz, lo del pie se dice hablando', () => {
-  it('en la mesa no aparece el botón del pie', async () => {
+describe('con voz, el pie igual les dice a sus bots qué jugar', () => {
+  it('en la mesa está el botón del pie, con voz y sin voz', async () => {
     for (const voz of [false, true]) {
       const f = conexionFalsa()
       act(() => useJuego.getState().conectar(f.c))
@@ -399,7 +399,7 @@ describe('con voz, lo del pie se dice hablando', () => {
       f.llegar({ tipo: 'sala', datos: sala(voz, '2v2') })
       f.llegar({ tipo: 'vista', datos: vistaPara(estado, 'j0') })
       await waitFor(() => expect(screen.getByLabelText('Mazo y muestra')).toBeTruthy())
-      expect(!!screen.queryByRole('button', { name: /pie/i })).toBe(!voz)
+      expect(screen.queryByRole('button', { name: /pie/i })).toBeTruthy()
       act(() => useJuego.getState().salir())
       cleanup()
     }

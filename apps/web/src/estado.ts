@@ -1,11 +1,12 @@
 import { create } from 'zustand'
-import { mismaCarta } from '@truco/engine'
+import { mismaCarta, nombreCarta } from '@truco/engine'
 import type { Carta, CartasMostradas, Evento, ResultadoEnfrentamiento, ResultadoVuelta, TipoCorte, VistaPartida } from '@truco/engine'
-import type { Senia, Sugerencia } from '@truco/bots'
+import type { Senia } from '@truco/bots'
 import {
   describirEvento,
   TEXTO_CANTO,
   TEXTO_CORTE,
+  TEXTO_ORDEN,
   type InfoSala,
   type LugarPublico,
   type MensajeChat,
@@ -70,7 +71,8 @@ interface EstadoJuego {
   pedidoSenias: { de: number; id: number } | null
   /** Señas de los rivales que alcanzaste a ver (sin la carta si la sala no la deja ver). */
   pescadas: { de: number; senia: Senia | null; tanto?: number; id: number }[]
-  turno: { asientos: number[]; venceEn: number | null }
+  /** `pie`: si le toca a tu bot y se espera que le digas qué jugar (sos su pie). */
+  turno: { asientos: number[]; venceEn: number | null; pie?: number }
   error: { motivo: string; id: number } | null
   /** Solo online: si hay conexión con el servidor. */
   estadoConexion: EstadoConexion
@@ -80,8 +82,6 @@ interface EstadoJuego {
   finDeMano: string | null
   /** Cartas que se dieron vuelta al terminar (flor o envido ganado), mientras dura la pausa. */
   mostradas: Mostradas[]
-  /** La última sugerencia del pie (la dijo en voz alta: la oyen todos). */
-  sugerencia: { de: number; sugerencia: Sugerencia; id: number } | null
   /**
    * Los reyes que se tiraron antes de empezar, mientras se muestran: en la mesa (`enMesa`,
    * con los lugares y tu asiento de antes de reacomodarse) o, con movimiento reducido, en un cuadro.
@@ -205,7 +205,8 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         mostrarGlobo(ev.asiento, ev.yTruco ? '¡Flor y truco!' : `¡${TEXTO_CANTO[ev.canto]}!`)
         break
       case 'orden':
-        mostrarGlobo(ev.asiento, `${ev.que === 'tocar' ? '¡Tocá' : '¡Gritá'}, ${nombre(ev.a)}!`)
+        // El pie lo dice (las de qué carta tirar las ven solo él y el que la recibe).
+        mostrarGlobo(ev.asiento, `${nombre(ev.a)}: ${TEXTO_ORDEN[ev.que](ev.carta ? nombreCarta(ev.carta) : '', ev.vamosA !== undefined ? nombre(ev.vamosA) : '')}`)
         break
       case 'corte':
         mostrarGlobo(ev.asiento, TEXTO_CORTE[ev.corte])
@@ -352,12 +353,6 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       case 'ofrecerBot':
         set({ ofrecerBot: true })
         break
-      case 'sugerencia': {
-        const { de, sugerencia } = m.datos
-        set({ sugerencia: { de, sugerencia, id: ++contador } })
-        mostrarGlobo(de, sugerencia.tipo === 'veni' ? '¡Vení!' : `¡Vamos a ${nombre(sugerencia.asiento)}!`)
-        break
-      }
       case 'reyes': {
         // Se tiran en la mesa y la primera mano espera; con movimiento reducido, en un cuadro.
         const enMesa = !movimientoReducido()
@@ -400,7 +395,6 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     mostradas: [],
     estadoConexion: 'conectada',
     ofrecerBot: false,
-    sugerencia: null,
     reyes: null,
     expulsado: null,
     monedas: null,
@@ -456,8 +450,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         mostradas: [],
         estadoConexion: 'conectada',
         ofrecerBot: false,
-        sugerencia: null,
-        reyes: null,
+            reyes: null,
         expulsado: null,
         monedas: null,
         elo: null,

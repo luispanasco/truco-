@@ -26,7 +26,7 @@ const arbConfig = fc.record<Partial<ConfigSala>>({
   picaPica: fc.boolean(),
   picaPicaAlternado: fc.boolean(),
   modoSucio: fc.boolean(),
-  toquesYGritos: fc.constantFrom('pie', 'cualquiera'),
+  pie: fc.constantFrom('persona', 'ultimo'),
   corte: fc.boolean(),
   puntosPartida: fc.constantFrom(20, 30, 40),
 })
@@ -34,7 +34,8 @@ const arbConfig = fc.record<Partial<ConfigSala>>({
 function nueva(config: Partial<ConfigSala>, semilla: number): EstadoPartida {
   const n = config.formato === '1v1' ? 2 : config.formato === '2v2' ? 4 : 6
   return crearPartida({
-    jugadores: IDS.slice(0, n).map((id) => ({ id, nombre: id })),
+    // Algunos bots, así se prueba también el pie que manda a sus bots.
+    jugadores: IDS.slice(0, n).map((id, i) => ({ id, nombre: id, ...(i % 4 === 2 ? { bot: true } : {}) })),
     semilla,
     config,
   })
@@ -122,8 +123,12 @@ describe('propiedades', () => {
               ...(e.resultado?.mostradas ?? []),
               ...Object.entries(e.flor.mesa?.mostradas ?? {}).map(([asiento, cartas]) => ({ asiento: Number(asiento), cartas })),
             ])
+            // El pie de bots ve las cartas de sus bots (y solo de bots de su equipo).
+            for (const b of vista.mano.misBots) {
+              expect(estado.jugadores[b.asiento]!.bot && b.asiento % 2 === j.asiento % 2).toBe(true)
+            }
             const ocultas = estado.mano.cartas.flatMap((cs, asiento) =>
-              asiento === j.asiento
+              asiento === j.asiento || vista.mano.misBots.some((b) => b.asiento === asiento)
                 ? []
                 : cs.filter((c) => !mostradas.some((m) => m.asiento === asiento && m.cartas.some((x) => mismaCarta(x, c)))),
             )

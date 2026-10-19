@@ -1456,6 +1456,43 @@ input {
 .boton-pie.manda-gritar {
   border-color: var(--accion-truco);
 }
+/* Un bloque por compañero: su nombre, sus cartas (si es tu bot) y lo que le decís. */
+.pie-companiero {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 4px;
+}
+.pie-companiero + .pie-companiero {
+  border-left: 1px solid rgb(255 255 255 / 0.2);
+  padding-left: 8px;
+}
+.pie-companiero.espera .pie-nombre {
+  color: var(--acento);
+}
+.pie-nombre {
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.pie-cartas,
+.pie-botones {
+  display: flex;
+  gap: 4px;
+}
+.pie-carta {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  width: 34px;
+}
+.pie-carta:hover {
+  translate: 0 -3px;
+}
 /* Pasar en la tercera: prendido, la próxima carta va tapada. Igual el botón del pie, abierto. */
 .boton-pasar.activo,
 .boton-abrir-pie.activo {

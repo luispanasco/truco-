@@ -9,6 +9,7 @@ import {
   resolverVuelta,
   vistaPara,
   type Accion,
+  type ConfigSala,
   type EstadoPartida,
 } from '../src'
 import { c, jugar, partidaCon, rechaza } from './helpers'
@@ -108,53 +109,82 @@ describe('flor y truco', () => {
 })
 
 describe('el pie', () => {
-  const conPie = () => partidaCon(MANOS_2V2, '3c', { toquesYGritos: 'pie' })
+  /** 2v2: a y c contra b y d. `bots` son los asientos que juegan bots. */
+  const conBots = (bots: number[], config: Partial<ConfigSala> = {}) =>
+    crearPartida({
+      jugadores: ['a', 'b', 'c', 'd'].map((id, i) => ({ id, nombre: id.toUpperCase(), ...(bots.includes(i) ? { bot: true } : {}) })),
+      semilla: 1,
+      config: { formato: '2v2', ...config },
+      repartoFijo: { cartas: MANOS_2V2.map((m) => m.split(' ').map(c)), muestra: c('3c') },
+    })
 
   it('es el último de cada equipo en jugar la primera', () => {
-    const v = vistaPara(conPie(), 'a')
-    expect(v.mano.enfrentamientos[0]!.lideres).toEqual([2, 3])
+    expect(vistaPara(partidaCon(MANOS_2V2, '3c'), 'a').mano.enfrentamientos[0]!.lideres).toEqual([2, 3])
   })
 
-  it('con "toques y gritos del pie", toca y grita el pie o el compañero que él manda', () => {
-    let estado = conPie()
-    rechaza(estado, ['truco', 'a'], 'Grita el pie')
-    rechaza(estado, ['envido', 'a'], 'Toca el pie')
-    expect(apply(estado, { tipo: 'mandar', jugador: 'a', a: 2, que: 'tocar' })).toMatchObject({ ok: false, motivo: 'Manda el pie' })
-    const r = apply(estado, { tipo: 'mandar', jugador: 'c', a: 0, que: 'tocar' })
-    expect(r.ok && r.eventos).toEqual([{ tipo: 'orden', asiento: 2, a: 0, que: 'tocar' }])
-    estado = aplicar(estado, { tipo: 'mandar', jugador: 'c', a: 0, que: 'tocar' })
-    estado = jugar(estado, ['envido', 'a']).estado
-    // Contesta el pie del otro equipo.
+  it('al truco y al envido contesta siempre el pie; una persona canta en su turno aunque no sea pie', () => {
+    const estado = jugar(partidaCon(MANOS_2V2, '3c'), ['truco', 'a']).estado
     expect(esperandoA(estado)).toEqual([3])
     rechaza(estado, ['quiero', 'b'], 'Contesta el pie')
-    rechaza(estado, ['envido', 'b'], 'Contesta el pie')
-    jugar(estado, ['noQuiero', 'd'])
+    rechaza(estado, ['truco', 'b'], 'Contesta el pie')
+    jugar(estado, ['quiero', 'd'])
   })
 
-  it('con "cualquiera", toca y grita cada uno en su turno y contesta cualquiera', () => {
-    const estado = jugar(partidaCon(MANOS_2V2, '3c'), ['truco', 'a']).estado
-    expect(esperandoA(estado)).toEqual([1, 3])
-    jugar(estado, ['quiero', 'b'])
+  it('un equipo de una persona y bots: el pie es la persona, aunque el último sea un bot', () => {
+    expect(vistaPara(conBots([2]), 'a').mano.enfrentamientos[0]!.lideres).toEqual([0, 3])
+    // Con "el último, aunque sea bot", el pie es el bot.
+    expect(vistaPara(conBots([2], { pie: 'ultimo' }), 'a').mano.enfrentamientos[0]!.lideres).toEqual([2, 3])
   })
 
-  it('si el pie es un bot, lidera la persona del equipo', () => {
-    const p = crearPartida({
-      jugadores: [
-        { id: 'a', nombre: 'A' },
-        { id: 'b', nombre: 'B', bot: true },
-        { id: 'c', nombre: 'C', bot: true },
-        { id: 'd', nombre: 'D', bot: true },
-      ],
-      semilla: 1,
-      config: { formato: '2v2', toquesYGritos: 'pie' },
-    })
-    expect(vistaPara(p, 'a').mano.enfrentamientos[0]!.lideres).toEqual([0, 3])
+  it('el bot que manda una persona no canta solo (salvo la flor): toca o grita si el pie lo manda', () => {
+    // a es persona y pie; c es su bot. Le toca a c después de que juegan a y b.
+    let estado = jugar(conBots([2]), ['jugar', 'a', '1e'], ['jugar', 'b', '1b']).estado
+    rechaza(estado, ['truco', 'c'], 'Grita el pie')
+    rechaza(estado, ['envido', 'c'], 'Toca el pie')
+    estado = aplicar(estado, { tipo: 'mandar', jugador: 'a', a: 2, que: 'gritar' })
+    jugar(estado, ['truco', 'c'])
+    // Una persona que no es pie canta sola.
+    jugar(conBots([]), ['jugar', 'a', '1e'], ['jugar', 'b', '1b'], ['truco', 'c'])
+  })
+
+  it('el pie le dice a su bot qué carta tirar; a una persona solo se lo insinúa', () => {
+    const estado = conBots([2])
+    const r = apply(estado, { tipo: 'mandar', jugador: 'a', a: 2, que: 'carta', carta: c('12b') })
+    expect(r.ok && r.eventos).toEqual([{ tipo: 'orden', asiento: 0, a: 2, que: 'carta', carta: c('12b') }])
+    expect(apply(estado, { tipo: 'mandar', jugador: 'a', a: 2, que: 'carta', carta: c('1b') })).toMatchObject({ ok: false, motivo: 'Esa carta no la tiene' })
+    expect(apply(estado, { tipo: 'mandar', jugador: 'c', a: 0, que: 'dejala' })).toMatchObject({ ok: false, motivo: 'Manda el pie' })
+    // A una persona no se le dice la carta, pero sí "matala", "dejala" o "jugá algo".
+    const personas = partidaCon(MANOS_2V2, '3c')
+    expect(apply(personas, { tipo: 'mandar', jugador: 'c', a: 0, que: 'carta', carta: c('1e') })).toMatchObject({ ok: false })
+    expect(apply(personas, { tipo: 'mandar', jugador: 'c', a: 0, que: 'matala' }).ok).toBe(true)
+  })
+
+  it('las órdenes de qué carta tirar: una reemplaza a la otra y se cumplen al jugar', () => {
+    let estado = conBots([2])
+    estado = aplicar(estado, { tipo: 'mandar', jugador: 'a', a: 2, que: 'dejala' })
+    estado = aplicar(estado, { tipo: 'mandar', jugador: 'a', a: 2, que: 'matala' })
+    expect(enfrentamientoActual(estado).ordenes).toEqual([{ asiento: 2, que: 'matala' }])
+    estado = jugar(estado, ['jugar', 'a', '1e'], ['jugar', 'b', '1b'], ['jugar', 'c', '7e']).estado
+    expect(enfrentamientoActual(estado).ordenes).toEqual([])
+    // Después de jugar, en esa vuelta ya no se le dice nada.
+    expect(apply(estado, { tipo: 'mandar', jugador: 'a', a: 2, que: 'dejala' })).toMatchObject({ ok: false, motivo: 'Ya jugó en esta vuelta' })
+  })
+
+  it('"vamos a" es a otro compañero que todavía no jugó', () => {
+    // 3v3: a, c y e contra b, d y f; el pie del equipo de a es e.
+    const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 5o 12b', '3e 6b 11o', '2b 5e 10o', '3o 7b 12e'], '3c', { picaPica: false })
+    expect(apply(p, { tipo: 'mandar', jugador: 'e', a: 0, que: 'vamosA', vamosA: 2 }).ok).toBe(true)
+    expect(apply(p, { tipo: 'mandar', jugador: 'e', a: 0, que: 'vamosA', vamosA: 4 })).toMatchObject({ ok: false })
+    expect(apply(p, { tipo: 'mandar', jugador: 'e', a: 0, que: 'vamosA', vamosA: 1 })).toMatchObject({ ok: false })
+    // Al segundo, cuando ya jugó el primero, solo "vení".
+    const despues = jugar(p, ['jugar', 'a', '1e'], ['jugar', 'b', '1b']).estado
+    expect(apply(despues, { tipo: 'mandar', jugador: 'e', a: 2, que: 'vamosA', vamosA: 0 })).toMatchObject({ ok: false, motivo: 'Ese compañero ya jugó' })
+    expect(apply(despues, { tipo: 'mandar', jugador: 'e', a: 2, que: 'veni' }).ok).toBe(true)
   })
 
   it('en el pica-pica no hay pie', () => {
     const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 5o 12b', '3e 6b 11o', '2b 5e 10o', '3o 7b 12e'], '3c', {
       picaPicaAlternado: false,
-      toquesYGritos: 'pie',
     })
     expect(vistaPara(p, 'a').mano.enfrentamientos[0]!.lideres).toEqual([null, null])
     jugar(p, ['truco', 'a'])

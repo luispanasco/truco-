@@ -34,7 +34,7 @@ export type ReglasSala = Pick<
   | 'mazoCobraEnvidoPendiente'
   | 'florConPiezas'
   | 'puntosPartida'
-  | 'toquesYGritos'
+  | 'pie'
   | 'corte'
 >
 
@@ -52,13 +52,13 @@ export interface OpcionesSala {
   cartasJugadas: CartasJugadas
   /** Tirar reyes antes de la primera partida. */
   tirarReyes: TirarReyes
-  /** Chat de voz (prendido por defecto). Con voz, lo del pie se dice hablando. */
+  /** Chat de voz (prendido por defecto). Con voz, lo que el pie le insinúa a una persona se dice hablando. */
   voz: boolean
 }
 
 function reglasDe(c: ConfigSala): ReglasSala {
   const { picaPica, picaPicaAlternado, florObligatoria, envidoEnvido, valorContraflor, faltaEnvidoEnMalas, mazoCobraEnvidoPendiente, florConPiezas } = c
-  const { puntosPartida, toquesYGritos, corte } = c
+  const { puntosPartida, pie, corte } = c
   return {
     picaPica,
     picaPicaAlternado,
@@ -69,7 +69,7 @@ function reglasDe(c: ConfigSala): ReglasSala {
     mazoCobraEnvidoPendiente,
     florConPiezas,
     puntosPartida,
-    toquesYGritos,
+    pie,
     corte,
   }
 }
@@ -85,7 +85,7 @@ export function opcionesIniciales(p: Perfil): OpcionesSala {
       ...reglasDe(CONFIG_DEFAULT),
       picaPica: p.picaPica,
       puntosPartida: p.puntosPartida,
-      toquesYGritos: p.toquesDelPie ? 'pie' : 'cualquiera',
+      pie: p.pieUltimo ? 'ultimo' : 'persona',
       corte: p.corte,
     },
     // Con o sin señas, lo último que eligió; lo demás de las señas, como siempre.
@@ -331,7 +331,7 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
         detalle={
           valor.formato === '1v1'
             ? 'Cada uno lo activa en la mesa y recién ahí se pide el micrófono'
-            : 'Cada uno lo activa en la mesa. Con voz, el pie no manda ni sugiere: se dice hablando'
+            : 'Cada uno lo activa en la mesa. Con voz, a tus compañeros les hablás; a tus bots igual les decís qué jugar desde la mesa'
         }
       />
 
@@ -372,19 +372,19 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
             titulo="Mazo con envido pendiente"
             detalle="Si te vas al mazo sin contestar un envido, o en la primera sin que se haya tocado, el rival cobra el envido no querido"
           />
-          {valor.formato !== '1v1' && !valor.voz && (
+          {valor.formato !== '1v1' && (
             <Segmentado
-              titulo="Toques y gritos"
-              valor={r.toquesYGritos}
+              titulo="El pie"
+              valor={r.pie}
               opciones={[
-                ['pie', 'Los decide el pie'],
-                ['cualquiera', 'Cualquiera'],
+                ['persona', 'Siempre una persona'],
+                ['ultimo', 'Puede ser un bot'],
               ]}
-              alCambiar={(toquesYGritos) => regla({ toquesYGritos })}
+              alCambiar={(pie) => regla({ pie })}
               detalle={
-                r.toquesYGritos === 'pie'
-                  ? 'Toca y grita el pie (o el compañero que él manda), y el pie contesta. No vale en el pica-pica.'
-                  : 'Cada uno toca y grita en su turno, y contesta cualquiera del equipo.'
+                r.pie === 'persona'
+                  ? 'El pie es la última persona del equipo en jugar la primera: les dice a sus bots qué jugar y contesta por el equipo. No vale en el pica-pica.'
+                  : 'El pie es el último del equipo en jugar la primera, aunque sea un bot. No vale en el pica-pica.'
               }
             />
           )}
@@ -478,7 +478,7 @@ export function resumenSala(o: OpcionesSala): string[] {
   )
   partes.push(o.voz ? 'Con chat de voz' : 'Sin chat de voz')
   if (o.formato !== '1v1') {
-    partes.push(o.voz ? 'Toca y grita cualquiera (lo del pie se dice hablando)' : r.toquesYGritos === 'pie' ? 'Toques y gritos del pie' : 'Toca y grita cualquiera')
+    partes.push(r.pie === 'ultimo' ? 'El pie puede ser un bot' : 'El pie es siempre una persona')
   }
   if (r.corte) partes.push('Se corta el mazo')
   if (o.tirarReyes !== 'no') partes.push(o.tirarReyes === 'reparte' ? 'Se tiran reyes para repartir' : 'Se tiran reyes para repartir y armar los equipos')

@@ -13,6 +13,9 @@ import {
   eventosPara,
   LARGOS_PARTIDA,
   liderDe,
+  esBotMandado,
+  pendienteActual,
+  debeCantarFlor,
   vistaPara,
   type Accion,
   type ConfigSala,
@@ -20,7 +23,7 @@ import {
   type Equipo,
   type Evento,
 } from '@truco/engine'
-import { crearBot, NIVELES_BOT, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibidas, type Sugerencia } from '@truco/bots'
+import { crearBot, NIVELES_BOT, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibidas } from '@truco/bots'
 import {
   avatarAlAzar,
   BARAJA_DEFAULT,
@@ -224,8 +227,6 @@ export class SalaTruco extends Room {
   private senias: SeniasRecibidas[] = []
   /** Mano en curso y si ya se cortó: las señas de los bots se hacen recién con las cartas en la mano. */
   private claveMano = ''
-  /** Por equipo: la última sugerencia del pie, válida en la vuelta en que la dijo. */
-  private sugerencias: ({ sugerencia: Sugerencia; vuelta: string } | null)[] = [null, null]
   /** Si la última tirada de reyes cambió a alguien de lugar (la mesa anima el cambio). */
   private reacomodados = false
   /** Por asiento: jugadas seguidas que se le vencieron. */
@@ -485,30 +486,6 @@ export class SalaTruco extends Room {
       this.entregarSenias(asiento, hechas, true)
     })
 
-    manejar('sugerir', (client, asiento, { sugerencia }) => {
-      if (!this.limite(this.limitesAccion, client, 10, 1000)) throw new Rechazo('Demasiadas acciones seguidas')
-      if (this.fase !== 'jugando' || !this.estado) throw new Rechazo('La partida no está en juego')
-      const e = enfrentamientoActual(this.estado)
-      const equipo = equipoDe(asiento)
-      if (liderDe(this.estado, e, equipo) !== asiento) throw new Rechazo('Sugiere el pie')
-      if (this.conVoz()) throw new Rechazo('Con chat de voz, el pie habla: no hay sugerencias')
-      const valida: Sugerencia | null =
-        sugerencia?.tipo === 'veni'
-          ? { tipo: 'veni' }
-          : sugerencia?.tipo === 'vamosA' &&
-              e.participantes.includes(Number(sugerencia.asiento)) &&
-              Number(sugerencia.asiento) !== asiento &&
-              equipoDe(Number(sugerencia.asiento)) === equipo
-            ? { tipo: 'vamosA', asiento: Number(sugerencia.asiento) }
-            : null
-      if (!valida) throw new Rechazo('Sugerencia inválida')
-      this.sugerencias[equipo] = { sugerencia: valida, vuelta: this.claveVuelta() }
-      // Se dice en voz alta: la oyen todos.
-      for (const l of this.lugares) {
-        if (this.humanoConectado(l.asiento)) this.enviarA(l.asiento, 'sugerencia', { de: asiento, sugerencia: valida })
-      }
-    })
-
     manejar('silenciar', (_client, asiento, { asiento: otro, silenciar }) => {
       const inv = this.lugares[asiento]!.invitadoId!
       const set = this.silenciados.get(inv) ?? new Set<number>()
@@ -596,8 +573,8 @@ export class SalaTruco extends Room {
     this.config = crearConfig({
       ...pedido,
       puntosPartida,
-      // Con chat de voz, lo del pie (mandar a tocar o a gritar) se dice hablando.
-      toquesYGritos: pedido.toquesYGritos === 'pie' && !this.conVoz() ? 'pie' : 'cualquiera',
+      // Quién es el pie: siempre una persona (si el equipo tiene) o el último, aunque sea un bot.
+      pie: pedido.pie === 'ultimo' ? 'ultimo' : 'persona',
       corte: pedido.corte === true,
       modoSucio: false,
     })
@@ -696,7 +673,6 @@ export class SalaTruco extends Room {
       reparte,
     })
     this.vencidos.clear()
-    this.sugerencias = [null, null]
     this.fase = 'jugando'
     if (this.publica) void this.setPrivate(true)
     this.inicioMs = Date.now()
@@ -811,6 +787,15 @@ export class SalaTruco extends Room {
     const version = this.version
     const esperando = esperandoA(this.estado)
     const humanos = esperando.filter((a) => this.humanoConectado(a))
+    // El bot que manda una persona no juega hasta que su pie le dice qué: se espera el tiempo de
+    // un turno; si no le dice nada, decide solo.
+    const pieQueManda = this.pieQueTieneQueMandar(esperando)
+    if (pieQueManda !== null) {
+      const espera = extra + this.tiempoDeTurno(esperando)
+      this.timerJuego = setTimeout(() => this.jugarBot(esperando[0]!, version), espera)
+      this.broadcast('turno', { asientos: esperando, venceEn: Date.now() + espera, pie: pieQueManda })
+      return
+    }
     if (humanos.length === 0) {
       const a = esperando[0]
       if (a === undefined) return
@@ -858,6 +843,24 @@ export class SalaTruco extends Room {
     )
   }
 
+  /**
+   * Si al que le toca es un bot que manda una persona conectada (su pie) y todavía no le dijo qué
+   * jugar: el asiento del pie, que es a quien se espera. Si tiene que cantar la flor, no espera.
+   */
+  private pieQueTieneQueMandar(esperando: number[]): number | null {
+    const estado = this.estado!
+    const a = esperando[0]
+    if (esperando.length !== 1 || a === undefined || estado.mano.cortando !== null || estado.mano.verificacion) return null
+    const e = enfrentamientoActual(estado)
+    // Solo para jugar una carta: si tiene que declarar o contestar algo, lo hace solo.
+    if (e.turno !== a || pendienteActual(e) !== null || !esBotMandado(estado, e, a)) return null
+    const pie = liderDe(estado, e, equipoDe(a))
+    if (pie === null || !this.humanoConectado(pie)) return null
+    if (e.ordenes.some((o) => o.asiento === a)) return null
+    if (debeCantarFlor(estado, e, a)) return null
+    return pie
+  }
+
   private jugarBot(asiento: number, version: number, porTiempo = false) {
     this.timerJuego = null
     if (version !== this.version || !this.estado || this.fase !== 'jugando') return
@@ -870,9 +873,7 @@ export class SalaTruco extends Room {
     }
     const bot = lugar.tipo === 'bot' ? this.bots[asiento]! : this.reemplazos[asiento]!
     const vista = vistaPara(this.estado, idJugador(asiento))
-    const sug = this.sugerencias[equipoDe(asiento)]
-    const sugerencia = sug && sug.vuelta === this.claveVuelta() ? sug.sugerencia : undefined
-    const accion = bot.decidir(vista, this.senias[asiento], sugerencia)
+    const accion = bot.decidir(vista, this.senias[asiento])
     const motivo = this.aplicar(asiento, accion, true)
     if (motivo) {
       // No debería pasar: el bot elige entre las acciones válidas. Por las dudas, la primera.
@@ -897,21 +898,13 @@ export class SalaTruco extends Room {
     this.enviarSala()
   }
 
-  /** La vuelta en curso: una sugerencia del pie vale hasta que termina. */
-  private claveVuelta(): string {
-    if (!this.estado) return ''
-    const m = this.estado.mano
-    return `${m.numero}-${m.actual}-${m.enfrentamientos[m.actual]?.vueltas.length ?? 0}`
-  }
-
   /**
-   * Con "toques y gritos del pie": si le toca jugar a alguien y su pie no es una persona
-   * conectada (un bot, o el que juega por quien no está), el pie decide si lo manda a tocar o a gritar.
+   * Si le toca jugar a alguien y su pie no es una persona conectada (un bot, o el que juega por
+   * quien no está), el pie decide si lo manda a tocar o a gritar. Devuelve si mandó a alguien.
    */
-  /** Devuelve si mandó a alguien. */
   private ordenarDelPie(): boolean {
     const estado = this.estado
-    if (!estado || estado.config.toquesYGritos !== 'pie' || estado.mano.cortando !== null || estado.mano.verificacion) return false
+    if (!estado || estado.mano.cortando !== null || estado.mano.verificacion) return false
     const e = enfrentamientoActual(estado)
     const turno = e.turno
     if (turno === null || esperandoA(estado)[0] !== turno) return false

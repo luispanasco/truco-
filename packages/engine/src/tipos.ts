@@ -30,12 +30,29 @@ export interface Jugada {
 /** Los tres cortes del mazo. */
 export type TipoCorte = 'convencional' | 'sacarMuestra' | 'darAlMano'
 
-/** Lo que el pie le manda a un compañero: tocar (envido) o gritar (truco). */
-export type QueManda = 'tocar' | 'gritar'
+/**
+ * Lo que el pie le dice a un compañero. A un bot se lo manda (lo cumple: es lo único que hace,
+ * salvo cantar la flor); a una persona se lo insinúa (decide ella).
+ * - `tocar` / `gritar`: cantar envido / truco en su turno.
+ * - `carta`: tirá esta carta (solo a un bot: el pie ve sus cartas).
+ * - `dejala`: la más baja; `matala`: la más alta; `jugaAlgo`: la del medio.
+ * - `veni`: "vení a mí" (la vuelta la lleva el pie); `vamosA`: la lleva otro compañero que juega después.
+ */
+export type QueManda = 'tocar' | 'gritar' | 'carta' | 'dejala' | 'matala' | 'jugaAlgo' | 'veni' | 'vamosA'
+
+/** Las órdenes que tienen que ver con qué carta jugar (valen hasta que el compañero juega). */
+export const ORDENES_DE_CARTA: readonly QueManda[] = ['carta', 'dejala', 'matala', 'jugaAlgo', 'veni', 'vamosA']
+
+/** Las que no se dicen en voz alta: solo las ve el equipo. */
+export const ORDENES_PRIVADAS: readonly QueManda[] = ['carta', 'dejala', 'matala', 'jugaAlgo']
 
 export interface Orden {
   asiento: number
   que: QueManda
+  /** Con `carta`: cuál. */
+  carta?: Carta
+  /** Con `vamosA`: el compañero que lleva la vuelta. */
+  vamosA?: number
 }
 
 export interface Vuelta {
@@ -208,7 +225,7 @@ export type Accion =
   /** `tanto` es el tanto declarado; en modo normal se toma el real. `yTruco`: "flor y truco" en un solo canto. */
   | { tipo: 'cantarFlor'; jugador: string; canto: CantoFlor; tanto?: number; yTruco?: boolean }
   /** El pie manda a un compañero a tocar o a gritar. */
-  | { tipo: 'mandar'; jugador: string; a: number; que: QueManda }
+  | { tipo: 'mandar'; jugador: string; a: number; que: QueManda; carta?: Carta; vamosA?: number }
   | { tipo: 'cortar'; jugador: string; corte: TipoCorte }
   /** `cantaLaMesa`: al querer la contraflor al resto, en vez de decir las flores se tiran las cartas. */
   | { tipo: 'responder'; jugador: string; respuesta: Respuesta; cantaLaMesa?: boolean }
@@ -234,7 +251,7 @@ export type Evento =
   | { tipo: 'cantoTruco'; asiento: number; canto: CantoTruco }
   | { tipo: 'cantoEnvido'; asiento: number; canto: CantoEnvido; primeroEstaElEnvido: boolean }
   | { tipo: 'cantoFlor'; asiento: number; canto: CantoFlor; yTruco?: boolean }
-  | { tipo: 'orden'; asiento: number; a: number; que: QueManda }
+  | { tipo: 'orden'; asiento: number; a: number; que: QueManda; carta?: Carta; vamosA?: number }
   | { tipo: 'respuesta'; asiento: number; a: 'truco' | 'envido' | 'flor'; respuesta: Respuesta; cantaLaMesa?: boolean }
   /** "Canta la mesa": una carta de la flor sobre la mesa y lo que suma la flor hasta ahí. */
   | { tipo: 'florMostrada'; asiento: number; carta: Carta; suma: number }

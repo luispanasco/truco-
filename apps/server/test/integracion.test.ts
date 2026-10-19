@@ -60,7 +60,8 @@ describe('sala privada', () => {
     expect(archivos).toHaveLength(1)
     const registro = JSON.parse(readFileSync(join(dirDatos, 'partidas', archivos[0]!), 'utf8')) as RegistroPartida
     let estado = crearPartida({
-      jugadores: registro.jugadores.map((j) => ({ id: `j${j.asiento}`, nombre: j.apodo })),
+      // Quién es bot importa: el pie de un equipo con personas es una persona.
+      jugadores: registro.jugadores.map((j) => ({ id: `j${j.asiento}`, nombre: j.apodo, ...(j.tipo === 'bot' ? { bot: true } : {}) })),
       semilla: registro.semilla,
       config: registro.config,
     })

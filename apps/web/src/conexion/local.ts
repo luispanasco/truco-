@@ -10,6 +10,9 @@ import {
   esperandoA,
   eventosPara,
   liderDe,
+  esBotMandado,
+  debeCantarFlor,
+  pendienteActual,
   vistaPara,
   type Accion,
   type ConfigSala,
@@ -17,7 +20,7 @@ import {
   type Evento,
   type Formato,
 } from '@truco/engine'
-import { crearBot, type Bot, type Nivel, type Senia, type SeniasRecibidas, type Sugerencia } from '@truco/bots'
+import { crearBot, type Bot, type Nivel, type Senia, type SeniasRecibidas } from '@truco/bots'
 import {
   MOTIVO_ENVIDO_CON_FLOR,
   MOTIVO_SENIA_TARDE,
@@ -75,6 +78,8 @@ export interface OpcionesLocal {
 
 const NOMBRES_BOTS = ['Bot Pepe', 'Bot Chela', 'Bot Tito', 'Bot Mirta', 'Bot Ruben']
 const DEMORA_BOTS: [number, number] = [1000, 1800]
+/** Si no le decís nada a tu bot (sos su pie), después de este rato decide solo. */
+const ESPERA_ORDEN_TUYA_MS = 25_000
 /** La pausa entre manos coincide con la de la interfaz (PAUSA_ENTRE_MANOS), más un margen. */
 const PAUSAS = { vuelta: 3000, mano: 5000 }
 const id = (asiento: number) => `j${asiento}`
@@ -94,7 +99,6 @@ export class ConexionLocal implements Conexion {
   /** Mano en curso y si ya se cortó: los bots hacen sus señas recién con las cartas en la mano. */
   private claveMano = ''
   /** Lo que sugeriste como pie, válido en la vuelta en que lo dijiste. */
-  private sugerencia: { sugerencia: Sugerencia; vuelta: string } | null = null
   /** Nombre de cada asiento: con los reyes, los bots cambian de lugar (la persona sigue en el 0). */
   private nombres: string[] = []
   private primera = true
@@ -179,30 +183,6 @@ export class ConexionLocal implements Conexion {
         }
         return
       }
-      case 'sugerir': {
-        const { sugerencia } = datos as MensajesCliente['sugerir']
-        const e = this.terminada ? null : enfrentamientoActual(this.estado)
-        if (!e || liderDe(this.estado, e, 0) !== 0) {
-          this.emitir('error', { motivo: 'Sugiere el pie' })
-          return
-        }
-        const valida: Sugerencia | null =
-          sugerencia?.tipo === 'veni'
-            ? { tipo: 'veni' }
-            : sugerencia?.tipo === 'vamosA' &&
-              e.participantes.includes(Number(sugerencia.asiento)) &&
-              Number(sugerencia.asiento) !== 0 &&
-              Number(sugerencia.asiento) % 2 === 0
-              ? { tipo: 'vamosA', asiento: Number(sugerencia.asiento) }
-              : null
-        if (!valida) {
-          this.emitir('error', { motivo: 'Sugerencia inválida' })
-          return
-        }
-        this.sugerencia = { sugerencia: valida, vuelta: this.claveVuelta() }
-        this.emitir('sugerencia', { de: 0, sugerencia: valida })
-        return
-      }
       case 'revancha':
         if (this.terminada) {
           this.semilla = (this.semilla * 1103515245 + 12345) >>> 0
@@ -239,17 +219,10 @@ export class ConexionLocal implements Conexion {
       reparte,
     })
     this.claveMano = ''
-    this.sugerencia = null
     this.emitir('sala', this.infoSala())
     this.revisarNuevaMano()
     this.difundir([])
     this.programar()
-  }
-
-  /** La vuelta en curso: una sugerencia del pie vale hasta que termina. */
-  private claveVuelta(): string {
-    const m = this.estado.mano
-    return `${m.numero}-${m.actual}-${m.enfrentamientos[m.actual]?.vueltas.length ?? 0}`
   }
 
   /** Si empezó una mano o se terminó de cortar: reinicia las señas y hacen las suyas los bots. */
@@ -264,13 +237,12 @@ export class ConexionLocal implements Conexion {
   }
 
   /**
-   * Con "toques y gritos del pie": si le toca a un bot y su pie es otro bot, el pie decide si lo
-   * manda a tocar o a gritar. (En tu equipo el que lidera sos vos.)
+   * Si le toca a un bot y su pie es otro bot, el pie decide si lo manda a tocar o a gritar.
+   * (En tu equipo el pie sos vos.) Devuelve si mandó a alguien.
    */
-  /** Devuelve si mandó a alguien. */
   private ordenarDelPie(turno: number): boolean {
     const estado = this.estado
-    if (estado.config.toquesYGritos !== 'pie' || estado.mano.cortando !== null) return false
+    if (estado.mano.cortando !== null) return false
     const e = enfrentamientoActual(estado)
     if (e.turno !== turno) return false
     const lider = liderDe(estado, e, equipoDe(turno))
@@ -282,6 +254,19 @@ export class ConexionLocal implements Conexion {
     this.estado = r.estado
     this.difundir(r.eventos)
     return true
+  }
+
+  /**
+   * Si le toca jugar a un bot tuyo (sos su pie) y todavía no le dijiste qué: se lo espera. Si tiene
+   * que declarar, contestar o cantar la flor, lo hace solo.
+   */
+  private esperaTuOrden(a: number): boolean {
+    const estado = this.estado
+    if (estado.mano.cortando !== null || estado.mano.verificacion) return false
+    const e = enfrentamientoActual(estado)
+    if (e.turno !== a || pendienteActual(e) !== null || !esBotMandado(estado, e, a)) return false
+    if (liderDe(estado, e, equipoDe(a)) !== 0 || e.ordenes.some((o) => o.asiento === a)) return false
+    return !debeCantarFlor(estado, e, a)
   }
 
   /** Lo que tarda en cumplir una orden del pie (en los tests, con bots sin demora, nada). */
@@ -369,11 +354,22 @@ export class ConexionLocal implements Conexion {
         ? pausas.vuelta
         : 0
     const version = this.version
+    // Tu bot no juega hasta que le digas qué (sos su pie); si no le decís nada, al rato decide solo.
+    if (this.esperaTuOrden(a)) {
+      this.emitir('turno', { asientos: esperando, venceEn: null, pie: 0 })
+      this.timer = setTimeout(() => {
+        if (version !== this.version) return
+        const accion = this.bots[a]!.decidir(vistaPara(this.estado, id(a)), this.senias[a])
+        const motivo = this.aplicar(a, accion)
+        if (motivo) console.error('Un bot eligió una acción inválida:', motivo)
+        // Con bots sin demora (los tests) no se espera; con el juego rápido, sí: el pie sos vos.
+      }, this.op.demoraBots?.[1] === 0 ? 0 : ESPERA_ORDEN_TUYA_MS)
+      return
+    }
     this.emitir('turno', { asientos: esperando, venceEn: null })
     const jugar = () => {
       if (version !== this.version) return
-      const sug = a % 2 === 0 && this.sugerencia?.vuelta === this.claveVuelta() ? this.sugerencia.sugerencia : undefined
-      const accion = this.bots[a]!.decidir(vistaPara(this.estado, id(a)), this.senias[a], sug)
+      const accion = this.bots[a]!.decidir(vistaPara(this.estado, id(a)), this.senias[a])
       const motivo = this.aplicar(a, accion)
       if (motivo) console.error('Un bot eligió una acción inválida:', motivo)
     }

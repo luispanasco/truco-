@@ -5,7 +5,8 @@ import type { Accion, CantoEnvido, CantoFlor, EstadoPartida, QueManda, TipoCorte
 const CANTOS_ENVIDO: CantoEnvido[] = ['envido', 'realEnvido', 'faltaEnvido']
 const CANTOS_FLOR: CantoFlor[] = ['flor', 'contraflor', 'contraflorAlResto']
 const CORTES: TipoCorte[] = ['convencional', 'sacarMuestra', 'darAlMano']
-const ORDENES: QueManda[] = ['tocar', 'gritar']
+/** Lo que el pie le dice a un compañero (las de carta puntual y "vamos a" se arman aparte). */
+const ORDENES: QueManda[] = ['tocar', 'gritar', 'dejala', 'matala', 'jugaAlgo', 'veni']
 
 /**
  * Acciones que el jugador puede hacer ahora. Sirve para mostrar solo los botones
@@ -32,7 +33,12 @@ export function accionesValidas(estado: EstadoPartida, jugadorId: string): Accio
     ...misCartas.map((carta) => ({ tipo: 'jugarCarta' as const, ...jugadorAccion, carta, tapada: true })),
     ...CANTOS_FLOR.map((canto) => ({ tipo: 'cantarFlor' as const, ...jugadorAccion, canto })),
     { tipo: 'cantarFlor', ...jugadorAccion, canto: 'flor', yTruco: true },
-    ...companieros.flatMap((c) => ORDENES.map((que) => ({ tipo: 'mandar' as const, ...jugadorAccion, a: c.asiento, que }))),
+    ...companieros.flatMap((c) => [
+      ...ORDENES.map((que) => ({ tipo: 'mandar' as const, ...jugadorAccion, a: c.asiento, que })),
+      ...companieros.filter((x) => x.asiento !== c.asiento).map((x) => ({ tipo: 'mandar' as const, ...jugadorAccion, a: c.asiento, que: 'vamosA' as const, vamosA: x.asiento })),
+      // La carta puntual, solo a un bot (el pie ve sus cartas): la valida el motor.
+      ...(estado.mano.cartas[c.asiento] ?? []).map((carta) => ({ tipo: 'mandar' as const, ...jugadorAccion, a: c.asiento, que: 'carta' as const, carta })),
+    ]),
     ...CANTOS_ENVIDO.map((canto) => ({ tipo: 'cantarEnvido' as const, ...jugadorAccion, canto })),
     { tipo: 'cantarTruco', ...jugadorAccion },
     { tipo: 'irseAlMazo', ...jugadorAccion },
@@ -71,9 +77,9 @@ export function esperandoA(estado: EstadoPartida): number[] {
     // tampoco, hasta que la cante: la flor va primero.
     const conFlor = pend === 'envido' || pend === 'truco' ? florSinCantarDelEquipo(estado, e, responde) : []
     if (conFlor.length > 0) return conFlor
-    // Con "toques y gritos del pie", al truco y al envido contesta el pie.
+    // En 2v2 y 3v3, al truco y al envido contesta el pie.
     const lider = liderDe(estado, e, responde)
-    if (estado.config.toquesYGritos === 'pie' && lider !== null) return [lider]
+    if (lider !== null) return [lider]
     return e.participantes.filter((a) => equipoDe(a) === responde && !e.retirados.includes(a))
   }
   return e.turno === null ? [] : [e.turno]

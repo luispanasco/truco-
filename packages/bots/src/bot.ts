@@ -1,4 +1,4 @@
-import { equipoDe, valorEnvido, type Accion, type Carta, type CantoEnvido, type CantoFlor, type QueManda, type TipoCorte, type VistaPartida } from '@truco/engine'
+import { equipoDe, ORDENES_DE_CARTA, valorEnvido, type Accion, type Orden, type Carta, type CantoEnvido, type CantoFlor, type QueManda, type TipoCorte, type VistaPartida } from '@truco/engine'
 import { Aleatorio, crearContexto, f, mejorDeLaVuelta, ordenadas, pendiente, type Contexto } from './contexto'
 import { ENVIDO_PARA_SENIAR, envidoParaSenia, seniasDeMano, type Senia, type SeniasRecibidas } from './senias'
 import { crearFacil } from './facil'
@@ -181,25 +181,61 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[], sugerencia?: 
   }
 
   // Lo que manda el pie se cumple.
-  const ordenes = ctx.e.ordenes.filter((o) => o.asiento === ctx.yo).map((o) => o.que)
+  const misOrdenes = ctx.e.ordenes.filter((o) => o.asiento === ctx.yo)
+  const ordenes = misOrdenes.map((o) => o.que)
   if (ordenes.includes('tocar') && envidos.length > 0) {
     return { tipo: 'cantarEnvido', jugador, canto: est.cantarEnvido(ctx, envidos) ?? envidos[0]! }
   }
   if (ordenes.includes('gritar') && hay((a) => a.tipo === 'cantarTruco')) return { tipo: 'cantarTruco', jugador }
 
-  if (envidos.length > 0) {
-    const canto = est.cantarEnvido(ctx, envidos)
-    if (canto) return { tipo: 'cantarEnvido', jugador, canto }
+  // Un bot que manda una persona no canta por su cuenta (salvo la flor, arriba): espera que lo manden.
+  if (!mandadoPorPersona(ctx.vista)) {
+    if (envidos.length > 0) {
+      const canto = est.cantarEnvido(ctx, envidos)
+      if (canto) return { tipo: 'cantarEnvido', jugador, canto }
+    }
+    if (hay((a) => a.tipo === 'cantarTruco') && est.cantarTruco(ctx)) return { tipo: 'cantarTruco', jugador }
   }
-  if (hay((a) => a.tipo === 'cantarTruco') && est.cantarTruco(ctx)) return { tipo: 'cantarTruco', jugador }
   if (hay((a) => a.tipo === 'jugarCarta')) {
-    const carta = cartaSugerida(ctx, sugerencia) ?? est.elegirCarta(ctx)
+    const orden = misOrdenes.find((o) => ORDENES_DE_CARTA.includes(o.que))
+    const carta = cartaDeOrden(ctx, orden) ?? cartaSugerida(ctx, sugerencia) ?? est.elegirCarta(ctx)
     // Pasar en la tercera: si la carta no gana y juega un compañero después, va tapada.
     const tapada = hay((a) => a.tipo === 'jugarCarta' && a.tapada === true && JSON.stringify(a.carta) === JSON.stringify(carta))
     if (tapada && !ganaLaVuelta(ctx, carta) && quedaCompanieroPorJugar(ctx)) return tapada
     return { tipo: 'jugarCarta', jugador, carta }
   }
   return validas.find((a) => a.tipo !== 'irseAlMazo') ?? validas[0]!
+}
+
+/** Si el bot lo manda una persona (su pie): juega y canta lo que ella le diga. */
+export function mandadoPorPersona(v: VistaPartida): boolean {
+  if (!v.yo.bot) return false
+  const e = v.mano.enfrentamientos[v.mano.actual]
+  const lider = e?.lideres[v.yo.equipo] ?? null
+  return lider !== null && lider !== v.yo.asiento && !v.jugadores[lider]?.bot
+}
+
+/**
+ * La carta que pidió el pie: la que nombró; "dejala", la más baja; "matala", la más alta; "jugá
+ * algo", la del medio (la segunda más grande); "vení" y "vamos a", la más baja (la vuelta la lleva otro).
+ */
+function cartaDeOrden(ctx: Contexto, o: Orden | undefined): Carta | null {
+  if (!o || ctx.misCartas.length === 0) return null
+  const cs = ordenadas(ctx, ctx.misCartas)
+  switch (o.que) {
+    case 'carta':
+      return o.carta && ctx.misCartas.some((c) => c.numero === o.carta!.numero && c.palo === o.carta!.palo) ? o.carta : null
+    case 'matala':
+      return cs[cs.length - 1]!
+    case 'jugaAlgo':
+      return cs[Math.max(0, cs.length - 2)]!
+    case 'dejala':
+    case 'veni':
+    case 'vamosA':
+      return cs[0]!
+    default:
+      return null
+  }
 }
 
 /**

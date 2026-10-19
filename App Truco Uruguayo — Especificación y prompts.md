@@ -85,9 +85,21 @@ Dos cartas de igual orden empatan la vuelta (parda).
 
 ### El pie (2v2 y 3v3)
 
-- Es el último de cada equipo en jugar la primera vuelta: el que reparte y el primero a la izquierda del mazo. Cada jugador es pie dos manos seguidas. Con bots en el equipo lidera una persona.
-- Sugiere en voz alta (lo oyen todos): "Vení" (no juegues nada bueno) y "Vamos a X". Puede mandar a un compañero a tocar (envido) o a gritar (truco).
-- Opción de sala "Toques y gritos": los decide el pie (los demás tocan o gritan solo si los manda, y las respuestas las da el pie) o cualquiera. En el pica-pica no hay pie. Con chat de voz, todo esto se dice por voz.
+- En 1v1 y en el pica-pica no hay pie.
+- **Quién es:** el último de cada equipo en jugar la primera vuelta. Opción de sala "El pie":
+  - **Siempre una persona** (por defecto): si el equipo tiene personas, el pie es la última de ellas en jugar la primera. Un equipo de vos y bots: vos siempre.
+  - **Puede ser un bot:** el último, aunque sea un bot.
+- **El pie dicta el juego:** es el que sabe las cartas del equipo. Contesta él el truco y el envido por todo el equipo; si te gritan y no sos pie, "gritale al pie". El envido lo declara cada uno.
+- **A sus bots les manda** (un bot que manda una persona no hace nada por su cuenta salvo cantar la flor, y no juega hasta que el pie le dice):
+  - una carta puntual ("tirá el 3"; el pie ve las cartas de sus bots),
+  - "dejala" (la más baja), "matala" (la más alta), "jugá algo" (la del medio),
+  - "vení" (a mí) y "vamos a X" (otro compañero que todavía no jugó en la vuelta),
+  - "tocá" y "gritá", en su turno.
+  Si el pie no le dice nada en el tiempo del turno, el bot decide solo.
+- **A una persona solo le insinúa** lo mismo (salvo la carta puntual): decide ella, y canta por su cuenta si quiere.
+- Las órdenes de qué carta tirar las ven solo el pie y el que la recibe; "vení", "vamos a", "tocá" y "gritá" se dicen en voz alta.
+- Con chat de voz, lo que se le insinúa a una persona se dice hablando; a los bots se les manda igual desde la mesa.
+- Los bots siguen haciendo sus señas (aunque el pie vea sus cartas).
 
 ### Truco
 

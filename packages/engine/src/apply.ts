@@ -6,6 +6,7 @@ import {
   equipoDe,
   equipoQueCanto,
   liderDe,
+  esBotMandado,
   mejorDeclaracion,
   ordenDesde,
   otroEquipo,
@@ -23,6 +24,7 @@ import {
   valorResto,
   type Pendiente,
 } from './reglas'
+import { ORDENES_DE_CARTA } from './tipos'
 import type {
   Accion,
   CantoTruco,
@@ -33,6 +35,7 @@ import type {
   EstadoMano,
   Evento,
   Jugador,
+  Orden,
   QueManda,
   ResultadoApply,
   ResultadoEnfrentamiento,
@@ -136,11 +139,11 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
   }
   if (enMesa !== null) return 'Están cantando la mesa'
 
-  // El pie: con "toques y gritos del pie", toca y grita él o el compañero que manda, y contesta él.
-  const conPie = cfg.toquesYGritos === 'pie' && e.participantes.length > 2
+  // El pie contesta por el equipo. Un bot que manda una persona no canta solo: toca o grita si lo mandan.
   const lider = liderDe(estado, e, eq)
-  const esLider = !conPie || lider === a
-  const puede = (que: QueManda) => esLider || e.ordenes.some((o) => o.asiento === a && o.que === que)
+  const esLider = lider === null || lider === a
+  const mandado = esBotMandado(estado, e, a)
+  const puede = (que: QueManda) => !mandado || e.ordenes.some((o) => o.asiento === a && o.que === que)
 
   const pend = pendienteActual(e)
   const tanto = mano.tantos[a]
@@ -275,9 +278,9 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
     case 'responder': {
       if (pend === null || pend === 'declaracion') return 'No hay nada que responder'
       if (equipoQueCanto(e, pend) === eq) return 'Esperá la respuesta del rival'
-      if ((pend === 'truco' || pend === 'envido') && !esLider) return 'Contesta el pie'
       if (pend === 'envido' && debeCantar) return 'Tenés flor: cantala'
       if (pend === 'envido' && florDelEquipo.length > 0) return motivoFlorDelEquipo
+      if ((pend === 'truco' || pend === 'envido') && !esLider) return 'Contesta el pie'
       // La flor va primero que el truco: el equipo no contesta hasta que la canta el que la tiene.
       if (pend === 'truco' && florDelEquipo.length > 0) return motivoFlorDelEquipo
       // A la contraflor contesta solo el que tiene flor; los demás esperan.
@@ -314,16 +317,32 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
     }
 
     case 'mandar': {
-      if (!conPie) return 'En esta mesa no manda el pie'
+      if (lider === null) return 'En esta mesa no hay pie'
       if (lider !== a) return 'Manda el pie'
       const comp = accion.a
       if (comp === a || !e.participantes.includes(comp) || equipoDe(comp) !== eq) return 'Mandá a un compañero'
       if (e.retirados.includes(comp)) return 'Ese compañero se fue al mazo'
-      if (e.ordenes.some((o) => o.asiento === comp && o.que === accion.que)) return 'Ya se lo mandaste'
-      if (accion.que === 'tocar' && (!enPrimera || e.envido.estado !== 'libre' || e.flor.cantadas.length > 0)) {
-        return 'Ya no se puede tocar'
+      if (accion.que === 'tocar' || accion.que === 'gritar') {
+        if (e.ordenes.some((o) => o.asiento === comp && o.que === accion.que)) return 'Ya se lo mandaste'
+        if (accion.que === 'tocar' && (!enPrimera || e.envido.estado !== 'libre' || e.flor.cantadas.length > 0)) {
+          return 'Ya no se puede tocar'
+        }
+        if (accion.que === 'gritar' && e.truco.valor === 4) return 'No se puede subir más'
+        return null
       }
-      if (accion.que === 'gritar' && e.truco.valor === 4) return 'No se puede subir más'
+      // Qué carta jugar: solo antes de que juegue en esta vuelta.
+      const vuelta = ultimo(e.vueltas)
+      if (vuelta.jugadas.some((j) => j.asiento === comp)) return 'Ya jugó en esta vuelta'
+      if (accion.que === 'carta') {
+        // Solo a un bot que mandás vos: ves sus cartas.
+        if (!esBotMandado(estado, e, comp)) return 'Solo a un bot le decís qué carta tirar'
+        if (!accion.carta || !mano.cartas[comp]!.some((c) => mismaCarta(c, accion.carta!))) return 'Esa carta no la tiene'
+      }
+      if (accion.que === 'vamosA') {
+        const x = accion.vamosA
+        if (x === undefined || x === comp || x === a || !e.participantes.includes(x) || equipoDe(x) !== eq) return '"Vamos a" es a otro compañero'
+        if (e.retirados.includes(x) || vuelta.jugadas.some((j) => j.asiento === x)) return 'Ese compañero ya jugó'
+      }
       return null
     }
 
@@ -368,6 +387,8 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
       )
       const tapada = accion.tapada === true
       ultimo(e.vueltas).jugadas.push({ asiento: a, carta: accion.carta, ...(tapada ? { tapada } : {}) })
+      // Ya jugó: lo que el pie le dijo de qué carta tirar queda cumplido.
+      e.ordenes = e.ordenes.filter((o) => o.asiento !== a || !ORDENES_DE_CARTA.includes(o.que))
       // Tapada no la ve nadie más; en el pica-pica las piezas van por abajo: solo las ve el rival del duelo.
       const ocultaPara = tapada
         ? estado.jugadores.map((j) => j.asiento).filter((x) => x !== a)
@@ -567,8 +588,19 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
     }
 
     case 'mandar': {
-      e.ordenes.push({ asiento: accion.a, que: accion.que })
-      eventos.push({ tipo: 'orden', asiento: a, a: accion.a, que: accion.que })
+      const orden: Orden = {
+        asiento: accion.a,
+        que: accion.que,
+        ...(accion.que === 'carta' && accion.carta ? { carta: accion.carta } : {}),
+        ...(accion.que === 'vamosA' && accion.vamosA !== undefined ? { vamosA: accion.vamosA } : {}),
+      }
+      // Una orden de qué carta jugar reemplaza a la anterior.
+      if (ORDENES_DE_CARTA.includes(accion.que)) {
+        e.ordenes = e.ordenes.filter((o) => o.asiento !== accion.a || !ORDENES_DE_CARTA.includes(o.que))
+      }
+      e.ordenes.push(orden)
+      const { asiento: _, ...detalle } = orden
+      eventos.push({ tipo: 'orden', asiento: a, a: accion.a, ...detalle })
       return
     }
   }

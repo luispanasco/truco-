@@ -59,7 +59,7 @@ describe('bots', () => {
           picaPica: fc.boolean(),
           faltaEnvidoEnMalas: fc.constantFrom('loQueFalta', 'ganaPartido'),
           modoSucio: fc.boolean(),
-          toquesYGritos: fc.constantFrom('pie', 'cualquiera'),
+          pie: fc.constantFrom('persona', 'ultimo'),
           corte: fc.boolean(),
           puntosPartida: fc.constantFrom(20, 30, 40),
         }),
@@ -204,13 +204,38 @@ describe('bots', () => {
 
   it('cumple lo que le manda el pie: tocar y gritar', () => {
     // Muestra 3 de copas. a tiene envido 7, nada que cantar solo.
-    const p = partidaCon(['4e 6o 5b', '1b 2e 6e', '7e 5o 12b', '3e 6b 11o'], '3c', { toquesYGritos: 'pie' })
+    const p = partidaCon(['4e 6o 5b', '1b 2e 6e', '7e 5o 12b', '3e 6b 11o'], '3c')
     for (const nivel of NIVELES) {
       const toca = aplicar(p, { tipo: 'mandar', jugador: 'c', a: 0, que: 'tocar' })
       expect(crearBot(nivel, 1).decidir(vistaPara(toca, 'a'))).toMatchObject({ tipo: 'cantarEnvido' })
       const grita = aplicar(p, { tipo: 'mandar', jugador: 'c', a: 0, que: 'gritar' })
       expect(crearBot(nivel, 1).decidir(vistaPara(grita, 'a'))).toEqual({ tipo: 'cantarTruco', jugador: 'a' })
     }
+  })
+
+  it('el bot que manda una persona juega lo que el pie le dice y no canta solo', () => {
+    // a (persona, pie) y c (bot); b y d bots. Le toca a c después de a y b.
+    const conBot = () =>
+      crearPartida({
+        jugadores: ['a', 'b', 'c', 'd'].map((id, i) => ({ id, nombre: id, ...(i > 0 ? { bot: true } : {}) })),
+        semilla: 1,
+        config: { formato: '2v2' },
+        repartoFijo: { cartas: ['4e 6o 5b', '1b 2e 6e', '1e 7e 4o', '3e 6b 11o'].map((m) => m.split(' ').map(c)), muestra: c('3c') },
+      })
+    let p = aplicar(aplicar(conBot(), { tipo: 'jugarCarta', jugador: 'a', carta: c('4e') }), { tipo: 'jugarCarta', jugador: 'b', carta: c('2e') })
+    for (const nivel of NIVELES) {
+      // Sin orden no canta (tiene el 1 de espadas y el 7 de espadas, para gritar).
+      expect(crearBot(nivel, 1).decidir(vistaPara(p, 'c'))).toMatchObject({ tipo: 'jugarCarta' })
+      const matala = aplicar(p, { tipo: 'mandar', jugador: 'a', a: 2, que: 'matala' })
+      expect(crearBot(nivel, 1).decidir(vistaPara(matala, 'c'))).toMatchObject({ tipo: 'jugarCarta', carta: c('1e') })
+      const dejala = aplicar(p, { tipo: 'mandar', jugador: 'a', a: 2, que: 'dejala' })
+      expect(crearBot(nivel, 1).decidir(vistaPara(dejala, 'c'))).toMatchObject({ tipo: 'jugarCarta', carta: c('4o') })
+      const algo = aplicar(p, { tipo: 'mandar', jugador: 'a', a: 2, que: 'jugaAlgo' })
+      expect(crearBot(nivel, 1).decidir(vistaPara(algo, 'c'))).toMatchObject({ tipo: 'jugarCarta', carta: c('7e') })
+      const carta = aplicar(p, { tipo: 'mandar', jugador: 'a', a: 2, que: 'carta', carta: c('7e') })
+      expect(crearBot(nivel, 1).decidir(vistaPara(carta, 'c'))).toMatchObject({ tipo: 'jugarCarta', carta: c('7e') })
+    }
+    p = conBot()
   })
 
   it('con "vení" tira la más baja', () => {

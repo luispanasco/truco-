@@ -63,6 +63,9 @@ describe('conexión local', () => {
           ...v.mano.enfrentamientos.flatMap((e) => e.vueltas.flatMap((vu) => vu.jugadas.map((j) => j.carta))),
           // Las que se dieron vuelta al terminar (flor o envido ganado) son públicas.
           ...v.mano.enfrentamientos.flatMap((e) => e.resultado?.mostradas.flatMap((m) => m.cartas) ?? []),
+          // Las de tus bots (sos su pie) y las tiradas al cantar la mesa.
+          ...v.mano.misBots.flatMap((b) => b.cartas),
+          ...v.mano.enfrentamientos.flatMap((e) => Object.values(e.flor.mesa?.mostradas ?? {}).flat()),
         ]
         expect(cartasDentro(v).filter((c) => !publicas.some((p) => p !== null && mismaCarta(p, c)))).toEqual([])
       }

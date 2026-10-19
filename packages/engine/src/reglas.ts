@@ -36,13 +36,24 @@ export function ordenDesde(asientos: readonly number[], inicio: number, n: numbe
  * vuelta (el que reparte, o el primero a la izquierda del mazo). Si el pie es un bot y en el equipo
  * hay personas, lidera la última persona. En 1v1 y en los duelos del pica-pica no hay pie.
  */
-export function liderDe(estado: Pick<EstadoPartida, 'jugadores'>, e: Enfrentamiento, equipo: Equipo): number | null {
+export function liderDe(estado: Pick<EstadoPartida, 'jugadores' | 'config'>, e: Enfrentamiento, equipo: Equipo): number | null {
   if (e.participantes.length <= 2) return null
   const delEquipo = e.participantes.filter((a) => equipoDe(a) === equipo)
   const pie = ultimo(delEquipo)
+  if (estado.config.pie === 'ultimo') return pie
+  // El pie es una persona: la última del equipo en jugar la primera (si no hay personas, el último).
   const personas = delEquipo.filter((a) => !estado.jugadores[a]?.bot)
-  if (!estado.jugadores[pie]?.bot || personas.length === 0) return pie
-  return ultimo(personas)
+  return personas.length > 0 ? ultimo(personas) : pie
+}
+
+/**
+ * Si el asiento es un bot que manda una persona (su pie): no canta nada por su cuenta salvo la
+ * flor, y juega lo que el pie le diga.
+ */
+export function esBotMandado(estado: Pick<EstadoPartida, 'jugadores' | 'config'>, e: Enfrentamiento, a: number): boolean {
+  if (!estado.jugadores[a]?.bot) return false
+  const lider = liderDe(estado, e, equipoDe(a))
+  return lider !== null && lider !== a && !estado.jugadores[lider]?.bot
 }
 
 /**

@@ -13,13 +13,12 @@ beforeEach(async () => colyseus.cleanup())
 
 describe('opciones nuevas de la sala', () => {
   it('largo del partido, toques y gritos y corte: se validan y las malas salen de la mitad', async () => {
-    // Sin voz: con voz, toques y gritos quedan para cualquiera (ver voz.test.ts).
-    const a = await Jugador.crear(colyseus, { config: { formato: '2v2', puntosPartida: 20, toquesYGritos: 'pie', corte: true }, voz: false })
+    const a = await Jugador.crear(colyseus, { config: { formato: '2v2', puntosPartida: 20, pie: 'ultimo', corte: true } })
     await a.esperar(() => a.sala !== null)
-    expect(a.sala!.config).toMatchObject({ puntosPartida: 20, puntosMalas: 10, tramoPicaPica: { desde: 0, hasta: 10 }, toquesYGritos: 'pie', corte: true })
-    a.enviar('configurar', { config: { puntosPartida: 25, puntosMalas: 3, toquesYGritos: 'nadie' } as unknown as Partial<ConfigSala> })
+    expect(a.sala!.config).toMatchObject({ puntosPartida: 20, puntosMalas: 10, tramoPicaPica: { desde: 0, hasta: 10 }, pie: 'ultimo', corte: true })
+    a.enviar('configurar', { config: { puntosPartida: 25, puntosMalas: 3, pie: 'nadie' } as unknown as Partial<ConfigSala> })
     await a.esperar(() => a.sala!.config.puntosPartida === 30, 5_000, 'el largo por defecto')
-    expect(a.sala!.config).toMatchObject({ puntosMalas: 15, toquesYGritos: 'cualquiera' })
+    expect(a.sala!.config).toMatchObject({ puntosMalas: 15, pie: 'persona' })
   })
 })
 
@@ -57,27 +56,27 @@ describe('tirar reyes', () => {
   })
 })
 
-describe('el pie y sus sugerencias', () => {
-  it('sugiere el que lidera, y lo oyen todos', async () => {
-    const a = await Jugador.crear(colyseus, { config: { formato: '2v2' }, botsEnVacios: true, voz: false })
+describe('el pie y sus bots', () => {
+  it('el bot no juega hasta que el pie le dice qué; si no le dice nada, al vencer el turno decide solo', async () => {
+    const a = await Jugador.crear(colyseus, { config: { formato: '2v2' }, botsEnVacios: true, tiempos: { turnoS: 15 } })
     await a.esperar(() => a.sala !== null)
     a.enviar('iniciar', {})
     await a.esperar(() => a.vista !== null)
-    // a es el asiento 0: en su equipo el pie es el 2, un bot. Lidera a, la persona.
-    expect(a.vista!.mano.enfrentamientos[0]!.lideres[0]).toBe(0)
-    a.enviar('sugerir', { sugerencia: { tipo: 'veni' } })
-    await a.esperar(() => a.de('sugerencia').length > 0, 5_000, 'la sugerencia')
-    expect(a.de('sugerencia')[0]).toEqual({ de: 0, sugerencia: { tipo: 'veni' } })
-    a.enviar('sugerir', { sugerencia: { tipo: 'vamosA', asiento: 9 } })
-    await a.esperar(() => a.de('error').length > 0, 5_000, 'el rechazo')
-    expect(a.de('error')[0]!.motivo).toBe('Sugerencia inválida')
-    // "Vamos a X" es solo a un compañero: a un rival (asiento 1) no.
-    a.enviar('sugerir', { sugerencia: { tipo: 'vamosA', asiento: 1 } })
-    await a.esperar(() => a.de('error').length > 1, 5_000, 'el rechazo del rival')
-    a.enviar('sugerir', { sugerencia: { tipo: 'vamosA', asiento: 2 } })
-    await a.esperar(() => a.de('sugerencia').length > 1, 5_000, 'la sugerencia al compañero')
-    expect(a.de('sugerencia')[1]).toEqual({ de: 0, sugerencia: { tipo: 'vamosA', asiento: 2 } })
-  })
+    const e = () => a.vista!.mano.enfrentamientos[a.vista!.mano.actual]!
+    expect(e().lideres[0]).toBe(0)
+    // a juega su carta (y canta la flor si tiene); después juega el rival bot y le toca a su bot (2).
+    a.autoJugar(3)
+    await a.esperar(() => a.de('turno').some((t) => t.pie === 0), 20_000, 'la espera de la orden')
+    a.dejarDeJugar()
+    const vuelta = e().vueltas.length
+    const turno = a.de('turno').filter((t) => t.pie === 0).at(-1)!
+    expect(turno.asientos).toEqual([2])
+    expect(a.vista!.mano.misBots.map((b) => b.asiento)).toEqual([2])
+    // Le dice "matala": juega su carta más alta.
+    a.enviar('accion', { accion: { tipo: 'mandar', jugador: 'j0', a: 2, que: 'matala' } })
+    await a.esperar(() => e().vueltas[vuelta - 1]!.jugadas.some((j) => j.asiento === 2) || e().vueltas.length > vuelta, 10_000, 'la carta del bot')
+    expect(a.de('eventos').flat().some((ev) => ev.tipo === 'orden' && ev.que === 'matala')).toBe(true)
+  }, 40_000)
 })
 
 describe('cartas que no se ven', () => {

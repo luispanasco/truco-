@@ -2,7 +2,8 @@ import { accionesValidas, esperandoA } from './acciones'
 import type { Carta } from './cartas'
 import type { ConfigSala } from './config'
 import { esPieza } from './jerarquia'
-import { liderDe } from './reglas'
+import { equipoDe, esBotMandado, liderDe } from './reglas'
+import { ORDENES_PRIVADAS } from './tipos'
 import type {
   Accion,
   CartasMostradas,
@@ -55,6 +56,8 @@ export interface VistaPartida {
     picaPica: boolean
     actual: number
     misCartas: Carta[]
+    /** Si sos el pie de bots: sus cartas (las ves para decirles qué tirar). Nunca las de una persona. */
+    misBots: { asiento: number; cartas: Carta[] }[]
     /** Tu tanto real; el de los demás no se muestra hasta la verificación. */
     miTanto: { envido: number; flor: number | null }
     enfrentamientos: VistaEnfrentamiento[]
@@ -86,6 +89,13 @@ export function vistaPara(estado: EstadoPartida, jugadorId: string): VistaPartid
       picaPica: mano.picaPica,
       actual: mano.actual,
       misCartas: mano.cartas[yo.asiento] ?? [],
+      misBots: (() => {
+        const e = mano.enfrentamientos[mano.actual]
+        if (!e || cortando) return []
+        return e.participantes
+          .filter((x) => x !== yo.asiento && equipoDe(x) === yo.equipo && esBotMandado(estado, e, x) && liderDe(estado, e, yo.equipo) === yo.asiento)
+          .map((x) => ({ asiento: x, cartas: mano.cartas[x] ?? [] }))
+      })(),
       miTanto: { envido: tanto.envidoReal, flor: tanto.florReal },
       enfrentamientos: mano.enfrentamientos.map((e): VistaEnfrentamiento => {
         // En el pica-pica las piezas de los duelos ajenos van por abajo.
@@ -100,6 +110,10 @@ export function vistaPara(estado: EstadoPartida, jugadorId: string): VistaPartid
           },
           resultado: e.resultado && ajeno ? sinPiezas(e.resultado, mano.muestra) : e.resultado,
           lideres: [liderDe(estado, e, 0), liderDe(estado, e, 1)],
+          // Lo que el pie le dice a alguien de qué carta tirar lo ven solo el pie y ese (lo de voz alta, todos).
+          ordenes: e.ordenes.filter(
+            (o) => !ORDENES_PRIVADAS.includes(o.que) || o.asiento === yo.asiento || liderDe(estado, e, equipoDe(o.asiento)) === yo.asiento,
+          ),
         }
       }),
       verificacion: mano.verificacion,
@@ -114,7 +128,9 @@ export function vistaPara(estado: EstadoPartida, jugadorId: string): VistaPartid
  * pica-pica llegan sin carta, y las cartas que se dan vuelta al final no muestran esas piezas.
  */
 export function eventosPara(eventos: readonly Evento[], asiento: number): Evento[] {
-  return eventos.map((ev): Evento => {
+  // Las órdenes del pie de qué carta tirar las ven solo el pie y el que la recibe.
+  const ajena = (ev: Evento) => ev.tipo === 'orden' && ORDENES_PRIVADAS.includes(ev.que) && ev.asiento !== asiento && ev.a !== asiento
+  return eventos.filter((ev) => !ajena(ev)).map((ev): Evento => {
     if (ev.tipo === 'cartaJugada') {
       const { ocultaPara, ...resto } = ev
       return ocultaPara?.includes(asiento) ? { ...resto, carta: null } : resto

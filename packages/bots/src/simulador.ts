@@ -66,8 +66,8 @@ export function jugarPartida(op: OpcionesPartidaBots): ResultadoPartida {
     }
     const asiento = esperandoA(estado)[0]
     if (asiento === undefined) throw new Error('La partida se trabó')
-    // Con "toques y gritos del pie", el pie le manda al compañero antes de que juegue.
-    if (estado.config.toquesYGritos === 'pie' && estado.mano.cortando === null) {
+    // El pie le puede mandar al compañero antes de que juegue.
+    if (estado.mano.cortando === null) {
       const e = enfrentamientoActual(estado)
       const lider = liderDe(estado, e, equipoDe(asiento))
       if (lider !== null && lider !== asiento && e.turno === asiento) {

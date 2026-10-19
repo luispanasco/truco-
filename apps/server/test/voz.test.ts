@@ -123,29 +123,16 @@ describe('señalización', () => {
   })
 })
 
-describe('con voz, lo del pie se dice hablando', () => {
-  it('toques y gritos quedan para cualquiera y no se aceptan sugerencias', async () => {
-    const a = await Jugador.crear(colyseus, { config: { formato: '2v2', toquesYGritos: 'pie' }, botsEnVacios: true })
+describe('con voz, el pie igual le dice a sus bots qué jugar', () => {
+  it('a una persona se le habla; a su bot se le manda con la mesa', async () => {
+    const a = await Jugador.crear(colyseus, { config: { formato: '2v2' }, botsEnVacios: true })
     await a.esperar(() => a.sala !== null)
     expect(a.sala!.voz).toBe(true)
-    expect(a.sala!.config.toquesYGritos).toBe('cualquiera')
-    // Sin voz, el pie vuelve a poder decidirlos.
-    a.enviar('configurar', { voz: false, config: { toquesYGritos: 'pie' } })
-    await a.esperar(() => a.sala!.config.toquesYGritos === 'pie', 5_000, 'el pie')
-    a.enviar('configurar', { voz: true })
-    await a.esperar(() => a.sala!.config.toquesYGritos === 'cualquiera', 5_000, 'cualquiera')
-
     a.enviar('iniciar', {})
     await a.esperar(() => a.vista !== null)
-    expect(a.vista!.config.toquesYGritos).toBe('cualquiera')
-    // a lidera su equipo (su pie es un bot), pero con voz no sugiere: lo dice.
+    // a (asiento 0) es el pie de su equipo (su compañero, el 2, es un bot).
     expect(a.vista!.mano.enfrentamientos[0]!.lideres[0]).toBe(0)
-    a.enviar('sugerir', { sugerencia: { tipo: 'veni' } })
-    await a.esperar(() => a.de('error').length > 0, 5_000, 'el rechazo')
-    expect(a.de('error')[0]!.motivo).toMatch(/voz/)
-    expect(a.de('sugerencia')).toEqual([])
-    // Nadie manda a tocar ni a gritar.
-    expect(a.vista!.accionesValidas.some((x) => x.tipo === 'mandar')).toBe(false)
+    expect(a.vista!.accionesValidas.some((x) => x.tipo === 'mandar' && x.a === 2)).toBe(true)
   })
 })
 

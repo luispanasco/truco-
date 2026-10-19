@@ -141,7 +141,7 @@ export function Inicio() {
         config: {
           picaPica: perfil.picaPica,
           puntosPartida: perfil.puntosPartida,
-          toquesYGritos: perfil.toquesDelPie ? 'pie' : 'cualquiera',
+          pie: perfil.pieUltimo ? 'ultimo' : 'persona',
           corte: perfil.corte,
         },
         tirarReyes: perfil.tirarReyes,
@@ -245,10 +245,10 @@ export function Inicio() {
             detalle="Una carta a cada uno hasta el primer rey, que reparte (y, con equipos, los primeros reyes van juntos)"
           />
           <Interruptor
-            activo={perfil.toquesDelPie}
-            alCambiar={(v) => cambiar({ toquesDelPie: v })}
-            titulo="Toques y gritos del pie"
-            detalle="En parejas y tríos, toca y grita el pie (o el que él manda) y contesta él"
+            activo={perfil.pieUltimo}
+            alCambiar={(v) => cambiar({ pieUltimo: v })}
+            titulo="El pie puede ser un bot"
+            detalle="En parejas y tríos el pie es el último de tu equipo en jugar la primera. Apagado, el pie sos vos y tus bots juegan lo que les digas"
           />
           <Interruptor
             activo={perfil.corte}

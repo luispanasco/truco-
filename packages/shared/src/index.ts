@@ -3,7 +3,7 @@
  * cambio en el protocolo no compila hasta que ambos lo acompañan.
  */
 import type { Accion, Carta, ConfigSala, Evento, Formato, VistaPartida } from '@truco/engine'
-import { envidoParaSenia, type Nivel, type Senia, type Sugerencia } from '@truco/bots'
+import { envidoParaSenia, type Nivel, type Senia } from '@truco/bots'
 import type { IdBaraja } from './barajas'
 import type { IdMesa } from './mesas'
 import type { EstadoVoz, SenalVoz } from './voz'
@@ -203,8 +203,6 @@ export interface MensajesCliente {
   pedirSenias: { asiento: number }
   /** Volver a hacerles a tus compañeros las señas que ya les hiciste en esta mano. */
   repetirSenias: Record<string, never>
-  /** Solo el pie: sugerencia en voz alta a sus compañeros ("vení", "vamos a X"). La oyen todos. */
-  sugerir: { sugerencia: Sugerencia }
   silenciar: { asiento: number; silenciar: boolean }
   reportar: { asiento: number; motivo?: string }
   /** En la espera: cambiarse a un lugar libre (para elegir equipo). */
@@ -298,7 +296,8 @@ export interface MensajesServidor {
   /** Lo que acaba de pasar en la mesa (público). */
   eventos: Evento[]
   /** A quién espera el juego y cuándo vence el turno (ms desde epoch; null si juega un bot). */
-  turno: { asientos: number[]; venceEn: number | null }
+  /** `pie`: el que tiene que decirle al bot qué jugar (le toca al bot, pero se lo espera a él). */
+  turno: { asientos: number[]; venceEn: number | null; pie?: number }
   chat: MensajeChat
   /**
    * Seña de un compañero, con el número de mano en que la hizo. `repetida` si la volvió a
@@ -314,8 +313,6 @@ export interface MensajesServidor {
    * envido, también se ve el número (`tanto`).
    */
   seniaPescada: { de: number; senia: Senia | null; tanto?: number }
-  /** El pie le sugirió algo a su equipo, en voz alta. */
-  sugerencia: { de: number; sugerencia: Sugerencia }
   /**
    * Se tiraron reyes. `tiradas` son las cartas que se dieron, en orden, con el asiento que
    * tenía cada uno al tirar; `equipos` (si se armaron) son esos asientos de los que sacaron rey.
@@ -337,7 +334,7 @@ export interface MensajesServidor {
 export type TipoMensajeCliente = keyof MensajesCliente
 export type TipoMensajeServidor = keyof MensajesServidor
 
-export { describirAccion, describirEvento, TEXTO_CANTO, TEXTO_CORTE } from './textos'
+export { describirAccion, describirEvento, TEXTO_CANTO, TEXTO_CORTE, TEXTO_ORDEN } from './textos'
 export * from './avatar'
 export * from './mesas'
 export * from './barajas'

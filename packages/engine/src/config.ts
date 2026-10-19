@@ -43,10 +43,11 @@ export interface ConfigSala {
    */
   mazoCobraEnvidoPendiente: boolean
   /**
-   * En 2v2 y 3v3 (fuera del pica-pica), quién toca y grita: 'pie' = solo el pie (o el compañero que
-   * él manda) y las respuestas al truco y al envido las da el pie; 'cualquiera' = cada uno en su turno.
+   * En 2v2 y 3v3 (fuera del pica-pica), quién es el pie: el último de cada equipo en jugar la
+   * primera vuelta. 'persona': si el equipo tiene personas, el pie es la última de ellas (un equipo
+   * de vos y bots: vos siempre). 'ultimo': el último, aunque sea un bot.
    */
-  toquesYGritos: 'pie' | 'cualquiera'
+  pie: 'persona' | 'ultimo'
   /** Antes de cada mano corta el de la izquierda del que reparte, eligiendo el corte. */
   corte: boolean
   /** Modo sucio (fase 3): permite mentir en envido y flor, con verificación al final. */
@@ -69,7 +70,7 @@ export const CONFIG_DEFAULT: ConfigSala = {
   envidoEnvido: true,
   empiezaTrasParda: 'quienEmpezo',
   mazoCobraEnvidoPendiente: true,
-  toquesYGritos: 'cualquiera',
+  pie: 'persona',
   corte: false,
   modoSucio: false,
   penalidadMentira: 'puntosAlRival',

@@ -37,8 +37,8 @@ export interface Perfil {
   picaPica: boolean
   /** A cuánto se juega (contra bots y como propuesta al crear una sala): 20, 30 o 40. */
   puntosPartida: number
-  /** Toques y gritos los decide el pie (en parejas y tríos). */
-  toquesDelPie: boolean
+  /** El pie puede ser un bot (el último del equipo en jugar la primera); si no, sos vos. */
+  pieUltimo: boolean
   /** Cortar el mazo antes de cada mano. */
   corte: boolean
   /** Tirar reyes antes de la primera partida. */
@@ -120,7 +120,7 @@ export function leerPerfil(): Perfil {
     ayudas: true,
     picaPica: true,
     puntosPartida: 30,
-    toquesDelPie: false,
+    pieUltimo: false,
     corte: false,
     tirarReyes: 'no',
     rapido: false,

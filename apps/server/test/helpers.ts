@@ -13,7 +13,8 @@ export async function levantar(
   op: OpcionesServidor = {},
 ): Promise<{ colyseus: ColyseusTestServer; dirDatos: string }> {
   const dirDatos = mkdtempSync(join(tmpdir(), 'truco-'))
-  const colyseus = await boot(crearServidor({ dirDatos, ...op }), puerto)
+  // Sin la pausa con la que un bot cumple una orden del pie (salvo que el test la pida), así las partidas no se alargan.
+  const colyseus = await boot(crearServidor({ dirDatos, ...op, tiempos: { esperaOrdenMs: [0, 0], ...op.tiempos } }), puerto)
   return { colyseus, dirDatos }
 }
 
@@ -107,11 +108,31 @@ export class Jugador {
     this.jugarSiLeToca()
   }
 
+  dejarDeJugar() {
+    this.autoRng = null
+  }
+
   private jugarSiLeToca() {
     const v = this.vista
     if (this.autoRng === null || !v || v.ganador !== null) return
+    // Como pie de un bot: cuando le toca a él, le dice qué carta jugar.
+    const e = v.mano.enfrentamientos[v.mano.actual]
+    const bot = v.esperandoA.length === 1 && v.mano.misBots.some((b) => b.asiento === v.esperandoA[0]) ? v.esperandoA[0]! : null
+    // Solo cuando le toca jugar (no si tiene que declarar o contestar) y todavía no le dijo nada.
+    const leTocaJugar =
+      bot !== null && e?.turno === bot && e.envido.estado !== 'declarando' && !e.truco.pendiente && e.flor.estado !== 'pendiente' && !e.ordenes.some((o) => o.asiento === bot)
+    if (bot !== null && !leTocaJugar) return
+    if (bot !== null) {
+      const ordenes = v.accionesValidas.filter((a) => a.tipo === 'mandar' && a.a === bot && a.que !== 'tocar' && a.que !== 'gritar')
+      if (ordenes.length === 0) return
+      const [r, sig] = siguienteAleatorio(this.autoRng)
+      this.autoRng = sig
+      this.enviar('accion', { accion: ordenes[Math.floor(r * ordenes.length)]! })
+      return
+    }
     if (!v.esperandoA.includes(v.yo.asiento) || v.accionesValidas.length === 0) return
-    const sinMazo = v.accionesValidas.filter((a) => a.tipo !== 'irseAlMazo')
+    // Las órdenes del pie se dan arriba, cuando le toca al bot: acá no (si no, se repetirían sin jugar).
+    const sinMazo = v.accionesValidas.filter((a) => a.tipo !== 'irseAlMazo' && a.tipo !== 'mandar')
     const opciones = sinMazo.length > 0 ? sinMazo : v.accionesValidas
     const [r, sig] = siguienteAleatorio(this.autoRng)
     this.autoRng = sig
@@ -141,6 +162,8 @@ export function cartasAjenasEnVista(v: VistaPartida): Carta[] {
     ...v.mano.enfrentamientos.flatMap((e) => e.vueltas.flatMap((vu) => vu.jugadas.map((j) => j.carta))),
     // Las que se dieron vuelta al terminar (flor o envido ganado) son públicas.
     ...v.mano.enfrentamientos.flatMap((e) => e.resultado?.mostradas.flatMap((m) => m.cartas) ?? []),
+    // Las de los bots que manda (si es su pie): las ve para decirles qué tirar.
+    ...v.mano.misBots.flatMap((b) => b.cartas),
     // Y las que se tiraron al cantar la mesa.
     ...v.mano.enfrentamientos.flatMap((e) => Object.values(e.flor.mesa?.mostradas ?? {}).flat()),
   ]

@@ -142,17 +142,17 @@ describe('envido', () => {
   it('si tenés más que lo que se viene diciendo, lo tenés que decir: no vale "son buenas"', () => {
     // a (1): 7, b (2): 6, c (3): 33, d (4): 28.
     const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 6e 12o', '5b 3b 11o'], '3c')
-    const { estado } = jugar(p, ['envido', 'a'], ['quiero', 'b'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'])
+    const { estado } = jugar(p, ['envido', 'a'], ['quiero', 'd'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'])
     rechaza(estado, ['declarar', 'd', 'sonBuenas'], 'Tenés más')
     // En modo sucio se puede callar.
     const sucio = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 6e 12o', '5b 3b 11o'], '3c', { modoSucio: true })
-    jugar(sucio, ['envido', 'a'], ['quiero', 'b'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'], ['declarar', 'd', 'sonBuenas'])
+    jugar(sucio, ['envido', 'a'], ['quiero', 'd'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'], ['declarar', 'd', 'sonBuenas'])
   })
 
   it('en 2v2 (jugadores 1, 2, 3 y 4): si va ganando el 1, el 3 no habla; si el 4 lo pasa, el 3 puede decir', () => {
     // a (1): 7, b (2): 6, c (3): 33, d (4): 28.
     const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 6e 12o', '5b 3b 11o'], '3c')
-    let { estado } = jugar(p, ['envido', 'a'], ['quiero', 'b'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'])
+    let { estado } = jugar(p, ['envido', 'a'], ['quiero', 'd'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'])
     expect(esperandoA(estado)).toEqual([3])
     rechaza(estado, ['declarar', 'c', 33], 'No te toca')
     ;({ estado } = jugar(estado, ['declarar', 'd', 28]))
@@ -166,7 +166,7 @@ describe('envido', () => {
   it('en 2v2 declaran en orden y el que ya va ganando no habla', () => {
     // a: 7, b: 26, c: 33, d: 5
     const p = partidaCon(['1e 7o 4b', '1b 2o 4o', '7e 6e 12b', '5e 11b 10o'], '3c')
-    let { estado } = jugar(p, ['envido', 'a'], ['quiero', 'b'], ['declarar', 'a', 7], ['declarar', 'b', 26])
+    let { estado } = jugar(p, ['envido', 'a'], ['quiero', 'd'], ['declarar', 'a', 7], ['declarar', 'b', 26])
     // d no habla porque su equipo va ganando; le toca a c.
     rechaza(estado, ['declarar', 'd', 'sonBuenas'], 'No te toca')
     ;({ estado } = jugar(estado, ['declarar', 'c', 33]))
@@ -195,7 +195,7 @@ describe('envido', () => {
     expect(eventos).toContainEqual(expect.objectContaining({ tipo: 'cantoEnvido', asiento: 2, primeroEstaElEnvido: true }))
     ;({ estado } = jugar(
       estado,
-      ['quiero', 'b'],
+      ['quiero', 'd'],
       ['declarar', 'a', 7],
       ['declarar', 'b', 'sonBuenas'],
       ['declarar', 'd', 'sonBuenas'],
@@ -443,11 +443,11 @@ describe('flor', () => {
   it('en 2v2 con flor en los dos equipos, el ganador suma 3 por cada flor suya mayor que la mejor del rival', () => {
     // a: 37 (equipo 0); b: 38 y d: 34 (equipo 1). Gana b, pero la de d no le gana a la de a: cobra 3.
     const p = partidaCon(['7e 6e 4e', '7b 6b 5b', '1e 4o 12b', '7o 6o 1o'], '3c')
-    const { estado } = jugar(p, ['flor', 'a'], ['flor', 'b'], ['flor', 'd'], ['truco', 'a'], ['noQuiero', 'b'])
+    const { estado } = jugar(p, ['flor', 'a'], ['flor', 'b'], ['flor', 'd'], ['truco', 'a'], ['noQuiero', 'd'])
     expect(estado.puntos).toEqual([1, 3])
     // a: 38 y c: 37 (equipo 0); d: 33 (equipo 1). Las dos le ganan a la de d: el equipo 0 cobra 6.
     const p2 = partidaCon(['7e 6e 5e', '1b 2e 3o', '7o 6o 4o', '7b 6b 2b'], '3c')
-    const r2 = jugar(p2, ['flor', 'd'], ['flor', 'a'], ['flor', 'c'], ['truco', 'a'], ['noQuiero', 'b'])
+    const r2 = jugar(p2, ['flor', 'd'], ['flor', 'a'], ['flor', 'c'], ['truco', 'a'], ['noQuiero', 'd'])
     expect(r2.estado.puntos).toEqual([3 + 3 + 1, 0])
   })
 

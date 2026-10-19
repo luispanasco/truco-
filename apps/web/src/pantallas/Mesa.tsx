@@ -253,6 +253,8 @@ export function Mesa() {
       <ResumenSenias marcas={resumenDe(senias, a, vista.mano.numero)} apodo={sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`} lado={ladoResumen(rel(a))} />
     ) : undefined
   const pieAbierto = pieAbiertoEn === vista.mano.numero && !finDeMano
+  // Tu bot espera que le digas qué jugar (sos su pie): el panel se abre solo.
+  const botEspera = !finDeMano && turno.pie === yo && turno.asientos.length === 1 ? turno.asientos[0]! : null
   const misHechas = hechas.mano === vista.mano.numero ? hechas.senias : []
   // Reloj del turno (solo online, cuando el juego espera a una persona).
   const miReloj = meToca && turno.asientos.includes(yo) ? turno.venceEn : null
@@ -426,8 +428,9 @@ export function Mesa() {
             {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
             {hayCompanieros && <BotonSenias alTocar={() => setPanel('senias')} cerrado={seniasCerradas} />}
             {!finDeMano && <BotonPasar vista={vista} activo={pasando} alCambiar={setPasando} />}
-            {/* Con chat de voz, lo del pie se dice hablando. */}
-            {!finDeMano && !sala.voz && <BotonPie vista={vista} abierto={pieAbierto} alCambiar={(a) => setPieAbiertoEn(a ? vista.mano.numero : null)} />}
+            {!finDeMano && (
+              <BotonPie vista={vista} abierto={pieAbierto} esperando={botEspera} alCambiar={(a) => setPieAbiertoEn(a ? vista.mano.numero : null)} />
+            )}
             {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
           </span>
         </div>
@@ -471,13 +474,13 @@ export function Mesa() {
           )}
         </div>
         {/* Lo del pie flota sobre el borde del paño, arriba de tu lugar: no tapa la mano ni los cantos. */}
-        {pieAbierto && (
+        {(pieAbierto || botEspera !== null) && (
           <PanelPie
             vista={vista}
             apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
-            alSugerir={(sugerencia) => enviar('sugerir', { sugerencia })}
             alElegir={jugar}
             alCerrar={() => setPieAbiertoEn(null)}
+            esperando={botEspera}
           />
         )}
         {explicacion && <GloboExplicacion key={explicacion.id} explicacion={explicacion} alCerrar={cerrarExplicacion} />}

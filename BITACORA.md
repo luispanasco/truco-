@@ -1135,3 +1135,42 @@ Pedido del usuario: en 2v2, una contraflor al resto querida "se buggeaba y no se
 - **Pendientes a definir con el usuario:** el truco antes de la flor, y rehacer el pie.
 - **La flor va primero que el truco (opción B, elegida por el usuario):** si te gritan y alguien de tu equipo tiene flor sin cantar, la canta antes de que el equipo conteste o suba. Con flor sin cantar tampoco se puede gritar en tu turno: primero la flor, o "flor y truco".
 - **Tests:** la ayuda `cartasAjenasEnVista` del servidor ahora acepta como públicas las cartas tiradas al cantar la mesa. Hacía fallar a veces la partida 2v2 completa.
+
+## El pie, rehecho — 2026-10-19
+
+Reglas del usuario. En 1v1 no hay pie. En 2v2 el pie juega con un bot o con una persona; en 3v3, con dos bots o con un bot y una persona. El pie es el último del equipo en jugar la primera, y si el equipo sos vos con bots, el pie sos vos. El pie dicta el juego: al bot le manda, a una persona solo le insinúa.
+
+- **Motor:**
+  - **Quién es el pie:** la opción `toquesYGritos` se reemplazó por `pie`:
+    - `'persona'` (por defecto): la última persona del equipo en jugar la primera;
+    - `'ultimo'`: el último, aunque sea un bot. Es la "otra manera de jugar" que pidió el usuario.
+  - **Bots que manda una persona** (`esBotMandado`): no cantan por su cuenta salvo la flor. Tocan o gritan solo si los mandan.
+  - **Contesta siempre el pie:** al truco y al envido, en todos los modos.
+  - **Las órdenes** (`mandar`, `QueManda`):
+    - tocar y gritar;
+    - `carta` (una carta puntual, solo a un bot que mandás vos);
+    - dejala, matala y jugaAlgo;
+    - vení y vamosA (a otro compañero que todavía no jugó en la vuelta);
+    - las de qué carta tirar valen hasta que el compañero juega, y una reemplaza a la otra.
+  - **Lo que se ve:**
+    - `vista.mano.misBots`: el pie ve las cartas de sus bots, nunca las de una persona;
+    - las órdenes de qué carta tirar las ven solo el pie y el que la recibe (`ORDENES_PRIVADAS`, filtradas en la vista y en `eventosPara`).
+- **Bots:** cumplen la orden (`cartaDeOrden`). Sin orden, eligen solos la carta pero no cantan. "Vení" y "vamos a" son su carta más baja.
+- **Servidor:**
+  - si le toca jugar a un bot cuyo pie es una persona conectada y no le dijo nada, se espera el tiempo de un turno. El mensaje `turno` lleva `pie`;
+  - si el pie no le dice nada, el bot decide solo, sin penalidad;
+  - si el bot tiene que declarar, contestar o cantar la flor, lo hace solo.
+  - Se sacaron las sugerencias viejas (`sugerir` y `sugerencia`): ahora todo es `mandar`.
+- **Contra la compu:** igual. Si no le decís nada a tu bot, decide solo a los 25 s. Con "juego rápido" también te espera.
+- **Web:**
+  - **Panel del pie:** por compañero, las cartas de tu bot para tocar ("Tirá el 3 de oros") y los botones Dejala, ¡Matala!, Jugá algo, ¡Vení a mí!, ¡Vamos a X!, ¡Tocá! y ¡Gritá!;
+  - **Cuando tu bot espera:** el panel se abre solo ("Chela espera: ¿qué juega?") y el botón "Pie" queda marcado;
+  - **Una persona:** "se lo insinuás";
+  - **Globos:** "Chela: ¡Matala!";
+  - **Opción de sala:** "El pie: siempre una persona / puede ser un bot". Contra la compu, el interruptor "El pie puede ser un bot";
+  - **Con chat de voz:** el botón del pie sigue, para mandar a los bots.
+- **Tests:**
+  - engine 170: quién es el pie, contesta el pie, bots mandados, órdenes de carta, "vamos a" y propiedades con bots;
+  - bots 25: el bot cumple matala, dejala, jugá algo y la carta;
+  - server 103: el bot espera la orden y la cumple. Los jugadores de prueba ahora mandan a su bot cuando le toca, y la pausa de reacción a la orden es 0 en los tests;
+  - web 298.

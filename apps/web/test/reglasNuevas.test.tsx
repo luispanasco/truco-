@@ -14,9 +14,9 @@ const ids = ['a', 'b', 'c', 'd']
 
 afterEach(cleanup)
 
-function dosVsDos(config = {}): EstadoPartida {
+function dosVsDos(config = {}, bots: number[] = []): EstadoPartida {
   return crearPartida({
-    jugadores: ids.map((id) => ({ id, nombre: id.toUpperCase() })),
+    jugadores: ids.map((id, i) => ({ id, nombre: id.toUpperCase(), ...(bots.includes(i) ? { bot: true } : {}) })),
     semilla: 3,
     config: { formato: '2v2', ...config },
     repartoFijo: {
@@ -34,41 +34,38 @@ function dosVsDos(config = {}): EstadoPartida {
 describe('el panel del pie', () => {
   const apodo = (a: number) => ids[a]!.toUpperCase()
 
-  it('aparece solo para el que lidera, con "Vení" y "Vamos a"', () => {
+  it('aparece solo para el pie; a una persona se le insinúa (sin ver sus cartas)', () => {
     const p = dosVsDos()
-    const alSugerir = vi.fn()
-    const { container } = render(<PanelPie vista={vistaPara(p, 'a')} apodo={apodo} alSugerir={alSugerir} alElegir={() => {}} />)
-    expect(container.querySelector('.panel-pie')).toBeNull()
-    render(<PanelPie vista={vistaPara(p, 'c')} apodo={apodo} alSugerir={alSugerir} alElegir={() => {}} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Vení' }))
-    expect(alSugerir).toHaveBeenCalledWith({ tipo: 'veni' })
-    // "Vamos a" es solo a un compañero: a A sí, a los rivales (B y D) no.
-    fireEvent.click(screen.getByRole('button', { name: 'Vamos a A' }))
-    expect(alSugerir).toHaveBeenCalledWith({ tipo: 'vamosA', asiento: 0 })
-    expect(screen.queryByRole('button', { name: 'Vamos a B' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Vamos a D' })).toBeNull()
-  })
-
-  it('con "toques y gritos del pie" manda a tocar o a gritar', () => {
-    const p = dosVsDos({ toquesYGritos: 'pie' })
     const alElegir = vi.fn()
-    render(<PanelPie vista={vistaPara(p, 'c')} apodo={apodo} alSugerir={() => {}} alElegir={alElegir} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Tocá, A' }))
-    expect(alElegir).toHaveBeenCalledWith({ tipo: 'mandar', jugador: 'c', a: 0, que: 'tocar' })
-    expect(screen.getByRole('button', { name: 'Gritá, A' })).toBeTruthy()
+    const { container } = render(<PanelPie vista={vistaPara(p, 'a')} apodo={apodo} alElegir={alElegir} />)
+    expect(container.querySelector('.panel-pie')).toBeNull()
+    render(<PanelPie vista={vistaPara(p, 'c')} apodo={apodo} alElegir={alElegir} />)
+    expect(screen.getByText('A A (se lo insinuás)')).toBeTruthy()
+    expect(document.querySelector('.pie-carta')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: '¡Matala!' }))
+    expect(alElegir).toHaveBeenCalledWith({ tipo: 'mandar', jugador: 'c', a: 0, que: 'matala' })
+    for (const texto of ['Dejala', 'Jugá algo', '¡Vení a mí!', '¡Tocá!', '¡Gritá!']) expect(screen.getByRole('button', { name: texto })).toBeTruthy()
   })
 
-  it('se abre con el botón "Pie" (marcado si puede mandar) y se cierra al elegir', () => {
-    const p = dosVsDos({ toquesYGritos: 'pie' })
-    const { container } = render(<BotonPie vista={vistaPara(p, 'a')} abierto={false} alCambiar={() => {}} />)
-    expect(container.querySelector('.boton-abrir-pie')).toBeNull()
+  it('a tu bot le decís qué carta tirar: ves sus cartas', () => {
+    // a es persona y pie; c es su bot.
+    const p = dosVsDos({}, [1, 2, 3])
+    const alElegir = vi.fn()
+    render(<PanelPie vista={vistaPara(p, 'a')} apodo={apodo} alElegir={alElegir} esperando={2} />)
+    expect(screen.getByText('C espera: ¿qué juega?')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Tirá el 12 de bastos' }))
+    expect(alElegir).toHaveBeenCalledWith({ tipo: 'mandar', jugador: 'a', a: 2, que: 'carta', carta: c(12, 'basto') })
+  })
+
+  it('se abre con el botón "Pie" (marcado si tu bot espera) y se cierra al elegir', () => {
+    const p = dosVsDos({}, [1, 2, 3])
     const alCambiar = vi.fn()
-    render(<BotonPie vista={vistaPara(p, 'c')} abierto={false} alCambiar={alCambiar} />)
-    fireEvent.click(screen.getByRole('button', { name: /^Pie: podés mandar/ }))
+    render(<BotonPie vista={vistaPara(p, 'a')} abierto={false} alCambiar={alCambiar} esperando={2} />)
+    fireEvent.click(screen.getByRole('button', { name: /^Pie: tu bot espera/ }))
     expect(alCambiar).toHaveBeenCalledWith(true)
     const alCerrar = vi.fn()
-    render(<PanelPie vista={vistaPara(p, 'c')} apodo={apodo} alSugerir={() => {}} alElegir={() => {}} alCerrar={alCerrar} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Vení' }))
+    render(<PanelPie vista={vistaPara(p, 'a')} apodo={apodo} alElegir={() => {}} alCerrar={alCerrar} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Dejala' }))
     expect(alCerrar).toHaveBeenCalled()
   })
 })
@@ -225,7 +222,7 @@ describe('contra la compu con las reglas nuevas', () => {
       demoraBots: [0, 0],
       semilla: 5,
       tirarReyes: 'reparteYEquipos',
-      config: { corte: true, toquesYGritos: 'pie', puntosPartida: 20 },
+      config: { corte: true, puntosPartida: 20 },
     })
     const mensajes: MensajeServidor[] = []
     let i = 0
