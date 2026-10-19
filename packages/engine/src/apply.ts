@@ -290,7 +290,12 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if (siguienteDeclarante(e) !== a) return 'No te toca declarar'
       if (debeCantar) return 'Tenés flor: cantala'
       const mejor = mejorDeclaracion(e)
-      if (accion.tanto === 'sonBuenas') return mejor ? null : 'El primero tiene que decir su tanto'
+      if (accion.tanto === 'sonBuenas') {
+        if (!mejor) return 'El primero tiene que decir su tanto'
+        // Si tenés más que lo que se viene diciendo, lo tenés que decir (en modo sucio se puede callar).
+        if (!cfg.modoSucio && supera(e, { asiento: a, tanto: tanto.envidoReal }, mejor)) return 'Tenés más: lo tenés que decir'
+        return null
+      }
       const t = accion.tanto
       if (!Number.isInteger(t) || t < 0 || t > MAX_ENVIDO) return 'Tanto inválido'
       if (!cfg.modoSucio && t !== tanto.envidoReal) return `Tu tanto es ${tanto.envidoReal}`

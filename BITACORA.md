@@ -1126,3 +1126,10 @@ Pedido del usuario: en 2v2, una contraflor al resto querida "se buggeaba y no se
 - **Un caso que trababa la partida, encontrado con las partidas al azar:** el de la flor se iba al mazo solo y le cantaban contraflor. Ahora no se puede cantar contraflor si las flores del rival se fueron, y si el que tenía que contestar se va solo con la contraflor pendiente, cuenta como "me achico".
 - **Tests:** engine 165 (nuevos: comparación en el momento, al resto termina el partido, canta la mesa paso a paso, contesta solo el de flor), bots 24, server 103, web 298 (nuevo: el panel de canta la mesa).
 - **Pendiente:** `reglasNuevas` "pica-pica, piezas de otro duelo" sigue fallando de vez en cuando, como antes.
+
+## Mejoras del archivo del usuario (`secretos/trucoMejoras.txt`) — 2026-10-18
+
+- **Envido: si tenés más, lo tenés que decir.** Al declarar, si tu tanto supera lo que se viene diciendo, no vale "son buenas". En modo sucio sí se puede callar.
+- **Las señas esperan al reparto.** No se pueden hacer mientras se corta o se reparte (`MOTIVO_SENIA_TEMPRANO`). Lo controlan el servidor, el modo contra la compu y el botón de la mesa, que queda apagado hasta que las cartas están en la mano.
+- **El resumen de señas va al costado del avatar,** no encima. Está adentro de `.asiento-avatar`, centrado en su alto, del lado de adentro de la mesa: el de enfrente a su izquierda (a la derecha si ahí está el mazo) y los de la izquierda de la pantalla a su derecha. Se sacaron las reglas viejas de ubicación. Revisado en círculos, sentados y perspectiva, en 2v2 y 3v3.
+- **Pendientes a definir con el usuario:** el truco antes de la flor, y rehacer el pie.

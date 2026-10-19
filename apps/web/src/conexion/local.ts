@@ -21,6 +21,7 @@ import { crearBot, type Bot, type Nivel, type Senia, type SeniasRecibidas, type 
 import {
   MOTIVO_ENVIDO_CON_FLOR,
   MOTIVO_SENIA_TARDE,
+  MOTIVO_SENIA_TEMPRANO,
   MOTIVO_SIN_SENIAS,
   envidoDeSenia,
   avatarAlAzar,
@@ -148,6 +149,9 @@ export class ConexionLocal implements Conexion {
           this.emitir('error', { motivo: MOTIVO_SIN_SENIAS })
         } else if (this.terminada || n <= 2 || this.estado.mano.picaPica) {
           this.emitir('error', { motivo: 'Ahora no hay compañeros a quien hacerle señas' })
+        } else if (this.estado.mano.cortando !== null || !this.estado.mano.muestra) {
+          // Las señas se hacen con las cartas en la mano: no mientras se corta o se reparte.
+          this.emitir('error', { motivo: MOTIVO_SENIA_TEMPRANO })
         } else if (this.configSenias.momento === 'antesDeJugar' && yaJugoEnLaMano(this.estado.mano, 0)) {
           this.emitir('error', { motivo: MOTIVO_SENIA_TARDE })
         } else if ((datos as MensajesCliente['senia']).senia === 'envido' && envidoDeSenia(this.estado.mano, 0) === null) {

@@ -127,6 +127,9 @@ export function yaJugoEnLaMano(mano: { enfrentamientos: { vueltas: { jugadas: { 
 /** Texto del rechazo cuando ya pasó el momento de hacer señas. */
 export const MOTIVO_SENIA_TARDE = 'En esta sala las señas se hacen antes de jugar tu primera carta'
 
+/** Texto del rechazo de una seña antes de que se repartan las cartas (mientras se corta o se reparte). */
+export const MOTIVO_SENIA_TEMPRANO = 'Esperá a que se repartan las cartas'
+
 /** Texto del rechazo de la seña de envido con flor: con flor el envido no se juega. */
 export const MOTIVO_ENVIDO_CON_FLOR = 'Con flor no hay envido: marcale la flor'
 

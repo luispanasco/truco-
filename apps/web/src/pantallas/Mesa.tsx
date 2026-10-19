@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
 import { envidoParaSenia, seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
-import { ESPERA_PEDIR_SENIAS_MS, MOTIVO_SENIA_TARDE, yaJugoEnLaMano } from '@truco/shared'
+import { ESPERA_PEDIR_SENIAS_MS, MOTIVO_SENIA_TARDE, MOTIVO_SENIA_TEMPRANO, yaJugoEnLaMano } from '@truco/shared'
 import { BotonSonido } from '../componentes/AjustesSonido'
 import { esPiezaOMata } from '../senias'
 import { explicarCarta, explicarTanto } from '../ayudas'
@@ -199,7 +199,13 @@ export function Mesa() {
     const numero = vista.mano.numero
     setHechas((h) => ({ mano: numero, senias: h.mano === numero ? [...new Set([...h.senias, s])] : [s] }))
   }
-  const seniasCerradas = sala.senias.momento === 'antesDeJugar' && yaJugoEnLaMano(vista.mano, yo) ? MOTIVO_SENIA_TARDE : null
+  // Las señas esperan a que las cartas estén en la mano (después del corte y del reparto).
+  const seniasCerradas =
+    cortando !== null || !muestra || repartiendo
+      ? MOTIVO_SENIA_TEMPRANO
+      : sala.senias.momento === 'antesDeJugar' && yaJugoEnLaMano(vista.mano, yo)
+        ? MOTIVO_SENIA_TARDE
+        : null
   // Mantener apretada una carta hace su seña.
   const seniaDeMiCarta = (c: TCarta) => {
     const s = muestra ? seniaDeCarta(c, muestra) : null
@@ -234,9 +240,12 @@ export function Mesa() {
   // mazo con la muestra quedó justo donde va (repartió ese compañero, o en 3v3 el de enfrente
   // para el de la izquierda), se pasa al otro lado.
   const reparteRel = rel(vista.mano.reparte)
-  const ladoResumen = (pos: number): 'derecha' | 'abajo' | undefined => {
+  // Al costado del avatar, del lado de adentro de la mesa: los de la izquierda de la pantalla lo
+  // llevan a su derecha; el de enfrente, a su izquierda (o a su derecha si ahí está el mazo).
+  const ladoResumen = (pos: number): 'derecha' | undefined => {
     if (n === 4 && pos === 2 && reparteRel === 2) return 'derecha'
-    if (n === 6 && ((pos === 2 && reparteRel === 2) || (pos === 4 && reparteRel === 3))) return 'abajo'
+    if (n === 6 && pos === 3 && reparteRel === 3) return 'derecha'
+    if ((n === 4 && pos === 3) || (n === 6 && (pos === 4 || pos === 5))) return 'derecha'
     return undefined
   }
   const resumenPara = (a: number) =>

@@ -139,6 +139,16 @@ describe('envido', () => {
     expect(enfrentamientoActual(estado).envido.ganador).toBe(1)
   })
 
+  it('si tenés más que lo que se viene diciendo, lo tenés que decir: no vale "son buenas"', () => {
+    // a (1): 7, b (2): 6, c (3): 33, d (4): 28.
+    const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 6e 12o', '5b 3b 11o'], '3c')
+    const { estado } = jugar(p, ['envido', 'a'], ['quiero', 'b'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'])
+    rechaza(estado, ['declarar', 'd', 'sonBuenas'], 'Tenés más')
+    // En modo sucio se puede callar.
+    const sucio = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 6e 12o', '5b 3b 11o'], '3c', { modoSucio: true })
+    jugar(sucio, ['envido', 'a'], ['quiero', 'b'], ['declarar', 'a', 7], ['declarar', 'b', 'sonBuenas'], ['declarar', 'd', 'sonBuenas'])
+  })
+
   it('en 2v2 (jugadores 1, 2, 3 y 4): si va ganando el 1, el 3 no habla; si el 4 lo pasa, el 3 puede decir', () => {
     // a (1): 7, b (2): 6, c (3): 33, d (4): 28.
     const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 6e 12o', '5b 3b 11o'], '3c')

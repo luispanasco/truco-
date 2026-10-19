@@ -35,6 +35,7 @@ import {
   ESPERA_PEDIR_SENIAS_MS,
   MOTIVO_ENVIDO_CON_FLOR,
   MOTIVO_SENIA_TARDE,
+  MOTIVO_SENIA_TEMPRANO,
   MOTIVO_SIN_SENIAS,
   SENIAS_DEFAULT,
   envidoDeSenia,
@@ -436,6 +437,8 @@ export class SalaTruco extends Room {
       if (!(SENIAS as readonly string[]).includes(senia)) throw new Rechazo('Seña inválida')
       if (!this.configSenias.habilitadas) throw new Rechazo(MOTIVO_SIN_SENIAS)
       if (!this.hayCompanieros()) throw new Rechazo('Ahora no hay compañeros a quien hacerle señas')
+      // Las señas se hacen con las cartas en la mano: no mientras se corta o se reparte.
+      if (this.estado!.mano.cortando !== null || !this.estado!.mano.muestra) throw new Rechazo(MOTIVO_SENIA_TEMPRANO)
       if (this.configSenias.momento === 'antesDeJugar' && yaJugoEnLaMano(this.estado!.mano, asiento)) {
         throw new Rechazo(MOTIVO_SENIA_TARDE)
       }

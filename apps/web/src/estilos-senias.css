@@ -694,8 +694,7 @@
 /*
  * Cartelito con lo que te marcó cada compañero en la mano (preferencia propia): una pila de
  * fichitas, una por seña. Va fuera del flujo del asiento (no lo corre) y no se toca: el avatar
- * sigue abriendo el panel del compañero. Por defecto, arriba del avatar; el de enfrente lo
- * lleva a su izquierda (arriba está el borde de la mesa).
+ * sigue abriendo el panel del compañero.
  */
 .resumen-senias {
   position: absolute;
@@ -737,36 +736,22 @@
   display: inline-block;
   scale: -1 1;
 }
-/* El de enfrente: a la izquierda de su avatar, contra él. */
-:is(.n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .resumen-senias {
+/*
+ * Al costado del avatar, no encima (pedido del usuario): va dentro de .asiento-avatar, centrado en
+ * su alto, a la izquierda; con .resumen-derecha, a la derecha.
+ */
+.asiento .asiento-avatar > .resumen-senias {
+  top: 50%;
   bottom: auto;
-  top: 2px;
   left: auto;
-  right: calc(50% + 30px);
-  translate: none;
+  right: calc(100% + 6px);
+  translate: 0 -50%;
   align-items: flex-end;
 }
-/* En 3 contra 3, los de los costados de arriba: arriba del avatar, contra su borde de la mesa. */
-.n-6 .asiento.pos-2 .resumen-senias {
-  left: auto;
-  right: 0;
-  translate: none;
-  align-items: flex-end;
-}
-.n-6 .asiento.pos-4 .resumen-senias {
-  left: 0;
-  translate: none;
-  align-items: flex-start;
-}
-/* El mazo quedó donde iba: el de enfrente lo lleva a su derecha y los de los costados, abajo. */
-.asiento.asiento .resumen-senias.resumen-derecha {
+.asiento .asiento-avatar > .resumen-senias.resumen-derecha {
   right: auto;
-  left: calc(50% + 30px);
+  left: calc(100% + 6px);
   align-items: flex-start;
-}
-.asiento.asiento .resumen-senias.resumen-abajo {
-  top: calc(100% + 3px);
-  bottom: auto;
 }
 @media (prefers-reduced-motion: reduce) {
   .resumen-senias {

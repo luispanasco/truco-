@@ -70,7 +70,7 @@ export function ResumenSenias({
   marcas: readonly Marca[]
   apodo: string
   /** Para no tapar el mazo (o la muestra) cuando quedan donde va el resumen: al otro lado. */
-  lado?: 'derecha' | 'abajo'
+  lado?: 'derecha'
 }) {
   if (marcas.length === 0) return null
   const completo = marcas.map((m) => significadoDe(m.senia, m.tanto)).join(', ')

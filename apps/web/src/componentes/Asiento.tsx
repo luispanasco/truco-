@@ -196,8 +196,9 @@ export function Asiento({
           )}
         </>
       )}
-      {resumen}
       <div className="asiento-avatar">
+        {/* Al costado del avatar (no encima): lo que te marcó en la mano. */}
+        {resumen}
         <Avatar lugar={lugar} gesto={gesto} busto={busto} />
         <AnilloVoz asiento={lugar.asiento} />
         {conReloj && <AnilloReloj venceEn={venceEn} />}
