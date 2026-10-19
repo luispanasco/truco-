@@ -142,12 +142,12 @@ describe('pantallas online', () => {
 })
 
 describe('inicio online', () => {
-  it('sin apodo, las opciones online están desactivadas', () => {
+  it('sin apodo, lo online pide el apodo antes de seguir', async () => {
     render(<App ruta="/" />)
-    expect(screen.getByRole('button', { name: /Crear sala/ })).toHaveProperty('disabled', true)
-    expect(screen.getByRole('button', { name: /Buscar partida/ })).toHaveProperty('disabled', true)
+    fireEvent.click(screen.getByRole('button', { name: /Unirme con código/ }))
     fireEvent.change(screen.getByPlaceholderText('¿Cómo te dicen?'), { target: { value: 'Luis' } })
-    expect(screen.getByRole('button', { name: /Unirme con código/ })).toHaveProperty('disabled', false)
+    fireEvent.click(screen.getByRole('button', { name: '¡A jugar!' }))
+    expect(await screen.findByLabelText('Código de la sala')).toBeTruthy()
   })
 
   it('ofrece volver a una partida en curso y se puede descartar', () => {

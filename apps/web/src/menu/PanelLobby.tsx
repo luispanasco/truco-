@@ -2,11 +2,11 @@ import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { FORMATOS, NIVELES, Segmentado, SelectorLargo } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
-import { ConexionLocal } from '../conexion/local'
 import { useCuenta } from '../cuenta/cuenta'
 import { useJuego } from '../estado'
-import type { Perfil } from '../perfil'
-import { IconoCrear, IconoLobby } from './Iconos'
+import { leerPerfil, type Perfil } from '../perfil'
+import { conexionContraLaCompu } from './contraLaCompu'
+import { IconoCompu, IconoCrear, IconoLobby } from './Iconos'
 
 /** Un atajo del lobby a otra pantalla: ícono, título y una línea que explica. */
 function Atajo({ icono, titulo, detalle, alTocar }: { icono: ReactNode; titulo: string; detalle: string; alTocar: () => void }) {
@@ -30,46 +30,31 @@ function Atajo({ icono, titulo, detalle, alTocar }: { icono: ReactNode; titulo: 
  * La pantalla de la derecha del menú: contra la compu (formato, nivel de los bots y las reglas
  * de esa partida), el ranking y los amigos.
  */
-export function PanelLobby({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Partial<Perfil>) => void }) {
+export function PanelLobby({
+  perfil,
+  cambiar,
+  conApodo,
+}: {
+  perfil: Perfil
+  cambiar: (p: Partial<Perfil>) => void
+  /** Hace lo pedido; sin apodo, antes lo pide. */
+  conApodo: (accion: () => void) => void
+}) {
   const navegar = useNavigate()
-  const apodo = perfil.apodo.trim()
   const adentro = useCuenta((s) => s.estado === 'adentro')
 
-  const jugarContraBots = () => {
-    useJuego.getState().conectar(
-      new ConexionLocal({
-        apodo,
-        avatar: perfil.avatar,
-        formato: perfil.formato,
-        nivelBots: perfil.nivelBots,
-        ayudas: perfil.ayudas,
-        cartasJugadas: perfil.cartasJugadas,
-        mesa: perfil.mesa,
-        baraja: perfil.baraja,
-        config: {
-          picaPica: perfil.picaPica,
-          puntosPartida: perfil.puntosPartida,
-          pie: perfil.pieUltimo ? 'ultimo' : 'persona',
-          corte: perfil.corte,
-        },
-        tirarReyes: perfil.tirarReyes,
-        senias: {
-          habilitadas: perfil.seniasHabilitadas,
-          pescar: perfil.pescarSenias ? 'gesto' : 'nunca',
-          momento: perfil.seniasAntesDeJugar ? 'antesDeJugar' : 'libre',
-        },
-        ...(perfil.rapido ? { demoraBots: [350, 700] as [number, number], pausas: { vuelta: 1500, mano: 5000 } } : {}),
-      }),
-    )
-    navegar('/mesa')
-  }
+  const jugarContraBots = () =>
+    conApodo(() => {
+      useJuego.getState().conectar(conexionContraLaCompu(leerPerfil()))
+      navegar('/mesa')
+    })
 
   return (
     <>
       <h2 className="panel-titulo">Lobby</h2>
       <section className="tarjeta contra-la-compu" aria-labelledby="titulo-compu">
         <h2 id="titulo-compu">
-          <span aria-hidden="true">🤖</span> Contra la compu
+          <IconoCompu clase="titulo-icono" /> Contra la compu
         </h2>
         <p className="nota-izq">Para practicar, sin internet. No cuenta para el Elo.</p>
         <div className="campo">
@@ -127,10 +112,9 @@ export function PanelLobby({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: P
           />
           <Interruptor activo={perfil.rapido} alCambiar={(v) => cambiar({ rapido: v })} titulo="Juego rápido" detalle="Los bots juegan sin pensar tanto" />
         </details>
-        <button type="button" className="boton boton-grande boton-relieve" disabled={!apodo} onClick={jugarContraBots}>
+        <button type="button" className="boton boton-grande boton-relieve" onClick={jugarContraBots}>
           Jugar
         </button>
-        {!apodo && <p className="nota">Poné tu apodo para jugar.</p>}
       </section>
 
       <div className="atajos-lobby">

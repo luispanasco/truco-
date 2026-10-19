@@ -1,47 +1,42 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import type { Nivel } from '@truco/bots'
+import type { Formato } from '@truco/engine'
 import { AmigosConectados } from '../componentes/Amistad'
 import { Carta } from '../componentes/Carta'
 import { datosUnirse, destinoAlEntrar, MensajeError } from '../componentes/Online'
 import { ConexionOnline, descartarPartidaGuardada, leerPartidaGuardada, motivoError } from '../conexion/online'
-import { useCuenta } from '../cuenta/cuenta'
+import { FORMATOS, NIVELES } from '../componentes/FormularioSala'
 import { useJuego } from '../estado'
-import type { Perfil } from '../perfil'
-import { IconoBuscar, IconoCrear, IconoLlave } from './Iconos'
+import { leerPerfil, MODOS_JUGAR, type Perfil } from '../perfil'
+import { conexionContraLaCompu } from './contraLaCompu'
+import { IconoBuscar, IconoCompu, IconoCrear, IconoLlave } from './Iconos'
 
-/** Un botón grande del menú, con relieve: ícono, título y una línea que explica. */
-function BotonJugar({
+/** Un botón chico del menú (crear sala, unirme): ícono y título, con la explicación debajo. */
+function BotonChico({
   icono,
   titulo,
   detalle,
   deshabilitado,
-  clase,
   alTocar,
 }: {
   icono: ReactNode
   titulo: string
   detalle: string
   deshabilitado: boolean
-  clase: string
   alTocar: () => void
 }) {
   return (
-    <motion.button
-      type="button"
-      className={`boton-jugar ${clase}`}
-      disabled={deshabilitado}
-      onClick={alTocar}
-      variants={{ antes: { opacity: 0, y: 14 }, despues: { opacity: 1, y: 0 } }}
-    >
-      <span className="boton-jugar-icono" aria-hidden="true">
+    <button type="button" className="boton-chico" disabled={deshabilitado} onClick={alTocar}>
+      <span className="boton-chico-icono" aria-hidden="true">
         {icono}
       </span>
-      <span className="boton-jugar-texto">
+      <span className="boton-chico-texto">
         <strong>{titulo}</strong>
         <small>{detalle}</small>
       </span>
-    </motion.button>
+    </button>
   )
 }
 
@@ -112,28 +107,48 @@ function PartidaEnCurso({ perfil, enLinea }: { perfil: Perfil; enLinea: boolean 
   )
 }
 
+const NOMBRE_FORMATO = Object.fromEntries(FORMATOS.map(([f, t]) => [f, t])) as Record<Formato, string>
+const NOMBRE_NIVEL = Object.fromEntries(NIVELES) as Record<Nivel, string>
+
 /**
- * La pantalla del medio del menú, la que abre: el juego es online. Crear una sala, unirse con
- * un código o buscar partida, y tus amigos conectados.
+ * La pantalla del medio del menú, la que abre, como en los juegos de celular: arriba el nombre,
+ * al medio el modo (contra la compu o buscar partida, con flechas o deslizando) y el botón grande
+ * de jugar; debajo, crear sala y unirme con código, y tus amigos conectados.
  */
 export function PanelJugar({
   perfil,
   cambiar,
   enLinea,
-  alEntrar,
+  conApodo,
+  alConfigurarCompu,
 }: {
   perfil: Perfil
   cambiar: (p: Partial<Perfil>) => void
   enLinea: boolean
-  alEntrar: () => void
+  /** Hace lo pedido; sin apodo, antes lo pide. */
+  conApodo: (accion: () => void) => void
+  /** Ir a elegir el formato, el nivel y las reglas de contra la compu (el lobby). */
+  alConfigurarCompu: () => void
 }) {
   const navegar = useNavigate()
-  const apodo = perfil.apodo.trim()
-  // Sin apodo (la primera vez), se pide acá mismo; queda a la vista mientras se escribe.
-  const [pedirApodo] = useState(() => !apodo)
-  const afuera = useCuenta((s) => s.estado === 'afuera' || s.estado === 'entrando')
-  const online = !apodo || !enLinea
+  const sinMovimiento = useReducedMotion() ?? false
+  const i = MODOS_JUGAR.indexOf(perfil.modoJugar)
+  // Para qué lado entra el modo nuevo: 1 desde la derecha, -1 desde la izquierda.
+  const [sentido, setSentido] = useState(1)
+  const cambiarModo = (paso: number) => {
+    setSentido(paso)
+    cambiar({ modoJugar: MODOS_JUGAR[(i + paso + MODOS_JUGAR.length) % MODOS_JUGAR.length]! })
+  }
+  const modo = perfil.modoJugar
+  const sinRed = modo === 'buscar' && !enLinea
   const detalle = (texto: string) => (enLinea ? texto : 'Sin conexión')
+
+  const jugar = () =>
+    conApodo(() => {
+      if (modo === 'buscar') return navegar('/buscar')
+      useJuego.getState().conectar(conexionContraLaCompu(leerPerfil()))
+      navegar('/mesa')
+    })
 
   return (
     <>
@@ -149,63 +164,91 @@ export function PanelJugar({
         <p className="subtitulo">uruguayo · con muestra, piezas y flor</p>
       </header>
 
-      {pedirApodo && (
-        <section className="tarjeta pedir-apodo">
-          <label className="perfil-apodo">
-            <span>Para jugar, poné tu apodo</span>
-            <input value={perfil.apodo} maxLength={20} placeholder="¿Cómo te dicen?" onChange={(e) => cambiar({ apodo: e.target.value })} />
-          </label>
-        </section>
-      )}
+      <div className="jugar-centro">
+        <div className="selector-modo" role="group" aria-label="Modo de juego">
+          <button type="button" className="selector-modo-flecha" aria-label="Modo anterior" onClick={() => cambiarModo(-1)}>
+            ‹
+          </button>
+          <div className="selector-modo-ventana">
+            <AnimatePresence initial={false} mode="popLayout" custom={sentido}>
+              <motion.div
+                key={modo}
+                className="selector-modo-modo"
+                custom={sentido}
+                variants={{
+                  entra: (d: number) => ({ x: sinMovimiento ? 0 : `${d * 60}%`, opacity: 0 }),
+                  quieto: { x: 0, opacity: 1 },
+                  sale: (d: number) => ({ x: sinMovimiento ? 0 : `${-d * 60}%`, opacity: 0 }),
+                }}
+                initial="entra"
+                animate="quieto"
+                exit="sale"
+                transition={{ type: 'spring', stiffness: 420, damping: 36 }}
+                drag={sinMovimiento ? false : 'x'}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.35}
+                onDragEnd={(_, info) => {
+                  if (info.offset.x < -45) cambiarModo(1)
+                  else if (info.offset.x > 45) cambiarModo(-1)
+                }}
+              >
+                <span className="selector-modo-icono" aria-hidden="true">
+                  {modo === 'compu' ? <IconoCompu /> : <IconoBuscar />}
+                </span>
+                <strong aria-live="polite">{modo === 'compu' ? 'Contra la compu' : 'Buscar partida'}</strong>
+                {modo === 'compu' ? (
+                  <button
+                    type="button"
+                    className="selector-modo-detalle"
+                    onClick={alConfigurarCompu}
+                    aria-label={`Cambiar formato y nivel (${NOMBRE_FORMATO[perfil.formato]}, ${NOMBRE_NIVEL[perfil.nivelBots]})`}
+                  >
+                    {NOMBRE_FORMATO[perfil.formato]} · {NOMBRE_NIVEL[perfil.nivelBots]} <span aria-hidden="true">›</span>
+                  </button>
+                ) : (
+                  <span className="selector-modo-detalle">{detalle('Mano a mano online, con Elo')}</span>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+          <button type="button" className="selector-modo-flecha" aria-label="Modo siguiente" onClick={() => cambiarModo(1)}>
+            ›
+          </button>
+        </div>
+        <div className="selector-modo-puntos" aria-hidden="true">
+          {MODOS_JUGAR.map((m) => (
+            <span key={m} className={m === modo ? 'activo' : ''} />
+          ))}
+        </div>
 
-      <motion.div
-        className="jugar-botones"
-        initial="antes"
-        animate="despues"
-        variants={{ despues: { transition: { staggerChildren: 0.06 } } }}
-      >
-        <BotonJugar
-          clase="boton-jugar-crear"
+        <button type="button" className="boton-jugar-grande" disabled={sinRed} onClick={jugar}>
+          ¡Jugar!
+        </button>
+      </div>
+
+      <div className="jugar-secundarios">
+        <BotonChico
           icono={<IconoCrear />}
           titulo="Crear sala"
-          detalle={detalle('Armá la mesa y pasale el código a tus amigos')}
-          deshabilitado={online}
-          alTocar={() => navegar('/crear')}
+          detalle={detalle('Con tus amigos')}
+          deshabilitado={!enLinea}
+          alTocar={() => conApodo(() => navegar('/crear'))}
         />
-        <BotonJugar
-          clase="boton-jugar-unirme"
+        <BotonChico
           icono={<IconoLlave />}
           titulo="Unirme con código"
-          detalle={detalle('Entrá a la sala que armó otro')}
-          deshabilitado={online}
-          alTocar={() => navegar('/unirme')}
+          detalle={detalle('A la sala de otro')}
+          deshabilitado={!enLinea}
+          alTocar={() => conApodo(() => navegar('/unirme'))}
         />
-        <BotonJugar
-          clase="boton-jugar-buscar"
-          icono={<IconoBuscar />}
-          titulo="Buscar partida"
-          detalle={detalle('Mano a mano con desconocidos')}
-          deshabilitado={online}
-          alTocar={() => navegar('/buscar')}
-        />
-      </motion.div>
-      {!enLinea ? (
+      </div>
+      {!enLinea && (
         <p className="sin-conexion" role="status">
           <span aria-hidden="true">📵</span> Sin conexión: lo online vuelve cuando haya internet. Contra la compu se juega igual.
         </p>
-      ) : (
-        !apodo && <p className="nota">Poné tu apodo para jugar online.</p>
       )}
 
-      <AmigosConectados deshabilitado={online} />
-      {afuera && (
-        <AvisoMenu icono="🧉" titulo="Jugá con tus amigos">
-          Con tu cuenta los agregás, ves quién está conectado y los invitás a tu sala.{' '}
-          <button type="button" className="boton-enlace" onClick={alEntrar}>
-            Entrar a tu cuenta
-          </button>
-        </AvisoMenu>
-      )}
+      <AmigosConectados deshabilitado={!enLinea} conApodo={conApodo} />
     </>
   )
 }

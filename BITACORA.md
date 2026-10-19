@@ -1250,3 +1250,15 @@ Pedido del usuario tras probar, con el plan aprobado.
 - **Las cartas de los demás, en abanico:** encimadas y abiertas (−14°, 0°, +14°; con dos, ±8°), solo CSS.
 - **Pica-pica, envido con pieza:** era lo esperado (la pieza va por abajo: solo la ve el rival del duelo; el tanto lo oyen todos). Quedó una prueba que lo fija.
 - **Tests:** engine 171, web 313 (los del panel del pie, rehechos; señas que esperan al reparto).
+
+## Menú principal rehecho, estilo juego — 2026-10-19
+
+Pedido del usuario ("el menú ppal está medio raro"), con el plan aprobado (opción "estilo juego").
+
+- **Jugar, la pantalla del medio:** portada más chica (abanico y "Truco"); al medio, el **selector de modo** con flechas ‹ › o deslizando la tarjeta (motion `drag`): "Contra la compu" (con "Parejas · Medio ›", que lleva al lobby a cambiarlo) y "Buscar partida". Queda guardado en el perfil (`modoJugar`). Debajo, **¡Jugar!**, grande, dorado, con relieve y un brillo que pasa; hace lo del modo (sin internet, en buscar, apagado).
+- **Crear sala y Unirme con código**, dos botones chicos iguales, del mismo vidrio que el resto.
+- **Amigos:** una tira de avatares de los que están en la app (al que está en una sala, "Unirme"; al conectado, "Invitar") y un "+" a la pantalla de amigos, con las solicitudes. Sin cuenta no se muestra.
+- **El apodo se pide al jugar:** se fue el formulario del inicio y los avisos repetidos. Si tocás jugar (o crear, unirme, un amigo, o Jugar del lobby) sin apodo, se abre "¿Cómo te dicen?" y, al ponerlo, sigue con lo que tocaste.
+- **Barra de abajo:** cada ícono con su nombre; Jugar, redondo, dorado y sobresaliendo de la barra.
+- `menu/contraLaCompu.ts`: la partida contra la compu sale de un solo lugar (menú y lobby). En el lobby, el ícono propio de la compu en vez del emoji.
+- **Tests:** web 314 (menú: el modo y el botón grande, el apodo que se pide y sigue; amigos en tira; sin conexión). e2e 12 (el apodo se pone desde el banner).

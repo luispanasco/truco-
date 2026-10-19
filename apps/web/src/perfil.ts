@@ -26,6 +26,9 @@ import type { Baraja } from './baraja'
 import { inventarioGuardado } from './cuenta/inventario'
 
 /** Datos que se recuerdan en este navegador. Si el almacenamiento falla, se usan los valores por defecto. */
+export const MODOS_JUGAR = ['compu', 'buscar'] as const
+export type ModoJugar = (typeof MODOS_JUGAR)[number]
+
 export interface Perfil {
   invitadoId: string
   apodo: string
@@ -45,6 +48,8 @@ export interface Perfil {
   tirarReyes: TirarReyes
   /** Bots sin demora, para partidas cortas. */
   rapido: boolean
+  /** Lo que hace el botón grande de jugar del menú: contra la compu o buscar partida online. */
+  modoJugar: ModoJugar
   /** Ojear las cartas al empezar cada mano (si no, llegan directo en abanico). */
   ojear: boolean
   /** Si se juega con señas (contra bots y como propuesta al crear una sala). */
@@ -124,6 +129,7 @@ export function leerPerfil(): Perfil {
     corte: false,
     tirarReyes: 'no',
     rapido: false,
+    modoJugar: 'compu',
     ojear: true,
     pescarSenias: true,
     seniasAntesDeJugar: false,
@@ -149,6 +155,7 @@ export function leerPerfil(): Perfil {
     perfil.cartasJugadas = normalizarCartasJugadas(perfil.cartasJugadas)
     perfil.tirarReyes = normalizarTirarReyes(perfil.tirarReyes)
     if (![20, 30, 40].includes(perfil.puntosPartida)) perfil.puntosPartida = 30
+    if (!MODOS_JUGAR.includes(perfil.modoJugar)) perfil.modoJugar = 'compu'
     const cosmeticos = cosmeticosPermitidos(perfil)
     const cambio = (['avatar', 'mesa', 'baraja', 'tipografia'] as const).some((k) => cosmeticos[k] !== perfil[k])
     Object.assign(perfil, cosmeticos)

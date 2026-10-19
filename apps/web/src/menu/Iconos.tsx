@@ -96,3 +96,16 @@ export function IconoBuscar({ clase }: { clase?: string }) {
     </Icono>
   )
 }
+
+/** Contra la compu: una pantallita con dos ojos. */
+export function IconoCompu({ clase }: { clase?: string }) {
+  return (
+    <Icono clase={clase}>
+      <rect x="4" y="6" width="16" height="12" rx="3" />
+      <path d="M12 3v3M9 21h6M12 18v3" />
+      <circle cx="9.2" cy="11.5" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="14.8" cy="11.5" r="1.1" fill="currentColor" stroke="none" />
+      <path d="M9.8 14.6h4.4" />
+    </Icono>
+  )
+}

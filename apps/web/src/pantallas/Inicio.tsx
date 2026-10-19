@@ -18,10 +18,7 @@ import { aplicarTipografia } from '../temaTipografia'
 import { VitrinaDelDia } from './Tienda'
 import '../menu/estilos-menu.css'
 
-/**
- * Las tres pantallas del menú, de izquierda a derecha. Abre en la del medio: jugar online. En la
- * barra de abajo va solo el ícono; el título queda como nombre de la pestaña (lectores de pantalla).
- */
+/** Las tres pantallas del menú, de izquierda a derecha. Abre en la del medio: jugar. */
 const PANELES = [
   { id: 'tienda', titulo: 'Tienda', Icono: IconoTienda },
   { id: 'jugar', titulo: 'Jugar', Icono: IconoJugar },
@@ -42,11 +39,11 @@ function suscribirAncho(avisar: () => void) {
 }
 const esAncha = () => typeof matchMedia === 'function' && matchMedia(ANCHO).matches
 
-type HojaMenu = 'perfil' | 'cuenta' | 'ajustes' | null
+type HojaMenu = 'perfil' | 'cuenta' | 'ajustes' | 'apodo' | null
 
 /**
  * El menú principal, como en los juegos de celular: el banner con tu cuenta arriba, tres
- * pantallas que se deslizan con el dedo (tienda, jugar online y lobby) y la barra de abajo
+ * pantallas que se deslizan con el dedo (tienda, jugar y lobby) y la barra de abajo
  * para saltar de una a otra. Deslizar es scroll horizontal con "snap": lo hace el navegador,
  * así se siente como en una app.
  */
@@ -60,6 +57,20 @@ export function Inicio() {
   const [hoja, setHoja] = useState<HojaMenu>(null)
   const carril = useRef<HTMLDivElement>(null)
   const cerrarHoja = useCallback(() => setHoja(null), [])
+  // Lo que se quería hacer cuando se pidió el apodo: se hace al ponerlo.
+  const pendiente = useRef<(() => void) | null>(null)
+  const conApodo = (accion: () => void) => {
+    if (perfil.apodo.trim()) return accion()
+    pendiente.current = accion
+    setHoja('apodo')
+  }
+  const listoApodo = () => {
+    if (!perfil.apodo.trim()) return
+    setHoja(null)
+    const accion = pendiente.current
+    pendiente.current = null
+    accion?.()
+  }
 
   // Al elegir otra mesa, toda la app cambia de color en el momento. El perfil ya trae solo lo
   // que se puede usar (con la tienda de prueba, también lo pago). Al volver de una sala, que
@@ -115,8 +126,8 @@ export function Inicio() {
       <h2 className="panel-titulo">Tienda</h2>
       <VitrinaDelDia alEntrar={() => setHoja('cuenta')} />
     </>,
-    <PanelJugar perfil={perfil} cambiar={cambiar} enLinea={enLinea} alEntrar={() => setHoja('cuenta')} />,
-    <PanelLobby perfil={perfil} cambiar={cambiar} />,
+    <PanelJugar perfil={perfil} cambiar={cambiar} enLinea={enLinea} conApodo={conApodo} alConfigurarCompu={() => irA(2)} />,
+    <PanelLobby perfil={perfil} cambiar={cambiar} conApodo={conApodo} />,
   ]
 
   return (
@@ -159,11 +170,14 @@ export function Inicio() {
                 aria-label={p.titulo}
                 title={p.titulo}
                 tabIndex={i === actual ? 0 : -1}
-                className={`menu-pestania${i === actual ? ' activa' : ''}`}
+                className={`menu-pestania pestania-${p.id}${i === actual ? ' activa' : ''}`}
                 onClick={() => irA(i)}
               >
                 {i === actual && <motion.span layoutId="menu-pestania-activa" className="menu-pestania-marca" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
                 <p.Icono clase="menu-pestania-icono" />
+                <span className="menu-pestania-nombre" aria-hidden="true">
+                  {p.titulo}
+                </span>
               </button>
             ))}
           </div>
@@ -185,6 +199,26 @@ export function Inicio() {
           <button type="button" className="boton" onClick={cerrarHoja}>
             Listo
           </button>
+        </Hoja>
+      )}
+      {hoja === 'apodo' && (
+        <Hoja titulo="¿Cómo te dicen?" alCerrar={cerrarHoja} clase="hoja-menu hoja-apodo" claseFondo="hoja-fija">
+          <form
+            className="hoja-menu-contenido"
+            onSubmit={(e) => {
+              e.preventDefault()
+              listoApodo()
+            }}
+          >
+            <p className="nota-izq">Es el nombre que ven los demás en la mesa. Lo cambiás cuando quieras tocando tu avatar.</p>
+            <label className="perfil-apodo">
+              <span>Tu apodo</span>
+              <input autoFocus value={perfil.apodo} maxLength={20} placeholder="¿Cómo te dicen?" onChange={(e) => cambiar({ apodo: e.target.value })} />
+            </label>
+            <button type="submit" className="boton boton-grande boton-relieve" disabled={!perfil.apodo.trim()}>
+              ¡A jugar!
+            </button>
+          </form>
         </Hoja>
       )}
       {hoja === 'cuenta' && (

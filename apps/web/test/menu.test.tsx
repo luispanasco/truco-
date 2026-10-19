@@ -80,9 +80,10 @@ describe('menú principal', () => {
     servidorFalso()
     menu()
     expect(pestania('Jugar').getAttribute('aria-selected')).toBe('true')
+    expect(within(panel('jugar')).getByRole('button', { name: '¡Jugar!' })).toBeTruthy()
+    expect(within(panel('jugar')).getByText('Contra la compu')).toBeTruthy()
     expect(within(panel('jugar')).getByRole('button', { name: /Crear sala/ })).toBeTruthy()
     expect(within(panel('jugar')).getByRole('button', { name: /Unirme con código/ })).toBeTruthy()
-    expect(within(panel('jugar')).getByRole('button', { name: /Buscar partida/ })).toBeTruthy()
     // Las de los costados no se alcanzan mientras no están a la vista.
     expect(panel('tienda').hasAttribute('inert')).toBe(true)
     expect(panel('lobby').hasAttribute('inert')).toBe(true)
@@ -114,16 +115,33 @@ describe('menú principal', () => {
     expect(pestania('Tienda').getAttribute('aria-selected')).toBe('true')
   })
 
-  it('sin apodo se pide en "Jugar", y lo online se habilita al ponerlo', () => {
+  it('el modo se cambia con las flechas y queda guardado; el botón grande hace lo del modo', () => {
     servidorFalso()
-    guardarPerfil({ ...leerPerfil(), apodo: '' })
     menu()
-    expect(screen.getByRole('button', { name: /Crear sala/ })).toHaveProperty('disabled', true)
-    expect(screen.getByRole('button', { name: 'Cambiar tu avatar' })).toBeTruthy()
-    fireEvent.change(screen.getByPlaceholderText('¿Cómo te dicen?'), { target: { value: 'Luis' } })
-    expect(screen.getByRole('button', { name: /Crear sala/ })).toHaveProperty('disabled', false)
+    const jugar = within(panel('jugar'))
+    // Contra la compu dice el formato y el nivel; tocándolo se va al lobby a cambiarlos.
+    fireEvent.click(jugar.getByRole('button', { name: 'Cambiar formato y nivel (Mano a mano, Medio)' }))
+    expect(pestania('Lobby').getAttribute('aria-selected')).toBe('true')
+    fireEvent.click(pestania('Jugar'))
+    fireEvent.click(jugar.getByRole('button', { name: 'Modo siguiente' }))
+    expect(jugar.getByText('Buscar partida')).toBeTruthy()
+    expect(leerPerfil().modoJugar).toBe('buscar')
+    fireEvent.click(jugar.getByRole('button', { name: '¡Jugar!' }))
+    expect(screen.getByTestId('ruta').textContent).toBe('/buscar')
+  })
+
+  it('sin apodo, al tocar jugar se pide y después sigue con lo que tocaste', () => {
+    servidorFalso()
+    guardarPerfil({ ...leerPerfil(), apodo: '', modoJugar: 'buscar' })
+    menu()
+    fireEvent.click(screen.getByRole('button', { name: '¡Jugar!' }))
+    const hoja = screen.getByRole('dialog', { name: '¿Cómo te dicen?' })
+    expect(within(hoja).getByRole('button', { name: '¡A jugar!' })).toHaveProperty('disabled', true)
+    fireEvent.change(within(hoja).getByPlaceholderText('¿Cómo te dicen?'), { target: { value: 'Luis' } })
     // El banner se entera en el momento.
     expect(screen.getByRole('button', { name: 'Luis' })).toBeTruthy()
+    fireEvent.click(within(hoja).getByRole('button', { name: '¡A jugar!' }))
+    expect(screen.getByTestId('ruta').textContent).toBe('/buscar')
   })
 
   it('tocando el avatar del banner se editan el avatar y el apodo', () => {
@@ -198,7 +216,7 @@ describe('amigos en el menú', () => {
     servidorFalso()
     useCuenta.setState({ estado: 'adentro', token: 'prueba:ana@ejemplo.com', saldo: 0 })
     menu()
-    const amigos = await screen.findByRole('region', { name: /Tus amigos/ })
+    const amigos = await screen.findByRole('region', { name: /^Amigos/ })
     await within(amigos).findByText('Beto')
     expect(within(amigos).getByText('Caro')).toBeTruthy()
     // Los desconectados no aparecen en el menú (están en la pantalla de amigos).
@@ -214,8 +232,8 @@ describe('amigos en el menú', () => {
     servidorFalso()
     useCuenta.setState({ estado: 'adentro', token: 'prueba:ana@ejemplo.com', saldo: 0 })
     menu()
-    const amigos = await screen.findByRole('region', { name: /Tus amigos/ })
-    fireEvent.click(await within(amigos).findByRole('button', { name: 'Unirme' }))
+    const amigos = await screen.findByRole('region', { name: /^Amigos/ })
+    fireEvent.click(await within(amigos).findByRole('button', { name: 'Unirte a la sala de Caro' }))
     expect(screen.getByTestId('ruta').textContent).toBe('/s/QWERT')
   })
 })

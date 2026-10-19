@@ -9,18 +9,20 @@ test('el menú se desliza con el dedo y el banner muestra la cuenta', async ({ b
   const page = await persona(browser, 'Mora')
   const pestania = (nombre: string) => page.getByRole('tab', { name: nombre })
   await expect(pestania('Jugar')).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('button', { name: '¡Jugar!' })).toBeVisible()
   await expect(page.getByRole('button', { name: /Crear sala/ })).toBeVisible()
   await expect(page.getByRole('img', { name: 'Bandera de Uruguay' })).toBeVisible()
 
   // Deslizando hacia la izquierda aparece el lobby; hacia la derecha, de vuelta y la tienda.
   const carril = await caja(page.locator('.menu-carril'))
-  const medio = carril.y + carril.height / 2
+  // Bien abajo: sobre la tarjeta del modo, deslizar cambia el modo.
+  const medio = carril.y + carril.height * 0.9
   const izquierda = { x: carril.x + carril.width * 0.15, y: medio }
   const derecha = { x: carril.x + carril.width * 0.85, y: medio }
   const deslizar = (desde: typeof izquierda, hasta: typeof izquierda) => arrastrarConDedo(page, desde, hasta, 12, 16)
   await deslizar(derecha, izquierda)
   await expect(pestania('Lobby')).toHaveAttribute('aria-selected', 'true')
-  await expect(page.getByText('Contra la compu')).toBeInViewport()
+  await expect(page.locator('#panel-lobby').getByText('Contra la compu')).toBeInViewport()
   await deslizar(izquierda, derecha)
   await expect(pestania('Jugar')).toHaveAttribute('aria-selected', 'true')
   await deslizar(izquierda, derecha)

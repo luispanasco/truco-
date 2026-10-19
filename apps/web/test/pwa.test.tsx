@@ -72,10 +72,15 @@ describe('Inicio sin conexión', () => {
   it('desactiva lo online con "Sin conexión" y deja jugar contra la compu', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
     inicio()
-    for (const titulo of ['Crear sala', 'Unirme con código', 'Buscar partida']) {
+    for (const titulo of ['Crear sala', 'Unirme con código']) {
       expect(opcion(titulo).disabled).toBe(true)
       expect(opcion(titulo).textContent).toContain('Sin conexión')
     }
+    // Contra la compu se juega; buscar partida, no.
+    expect((screen.getByRole('button', { name: '¡Jugar!' }) as HTMLButtonElement).disabled).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: 'Modo siguiente' }))
+    expect((screen.getByRole('button', { name: '¡Jugar!' }) as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.getByText('Sin conexión', { selector: '.selector-modo-detalle' })).toBeTruthy()
     expect((screen.getByRole('button', { name: /Volver a la partida · Sin conexión/ }) as HTMLButtonElement).disabled).toBe(true)
     expect(screen.getByText(/Contra la compu se juega igual/)).toBeTruthy()
     expect((screen.getByRole('button', { name: 'Jugar' }) as HTMLButtonElement).disabled).toBe(false)

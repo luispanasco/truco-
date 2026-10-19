@@ -117,10 +117,11 @@ export function InvitarAmigos() {
 const ORDEN_ESTADO: Record<Amigo['estado'], number> = { enSala: 0, conectado: 1, jugando: 2, desconectado: 3 }
 
 /**
- * En el menú, en "Jugar": tus amigos que están en la app. Al que espera en una sala te unís;
- * al que está conectado lo invitás (se crea tu sala y le llega la invitación).
+ * En el menú, en "Jugar": una tira con los avatares de tus amigos que están en la app. Al que
+ * espera en una sala te unís; al conectado lo invitás (se crea tu sala y le llega la invitación).
+ * Al final, el acceso a la pantalla de amigos (con las solicitudes que te llegaron). Sin cuenta, nada.
  */
-export function AmigosConectados({ deshabilitado }: { deshabilitado: boolean }) {
+export function AmigosConectados({ deshabilitado, conApodo }: { deshabilitado: boolean; conApodo: (accion: () => void) => void }) {
   const adentro = useCuenta((s) => s.estado === 'adentro')
   const lista = useAmigos((s) => s.lista)
   const navegar = useNavigate()
@@ -129,58 +130,52 @@ export function AmigosConectados({ deshabilitado }: { deshabilitado: boolean }) 
 
   const enLaApp = (lista?.amigos ?? []).filter((a) => a.estado !== 'desconectado').sort((a, b) => ORDEN_ESTADO[a.estado] - ORDEN_ESTADO[b.estado])
   const pedidos = lista?.recibidas.length ?? 0
+  const accion = (a: Amigo) =>
+    a.sala
+      ? { texto: `Unirte a la sala de ${a.apodo}`, hacer: () => navegar(`/s/${a.sala}`) }
+      : a.estado === 'conectado'
+        ? { texto: `Invitar a ${a.apodo}`, hacer: () => navegar('/crear', { state: { invitar: { id: a.id, apodo: a.apodo } } satisfies InvitarAlCrear }) }
+        : null
   return (
-    <section className="tarjeta amigos-menu" aria-labelledby="titulo-amigos-menu">
+    <section className="amigos-tira" aria-labelledby="titulo-amigos-menu">
       <h2 id="titulo-amigos-menu">
-        <span aria-hidden="true">🧉</span> Tus amigos
-        <Link className="boton-texto" to="/amigos">
-          {pedidos > 0 ? `${pedidos} ${pedidos === 1 ? 'solicitud' : 'solicitudes'}` : 'Ver todos'}
-        </Link>
+        Amigos
+        {lista && <small>{enLaApp.length > 0 ? `${enLaApp.length} en la app` : lista.amigos.length > 0 ? 'Ninguno conectado' : ''}</small>}
       </h2>
-      {!lista && <p className="nota">Cargando…</p>}
-      {lista && lista.amigos.length === 0 && (
-        <p className="nota-izq">
-          Todavía no agregaste a nadie. En <Link to="/amigos">Amigos</Link> está tu código para pasarle a los demás.
-        </p>
-      )}
-      {lista && lista.amigos.length > 0 && enLaApp.length === 0 && <p className="nota-izq">Ninguno de tus amigos está conectado ahora.</p>}
-      {enLaApp.length > 0 && (
-        <ul className="amigos">
-          {enLaApp.map((a) => (
-            <li key={a.id} className={`amigo estado-${a.estado}`}>
-              <span className="amigo-avatar">
-                <Avatar codigo={a.avatar} apodo={a.apodo} />
-              </span>
-              <span className="amigo-nombre">
-                {a.apodo}
-                <small className="amigo-estado">
-                  <span className="amigo-punto" aria-hidden="true" /> {TEXTO_ESTADO[a.estado]}
-                </small>
-              </span>
-              <span className="amigo-acciones">
-                {a.sala ? (
-                  <button type="button" className="boton" disabled={deshabilitado} onClick={() => navegar(`/s/${a.sala}`)}>
-                    Unirme
-                  </button>
-                ) : (
-                  a.estado === 'conectado' && (
-                    <button
-                      type="button"
-                      className="boton boton-secundario"
-                      aria-label={`Invitar a ${a.apodo}`}
-                      disabled={deshabilitado}
-                      onClick={() => navegar('/crear', { state: { invitar: { id: a.id, apodo: a.apodo } } satisfies InvitarAlCrear })}
-                    >
-                      Invitar
-                    </button>
-                  )
-                )}
-              </span>
+      <ul>
+        {enLaApp.map((a) => {
+          const acc = accion(a)
+          return (
+            <li key={a.id}>
+              <button
+                type="button"
+                className={`amigo-tira estado-${a.estado}`}
+                disabled={deshabilitado || !acc}
+                aria-label={acc ? acc.texto : `${a.apodo}: ${TEXTO_ESTADO[a.estado]}`}
+                title={TEXTO_ESTADO[a.estado]}
+                onClick={() => acc && conApodo(acc.hacer)}
+              >
+                <span className="amigo-tira-avatar">
+                  <Avatar codigo={a.avatar} apodo={a.apodo} />
+                  <span className="amigo-punto" aria-hidden="true" />
+                </span>
+                <span className="amigo-tira-nombre">{a.apodo}</span>
+                <span className="amigo-tira-accion" aria-hidden="true">
+                  {a.sala ? 'Unirme' : a.estado === 'conectado' ? 'Invitar' : TEXTO_ESTADO[a.estado]}
+                </span>
+              </button>
             </li>
-          ))}
-        </ul>
-      )}
+          )
+        })}
+        <li>
+          <Link className="amigo-tira amigo-tira-mas" to="/amigos" aria-label={pedidos > 0 ? `Amigos: ${pedidos} ${pedidos === 1 ? 'solicitud' : 'solicitudes'}` : 'Agregar amigos'}>
+            <span className="amigo-tira-avatar" aria-hidden="true">
+              +{pedidos > 0 && <span className="amigo-tira-pedidos">{pedidos}</span>}
+            </span>
+            <span className="amigo-tira-nombre">{lista && lista.amigos.length === 0 ? 'Agregar' : 'Ver todos'}</span>
+          </Link>
+        </li>
+      </ul>
     </section>
   )
 }
-

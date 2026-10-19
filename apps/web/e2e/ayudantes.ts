@@ -29,7 +29,12 @@ export async function persona(browser: Browser, apodo: string): Promise<Page> {
   abiertos.push(ctx)
   const page = await ctx.newPage()
   await page.goto('/')
-  await page.getByPlaceholder('¿Cómo te dicen?').fill(apodo)
+  // El apodo se pone tocándolo en el banner (o el menú lo pide al jugar).
+  await page.getByRole('button', { name: 'Poné tu apodo' }).click()
+  const hoja = page.getByRole('dialog', { name: 'Tu perfil' })
+  await hoja.getByPlaceholder('¿Cómo te dicen?').fill(apodo)
+  await hoja.getByRole('button', { name: 'Listo' }).click()
+  await expect(hoja).toBeHidden()
   return page
 }
 
