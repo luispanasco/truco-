@@ -100,6 +100,8 @@ describe('selector de mesas', () => {
         <Inicio />
       </MemoryRouter>,
     )
+    // Las opciones finas están en el engranaje del banner.
+    fireEvent.click(screen.getByRole('button', { name: 'Ajustes' }))
     expect(document.documentElement.dataset.mesa).toBe('boliche')
     const grupo = screen.getByRole('radiogroup', { name: 'Mesa' })
     fireEvent.click(within(grupo).getByRole('radio', { name: 'Azul' }))

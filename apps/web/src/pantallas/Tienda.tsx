@@ -30,6 +30,19 @@ interface Vitrina {
  * Uruguay. Lo comprado es tuyo para siempre y se puede usar desde acá mismo.
  */
 export function Tienda() {
+  return (
+    <div className="pantalla-inicio pantalla-online">
+      <CabeceraOnline titulo="Tienda" />
+      <VitrinaDelDia />
+    </div>
+  )
+}
+
+/**
+ * La vitrina del día con tu saldo: la pantalla /tienda y el panel de la tienda en el menú.
+ * Sin cuenta, `alEntrar` abre el login ahí mismo (si no viene, se manda al inicio).
+ */
+export function VitrinaDelDia({ alEntrar }: { alEntrar?: () => void }) {
   const [vitrina, setVitrina] = useState<Vitrina | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [ahora, setAhora] = useState(() => Date.now())
@@ -59,12 +72,19 @@ export function Tienda() {
   }, [])
 
   return (
-    <div className="pantalla-inicio pantalla-online">
-      <CabeceraOnline titulo="Tienda" />
+    <>
       <section className="tarjeta tienda-cabecera">
         {estado === 'adentro' ? (
           <p className="cuenta-saldo">
             <span aria-hidden="true">🪙</span> <strong>{saldo ?? 0}</strong> monedas
+          </p>
+        ) : alEntrar ? (
+          <p className="nota-izq">
+            Para comprar,{' '}
+            <button type="button" className="boton-enlace" onClick={alEntrar}>
+              entrá a tu cuenta
+            </button>
+            . Las monedas se ganan jugando.
           </p>
         ) : (
           <p className="nota-izq">
@@ -82,7 +102,7 @@ export function Tienda() {
           ))}
         </ul>
       )}
-    </div>
+    </>
   )
 }
 

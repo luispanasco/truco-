@@ -7,9 +7,9 @@ import { crearSala, expect, persona, test, unirse } from './ayudantes'
 test('el avatar armado en el perfil es el que ven los demás en la sala', async ({ browser }) => {
   const ana = await persona(browser, 'Ana')
 
-  // Ana abre el editor y elige peinado, ojos y ropa (gratis).
+  // Ana toca su avatar en el banner y elige peinado, ojos y ropa (gratis).
   await ana.getByRole('button', { name: 'Cambiar tu avatar' }).click()
-  const editor = ana.getByRole('dialog', { name: 'Tu avatar' })
+  const editor = ana.getByRole('dialog', { name: 'Tu perfil' })
   await editor.getByRole('tab', { name: 'Pelo' }).click()
   await editor.getByRole('radio', { name: 'Peinado 5' }).click()
   await editor.getByRole('radio', { name: 'Color 6' }).click()

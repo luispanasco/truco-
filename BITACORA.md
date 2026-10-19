@@ -1126,3 +1126,27 @@ Pedido del usuario: en 2v2, una contraflor al resto querida "se buggeaba y no se
 - **Un caso que trababa la partida, encontrado con las partidas al azar:** el de la flor se iba al mazo solo y le cantaban contraflor. Ahora no se puede cantar contraflor si las flores del rival se fueron, y si el que tenía que contestar se va solo con la contraflor pendiente, cuenta como "me achico".
 - **Tests:** engine 165 (nuevos: comparación en el momento, al resto termina el partido, canta la mesa paso a paso, contesta solo el de flor), bots 24, server 103, web 298 (nuevo: el panel de canta la mesa).
 - **Pendiente:** `reglasNuevas` "pica-pica, piezas de otro duelo" sigue fallando de vez en cuando, como antes.
+
+## Menú principal nuevo, estilo juego de celular — 2026-10-18
+
+Pedido del usuario (rama `menu-nuevo`): un menú como el de Clash Royale, con el juego online al medio.
+
+- **Banner fijo arriba** (`menu/Banner.tsx`):
+  - tu avatar (tocándolo se abre "Tu perfil": apodo y editor de avatar), tu apodo con la bandera de Uruguay al lado y el engranaje ⚙;
+  - con cuenta: tus monedas (llevan a la tienda) y tu **Elo del formato que jugás** (`perfil.formato`, el de "contra la compu"), pedido a `/api/ranking?formato=…` (`yo.puntos`). Sin partidas con Elo el servidor no te devuelve: se muestra 1200, el inicial, un poco apagado;
+  - invitado: "Entrar a tu cuenta" abre una hoja con lo de `TarjetaCuenta` (Google, link por email o login de prueba), que se cierra sola al entrar. Si el servidor no tiene cuentas, dice "Jugás como invitado".
+  - **No hay nivel**: queda para cuando el usuario lo defina.
+- **La bandera** es el SVG oficial de Wikimedia Commons ("Flag_of_Uruguay.svg", dominio público), en `public/bandera-uruguay.svg`. Va como `<img>` (el archivo trae clases propias que se mezclarían con los estilos) y entra en la caché de la app instalada. Sus colores (azul `#0038a8`, blanco, sol `#fcd116` con borde `#7b3f00`) son los del banner, la barra de abajo y los botones grandes (`--uy-*` en `menu/estilos-menu.css`). Las tarjetas de adentro siguen con la mesa y la letra elegidas.
+- **Tres pantallas que se deslizan** (`pantallas/Inicio.tsx`): scroll horizontal con *snap* (lo hace el navegador, se siente nativo) y una barra de abajo con íconos (pestañas con flechas de teclado y un fondo que se corre con motion). Las de los costados quedan `inert` mientras no se ven. Al volver de una sala o del ranking, el menú queda en la pantalla de la que saliste (hasta recargar). En pantallas de 1100 px o más las tres van una al lado de la otra y no hay barra.
+  - **Tienda** (izquierda): la vitrina del día (`VitrinaDelDia`, sacada de `Tienda.tsx`; `/tienda` sigue igual).
+  - **Jugar** (al medio, la que abre; `menu/PanelJugar.tsx`): la partida en curso para volver, destacada arriba; el logo; botones grandes con relieve para **Crear sala** (dorado), **Unirme con código** (celeste) y **Buscar partida** (blanco); sin apodo, se pide ahí mismo. Con cuenta, **tus amigos en la app** (`AmigosConectados`): al que espera en una sala, "Unirme"; al conectado, "Invitar", que lleva a crear la sala y, al estar en la espera, le manda la invitación sola. Sin cuenta, una tarjeta invita a entrar para jugar con amigos.
+  - **Lobby** (derecha; `menu/PanelLobby.tsx`): contra la compu (formato, dificultad, "Reglas de la partida" plegadas y Jugar), y atajos al ranking y a los amigos.
+- **El engranaje** (`menu/Ajustes.tsx`) abre una hoja con el sonido, la mesa y las cartas (mesa, letra, baraja, vista, cartas jugadas, ojear, ayudas), las señas, la tienda de prueba, instalar la app y, al final, tu cuenta (salir). Las reglas de la partida contra la compu (largo, tirar reyes, toques del pie, corte, pica-pica, juego rápido) quedaron al lado de su botón Jugar, en el lobby.
+- **`usePerfil` ahora se entera de todos los cambios del perfil**, no solo de los que baja la cuenta. Antes cada pantalla tenía su copia y, con el banner, la tienda y los ajustes a la vez, un cambio en una podía pisar el de otra.
+- Las rutas (/crear, /unirme, /s/:codigo, /sala, /buscar, /mesa, /tienda, /amigos, /ranking) y los avisos globales (invitaciones, versión nueva) quedan como estaban.
+- **Tests:** web 307 (nuevo `menu.test.tsx`, 9: pestañas y flechas, deslizar, apodo, perfil, engranaje, banner invitado y con cuenta, Elo inicial, amigos con Unirme e Invitar); los tests que buscaban las opciones en el inicio ahora abren el engranaje. e2e: nuevo `menu.spec.ts` (deslizar con el dedo de verdad, barra, engranaje, login de prueba con monedas y Elo); `local`, `ojeo`, `anfitrion` y `avatar` llegan por el lobby, el engranaje y "Tu perfil".
+- **Pendiente / a decidir:**
+  - el nivel del jugador en el banner;
+  - los íconos de la barra son emojis (🛒 🃏 🏠): se pueden cambiar por dibujos propios;
+  - "Invitar" desde el menú crea una sala con lo último que elegiste; quizás convenga una sala rápida sin pasar por el formulario;
+  - el nombre "Lobby" para la pantalla de la derecha.

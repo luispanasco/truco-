@@ -47,6 +47,7 @@ async function esperarTurno(page: Page) {
 
 test('la mano llega apilada, se ojea deslizando y se juega arrastrando una carta', async ({ browser }) => {
   const page = await persona(browser, 'Tomi')
+  await page.getByRole('tab', { name: 'Lobby' }).click()
   await page.getByRole('button', { name: /^Mano a mano/ }).click()
   await page.getByRole('button', { name: 'Jugar', exact: true }).click()
   await expect(page).toHaveURL(/\/mesa$/)

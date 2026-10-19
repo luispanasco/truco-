@@ -1,21 +1,35 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { guardarPerfil, leerPerfil, observarPerfil, type Perfil } from '../perfil'
 import { Avatar } from './Avatar'
 import { EditorAvatar } from './EditorAvatar'
 import { Hoja } from './Hoja'
 import { SelectorBaraja } from './SelectorBaraja'
 
-/** El perfil de este navegador; se guarda mientras se edita, así sobrevive a recargar la página. */
+/**
+ * El perfil de este navegador; se guarda mientras se edita, así sobrevive a recargar la página.
+ * Todas las partes de la pantalla que lo usan se enteran de cada cambio (en el menú, el banner,
+ * la tienda y los ajustes lo cambian a la vez), y al entrar a la cuenta, lo guardado en ella
+ * reemplaza lo de este navegador.
+ */
 export function usePerfil(): [Perfil, (p: Partial<Perfil>) => void] {
   const [perfil, setPerfil] = useState(leerPerfil)
-  // Al entrar a la cuenta, lo guardado en ella reemplaza lo de este navegador.
-  useEffect(() => observarPerfil((p, origen) => origen === 'cuenta' && setPerfil(p)), [])
-  const cambiar = (p: Partial<Perfil>) =>
-    setPerfil((x) => {
-      const nuevo = { ...x, ...p }
-      guardarPerfil(nuevo)
-      return nuevo
-    })
+  // El último perfil guardado, para que dos cambios seguidos no se pisen.
+  const actual = useRef(perfil)
+  useEffect(
+    () =>
+      observarPerfil((p) => {
+        actual.current = p
+        setPerfil(p)
+      }),
+    [],
+  )
+  const cambiar = useCallback((p: Partial<Perfil>) => {
+    const nuevo = { ...actual.current, ...p }
+    actual.current = nuevo
+    guardarPerfil(nuevo)
+    // Por si no hay nadie escuchando todavía (el efecto corre después del primer dibujo).
+    setPerfil(nuevo)
+  }, [])
   return [perfil, cambiar]
 }
 

@@ -1,120 +1,62 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import { TODO_PERMITIDO } from '@truco/shared'
 import { mostrarBaraja } from '../baraja'
-import { AjustesSonido } from '../componentes/AjustesSonido'
-import { Carta } from '../componentes/Carta'
-import { FORMATOS, NIVELES, Segmentado, SelectorCartasJugadas, SelectorLargo } from '../componentes/FormularioSala'
-import { Interruptor } from '../componentes/Interruptor'
-import { SelectorMesa } from '../componentes/SelectorMesa'
-import { SelectorTipografia } from '../componentes/SelectorTipografia'
-import { SelectorVistaMesa } from '../componentes/SelectorVistaMesa'
-import { InstalarApp } from '../componentes/Pwa'
-import { datosUnirse, destinoAlEntrar, MensajeError } from '../componentes/Online'
-import { TarjetaPerfil, usePerfil } from '../componentes/TarjetaPerfil'
-import { ConexionLocal } from '../conexion/local'
-import { ConexionOnline, descartarPartidaGuardada, leerPartidaGuardada, motivoError } from '../conexion/online'
-import { useEnLinea } from '../enLinea'
-import { useJuego } from '../estado'
-import { cosmeticosPermitidos } from '../perfil'
-import { aplicarMesa } from '../temaMesa'
+import { EditorAvatar } from '../componentes/EditorAvatar'
+import { Hoja } from '../componentes/Hoja'
 import { TarjetaCuenta } from '../componentes/TarjetaCuenta'
+import { usePerfil } from '../componentes/TarjetaPerfil'
+import { useCuenta } from '../cuenta/cuenta'
+import { useEnLinea } from '../enLinea'
+import { Ajustes } from '../menu/Ajustes'
+import { Banner } from '../menu/Banner'
+import { PanelJugar } from '../menu/PanelJugar'
+import { PanelLobby } from '../menu/PanelLobby'
+import { aplicarMesa } from '../temaMesa'
 import { aplicarTipografia } from '../temaTipografia'
+import { VitrinaDelDia } from './Tienda'
+import '../menu/estilos-menu.css'
 
-/** Una opción del menú online: ícono, título y una línea que explica. */
-function OpcionOnline({
-  icono,
-  titulo,
-  detalle,
-  deshabilitada,
-  alTocar,
-}: {
-  icono: string
-  titulo: string
-  detalle: string
-  deshabilitada: boolean
-  alTocar: () => void
-}) {
-  return (
-    <button type="button" className="opcion-online" disabled={deshabilitada} onClick={alTocar}>
-      <span className="opcion-online-icono" aria-hidden="true">
-        {icono}
-      </span>
-      <span className="opcion-online-texto">
-        <strong>{titulo}</strong>
-        <small>{detalle}</small>
-      </span>
-      <span className="opcion-online-flecha" aria-hidden="true">
-        ›
-      </span>
-    </button>
-  )
+/** Las tres pantallas del menú, de izquierda a derecha. Abre en la del medio: jugar online. */
+const PANELES = [
+  { id: 'tienda', titulo: 'Tienda', icono: '🛒' },
+  { id: 'jugar', titulo: 'Jugar', icono: '🃏' },
+  { id: 'lobby', titulo: 'Lobby', icono: '🏠' },
+] as const
+const JUGAR = 1
+
+/** En qué pantalla quedó el menú: al volver de una sala o del ranking, se vuelve a la misma (hasta recargar). */
+let ultimoPanel = JUGAR
+
+/** Con pantalla ancha (la compu), las tres pantallas van una al lado de la otra, sin deslizar. */
+const ANCHO = '(min-width: 1100px)'
+function suscribirAncho(avisar: () => void) {
+  if (typeof matchMedia !== 'function') return () => {}
+  const m = matchMedia(ANCHO)
+  m.addEventListener('change', avisar)
+  return () => m.removeEventListener('change', avisar)
 }
+const esAncha = () => typeof matchMedia === 'function' && matchMedia(ANCHO).matches
 
-/** Si quedó una partida online a medias (se recargó o se cerró la app), se ofrece volver. */
-function PartidaEnCurso({
-  apodo,
-  enLinea,
-  alVolver,
-}: {
-  apodo: boolean
-  enLinea: boolean
-  alVolver: () => Promise<string | null>
-}) {
-  const [partida, setPartida] = useState(leerPartidaGuardada)
-  const [volviendo, setVolviendo] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  if (!partida && !error) return null
+type HojaMenu = 'perfil' | 'cuenta' | 'ajustes' | null
 
-  const volver = async () => {
-    setVolviendo(true)
-    setError(null)
-    const motivo = await alVolver()
-    if (motivo) {
-      setError(motivo)
-      setVolviendo(false)
-      if (!leerPartidaGuardada()) setPartida(null)
-    }
-  }
-
-  return (
-    <section className="tarjeta partida-en-curso">
-      <h2>Tenés una partida en curso</h2>
-      {partida ? (
-        <>
-          <p className="nota-izq">
-            {partida.publica ? 'Un mano a mano online' : `La sala ${partida.roomId}`}: mientras no estás, juega un bot por vos.
-          </p>
-          {error && <MensajeError>{error}</MensajeError>}
-          <div className="botones-fila botones-volver">
-            <button type="button" className="boton" disabled={!apodo || volviendo || !enLinea} onClick={volver}>
-              {volviendo ? 'Volviendo…' : enLinea ? 'Volver a la partida' : 'Volver a la partida · Sin conexión'}
-            </button>
-            <button
-              type="button"
-              className="boton boton-secundario"
-              disabled={volviendo}
-              onClick={() => {
-                descartarPartidaGuardada()
-                setPartida(null)
-              }}
-            >
-              Descartar
-            </button>
-          </div>
-        </>
-      ) : (
-        <MensajeError>{error}</MensajeError>
-      )}
-    </section>
-  )
-}
-
+/**
+ * El menú principal, como en los juegos de celular: el banner con tu cuenta arriba, tres
+ * pantallas que se deslizan con el dedo (tienda, jugar online y lobby) y la barra de abajo
+ * para saltar de una a otra. Deslizar es scroll horizontal con "snap": lo hace el navegador,
+ * así se siente como en una app.
+ */
 export function Inicio() {
-  const navegar = useNavigate()
   const [perfil, cambiar] = usePerfil()
-  const apodo = perfil.apodo.trim()
   const enLinea = useEnLinea()
+  const adentro = useCuenta((s) => s.estado === 'adentro')
+  const ancha = useSyncExternalStore(suscribirAncho, esAncha, () => false)
+  const sinMovimiento = useReducedMotion() ?? false
+  const [actual, setActual] = useState(ultimoPanel)
+  const [hoja, setHoja] = useState<HojaMenu>(null)
+  const carril = useRef<HTMLDivElement>(null)
+  const cerrarHoja = useCallback(() => setHoja(null), [])
+
   // Al elegir otra mesa, toda la app cambia de color en el momento. El perfil ya trae solo lo
   // que se puede usar (con la tienda de prueba, también lo pago). Al volver de una sala, que
   // tenía la mesa y la baraja del anfitrión, vuelven las tuyas.
@@ -123,242 +65,139 @@ export function Inicio() {
   // La tipografía es solo tuya (no cambia en las salas): se aplica al elegirla.
   useEffect(() => aplicarTipografia(perfil.tipografia, TODO_PERMITIDO), [perfil.tipografia])
 
-  /** Prendida, todo lo pago se elige; apagada, lo pago que tuvieras vuelve a lo gratis. */
-  const cambiarTienda = (tiendaDesbloqueada: boolean) =>
-    cambiar({ tiendaDesbloqueada, ...cosmeticosPermitidos({ ...perfil, tiendaDesbloqueada }) })
+  // Al entrar a la cuenta desde la hoja, la hoja se cierra sola.
+  useEffect(() => {
+    if (adentro) setHoja((h) => (h === 'cuenta' ? null : h))
+  }, [adentro])
 
-  const jugarContraBots = () => {
-    useJuego.getState().conectar(
-      new ConexionLocal({
-        apodo,
-        avatar: perfil.avatar,
-        formato: perfil.formato,
-        nivelBots: perfil.nivelBots,
-        ayudas: perfil.ayudas,
-        cartasJugadas: perfil.cartasJugadas,
-        mesa: perfil.mesa,
-        baraja: perfil.baraja,
-        config: {
-          picaPica: perfil.picaPica,
-          puntosPartida: perfil.puntosPartida,
-          toquesYGritos: perfil.toquesDelPie ? 'pie' : 'cualquiera',
-          corte: perfil.corte,
-        },
-        tirarReyes: perfil.tirarReyes,
-        senias: {
-          habilitadas: perfil.seniasHabilitadas,
-          pescar: perfil.pescarSenias ? 'gesto' : 'nunca',
-          momento: perfil.seniasAntesDeJugar ? 'antesDeJugar' : 'libre',
-        },
-        ...(perfil.rapido ? { demoraBots: [350, 700] as [number, number], pausas: { vuelta: 1500, mano: 5000 } } : {}),
-      }),
-    )
-    navegar('/mesa')
+  // Al llegar, el carril se para en la pantalla que corresponde, sin animar.
+  useLayoutEffect(() => {
+    const c = carril.current
+    if (c && !ancha) c.scrollLeft = ultimoPanel * c.clientWidth
+  }, [ancha])
+
+  const fijar = (i: number) => {
+    ultimoPanel = i
+    setActual(i)
   }
 
-  /** Vuelve a la partida guardada; devuelve el motivo si no se pudo. */
-  const volverALaPartida = async (): Promise<string | null> => {
-    const partida = leerPartidaGuardada()
-    if (!partida) return 'Esa partida ya no está disponible.'
-    try {
-      const c = await ConexionOnline.unirse(partida.roomId, datosUnirse(perfil))
-      useJuego.getState().conectar(c)
-      navegar(destinoAlEntrar())
-      return null
-    } catch (e) {
-      const motivo = motivoError(e)
-      // Si la sala ya no existe (terminó o se cerró), no tiene sentido seguir ofreciéndola.
-      if (motivo === 'No existe una sala con ese código.') {
-        descartarPartidaGuardada()
-        return 'Esa partida ya terminó o se cerró.'
-      }
-      return motivo
-    }
+  /** Al deslizar con el dedo: la pantalla que quedó más a la vista. */
+  const alDeslizar = () => {
+    const c = carril.current
+    if (!c || c.clientWidth === 0 || ancha) return
+    const i = Math.max(0, Math.min(PANELES.length - 1, Math.round(c.scrollLeft / c.clientWidth)))
+    if (i !== actual) fijar(i)
   }
+
+  /** Desde la barra de abajo (o el banner): desliza hasta esa pantalla. */
+  const irA = (i: number) => {
+    fijar(i)
+    const c = carril.current
+    if (c && !ancha) c.scrollTo?.({ left: i * c.clientWidth, behavior: sinMovimiento ? 'auto' : 'smooth' })
+  }
+
+  /** Flechas en la barra, como en cualquier grupo de pestañas. */
+  const alTeclado = (e: KeyboardEvent) => {
+    const paso = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+    if (!paso) return
+    e.preventDefault()
+    const i = (actual + paso + PANELES.length) % PANELES.length
+    irA(i)
+    document.getElementById(`pestania-${PANELES[i]!.id}`)?.focus()
+  }
+
+  const contenido = [
+    <>
+      <h2 className="panel-titulo">Tienda</h2>
+      <VitrinaDelDia alEntrar={() => setHoja('cuenta')} />
+    </>,
+    <PanelJugar perfil={perfil} cambiar={cambiar} enLinea={enLinea} alEntrar={() => setHoja('cuenta')} />,
+    <PanelLobby perfil={perfil} cambiar={cambiar} />,
+  ]
 
   return (
-    <div className="pantalla-inicio">
-      <header className="inicio-cabecera">
-        <div className="abanico" aria-hidden="true">
-          <Carta carta={{ numero: 7, palo: 'oro' }} />
-          <Carta carta={{ numero: 1, palo: 'espada' }} />
-          <Carta carta={{ numero: 1, palo: 'basto' }} />
-        </div>
-        <h1>Truco</h1>
-        <p className="subtitulo">uruguayo · con muestra, piezas y flor</p>
-      </header>
+    <div className={`menu${ancha ? ' menu-ancho' : ''}`}>
+      <Banner
+        perfil={perfil}
+        alEditarPerfil={() => setHoja('perfil')}
+        alEntrar={() => setHoja('cuenta')}
+        alAjustes={() => setHoja('ajustes')}
+        alTienda={() => irA(0)}
+      />
 
-      <PartidaEnCurso apodo={apodo.length > 0} enLinea={enLinea} alVolver={volverALaPartida} />
+      <div className="menu-carril" ref={carril} onScroll={alDeslizar}>
+        {PANELES.map((p, i) => (
+          <section
+            key={p.id}
+            id={`panel-${p.id}`}
+            className={`menu-panel panel-${p.id}`}
+            role={ancha ? 'region' : 'tabpanel'}
+            {...(ancha ? { 'aria-label': p.titulo } : { 'aria-labelledby': `pestania-${p.id}` })}
+            // Las de los costados no se alcanzan con el teclado mientras no están a la vista.
+            inert={!ancha && i !== actual}
+          >
+            <div className="menu-panel-contenido">{contenido[i]}</div>
+          </section>
+        ))}
+      </div>
 
-      <TarjetaPerfil perfil={perfil} cambiar={cambiar} />
-      <TarjetaCuenta />
-      <AjustesSonido />
-
-      <section className="tarjeta">
-        <h2>Contra la compu</h2>
-        <div className="campo">
-          <span>Formato</span>
-          <div className="segmentado">
-            {FORMATOS.map(([f, t, sub]) => (
-              <button key={f} type="button" className={perfil.formato === f ? 'elegido' : ''} onClick={() => cambiar({ formato: f })}>
-                <strong>{t}</strong>
-                <small>{sub}</small>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="campo">
-          <span>Dificultad</span>
-          <div className="segmentado segmentado-niveles">
-            {NIVELES.map(([nv, t]) => (
+      {!ancha && (
+        <nav className="menu-barra" aria-label="Menú">
+          <div className="menu-barra-pestanias" role="tablist" aria-label="Pantallas del menú" onKeyDown={alTeclado}>
+            {PANELES.map((p, i) => (
               <button
-                key={nv}
+                key={p.id}
+                id={`pestania-${p.id}`}
                 type="button"
-                className={perfil.nivelBots === nv ? 'elegido' : ''}
-                onClick={() => cambiar({ nivelBots: nv })}
+                role="tab"
+                aria-selected={i === actual}
+                aria-controls={`panel-${p.id}`}
+                tabIndex={i === actual ? 0 : -1}
+                className={`menu-pestania${i === actual ? ' activa' : ''}`}
+                onClick={() => irA(i)}
               >
-                {t}
+                {i === actual && <motion.span layoutId="menu-pestania-activa" className="menu-pestania-fondo" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+                <span className="menu-pestania-icono" aria-hidden="true">
+                  {p.icono}
+                </span>
+                <span className="menu-pestania-titulo">{p.titulo}</span>
               </button>
             ))}
           </div>
-        </div>
-        <details className="mas-opciones">
-          <summary>Más opciones</summary>
-          <Interruptor
-            activo={perfil.ojear}
-            alCambiar={(v) => cambiar({ ojear: v })}
-            titulo="Ojear cartas"
-            detalle="Al repartir, descubrís tus cartas de a poco, como en la mesa (también online)"
-          />
-          <SelectorVistaMesa valor={perfil.vistaMesa} alCambiar={(vistaMesa) => cambiar({ vistaMesa })} />
-          <SelectorCartasJugadas valor={perfil.cartasJugadas} alCambiar={(cartasJugadas) => cambiar({ cartasJugadas })} />
-          <SelectorLargo valor={perfil.puntosPartida} alCambiar={(puntosPartida) => cambiar({ puntosPartida })} />
-          <Segmentado
-            titulo="Tirar reyes"
-            valor={perfil.tirarReyes}
-            opciones={[
-              ['no', 'No'],
-              ['reparte', 'Para repartir'],
-              ['reparteYEquipos', 'Y los equipos'],
-            ]}
-            alCambiar={(tirarReyes) => cambiar({ tirarReyes })}
-            detalle="Una carta a cada uno hasta el primer rey, que reparte (y, con equipos, los primeros reyes van juntos)"
-          />
-          <Interruptor
-            activo={perfil.toquesDelPie}
-            alCambiar={(v) => cambiar({ toquesDelPie: v })}
-            titulo="Toques y gritos del pie"
-            detalle="En parejas y tríos, toca y grita el pie (o el que él manda) y contesta él"
-          />
-          <Interruptor
-            activo={perfil.corte}
-            alCambiar={(v) => cambiar({ corte: v })}
-            titulo="Cortar el mazo"
-            detalle="Antes de cada mano: corte, sacar la muestra o se la doy al mano"
-          />
-          <SelectorMesa valor={perfil.mesa} alCambiar={(mesa) => cambiar({ mesa })} tiendaDesbloqueada={perfil.tiendaDesbloqueada} />
-          <SelectorTipografia
-            valor={perfil.tipografia}
-            alCambiar={(tipografia) => cambiar({ tipografia })}
+        </nav>
+      )}
+
+      {hoja === 'perfil' && (
+        <Hoja titulo="Tu perfil" alCerrar={cerrarHoja} clase="hoja-avatar hoja-perfil" claseFondo="hoja-fija">
+          <label className="perfil-apodo">
+            <span>Tu apodo</span>
+            <input value={perfil.apodo} maxLength={20} placeholder="¿Cómo te dicen?" onChange={(e) => cambiar({ apodo: e.target.value })} />
+          </label>
+          <EditorAvatar
+            codigo={perfil.avatar}
+            apodo={perfil.apodo}
+            alCambiar={(avatar) => cambiar({ avatar })}
             tiendaDesbloqueada={perfil.tiendaDesbloqueada}
           />
-          <Interruptor
-            activo={perfil.tiendaDesbloqueada}
-            alCambiar={cambiarTienda}
-            titulo="Desbloquear la tienda (prueba)"
-            detalle="Mientras no hay tienda: elegís cualquier pieza del avatar, mesa o tipografía sin monedas. Al apagarlo, vuelve lo gratis"
-          />
-          <Interruptor
-            activo={perfil.ayudas}
-            alCambiar={(v) => cambiar({ ayudas: v })}
-            titulo="Ayudas"
-            detalle="Marca piezas y matas, y muestra tu envido y tu flor"
-          />
-          <Interruptor
-            activo={perfil.picaPica}
-            alCambiar={(v) => cambiar({ picaPica: v })}
-            titulo="Pica-pica"
-            detalle="En 3 vs 3, mientras los dos equipos están en malas"
-          />
-          <Interruptor
-            activo={perfil.seniasHabilitadas}
-            alCambiar={(v) => cambiar({ seniasHabilitadas: v })}
-            titulo="Se juega con señas"
-            detalle="En parejas y tríos, con tu compañero (y los bots también se hacen)"
-          />
-          {perfil.seniasHabilitadas && (
-            <>
-              <Interruptor
-                activo={perfil.pescarSenias}
-                alCambiar={(v) => cambiar({ pescarSenias: v })}
-                titulo="Pescar señas"
-                detalle="A veces se ve que un rival le hace una seña a su compañero (y a vos también te pueden ver)"
-              />
-              <Interruptor
-                activo={perfil.seniasAntesDeJugar}
-                alCambiar={(v) => cambiar({ seniasAntesDeJugar: v })}
-                titulo="Señas antes de jugar"
-                detalle="Las señas se hacen solo hasta tirar tu primera carta de la mano"
-              />
-              <Interruptor
-                activo={perfil.resumenSenias}
-                alCambiar={(v) => cambiar({ resumenSenias: v })}
-                titulo="Resumen de señas sobre los compañeros"
-                detalle="Un cartelito arriba de cada compañero con lo que te marcó en la mano (también online). Solo lo ves vos"
-              />
-            </>
-          )}
-          <Interruptor
-            activo={perfil.rapido}
-            alCambiar={(v) => cambiar({ rapido: v })}
-            titulo="Juego rápido"
-            detalle="Los bots juegan sin pensar tanto"
-          />
-        </details>
-        <button type="button" className="boton boton-grande" disabled={!apodo} onClick={jugarContraBots}>
-          Jugar
-        </button>
-        {!apodo && <p className="nota">Poné tu apodo para jugar.</p>}
-      </section>
-
-      <section className="tarjeta tarjeta-online">
-        <h2>Online</h2>
-        <p className="nota-izq">Jugá con amigos con un código o un link, o con gente de todos lados.</p>
-        <div className="opciones-online">
-          <OpcionOnline
-            icono="👥"
-            titulo="Crear sala"
-            detalle={enLinea ? 'Armá la mesa y pasale el código a tus amigos' : 'Sin conexión'}
-            deshabilitada={!apodo || !enLinea}
-            alTocar={() => navegar('/crear')}
-          />
-          <OpcionOnline
-            icono="🔑"
-            titulo="Unirme con código"
-            detalle={enLinea ? 'Entrá a la sala que armó otro' : 'Sin conexión'}
-            deshabilitada={!apodo || !enLinea}
-            alTocar={() => navegar('/unirme')}
-          />
-          <OpcionOnline
-            icono="🌎"
-            titulo="Buscar partida"
-            detalle={enLinea ? 'Mano a mano con desconocidos' : 'Sin conexión'}
-            deshabilitada={!apodo || !enLinea}
-            alTocar={() => navegar('/buscar')}
-          />
-        </div>
-        {!enLinea ? (
-          <p className="sin-conexion" role="status">
-            <span aria-hidden="true">📵</span> Sin conexión: lo online vuelve cuando haya internet. Contra la compu se juega igual.
-          </p>
-        ) : (
-          !apodo && <p className="nota">Poné tu apodo para jugar online.</p>
-        )}
-      </section>
-
-      <InstalarApp />
-
-      <footer className="inicio-pie">Truco uruguayo · versión de prueba</footer>
+          <button type="button" className="boton" onClick={cerrarHoja}>
+            Listo
+          </button>
+        </Hoja>
+      )}
+      {hoja === 'cuenta' && (
+        <Hoja titulo="Entrar a tu cuenta" alCerrar={cerrarHoja} clase="hoja-menu" claseFondo="hoja-fija">
+          <div className="hoja-menu-contenido">
+            <TarjetaCuenta sinEnlaces />
+          </div>
+        </Hoja>
+      )}
+      {hoja === 'ajustes' && (
+        <Hoja titulo="Ajustes" alCerrar={cerrarHoja} clase="hoja-menu hoja-ajustes" claseFondo="hoja-fija">
+          <div className="hoja-menu-contenido">
+            <Ajustes perfil={perfil} cambiar={cambiar} />
+          </div>
+        </Hoja>
+      )}
     </div>
   )
 }
