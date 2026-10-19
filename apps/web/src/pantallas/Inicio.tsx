@@ -10,6 +10,7 @@ import { useCuenta } from '../cuenta/cuenta'
 import { useEnLinea } from '../enLinea'
 import { Ajustes } from '../menu/Ajustes'
 import { Banner } from '../menu/Banner'
+import { IconoJugar, IconoLobby, IconoTienda } from '../menu/Iconos'
 import { PanelJugar } from '../menu/PanelJugar'
 import { PanelLobby } from '../menu/PanelLobby'
 import { aplicarMesa } from '../temaMesa'
@@ -17,11 +18,14 @@ import { aplicarTipografia } from '../temaTipografia'
 import { VitrinaDelDia } from './Tienda'
 import '../menu/estilos-menu.css'
 
-/** Las tres pantallas del menú, de izquierda a derecha. Abre en la del medio: jugar online. */
+/**
+ * Las tres pantallas del menú, de izquierda a derecha. Abre en la del medio: jugar online. En la
+ * barra de abajo va solo el ícono; el título queda como nombre de la pestaña (lectores de pantalla).
+ */
 const PANELES = [
-  { id: 'tienda', titulo: 'Tienda', icono: '🛒' },
-  { id: 'jugar', titulo: 'Jugar', icono: '🃏' },
-  { id: 'lobby', titulo: 'Lobby', icono: '🏠' },
+  { id: 'tienda', titulo: 'Tienda', Icono: IconoTienda },
+  { id: 'jugar', titulo: 'Jugar', Icono: IconoJugar },
+  { id: 'lobby', titulo: 'Lobby', Icono: IconoLobby },
 ] as const
 const JUGAR = 1
 
@@ -152,15 +156,14 @@ export function Inicio() {
                 role="tab"
                 aria-selected={i === actual}
                 aria-controls={`panel-${p.id}`}
+                aria-label={p.titulo}
+                title={p.titulo}
                 tabIndex={i === actual ? 0 : -1}
                 className={`menu-pestania${i === actual ? ' activa' : ''}`}
                 onClick={() => irA(i)}
               >
-                {i === actual && <motion.span layoutId="menu-pestania-activa" className="menu-pestania-fondo" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
-                <span className="menu-pestania-icono" aria-hidden="true">
-                  {p.icono}
-                </span>
-                <span className="menu-pestania-titulo">{p.titulo}</span>
+                {i === actual && <motion.span layoutId="menu-pestania-activa" className="menu-pestania-marca" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+                <p.Icono clase="menu-pestania-icono" />
               </button>
             ))}
           </div>

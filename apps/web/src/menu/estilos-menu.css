@@ -1,28 +1,38 @@
 /*
  * El menú principal: banner arriba, tres pantallas que se deslizan y la barra de abajo.
- * El banner, la barra y los botones grandes van con los colores de la bandera (azul, blanco
- * y el dorado del Sol de Mayo); las tarjetas de adentro siguen con la mesa elegida.
+ * Todo sale de la mesa elegida (estilos-mesas.css): el fondo es su paño, los resaltados y el
+ * botón principal van con el acento dorado, los secundarios son de papel y los íconos, del
+ * paño. La bandera de Uruguay queda como bandera, sin pintar el resto.
  */
-:root {
-  --uy-azul: #0038a8;
-  --uy-azul-claro: #1a56c9;
-  --uy-azul-oscuro: #002574;
-  --uy-celeste: #5cbfeb;
-  --uy-celeste-claro: #a6defa;
-  --uy-celeste-oscuro: #1f6fa5;
-  --uy-sol: #fcd116;
-  --uy-sol-claro: #ffe680;
-  --uy-sol-oscuro: #c29400;
-  --uy-sol-borde: #7b3f00;
-  --uy-blanco: #ffffff;
-  --uy-tinta: #062a5e;
-}
-
 .menu {
+  /* El paño de fondo, más oscuro en los bordes para que el texto claro se lea en cualquier mesa. */
+  --menu-fondo: color-mix(in srgb, var(--tapete) 78%, black);
+  --menu-fondo-borde: color-mix(in srgb, var(--tapete-oscuro) 55%, black);
+  /* Botón principal (el acento) y secundarios (el papel), con su canto para el relieve. */
+  --menu-oro: var(--acento);
+  --menu-oro-canto: color-mix(in srgb, var(--acento) 55%, #3b2208);
+  --menu-oro-tinta: color-mix(in srgb, var(--acento) 18%, #2b1804);
+  --menu-papel: var(--papel);
+  --menu-papel-canto: color-mix(in srgb, var(--papel) 62%, var(--madera));
+  --menu-panio-tinta: color-mix(in srgb, var(--tapete-oscuro) 80%, black);
+  /* Las tarjetas sobre el paño: vidrio oscuro con un filo claro. */
+  --menu-vidrio: rgb(0 0 0 / 0.24);
+  --menu-filo: rgb(255 255 255 / 0.09);
+  --menu-suave: color-mix(in srgb, var(--texto-claro) 68%, transparent);
+
   height: 100dvh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
+  background:
+    radial-gradient(120% 70% at 50% 28%, rgb(255 255 255 / 0.07), transparent 60%),
+    radial-gradient(140% 100% at 50% 40%, var(--menu-fondo), var(--menu-fondo-borde));
+}
+
+.icono-menu {
+  display: block;
+  width: 1em;
+  height: 1em;
 }
 
 /* ── Banner ───────────────────────────────────────────────────── */
@@ -30,14 +40,8 @@
 .banner {
   position: relative;
   z-index: 5;
-  padding: calc(8px + env(safe-area-inset-top)) 12px 9px;
-  /* Las franjas de la bandera, apenas marcadas, sobre el azul. */
-  background:
-    repeating-linear-gradient(180deg, rgb(255 255 255 / 0.05) 0 7px, transparent 7px 14px),
-    linear-gradient(180deg, var(--uy-azul-claro), var(--uy-azul) 55%, var(--uy-azul-oscuro));
-  border-bottom: 3px solid var(--uy-sol);
-  box-shadow: 0 4px 14px rgb(0 0 0 / 0.4);
-  color: var(--uy-blanco);
+  padding: calc(10px + env(safe-area-inset-top)) 16px 4px;
+  color: var(--texto-claro);
 }
 .banner-fila {
   max-width: 720px;
@@ -45,25 +49,28 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .perfil-avatar.banner-avatar {
-  width: 54px;
-  height: 54px;
-  border: 3px solid var(--uy-sol);
-  background: rgb(255 255 255 / 0.18);
-  box-shadow:
-    0 3px 0 var(--uy-sol-borde),
-    0 5px 10px rgb(0 0 0 / 0.35);
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--menu-oro);
+  background: rgb(0 0 0 / 0.2);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.3);
 }
 .banner-avatar .perfil-editar {
-  background: var(--uy-sol);
-  color: var(--uy-sol-borde);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  right: -3px;
+  bottom: -3px;
+  width: 18px;
+  height: 18px;
+  font-size: 0.65rem;
+  background: var(--menu-oro);
+  color: var(--menu-oro-tinta);
+  box-shadow: 0 0 0 2px var(--menu-fondo);
 }
 .banner-quien {
   display: grid;
-  gap: 5px;
+  gap: 2px;
   min-width: 0;
   justify-items: start;
 }
@@ -79,110 +86,123 @@
   flex: none;
   height: auto;
   border-radius: 2px;
-  box-shadow:
-    0 0 0 1px rgb(0 0 0 / 0.15),
-    0 2px 4px rgb(0 0 0 / 0.35);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.2);
 }
 .banner-bandera {
-  width: 27px;
+  width: 20px;
 }
 .banner-apodo {
   min-width: 0;
   padding: 0;
   border: 0;
   background: none;
-  color: inherit;
+  color: var(--papel);
   font-family: var(--fuente-titulo);
   font-weight: 400;
-  font-size: 1.15rem;
-  line-height: 1.15;
+  font-size: 1.08rem;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 2px 0 rgb(0 0 0 / 0.35);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
 }
 .banner-apodo em {
   font-style: normal;
-  color: var(--uy-sol);
+  color: var(--menu-oro);
 }
 .banner-datos {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  align-items: center;
+  gap: 4px 14px;
 }
 .banner-dato {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 10px 2px 6px;
-  border: 1px solid rgb(255 255 255 / 0.22);
-  border-radius: 999px;
-  background: rgb(0 0 0 / 0.32);
-  color: var(--uy-blanco);
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--texto-claro);
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.5;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .banner-monedas {
-  color: var(--uy-sol);
+  color: var(--menu-oro);
+  border-radius: 6px;
 }
 .banner-monedas:hover,
 .banner-monedas:focus-visible {
-  background: rgb(0 0 0 / 0.5);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* La moneda, dibujada: un disco del acento con su canto. */
+.banner-moneda {
+  width: 0.95em;
+  height: 0.95em;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--menu-oro) 55%, white), var(--menu-oro) 60%);
+  box-shadow:
+    inset 0 0 0 1.5px var(--menu-oro-canto),
+    0 1px 1px rgb(0 0 0 / 0.3);
+}
+.banner-copa {
+  font-size: 1em;
+  color: var(--menu-oro);
 }
 .banner-elo small {
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  opacity: 0.75;
+  color: var(--menu-suave);
 }
 .banner-elo.sin-partidas {
-  color: rgb(255 255 255 / 0.8);
+  color: var(--menu-suave);
 }
 .banner-invitado {
   font-size: 0.8rem;
-  opacity: 0.8;
+  color: var(--menu-suave);
 }
 .banner-entrar {
-  padding: 5px 12px;
-  border: 1px solid rgb(255 255 255 / 0.6);
+  padding: 3px 12px;
+  border: 1.5px solid color-mix(in srgb, var(--menu-oro) 75%, transparent);
   border-radius: 999px;
-  background: linear-gradient(180deg, var(--uy-celeste-claro), var(--uy-celeste));
-  color: var(--uy-tinta);
+  background: none;
+  color: var(--menu-oro);
   font-weight: 800;
-  font-size: 0.85rem;
-  box-shadow: 0 3px 0 var(--uy-celeste-oscuro);
-  translate: 0 -1px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  transition: background 0.15s;
 }
-.banner-entrar:active {
-  translate: 0 1px;
-  box-shadow: 0 1px 0 var(--uy-celeste-oscuro);
+.banner-entrar:hover,
+.banner-entrar:focus-visible {
+  background: color-mix(in srgb, var(--menu-oro) 16%, transparent);
 }
 .banner-ajustes {
-  width: 46px;
-  height: 46px;
+  width: 42px;
+  height: 42px;
   display: grid;
   place-items: center;
   padding: 0;
-  border: 2px solid rgb(255 255 255 / 0.45);
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.25), rgb(255 255 255 / 0.06));
-  color: var(--uy-blanco);
-  font-size: 1.65rem;
-  line-height: 1;
-  box-shadow: 0 3px 0 var(--uy-azul-oscuro);
+  border: 0;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.18);
+  color: var(--texto-claro);
+  font-size: 1.4rem;
+  transition: background 0.15s;
 }
-.banner-ajustes span {
+.banner-ajustes .icono-menu {
   transition: rotate 0.4s;
 }
-.banner-ajustes:hover span,
-.banner-ajustes:focus-visible span {
-  rotate: 60deg;
+.banner-ajustes:hover,
+.banner-ajustes:focus-visible {
+  background: rgb(0 0 0 / 0.3);
 }
-.banner-ajustes:active {
-  translate: 0 2px;
-  box-shadow: 0 1px 0 var(--uy-azul-oscuro);
+.banner-ajustes:hover .icono-menu,
+.banner-ajustes:focus-visible .icono-menu {
+  rotate: 60deg;
 }
 
 /* ── Las tres pantallas ───────────────────────────────────────── */
@@ -212,24 +232,41 @@
 .menu-panel-contenido {
   max-width: 480px;
   margin: 0 auto;
-  padding: 14px 16px 28px;
+  padding: 12px 16px 24px;
   display: grid;
-  gap: 14px;
+  gap: 16px;
   align-content: start;
 }
 .panel-titulo {
-  margin: 2px 0 0;
+  margin: 4px 0 0;
   text-align: center;
   font-family: var(--fuente-titulo);
   font-weight: 400;
-  font-size: 1.6rem;
+  font-size: 1.45rem;
+  letter-spacing: 0.02em;
   color: var(--papel);
-  text-shadow:
-    0 2px 0 var(--uy-azul),
-    0 4px 10px rgb(0 0 0 / 0.4);
+  text-shadow: 0 2px 0 var(--menu-panio-tinta);
+}
+
+/* Adentro de las pantallas las tarjetas son vidrio sobre el paño (fuera, en las hojas, siguen igual). */
+.menu-panel .tarjeta {
+  background: var(--menu-vidrio);
+  border: 1px solid var(--menu-filo);
+  box-shadow: none;
+}
+.menu-panel .tarjeta h2 {
+  font-size: 1.08rem;
+}
+.menu-panel .partida-en-curso {
+  border: 1.5px solid var(--menu-oro);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--menu-oro) 18%, transparent), var(--menu-vidrio));
 }
 
 /* En la compu el banner usa todo el ancho, como las tres pantallas. */
+.menu-ancho .banner {
+  padding-top: 16px;
+  padding-bottom: 8px;
+}
 .menu-ancho .banner-fila {
   max-width: 1400px;
 }
@@ -241,14 +278,14 @@
   overflow: hidden;
   scroll-snap-type: none;
 }
-.menu-ancho .menu-panel {
-  border-left: 1px solid rgb(255 255 255 / 0.08);
+.menu-ancho .menu-panel + .menu-panel {
+  border-left: 1px solid var(--menu-filo);
 }
 .menu-ancho .panel-jugar {
-  background: rgb(0 0 0 / 0.14);
+  background: rgb(255 255 255 / 0.03);
 }
 .menu-ancho .menu-panel-contenido {
-  max-width: 460px;
+  max-width: 440px;
   padding-top: 20px;
 }
 
@@ -257,151 +294,160 @@
 .jugar-logo {
   display: grid;
   justify-items: center;
-  padding: 4px 0 0;
+  padding: 6px 0 2px;
 }
 .jugar-logo .abanico {
-  height: 80px;
-  margin-bottom: 2px;
+  height: 76px;
+  margin-bottom: 4px;
 }
 .jugar-logo .abanico .carta {
-  --ancho: 48px;
+  --ancho: 46px;
   margin: 0 -9px;
 }
 .jugar-logo h1 {
   margin: 0;
   font-family: var(--fuente-titulo);
   font-weight: 400;
-  font-size: 2.8rem;
+  font-size: 2.6rem;
   line-height: 1;
   letter-spacing: 0.02em;
   color: var(--papel);
   text-shadow:
-    0 3px 0 var(--uy-azul),
-    0 6px 14px rgb(0 0 0 / 0.45);
+    0 3px 0 var(--menu-panio-tinta),
+    0 8px 18px rgb(0 0 0 / 0.35);
 }
 .jugar-logo .subtitulo {
-  margin-top: 4px;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--menu-suave);
+  opacity: 1;
 }
 
 .jugar-botones {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  padding-bottom: 6px;
+  padding-bottom: 4px;
 }
-/* Botones grandes con relieve: la cara, y el canto abajo que se achica al apretar. */
+/* Botones grandes con relieve: la cara, un brillo arriba y el canto abajo, que se achica al apretar. */
 .boton-jugar {
-  --cara: var(--uy-celeste);
-  --canto: var(--uy-celeste-oscuro);
-  --texto: var(--uy-tinta);
+  --cara: var(--menu-papel);
+  --canto: var(--menu-papel-canto);
+  --texto: var(--tinta);
+  --icono: var(--tapete-oscuro);
   position: relative;
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 6px;
-  min-height: 132px;
-  padding: 14px 10px 12px;
-  border: 2px solid rgb(255 255 255 / 0.6);
-  border-radius: 20px;
+  gap: 8px;
+  min-height: 124px;
+  padding: 16px 10px 14px;
+  border: 0;
+  border-radius: 18px;
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.45), rgb(255 255 255 / 0) 48%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.28), rgb(255 255 255 / 0) 55%),
     var(--cara);
   color: var(--texto);
   text-align: center;
   box-shadow:
-    0 6px 0 var(--canto),
-    0 10px 18px rgb(0 0 0 / 0.35);
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    0 4px 0 var(--canto),
+    0 9px 16px rgb(0 0 0 / 0.28);
   transition:
     translate 0.08s,
-    box-shadow 0.08s;
+    box-shadow 0.08s,
+    filter 0.15s;
+}
+.boton-jugar:not(:disabled):hover {
+  filter: brightness(1.04);
 }
 .boton-jugar:not(:disabled):active {
-  translate: 0 4px;
+  translate: 0 3px;
   box-shadow:
-    0 2px 0 var(--canto),
-    0 4px 8px rgb(0 0 0 / 0.3);
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    0 1px 0 var(--canto),
+    0 3px 6px rgb(0 0 0 / 0.25);
 }
 .boton-jugar:focus-visible {
-  outline: 3px solid var(--uy-blanco);
+  outline: 3px solid var(--texto-claro);
   outline-offset: 3px;
 }
 .boton-jugar:disabled {
   cursor: default;
-  filter: grayscale(0.85) brightness(0.85);
-  opacity: 0.6;
+  filter: saturate(0.3);
+  opacity: 0.55;
 }
 .boton-jugar-icono {
-  font-size: 2rem;
-  line-height: 1;
-  filter: drop-shadow(0 2px 1px rgb(0 0 0 / 0.3));
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--icono) 12%, transparent);
+  color: var(--icono);
+  font-size: 1.55rem;
 }
 .boton-jugar-texto {
   display: grid;
   gap: 3px;
 }
 .boton-jugar-texto strong {
-  font-size: 1.02rem;
+  font-size: 1rem;
   font-weight: 800;
   line-height: 1.15;
 }
 .boton-jugar-texto small {
   font-size: 0.74rem;
   font-weight: 600;
-  line-height: 1.25;
-  opacity: 0.85;
+  line-height: 1.3;
+  opacity: 0.72;
 }
-/* Crear sala: el principal, ancho y dorado como el sol. */
+/* Crear sala: el principal, ancho y del acento. */
 .boton-jugar-crear {
-  --cara: var(--uy-sol);
-  --canto: var(--uy-sol-oscuro);
-  --texto: var(--uy-sol-borde);
+  --cara: var(--menu-oro);
+  --canto: var(--menu-oro-canto);
+  --texto: var(--menu-oro-tinta);
+  --icono: var(--menu-oro-tinta);
   grid-column: 1 / -1;
   grid-template-columns: auto 1fr;
   justify-items: start;
+  align-items: center;
   gap: 14px;
   min-height: 0;
-  padding: 18px 18px 16px;
+  padding: 16px 18px;
   text-align: left;
 }
 .boton-jugar-crear .boton-jugar-icono {
-  width: 60px;
-  height: 60px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.45);
-  font-size: 2.1rem;
+  width: 54px;
+  height: 54px;
+  background: rgb(255 255 255 / 0.3);
+  font-size: 1.75rem;
 }
 .boton-jugar-crear .boton-jugar-texto strong {
   font-family: var(--fuente-titulo);
   font-weight: 400;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  letter-spacing: 0.01em;
 }
 .boton-jugar-crear .boton-jugar-texto small {
   font-size: 0.8rem;
 }
-.boton-jugar-buscar {
-  --cara: #f4f7ff;
-  --canto: #8ea6d6;
-  --texto: var(--uy-azul);
-}
 
-.pedir-apodo {
-  border: 2px solid var(--uy-sol);
+.menu-panel .pedir-apodo {
+  border-color: color-mix(in srgb, var(--menu-oro) 70%, transparent);
 }
 
 /* Avisos chicos del menú (jugar con amigos sin cuenta). */
 .aviso-menu {
   grid-template-columns: auto 1fr;
   align-items: start;
-  background: rgb(0 0 0 / 0.22);
 }
 .aviso-menu-icono {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   line-height: 1;
 }
 .aviso-menu h2 {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .aviso-menu .nota-izq {
   margin: 0;
@@ -418,9 +464,6 @@
   text-underline-offset: 2px;
 }
 
-.amigos-menu {
-  background: rgb(0 0 0 / 0.22);
-}
 .amigos-menu h2 a.boton-texto {
   text-decoration: none;
 }
@@ -431,116 +474,131 @@
 
 /* ── Lobby ────────────────────────────────────────────────────── */
 
-/* El botón de jugar contra la compu, también con relieve. */
+/* El botón de jugar contra la compu, con el mismo relieve que crear sala. */
 .menu .boton-relieve {
-  border: 2px solid rgb(255 255 255 / 0.55);
-  border-radius: 16px;
+  border: 0;
+  border-radius: 14px;
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.45), rgb(255 255 255 / 0) 50%),
-    var(--uy-sol);
-  color: var(--uy-sol-borde);
+    linear-gradient(180deg, rgb(255 255 255 / 0.28), rgb(255 255 255 / 0) 55%),
+    var(--menu-oro);
+  color: var(--menu-oro-tinta);
   font-family: var(--fuente-titulo);
   font-weight: 400;
-  font-size: 1.35rem;
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
   box-shadow:
-    0 5px 0 var(--uy-sol-oscuro),
-    0 8px 14px rgb(0 0 0 / 0.3);
-  margin-bottom: 5px;
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    0 4px 0 var(--menu-oro-canto),
+    0 8px 14px rgb(0 0 0 / 0.25);
+  margin-bottom: 4px;
   transition:
     translate 0.08s,
     box-shadow 0.08s;
 }
 .menu .boton-relieve:not(:disabled):active {
-  translate: 0 4px;
+  translate: 0 3px;
   box-shadow:
-    0 1px 0 var(--uy-sol-oscuro),
-    0 3px 6px rgb(0 0 0 / 0.3);
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    0 1px 0 var(--menu-oro-canto),
+    0 3px 6px rgb(0 0 0 / 0.25);
 }
 .menu .boton:disabled {
   opacity: 1;
   border-color: transparent;
-  background: rgb(255 255 255 / 0.12);
-  color: rgb(255 255 255 / 0.45);
+  background: rgb(255 255 255 / 0.1);
+  color: rgb(255 255 255 / 0.4);
   box-shadow: none;
+}
+.menu-panel .segmentado button {
+  background: rgb(255 255 255 / 0.08);
+  transition: background 0.15s;
+}
+.menu-panel .segmentado button.elegido {
+  background: var(--menu-oro);
+  color: var(--menu-oro-tinta);
 }
 .atajos-lobby {
   display: grid;
   gap: 10px;
 }
-.atajo-lobby {
-  padding: 14px;
+.menu-panel .atajo-lobby {
+  padding: 13px 14px;
+  border: 1px solid var(--menu-filo);
   border-radius: 16px;
-  background: rgb(0 0 0 / 0.25);
+  background: var(--menu-vidrio);
+}
+.menu-panel .atajo-lobby:not(:disabled):hover,
+.menu-panel .atajo-lobby:focus-visible {
+  background: rgb(0 0 0 / 0.32);
 }
 .atajo-lobby .opcion-online-icono {
-  background: linear-gradient(180deg, var(--uy-celeste-claro), var(--uy-celeste));
+  background: color-mix(in srgb, var(--menu-oro) 16%, transparent);
+  color: var(--menu-oro);
+  font-size: 1.3rem;
 }
 
 /* ── Barra de abajo ───────────────────────────────────────────── */
 
+/* Sin fondo: solo los íconos sobre el paño, con una rayita del acento bajo el elegido. */
 .menu-barra {
   position: relative;
   z-index: 5;
-  padding: 7px 10px calc(7px + env(safe-area-inset-bottom));
-  background: linear-gradient(180deg, var(--uy-azul), var(--uy-azul-oscuro));
-  border-top: 3px solid var(--uy-sol);
-  box-shadow: 0 -4px 14px rgb(0 0 0 / 0.4);
+  padding: 4px 16px calc(6px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--menu-filo);
 }
 .menu-barra-pestanias {
-  max-width: 480px;
+  max-width: 420px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
 }
 .menu-pestania {
   position: relative;
-  isolation: isolate;
   display: grid;
-  justify-items: center;
-  gap: 2px;
-  min-height: 56px;
-  padding: 7px 4px 5px;
+  place-items: center;
+  min-height: 54px;
+  padding: 0;
   border: 0;
   border-radius: 14px;
-  background: rgb(255 255 255 / 0.06);
-  color: rgb(255 255 255 / 0.78);
-  font-weight: 800;
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
+  background: none;
+  color: color-mix(in srgb, var(--texto-claro) 52%, transparent);
+  font-size: 1.65rem;
+  transition: color 0.2s;
+}
+.menu-pestania:hover {
+  color: color-mix(in srgb, var(--texto-claro) 80%, transparent);
 }
 .menu-pestania:focus-visible {
-  outline: 2px solid var(--uy-blanco);
-  outline-offset: 2px;
-}
-.menu-pestania-fondo {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: 14px;
-  background: linear-gradient(180deg, var(--uy-celeste-claro), var(--uy-celeste) 60%);
-  box-shadow:
-    inset 0 2px 0 rgb(255 255 255 / 0.55),
-    0 3px 0 var(--uy-celeste-oscuro);
+  outline: 2px solid var(--texto-claro);
+  outline-offset: -2px;
 }
 .menu-pestania-icono {
-  font-size: 1.55rem;
-  line-height: 1;
-  filter: drop-shadow(0 2px 1px rgb(0 0 0 / 0.35));
-  transition: transform 0.2s cubic-bezier(0.3, 1.5, 0.6, 1);
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.3));
+  transition: transform 0.25s cubic-bezier(0.3, 1.5, 0.6, 1);
 }
 .menu-pestania.activa {
-  color: var(--uy-tinta);
+  color: var(--menu-oro);
 }
 .menu-pestania.activa .menu-pestania-icono {
-  transform: translateY(-3px) scale(1.2);
+  transform: translateY(-3px) scale(1.12);
+}
+.menu-pestania-marca {
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 22px;
+  height: 3px;
+  margin-left: -11px;
+  border-radius: 3px;
+  background: var(--menu-oro);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--menu-oro) 60%, transparent);
 }
 
 /* ── Hojas del menú (cuenta, ajustes y perfil) ────────────────── */
 
 .hoja.hoja-menu,
 .hoja.hoja-perfil {
-  border-top-color: var(--uy-sol);
+  border-top-color: var(--acento);
 }
 .hoja.hoja-menu {
   width: 100%;
@@ -578,7 +636,7 @@
     max-height: min(720px, 100%);
     border-radius: 22px;
     border: 0;
-    border-top: 5px solid var(--uy-sol);
+    border-top: 5px solid var(--acento);
   }
   .hoja.hoja-ajustes {
     height: min(720px, 100%);
@@ -587,7 +645,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .menu-pestania-icono,
-  .banner-ajustes span,
+  .banner-ajustes .icono-menu,
   .boton-jugar,
   .menu .boton-relieve {
     transition: none;

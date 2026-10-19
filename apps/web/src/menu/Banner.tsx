@@ -4,6 +4,7 @@ import { Avatar } from '../componentes/Avatar'
 import { direccionApi, iniciarCuenta, useCuenta } from '../cuenta/cuenta'
 import type { Perfil } from '../perfil'
 import { BanderaUruguay } from './BanderaUruguay'
+import { IconoAjustes, IconoLobby } from './Iconos'
 
 /** El Elo con el que arranca cualquiera (como en el servidor, `ELO.inicial`). */
 export const ELO_INICIAL = 1200
@@ -38,7 +39,7 @@ const NOMBRE_FORMATO: Record<Formato, string> = { '1v1': '1 vs 1', '2v2': '2 vs 
 /**
  * El banner fijo arriba del menú, como en los juegos de celular: tu avatar (tocándolo se edita
  * el avatar y el apodo), tu apodo, tus monedas y tu Elo del formato que jugás, la bandera y el
- * engranaje de los ajustes. Sin cuenta, invita a entrar.
+ * engranaje de los ajustes. Sin cuenta, invita a entrar. Va sin fondo, flotando sobre el paño.
  */
 export function Banner({
   perfil,
@@ -82,13 +83,13 @@ export function Banner({
                 aria-label={`${saldo ?? 0} monedas. Ir a la tienda`}
                 onClick={alTienda}
               >
-                <span aria-hidden="true">🪙</span> {saldo ?? '…'}
+                <span className="banner-moneda" aria-hidden="true" /> {saldo ?? '…'}
               </button>
               <span
                 className={`banner-dato banner-elo${elo && elo.partidas === 0 ? ' sin-partidas' : ''}`}
                 title={elo && elo.partidas === 0 ? 'Todavía sin partidas con Elo: arrancás con 1200' : undefined}
               >
-                <span aria-hidden="true">🏆</span> {elo?.puntos ?? '…'} <small>Elo {NOMBRE_FORMATO[perfil.formato]}</small>
+                <IconoLobby clase="banner-copa" /> {elo?.puntos ?? '…'} <small>Elo {NOMBRE_FORMATO[perfil.formato]}</small>
               </span>
             </div>
           ) : estado === 'afuera' || estado === 'entrando' ? (
@@ -100,7 +101,7 @@ export function Banner({
           )}
         </div>
         <button type="button" className="banner-ajustes" aria-label="Ajustes" aria-haspopup="dialog" onClick={alAjustes}>
-          <span aria-hidden="true">⚙</span>
+          <IconoAjustes />
         </button>
       </div>
     </header>

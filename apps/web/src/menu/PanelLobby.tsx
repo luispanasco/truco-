@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { FORMATOS, NIVELES, Segmentado, SelectorLargo } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
@@ -5,9 +6,10 @@ import { ConexionLocal } from '../conexion/local'
 import { useCuenta } from '../cuenta/cuenta'
 import { useJuego } from '../estado'
 import type { Perfil } from '../perfil'
+import { IconoCrear, IconoLobby } from './Iconos'
 
 /** Un atajo del lobby a otra pantalla: ícono, título y una línea que explica. */
-function Atajo({ icono, titulo, detalle, alTocar }: { icono: string; titulo: string; detalle: string; alTocar: () => void }) {
+function Atajo({ icono, titulo, detalle, alTocar }: { icono: ReactNode; titulo: string; detalle: string; alTocar: () => void }) {
   return (
     <button type="button" className="opcion-online atajo-lobby" onClick={alTocar}>
       <span className="opcion-online-icono" aria-hidden="true">
@@ -132,8 +134,8 @@ export function PanelLobby({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: P
       </section>
 
       <div className="atajos-lobby">
-        <Atajo icono="🏆" titulo="Ranking" detalle="Los mejores de cada formato, por Elo" alTocar={() => navegar('/ranking')} />
-        {adentro && <Atajo icono="🧉" titulo="Amigos" detalle="Tu código, solicitudes y quién está conectado" alTocar={() => navegar('/amigos')} />}
+        <Atajo icono={<IconoLobby />} titulo="Ranking" detalle="Los mejores de cada formato, por Elo" alTocar={() => navegar('/ranking')} />
+        {adentro && <Atajo icono={<IconoCrear />} titulo="Amigos" detalle="Tu código, solicitudes y quién está conectado" alTocar={() => navegar('/amigos')} />}
       </div>
     </>
   )

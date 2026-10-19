@@ -1150,3 +1150,13 @@ Pedido del usuario (rama `menu-nuevo`): un menú como el de Clash Royale, con el
   - los íconos de la barra son emojis (🛒 🃏 🏠): se pueden cambiar por dibujos propios;
   - "Invitar" desde el menú crea una sala con lo último que elegiste; quizás convenga una sala rápida sin pasar por el formulario;
   - el nombre "Lobby" para la pantalla de la derecha.
+
+### Menú: colores de la mesa, barra y banner sin fondo — 2026-10-19
+
+Pedido del usuario: "está fea la estética y la combinación de colores".
+
+- **Fuera los colores de la bandera** (`--uy-*`): el menú sale de la mesa elegida. El fondo es su paño, oscurecido hacia los bordes (`--menu-fondo`, con `color-mix`); el botón principal (Crear sala, Jugar contra la compu) y los resaltados van con el acento; los secundarios (Unirme, Buscar) son de papel con el ícono del color del paño; las tarjetas de adentro son vidrio oscuro sobre el paño. Probado con boliche, azul, bordó, pizarra, celeste, parrillero y cantina. La bandera queda solo como bandera, al lado del apodo.
+- **Banner sin caja**: avatar con aro del acento, apodo, y abajo las monedas (una moneda dibujada) y el Elo con una copita, como texto suelto; sin cuenta, "Entrar a tu cuenta" en un botón de contorno. El engranaje es un círculo apenas marcado.
+- **Barra de abajo sin fondo y sin textos**: solo íconos (el nombre queda como `aria-label`) con una rayita del acento bajo el elegido, que se corre con motion. El lobby ahora es una **copa** (ranking y partidas contra la compu) en vez de la casita.
+- **Íconos propios** (`menu/Iconos.tsx`, SVG a trazo con `currentColor`): tienda (bolsa), jugar (naipes), lobby (copa), ajustes, crear sala, llave y buscar. Reemplazan los emojis de la barra, los botones grandes y los atajos del lobby.
+- Relieve más sutil (canto de 4 px, brillo suave) y espaciados parejos. Tests: web 307, sin cambios (los nombres de las pestañas siguen iguales).

@@ -8,6 +8,7 @@ import { ConexionOnline, descartarPartidaGuardada, leerPartidaGuardada, motivoEr
 import { useCuenta } from '../cuenta/cuenta'
 import { useJuego } from '../estado'
 import type { Perfil } from '../perfil'
+import { IconoBuscar, IconoCrear, IconoLlave } from './Iconos'
 
 /** Un botón grande del menú, con relieve: ícono, título y una línea que explica. */
 function BotonJugar({
@@ -18,7 +19,7 @@ function BotonJugar({
   clase,
   alTocar,
 }: {
-  icono: string
+  icono: ReactNode
   titulo: string
   detalle: string
   deshabilitado: boolean
@@ -165,7 +166,7 @@ export function PanelJugar({
       >
         <BotonJugar
           clase="boton-jugar-crear"
-          icono="👥"
+          icono={<IconoCrear />}
           titulo="Crear sala"
           detalle={detalle('Armá la mesa y pasale el código a tus amigos')}
           deshabilitado={online}
@@ -173,7 +174,7 @@ export function PanelJugar({
         />
         <BotonJugar
           clase="boton-jugar-unirme"
-          icono="🔑"
+          icono={<IconoLlave />}
           titulo="Unirme con código"
           detalle={detalle('Entrá a la sala que armó otro')}
           deshabilitado={online}
@@ -181,7 +182,7 @@ export function PanelJugar({
         />
         <BotonJugar
           clase="boton-jugar-buscar"
-          icono="🌎"
+          icono={<IconoBuscar />}
           titulo="Buscar partida"
           detalle={detalle('Mano a mano con desconocidos')}
           deshabilitado={online}
