@@ -65,7 +65,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_…
 
 Cuando estén, avisame "listo". No me pases las claves: yo reinicio el servidor y lo pruebo. Al arrancar, el servidor crea solo las tablas.
 
-**Mientras tanto** el juego no se rompe: sin `DATABASE_URL`, el servidor usa una base local de prueba en `apps/server/datos/base`. Sin las variables de Supabase, la web muestra un "login de prueba" que solo existe en desarrollo.
+**Mientras tanto** el juego no se rompe: sin `DATABASE_URL`, el servidor usa una base local de prueba en `apps/server/datos/base` (con `TRUCO_DIR_BASE=otra/carpeta` usa otra, por ejemplo para probar con un segundo servidor sin tocar la de siempre). Sin las variables de Supabase, la web muestra un "login de prueba" que solo existe en desarrollo.
 
 ## 4. TURN de Cloudflare, para el chat de voz
 

@@ -21,7 +21,9 @@ const turnoMs = process.env.TRUCO_TURNO_MS ? Number(process.env.TRUCO_TURNO_MS) 
 // TRUCO_TIENDA_DE_PRUEBA=0 deja de aceptar lo pago a quien desbloqueó la tienda de prueba (ver servidor.ts).
 const conTurn = await prenderTurnCloudflare()
 console.log(conTurn ? 'Voz: con el TURN de Cloudflare.' : 'Voz: solo STUN (sin TRUCO_TURN_ID y TRUCO_TURN_TOKEN, algunas redes no conectan).')
-const cuentas = await cuentasDelEntorno(process.env, resolve(raiz, 'datos', 'base')).catch((e: unknown) => {
+// TRUCO_DIR_BASE: otra carpeta para la base local (sin DATABASE_URL), para probar sin tocar la de siempre.
+const dirBase = process.env.TRUCO_DIR_BASE ? resolve(process.env.TRUCO_DIR_BASE) : resolve(raiz, 'datos', 'base')
+const cuentas = await cuentasDelEntorno(process.env, dirBase).catch((e: unknown) => {
   console.error(`No se pudo conectar con la base de datos (${e instanceof Error ? e.message : e}). ¿Estás con VPN o en una red que lo bloquea?`)
   process.exit(1)
 })

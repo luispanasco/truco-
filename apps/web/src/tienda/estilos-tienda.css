@@ -1,0 +1,816 @@
+/*
+ * La tienda: la destacada grande arriba, las demás en grilla, tu colección y el probador.
+ * Los colores salen de la mesa (paño, acento, papel); cada rareza pone el suyo en `--rareza`:
+ * la común apenas un filo, la rara su color, la épica un brillo suave y la legendaria un borde
+ * que gira y un destello que pasa. Con movimiento reducido todo queda quieto.
+ */
+
+@property --giro-rareza {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.rareza-comun {
+  --rareza: #b7c0c9;
+}
+.rareza-rara {
+  --rareza: #5aa6f5;
+}
+.rareza-epica {
+  --rareza: #bb7af5;
+}
+.rareza-legendaria {
+  --rareza: #f5bd3c;
+}
+
+/* La moneda dibujada, como la del banner. */
+.moneda {
+  display: inline-block;
+  flex: none;
+  width: 0.95em;
+  height: 0.95em;
+  border-radius: 50%;
+  vertical-align: -0.12em;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--acento) 55%, white), var(--acento) 60%);
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--acento) 55%, #3b2208),
+    0 1px 1px rgb(0 0 0 / 0.3);
+}
+
+/* El botón de comprar: el del acento, con relieve (como los grandes del menú). */
+.boton.boton-tienda {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.28), rgb(255 255 255 / 0) 55%),
+    var(--acento);
+  color: color-mix(in srgb, var(--acento) 18%, #2b1804);
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    0 4px 0 color-mix(in srgb, var(--acento) 55%, #3b2208),
+    0 8px 14px rgb(0 0 0 / 0.25);
+  transition:
+    translate 0.08s,
+    box-shadow 0.08s;
+}
+.boton.boton-tienda:not(:disabled):active {
+  translate: 0 3px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    0 1px 0 color-mix(in srgb, var(--acento) 55%, #3b2208),
+    0 3px 6px rgb(0 0 0 / 0.25);
+}
+.boton.boton-tienda .moneda {
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--acento) 40%, #3b2208),
+    0 0 0 1.5px rgb(255 255 255 / 0.5);
+}
+.boton.boton-tienda:disabled {
+  opacity: 1;
+  background: rgb(255 255 255 / 0.12);
+  color: rgb(255 255 255 / 0.55);
+  box-shadow: none;
+}
+
+/* La cabecera de /tienda: el saldo, compacto, a la derecha del título. */
+.online-cabecera.con-extra {
+  grid-template-columns: 1fr auto 1fr;
+}
+.online-cabecera.con-extra > :last-child {
+  justify-self: end;
+}
+.saldo-compacto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.25);
+  color: var(--acento);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.pantalla-tienda {
+  max-width: 560px;
+}
+
+/* Sin cuenta: la invitación, arriba y corta. */
+.tienda-invitacion {
+  display: grid;
+  gap: 10px;
+}
+.tienda-invitacion p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+/* ── Las tarjetas de la vitrina ───────────────────────────────── */
+
+.vitrina {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vitrina-medianas {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.vitrina-chicas {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.vitrina li {
+  display: grid;
+}
+
+.vitrina-item {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  overflow: hidden;
+  border: 1.5px solid color-mix(in srgb, var(--rareza) 55%, transparent);
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--rareza) 26%, transparent), transparent 70%),
+    rgb(0 0 0 / 0.26);
+  color: var(--texto-claro);
+  text-align: center;
+  font: inherit;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.25);
+  transition:
+    translate 0.15s,
+    box-shadow 0.15s;
+}
+.vitrina-item:hover {
+  translate: 0 -2px;
+}
+.vitrina-item:active {
+  translate: 0 1px;
+}
+.vitrina-item:focus-visible {
+  outline: 3px solid var(--texto-claro);
+  outline-offset: 2px;
+}
+
+/* La cinta de la rareza, cruzada en la esquina. */
+.cinta-rareza {
+  position: absolute;
+  z-index: 2;
+  top: 13px;
+  right: -31px;
+  width: 112px;
+  padding: 2px 0;
+  rotate: 45deg;
+  background: var(--rareza);
+  color: color-mix(in srgb, var(--rareza) 15%, #120d06);
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-align: center;
+  text-transform: uppercase;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+  pointer-events: none;
+}
+
+.vitrina-muestra {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 45%, rgb(255 255 255 / 0.13), rgb(255 255 255 / 0.02) 70%);
+  overflow: hidden;
+}
+.vitrina-pie {
+  display: grid;
+  gap: 5px;
+  align-content: space-between;
+  justify-items: center;
+  min-width: 0;
+}
+.vitrina-nombre {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-weight: 800;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.vitrina-precio {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.3);
+  color: var(--acento);
+  font-weight: 800;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+}
+.vitrina-precio.no-alcanza {
+  color: var(--menu-suave, rgb(255 255 255 / 0.6));
+}
+.vitrina-precio.no-alcanza .moneda {
+  filter: grayscale(0.6);
+}
+.vitrina-precio.es-tuyo {
+  background: color-mix(in srgb, var(--rareza) 30%, rgb(0 0 0 / 0.3));
+  color: var(--texto-claro);
+}
+
+/* Las comunes, chiquitas. */
+.vitrina-chica {
+  padding: 8px 7px 9px;
+  gap: 6px;
+  border-radius: 15px;
+}
+.vitrina-chica .vitrina-muestra {
+  border-radius: 11px;
+}
+.vitrina-chica .vitrina-nombre {
+  font-size: 0.76rem;
+  min-height: 2.4em;
+}
+.vitrina-chica .vitrina-precio {
+  font-size: 0.78rem;
+  padding: 2px 8px;
+}
+.vitrina-chica .cinta-rareza {
+  top: 9px;
+  right: -36px;
+  font-size: 0.5rem;
+}
+
+/* La destacada: grande, con la muestra a lo ancho y el nombre con la letra de los títulos. */
+.vitrina-destacada {
+  grid-template-rows: auto auto;
+  gap: 12px;
+  padding: 14px;
+  border-width: 2px;
+  border-radius: 22px;
+}
+.vitrina-destacada .vitrina-muestra {
+  aspect-ratio: 16 / 10;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--rareza) 34%, transparent), transparent 62%),
+    rgb(0 0 0 / 0.18);
+}
+.vitrina-destacada .vitrina-pie {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'etiqueta precio'
+    'nombre precio';
+  justify-items: start;
+  align-items: center;
+  text-align: left;
+  gap: 2px 12px;
+}
+.vitrina-etiqueta {
+  grid-area: etiqueta;
+  color: var(--rareza);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.vitrina-destacada .vitrina-nombre {
+  grid-area: nombre;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: 1.35rem;
+  line-height: 1.1;
+  color: var(--papel);
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.3);
+}
+.vitrina-destacada .vitrina-precio {
+  grid-area: precio;
+  padding: 7px 14px;
+  font-size: 1.08rem;
+}
+.vitrina-destacada .cinta-rareza {
+  top: 18px;
+  right: -30px;
+  width: 130px;
+  font-size: 0.64rem;
+}
+/* Cuándo cambia la vitrina: una insignia sobre la muestra. */
+.vitrina-cambia {
+  position: absolute;
+  z-index: 2;
+  top: 22px;
+  left: 22px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.5);
+  color: var(--texto-claro);
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(3px);
+}
+.vitrina-cambia::before {
+  content: '⏱ ';
+}
+
+/* Épica: un brillo suave que respira. */
+.vitrina-item.rareza-epica {
+  border-color: color-mix(in srgb, var(--rareza) 80%, transparent);
+  box-shadow:
+    0 0 16px color-mix(in srgb, var(--rareza) 38%, transparent),
+    0 6px 16px rgb(0 0 0 / 0.25);
+  animation: rareza-respira 3.2s ease-in-out infinite;
+}
+@keyframes rareza-respira {
+  50% {
+    box-shadow:
+      0 0 26px color-mix(in srgb, var(--rareza) 58%, transparent),
+      0 6px 16px rgb(0 0 0 / 0.25);
+  }
+}
+
+/* Legendaria: el borde dorado gira y un destello cruza la tarjeta de vez en cuando. */
+.vitrina-item.rareza-legendaria,
+.probador.rareza-legendaria .probador-escenario {
+  border: 2px solid transparent;
+  background:
+    radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--rareza) 26%, transparent), transparent 70%) padding-box,
+    linear-gradient(color-mix(in srgb, var(--tapete-oscuro) 45%, #120d06), color-mix(in srgb, var(--tapete-oscuro) 45%, #120d06)) padding-box,
+    conic-gradient(from var(--giro-rareza), var(--rareza), #fff3c4 12%, color-mix(in srgb, var(--rareza) 40%, #3b2208) 30%, var(--rareza) 50%, #fff3c4 62%, color-mix(in srgb, var(--rareza) 40%, #3b2208) 80%, var(--rareza)) border-box;
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--rareza) 45%, transparent),
+    0 6px 16px rgb(0 0 0 / 0.25);
+  animation: rareza-gira 5s linear infinite;
+}
+@keyframes rareza-gira {
+  to {
+    --giro-rareza: 360deg;
+  }
+}
+.vitrina-item.rareza-legendaria::after,
+.probador.rareza-legendaria .probador-escenario::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(105deg, transparent 38%, rgb(255 246 214 / 0.32) 50%, transparent 62%);
+  translate: -120% 0;
+  animation: rareza-destello 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes rareza-destello {
+  0%,
+  62% {
+    translate: -120% 0;
+  }
+  100% {
+    translate: 120% 0;
+  }
+}
+
+/* ── Las muestras ─────────────────────────────────────────────── */
+
+/* El avatar encuadrado en la pieza: el punto `--foco` va al centro, acercado `--foco-zoom`. */
+/* Ocupa toda la caja de la muestra (que tiene su proporción), sin empujarla. */
+.muestra-avatar {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.muestra-avatar .avatar-dibujo,
+.muestra-avatar .avatar-inicial {
+  width: 100%;
+  height: 100%;
+}
+.muestra-avatar .avatar-inicial {
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 800;
+}
+.muestra-avatar .avatar-dibujo .avatar-todo {
+  transform-origin: var(--foco);
+  translate: var(--foco-mover);
+  scale: var(--foco-zoom);
+}
+.vitrina-destacada .muestra-avatar,
+.probador-muestra .muestra-avatar {
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.3));
+}
+
+.muestra-tienda-mesa {
+  width: 82%;
+  border-width: 3px;
+  box-shadow:
+    inset 0 0 10px rgb(0 0 0 / 0.4),
+    0 4px 10px rgb(0 0 0 / 0.3);
+}
+.vitrina-chica .muestra-tienda-mesa .carta {
+  --ancho: 17px;
+}
+.muestra-tienda-mesa.grande {
+  width: min(88%, 380px);
+  border-width: 7px;
+  border-radius: 18px;
+}
+.muestra-mesa-cartas {
+  display: flex;
+}
+.muestra-mesa-cartas .carta {
+  --ancho: 46px;
+  margin: 0 -6px;
+}
+.muestra-mesa-cartas .carta:nth-child(1) {
+  rotate: -12deg;
+  translate: 0 4px;
+}
+.muestra-mesa-cartas .carta:nth-child(2) {
+  rotate: 0deg;
+  translate: 0 -4px;
+}
+.muestra-mesa-cartas .carta:nth-child(3) {
+  rotate: 12deg;
+  translate: 0 4px;
+}
+.vitrina-destacada .muestra-tienda-mesa.grande {
+  width: min(70%, 300px);
+}
+.vitrina-destacada .muestra-mesa-cartas .carta {
+  --ancho: 38px;
+}
+
+.muestra-letra {
+  color: var(--papel);
+  font-size: calc(1.55rem * var(--escala-letra, 1));
+  line-height: 1.1;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.3);
+}
+.vitrina-chica .muestra-letra {
+  font-size: calc(1.15rem * var(--escala-letra, 1));
+}
+.muestra-letra.grande {
+  display: grid;
+  gap: 8px;
+  padding: 10px 16px;
+  text-align: center;
+}
+.muestra-letra.grande strong {
+  font-weight: inherit;
+  font-size: calc(2.1rem * var(--escala-letra, 1));
+  color: var(--acento);
+}
+.muestra-letra.grande span {
+  font-size: calc(1.05rem * var(--escala-letra, 1));
+  line-height: 1.3;
+}
+.muestra-letra.grande small {
+  font-size: calc(0.9rem * var(--escala-letra, 1));
+  opacity: 0.75;
+}
+
+/* ── Tu colección ─────────────────────────────────────────────── */
+
+.coleccion {
+  display: grid;
+  gap: 10px;
+  padding-top: 6px;
+}
+.coleccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: 1.2rem;
+  color: var(--papel);
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.3);
+}
+.coleccion-titulo small {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.28);
+  font-family: var(--fuente-texto, inherit);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-shadow: none;
+}
+.coleccion-vacia {
+  margin: 0;
+  opacity: 0.8;
+}
+.coleccion-lista {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.coleccion-item {
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+  align-content: start;
+  padding: 7px 7px 8px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--rareza) 40%, transparent);
+  background: rgb(0 0 0 / 0.2);
+  text-align: center;
+}
+.coleccion-muestra {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 45%, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.02) 70%);
+  overflow: hidden;
+  color: inherit;
+}
+.coleccion-muestra .muestra-letra {
+  font-size: calc(1.1rem * var(--escala-letra, 1));
+}
+.coleccion-muestra .muestra-tienda-mesa .carta {
+  --ancho: 17px;
+}
+.coleccion-nombre {
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.2;
+  min-height: 2.4em;
+  overflow-wrap: anywhere;
+}
+.boton.coleccion-usar {
+  width: 100%;
+  padding: 6px 4px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  box-shadow: none;
+}
+.boton.coleccion-usar:disabled {
+  opacity: 1;
+  background: rgb(255 255 255 / 0.1);
+  color: rgb(255 255 255 / 0.65);
+}
+
+/* ── El probador ──────────────────────────────────────────────── */
+
+.hoja.hoja-probador {
+  border-top-color: var(--rareza);
+}
+.probador {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding-bottom: 4px;
+}
+.probador-escenario {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: min(40dvh, 340px);
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--rareza) 60%, transparent);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 58%, color-mix(in srgb, var(--rareza) 38%, transparent), transparent 62%),
+    rgb(0 0 0 / 0.22);
+}
+.probador.rareza-epica .probador-escenario {
+  box-shadow: 0 0 22px color-mix(in srgb, var(--rareza) 42%, transparent);
+}
+.probador-escenario .cinta-rareza {
+  top: 20px;
+  right: -32px;
+  width: 140px;
+  font-size: 0.66rem;
+}
+.probador-muestra {
+  position: relative;
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+.probador-que {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--menu-suave, rgb(255 255 255 / 0.7));
+}
+.probador-rareza {
+  color: var(--rareza);
+}
+.probador-que small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.segmentado.probador-alternar {
+  justify-self: center;
+  width: 180px;
+  padding: 3px;
+  gap: 3px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.28);
+}
+.segmentado.probador-alternar button {
+  min-height: 0;
+  padding: 6px 4px;
+  border-radius: 999px;
+  background: none;
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+.segmentado.probador-alternar button.elegido {
+  background: var(--acento);
+  color: var(--tinta);
+}
+.probador-acciones {
+  display: grid;
+  gap: 10px;
+}
+.boton-comprar {
+  font-size: 1.1rem;
+  padding: 14px 16px;
+}
+.probador-aviso p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.probador-faltan {
+  text-align: center;
+  font-size: 1.15rem !important;
+  font-weight: 800;
+}
+.probador-faltan strong {
+  color: var(--acento);
+}
+.barra-ahorro {
+  height: 10px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.35);
+  overflow: hidden;
+}
+.barra-ahorro span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--acento) 70%, #3b2208), var(--acento));
+}
+.como-se-ganan {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.22);
+  list-style: none;
+  font-size: 0.86rem;
+}
+.como-se-ganan strong {
+  display: inline-block;
+  min-width: 2.6em;
+  color: var(--acento);
+}
+.como-se-ganan-nota {
+  font-size: 0.78rem;
+  opacity: 0.75;
+}
+.probador-confirmar {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgb(0 0 0 / 0.25);
+  text-align: center;
+}
+.probador-pregunta {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.35;
+}
+.probador-confirmar .nota-izq {
+  margin: 0;
+  text-align: center;
+  opacity: 0.8;
+}
+.probador-botones {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 10px;
+}
+.probador-tuyo {
+  margin: 0;
+  text-align: center;
+  font-family: var(--fuente-titulo);
+  font-size: 1.6rem;
+  color: var(--acento);
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.35);
+}
+
+/* ── Festejo y monedas ────────────────────────────────────────── */
+
+.festejo {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.festejo > * {
+  grid-area: 1 / 1;
+}
+.festejo-chispa {
+  border-radius: 2px;
+  background: var(--rareza);
+  box-shadow: 0 0 8px var(--rareza);
+}
+.festejo-chispa.acento {
+  border-radius: 50%;
+  background: #fff6d6;
+}
+.festejo-destello {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 6px solid var(--rareza);
+  box-shadow: 0 0 30px var(--rareza);
+}
+.monedas-volando {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+}
+.moneda-volando {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--acento) 50%, white), var(--acento) 60%);
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--acento) 55%, #3b2208),
+    0 2px 6px rgb(0 0 0 / 0.4);
+}
+
+/* ── Pantallas más anchas ─────────────────────────────────────── */
+
+@media (min-width: 720px) {
+  .hoja.hoja-menu.hoja-probador {
+    max-width: 480px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vitrina-item,
+  .boton.boton-tienda {
+    transition: none;
+  }
+  .vitrina-item.rareza-epica,
+  .vitrina-item.rareza-legendaria,
+  .probador.rareza-legendaria .probador-escenario {
+    animation: none;
+  }
+  .vitrina-item.rareza-legendaria::after,
+  .probador.rareza-legendaria .probador-escenario::after {
+    display: none;
+  }
+}

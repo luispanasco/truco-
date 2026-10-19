@@ -80,6 +80,7 @@ export function Banner({
               <button
                 type="button"
                 className="banner-dato banner-monedas"
+                data-saldo
                 aria-label={`${saldo ?? 0} monedas. Ir a la tienda`}
                 onClick={alTienda}
               >

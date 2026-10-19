@@ -1160,3 +1160,24 @@ Pedido del usuario: "está fea la estética y la combinación de colores".
 - **Barra de abajo sin fondo y sin textos**: solo íconos (el nombre queda como `aria-label`) con una rayita del acento bajo el elegido, que se corre con motion. El lobby ahora es una **copa** (ranking y partidas contra la compu) en vez de la casita.
 - **Íconos propios** (`menu/Iconos.tsx`, SVG a trazo con `currentColor`): tienda (bolsa), jugar (naipes), lobby (copa), ajustes, crear sala, llave y buscar. Reemplazan los emojis de la barra, los botones grandes y los atajos del lobby.
 - Relieve más sutil (canto de 4 px, brillo suave) y espaciados parejos. Tests: web 307, sin cambios (los nombres de las pestañas siguen iguales).
+
+### Tienda rediseñada: destacada, probador y nombres de las piezas — 2026-10-19
+
+Pedido del usuario (rama `menu-nuevo`), con el plan aprobado.
+
+- **La destacada arriba, grande:** el lugar épico o legendario de la vitrina va como tarjeta principal, con la muestra a lo ancho, el nombre con la letra de los títulos y la insignia "⏱ Cambia en 10:05". Abajo, las raras y épicas de a dos y las comunes de a tres, más chicas. Se fue la caja del saldo: en el menú el saldo está en el banner; en `/tienda` va compacto en la cabecera (`CabeceraOnline` acepta `extra`).
+- **Muestra enfocada en la pieza** (`tienda/items.ts`, `foco`): ojos, cejas y lentes, de cerca a los ojos; boca, barba y lo que va en la boca, a la boca; nariz y pecas, la cara; aros, la oreja; pelo, color y sombreros, la cabeza; ropa, bufanda y lo de la mano, el busto. Se calcula con la caja de la cara del estilo y nunca muestra fuera del dibujo. Mesas: el paño con una carta (en grande, con tres); letras: "¡Truco!" (en grande, una frase con números).
+- **Probador** (`tienda/Probador.tsx`, con `Hoja`): se abre tocando cualquier cosmético. Tu avatar grande con la pieza puesta (lo de la cara se ve con la cara entera; la ropa, el avatar entero) y "Sin / Con" para comparar con lo que tenés; en mesas y letras compara con la tuya. Desde ahí se compra o se usa.
+- **Rarezas:** cinta cruzada en la esquina con el nombre; común con un filo gris, rara azul, épica violeta con un brillo que respira y legendaria con el borde dorado que gira (`@property`) y un destello que cruza cada tanto. Con movimiento reducido, todo quieto.
+- **Comprar:** "Comprar 🪙 800" pide confirmación ("¿Comprás Poncho por 800? Te quedan 2200.", "Mejor no" / "Sí, comprar"). Al comprar, unas monedas vuelan en arco hasta el saldo (el del banner o el de la cabecera, marcados con `data-saldo`), que da un saltito, y saltan chispas del color de la rareza (más y más lejos cuanto más rara; desde épica, un destello). Después: "¡Es tuyo!", "Usar ahora" y "Seguir mirando". Todo con motion, sin librerías nuevas.
+- **Si no alcanza:** "Te faltan 🪙 680", una barra de lo juntado y cómo se ganan (10 por terminar una partida online, 10 más si la ganás, 30 la primera del día; con bots en la mesa, menos; los números son los de `ECONOMIA` del servidor, copiados). **Sin cuenta:** una tarjeta arriba invita a entrar, y el probador también.
+- **Tu colección**, al final: lo comprado (de lo último a lo primero) con su muestra, que abre el probador, y "Usar" / "✓ Puesto".
+- **Nombres para las piezas numeradas** (`packages/shared/src/avatar.ts`): pieles, caras, peinados, colores de pelo, cejas, ojos, narices, bocas, lentes y aros ("Jopo", "Rulos al viento", "Mirada canchera", "Ojos pícaros", "Sonrisa ladina", "Cara de póker", "Ñata", "Aro colgante"…), mirando cada dibujo. Mismo orden y cantidad. La lista vieja → nueva está en `NOMBRES-PIEZAS.md`, para revisar.
+- **`TRUCO_DIR_BASE`** (servidor): otra carpeta para la base local de prueba, para levantar un segundo servidor sin tocar la de siempre (documentado en `INSTRUCTIVO-CUENTAS.md`).
+- Revisado con capturas a 360×740, 412×915 y 1280×800 (con monedas, con pocas, invitado; probador de ojos, ropa, mesa, pelo y aros; confirmación, vuelo de monedas, festejo y colección), contra un servidor propio con su base en otra carpeta. En `capturas-menu/tienda/`, sin commitear.
+- **Tests:** web 312 (la tienda, nuevo: destacada con cuenta regresiva y saldo en la cabecera, probador con Sin/Con, confirmación, "Mejor no", te faltan, invitado y colección; el catálogo: nombres sin repetir ni numerar). e2e `avatar.spec.ts` y `menu.spec.ts` pasan con los nombres nuevos.
+
+**Pendiente / a decidir:**
+- Revisar los nombres en `NOMBRES-PIEZAS.md` (algunos son a ojo: "Corte milico", "Labios carnosos", "Cejas desafiantes").
+- Los montos de "cómo se ganan" están copiados del servidor: si cambia la economía, hay que cambiarlos en `tienda/Probador.tsx` (o mandarlos en `/api/tienda`).
+- Contra la compu sin internet no se gana nada; el texto solo dice que con bots en la mesa se gana menos.
