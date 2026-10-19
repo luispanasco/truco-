@@ -141,6 +141,8 @@ describe('selector de tipografías', () => {
         <Inicio />
       </MemoryRouter>,
     )
+    // Las opciones finas están en el engranaje del banner.
+    fireEvent.click(screen.getByRole('button', { name: 'Ajustes' }))
     expect(raiz.dataset.tipografia).toBe('nunito')
     const grupo = screen.getByRole('radiogroup', { name: 'Tipografía' })
     fireEvent.click(within(grupo).getByRole('radio', { name: 'Alfa Slab One' }))
@@ -160,6 +162,8 @@ describe('selector de tipografías', () => {
         <Inicio />
       </MemoryRouter>,
     )
+    // Las opciones finas están en el engranaje del banner.
+    fireEvent.click(screen.getByRole('button', { name: 'Ajustes' }))
     expect(raiz.dataset.tipografia).toBe('bebas-neue')
     fireEvent.click(screen.getByRole('switch', { name: /Desbloquear la tienda/ }))
     expect(raiz.dataset.tipografia).toBe('nunito')

@@ -9,9 +9,11 @@ test('una partida entera contra la compu, de la mesa al cartel final', async ({ 
   test.setTimeout(180_000)
   const page = await persona(browser, 'Lucía')
 
+  // Contra la compu está en el lobby, a la derecha del menú.
+  await page.getByRole('tab', { name: 'Lobby' }).click()
   await page.getByRole('button', { name: /^Mano a mano/ }).click()
   await page.getByRole('button', { name: 'Fácil' }).click()
-  await page.getByText('Más opciones').click()
+  await page.getByText('Reglas de la partida').click()
   const rapido = page.getByRole('switch', { name: /Juego rápido/ })
   await page.getByText('Juego rápido', { exact: true }).click()
   await expect(rapido).toBeChecked()

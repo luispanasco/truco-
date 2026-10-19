@@ -101,6 +101,16 @@ describe('formato del avatar', () => {
     const todas = CAPAS_AVATAR.flatMap((c) => CATALOGO_AVATAR[c])
     expect(todas.filter((p) => p.precio > 0).length).toBeGreaterThan(todas.length / 2)
   })
+
+  it('cada pieza tiene su nombre, sin repetirse en la capa ni ir numerada', () => {
+    for (const capa of CAPAS_AVATAR) {
+      const nombres = CATALOGO_AVATAR[capa].map((p) => p.nombre)
+      expect(new Set(nombres).size).toBe(nombres.length)
+      expect(nombres.filter((n) => /\d$/.test(n))).toEqual([])
+    }
+    expect(CATALOGO_AVATAR.pelo[7]!.nombre).toBe('Jopo')
+    expect(CATALOGO_AVATAR.boca[22]!.nombre).toBe('Cara de póker')
+  })
 })
 
 describe('estilo Lorelei', () => {

@@ -1174,3 +1174,67 @@ Reglas del usuario. En 1v1 no hay pie. En 2v2 el pie juega con un bot o con una 
   - bots 25: el bot cumple matala, dejala, jugá algo y la carta;
   - server 103: el bot espera la orden y la cumple. Los jugadores de prueba ahora mandan a su bot cuando le toca, y la pausa de reacción a la orden es 0 en los tests;
   - web 298.
+
+---
+
+## Menú principal nuevo, estilo juego de celular — 2026-10-18
+
+Pedido del usuario (rama `menu-nuevo`): un menú como el de Clash Royale, con el juego online al medio.
+
+- **Banner fijo arriba** (`menu/Banner.tsx`):
+  - tu avatar (tocándolo se abre "Tu perfil": apodo y editor de avatar), tu apodo con la bandera de Uruguay al lado y el engranaje ⚙;
+  - con cuenta: tus monedas (llevan a la tienda) y tu **Elo del formato que jugás** (`perfil.formato`, el de "contra la compu"), pedido a `/api/ranking?formato=…` (`yo.puntos`). Sin partidas con Elo el servidor no te devuelve: se muestra 1200, el inicial, un poco apagado;
+  - invitado: "Entrar a tu cuenta" abre una hoja con lo de `TarjetaCuenta` (Google, link por email o login de prueba), que se cierra sola al entrar. Si el servidor no tiene cuentas, dice "Jugás como invitado".
+  - **No hay nivel**: queda para cuando el usuario lo defina.
+- **La bandera** es el SVG oficial de Wikimedia Commons ("Flag_of_Uruguay.svg", dominio público), en `public/bandera-uruguay.svg`. Va como `<img>` (el archivo trae clases propias que se mezclarían con los estilos) y entra en la caché de la app instalada. Sus colores (azul `#0038a8`, blanco, sol `#fcd116` con borde `#7b3f00`) son los del banner, la barra de abajo y los botones grandes (`--uy-*` en `menu/estilos-menu.css`). Las tarjetas de adentro siguen con la mesa y la letra elegidas.
+- **Tres pantallas que se deslizan** (`pantallas/Inicio.tsx`): scroll horizontal con *snap* (lo hace el navegador, se siente nativo) y una barra de abajo con íconos (pestañas con flechas de teclado y un fondo que se corre con motion). Las de los costados quedan `inert` mientras no se ven. Al volver de una sala o del ranking, el menú queda en la pantalla de la que saliste (hasta recargar). En pantallas de 1100 px o más las tres van una al lado de la otra y no hay barra.
+  - **Tienda** (izquierda): la vitrina del día (`VitrinaDelDia`, sacada de `Tienda.tsx`; `/tienda` sigue igual).
+  - **Jugar** (al medio, la que abre; `menu/PanelJugar.tsx`): la partida en curso para volver, destacada arriba; el logo; botones grandes con relieve para **Crear sala** (dorado), **Unirme con código** (celeste) y **Buscar partida** (blanco); sin apodo, se pide ahí mismo. Con cuenta, **tus amigos en la app** (`AmigosConectados`): al que espera en una sala, "Unirme"; al conectado, "Invitar", que lleva a crear la sala y, al estar en la espera, le manda la invitación sola. Sin cuenta, una tarjeta invita a entrar para jugar con amigos.
+  - **Lobby** (derecha; `menu/PanelLobby.tsx`): contra la compu (formato, dificultad, "Reglas de la partida" plegadas y Jugar), y atajos al ranking y a los amigos.
+- **El engranaje** (`menu/Ajustes.tsx`) abre una hoja con el sonido, la mesa y las cartas (mesa, letra, baraja, vista, cartas jugadas, ojear, ayudas), las señas, la tienda de prueba, instalar la app y, al final, tu cuenta (salir). Las reglas de la partida contra la compu (largo, tirar reyes, toques del pie, corte, pica-pica, juego rápido) quedaron al lado de su botón Jugar, en el lobby.
+- **`usePerfil` ahora se entera de todos los cambios del perfil**, no solo de los que baja la cuenta. Antes cada pantalla tenía su copia y, con el banner, la tienda y los ajustes a la vez, un cambio en una podía pisar el de otra.
+- Las rutas (/crear, /unirme, /s/:codigo, /sala, /buscar, /mesa, /tienda, /amigos, /ranking) y los avisos globales (invitaciones, versión nueva) quedan como estaban.
+- **Tests:** web 307 (nuevo `menu.test.tsx`, 9: pestañas y flechas, deslizar, apodo, perfil, engranaje, banner invitado y con cuenta, Elo inicial, amigos con Unirme e Invitar); los tests que buscaban las opciones en el inicio ahora abren el engranaje. e2e: nuevo `menu.spec.ts` (deslizar con el dedo de verdad, barra, engranaje, login de prueba con monedas y Elo); `local`, `ojeo`, `anfitrion` y `avatar` llegan por el lobby, el engranaje y "Tu perfil".
+- **Pendiente / a decidir:**
+  - el nivel del jugador en el banner;
+  - los íconos de la barra son emojis (🛒 🃏 🏠): se pueden cambiar por dibujos propios;
+  - "Invitar" desde el menú crea una sala con lo último que elegiste; quizás convenga una sala rápida sin pasar por el formulario;
+  - el nombre "Lobby" para la pantalla de la derecha.
+
+### Menú: colores de la mesa, barra y banner sin fondo — 2026-10-19
+
+Pedido del usuario: "está fea la estética y la combinación de colores".
+
+- **Fuera los colores de la bandera** (`--uy-*`): el menú sale de la mesa elegida. El fondo es su paño, oscurecido hacia los bordes (`--menu-fondo`, con `color-mix`); el botón principal (Crear sala, Jugar contra la compu) y los resaltados van con el acento; los secundarios (Unirme, Buscar) son de papel con el ícono del color del paño; las tarjetas de adentro son vidrio oscuro sobre el paño. Probado con boliche, azul, bordó, pizarra, celeste, parrillero y cantina. La bandera queda solo como bandera, al lado del apodo.
+- **Banner sin caja**: avatar con aro del acento, apodo, y abajo las monedas (una moneda dibujada) y el Elo con una copita, como texto suelto; sin cuenta, "Entrar a tu cuenta" en un botón de contorno. El engranaje es un círculo apenas marcado.
+- **Barra de abajo sin fondo y sin textos**: solo íconos (el nombre queda como `aria-label`) con una rayita del acento bajo el elegido, que se corre con motion. El lobby ahora es una **copa** (ranking y partidas contra la compu) en vez de la casita.
+- **Íconos propios** (`menu/Iconos.tsx`, SVG a trazo con `currentColor`): tienda (bolsa), jugar (naipes), lobby (copa), ajustes, crear sala, llave y buscar. Reemplazan los emojis de la barra, los botones grandes y los atajos del lobby.
+- Relieve más sutil (canto de 4 px, brillo suave) y espaciados parejos. Tests: web 307, sin cambios (los nombres de las pestañas siguen iguales).
+
+### Tienda rediseñada: destacada, probador y nombres de las piezas — 2026-10-19
+
+Pedido del usuario (rama `menu-nuevo`), con el plan aprobado.
+
+- **La destacada arriba, grande:** el lugar épico o legendario de la vitrina va como tarjeta principal, con la muestra a lo ancho, el nombre con la letra de los títulos y la insignia "⏱ Cambia en 10:05". Abajo, las raras y épicas de a dos y las comunes de a tres, más chicas. Se fue la caja del saldo: en el menú el saldo está en el banner; en `/tienda` va compacto en la cabecera (`CabeceraOnline` acepta `extra`).
+- **Muestra enfocada en la pieza** (`tienda/items.ts`, `foco`): ojos, cejas y lentes, de cerca a los ojos; boca, barba y lo que va en la boca, a la boca; nariz y pecas, la cara; aros, la oreja; pelo, color y sombreros, la cabeza; ropa, bufanda y lo de la mano, el busto. Se calcula con la caja de la cara del estilo y nunca muestra fuera del dibujo. Mesas: el paño con una carta (en grande, con tres); letras: "¡Truco!" (en grande, una frase con números).
+- **Probador** (`tienda/Probador.tsx`, con `Hoja`): se abre tocando cualquier cosmético. Tu avatar grande con la pieza puesta (lo de la cara se ve con la cara entera; la ropa, el avatar entero) y "Sin / Con" para comparar con lo que tenés; en mesas y letras compara con la tuya. Desde ahí se compra o se usa.
+- **Rarezas:** cinta cruzada en la esquina con el nombre; común con un filo gris, rara azul, épica violeta con un brillo que respira y legendaria con el borde dorado que gira (`@property`) y un destello que cruza cada tanto. Con movimiento reducido, todo quieto.
+- **Comprar:** "Comprar 🪙 800" pide confirmación ("¿Comprás Poncho por 800? Te quedan 2200.", "Mejor no" / "Sí, comprar"). Al comprar, unas monedas vuelan en arco hasta el saldo (el del banner o el de la cabecera, marcados con `data-saldo`), que da un saltito, y saltan chispas del color de la rareza (más y más lejos cuanto más rara; desde épica, un destello). Después: "¡Es tuyo!", "Usar ahora" y "Seguir mirando". Todo con motion, sin librerías nuevas.
+- **Si no alcanza:** "Te faltan 🪙 680", una barra de lo juntado y cómo se ganan (10 por terminar una partida online, 10 más si la ganás, 30 la primera del día; con bots en la mesa, menos; los números son los de `ECONOMIA` del servidor, copiados). **Sin cuenta:** una tarjeta arriba invita a entrar, y el probador también.
+- **Tu colección**, al final: lo comprado (de lo último a lo primero) con su muestra, que abre el probador, y "Usar" / "✓ Puesto".
+- **Nombres para las piezas numeradas** (`packages/shared/src/avatar.ts`): pieles, caras, peinados, colores de pelo, cejas, ojos, narices, bocas, lentes y aros ("Jopo", "Rulos al viento", "Mirada canchera", "Ojos pícaros", "Sonrisa ladina", "Cara de póker", "Ñata", "Aro colgante"…), mirando cada dibujo. Mismo orden y cantidad. La lista vieja → nueva está en `NOMBRES-PIEZAS.md`, para revisar.
+- **`TRUCO_DIR_BASE`** (servidor): otra carpeta para la base local de prueba, para levantar un segundo servidor sin tocar la de siempre (documentado en `INSTRUCTIVO-CUENTAS.md`).
+- Revisado con capturas a 360×740, 412×915 y 1280×800 (con monedas, con pocas, invitado; probador de ojos, ropa, mesa, pelo y aros; confirmación, vuelo de monedas, festejo y colección), contra un servidor propio con su base en otra carpeta. En `capturas-menu/tienda/`, sin commitear.
+- **Tests:** web 312 (la tienda, nuevo: destacada con cuenta regresiva y saldo en la cabecera, probador con Sin/Con, confirmación, "Mejor no", te faltan, invitado y colección; el catálogo: nombres sin repetir ni numerar). e2e `avatar.spec.ts` y `menu.spec.ts` pasan con los nombres nuevos.
+
+**Pendiente / a decidir:**
+- Revisar los nombres en `NOMBRES-PIEZAS.md` (algunos son a ojo: "Corte milico", "Labios carnosos", "Cejas desafiantes").
+- Los montos de "cómo se ganan" están copiados del servidor: si cambia la economía, hay que cambiarlos en `tienda/Probador.tsx` (o mandarlos en `/api/tienda`).
+- Contra la compu sin internet no se gana nada; el texto solo dice que con bots en la mesa se gana menos.
+
+## Menú nuevo y tienda nueva, unidos con el motor — 2026-10-19
+
+- Se mezcló `menu-nuevo` en `main`: el menú principal estilo juego de celular, su estética con los colores de la mesa y la tienda rediseñada, todo junto con los cambios del motor (el pie, la flor, "son buenas" y demás).
+- La opción "El pie puede ser un bot" pasó al panel nuevo de contra la compu (`menu/PanelLobby.tsx`).
+- **e2e:** el servidor de las pruebas arranca siempre con la base local en una carpeta nueva y con el login de prueba (`DATABASE_URL` y `SUPABASE_URL` vacías, `TRUCO_DIR_BASE` en el temporal). Así no depende del `apps/server/.env` con Supabase ni de la red.
+- **Tests:** web 312, engine 170, bots 25, server 103, e2e 12.

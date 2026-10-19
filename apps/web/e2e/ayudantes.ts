@@ -138,9 +138,10 @@ type Punto = { x: number; y: number }
 
 /**
  * Arrastra con el dedo (eventos táctiles de verdad, como en el celular) de `desde` a `hasta`,
- * en `pasos` movimientos. Así el navegador genera pointer events de tipo "touch".
+ * en `pasos` movimientos. Así el navegador genera pointer events de tipo "touch". Con `pausaMs`
+ * entre movimiento y movimiento, el navegador lo toma como un deslizar de verdad y hace scroll.
  */
-export async function arrastrarConDedo(page: Page, desde: Punto, hasta: Punto, pasos = 12) {
+export async function arrastrarConDedo(page: Page, desde: Punto, hasta: Punto, pasos = 12, pausaMs = 0) {
   const cdp = await page.context().newCDPSession(page)
   const toque = (p: Punto) => [{ x: p.x, y: p.y, radiusX: 4, radiusY: 4, force: 1, id: 1 }]
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: toque(desde) })
@@ -148,6 +149,7 @@ export async function arrastrarConDedo(page: Page, desde: Punto, hasta: Punto, p
     const t = i / pasos
     const p = { x: desde.x + (hasta.x - desde.x) * t, y: desde.y + (hasta.y - desde.y) * t }
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: toque(p) })
+    if (pausaMs) await page.waitForTimeout(pausaMs)
   }
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
   await cdp.detach()

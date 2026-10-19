@@ -5,9 +5,10 @@ import { MensajeError } from './Online'
 
 /**
  * Tu cuenta: entrar guarda tu perfil y tus monedas para cualquier dispositivo.
- * Si el servidor no tiene cuentas, no se muestra y se juega como invitado.
+ * Si el servidor no tiene cuentas, no se muestra y se juega como invitado. En el menú va en una
+ * hoja (desde el banner o los ajustes) y `sinEnlaces` saca los atajos, que ya están en el menú.
  */
-export function TarjetaCuenta() {
+export function TarjetaCuenta({ sinEnlaces = false }: { sinEnlaces?: boolean }) {
   const { estado, cuenta, modo, error, linkEnviado, saldo } = useCuenta()
   const [email, setEmail] = useState('')
   useEffect(() => void iniciarCuenta(), [])
@@ -26,17 +27,19 @@ export function TarjetaCuenta() {
             <span aria-hidden="true">🪙</span> <strong>{saldo}</strong> {saldo === 1 ? 'moneda' : 'monedas'}
           </p>
         )}
-        <div className="cuenta-enlaces">
-          <Link className="boton" to="/tienda">
-            Tienda
-          </Link>
-          <Link className="boton boton-secundario" to="/amigos">
-            Amigos
-          </Link>
-          <Link className="boton boton-secundario" to="/ranking">
-            Ranking
-          </Link>
-        </div>
+        {!sinEnlaces && (
+          <div className="cuenta-enlaces">
+            <Link className="boton" to="/tienda">
+              Tienda
+            </Link>
+            <Link className="boton boton-secundario" to="/amigos">
+              Amigos
+            </Link>
+            <Link className="boton boton-secundario" to="/ranking">
+              Ranking
+            </Link>
+          </div>
+        )}
         <button type="button" className="boton boton-secundario" onClick={() => void salir()}>
           Salir de la cuenta
         </button>
@@ -86,14 +89,16 @@ export function TarjetaCuenta() {
         </form>
       )}
       {error && <MensajeError>{error}</MensajeError>}
-      <div className="cuenta-enlaces">
-        <Link className="boton boton-secundario" to="/tienda">
-          Tienda
-        </Link>
-        <Link className="boton boton-secundario" to="/ranking">
-          Ranking
-        </Link>
-      </div>
+      {!sinEnlaces && (
+        <div className="cuenta-enlaces">
+          <Link className="boton boton-secundario" to="/tienda">
+            Tienda
+          </Link>
+          <Link className="boton boton-secundario" to="/ranking">
+            Ranking
+          </Link>
+        </div>
+      )}
     </section>
   )
 }

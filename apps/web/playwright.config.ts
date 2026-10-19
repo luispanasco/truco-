@@ -1,3 +1,5 @@
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { defineConfig, devices } from '@playwright/test'
 
 /**
@@ -23,7 +25,16 @@ export default defineConfig({
     {
       command: `node ../server/node_modules/tsx/dist/cli.mjs ../server/src/index.ts`,
       port: PUERTO_SERVIDOR,
-      env: { PORT: String(PUERTO_SERVIDOR), TRUCO_BOT_MS: '0', TRUCO_TURNO_MS: '60000' },
+      // Siempre con la base local (en una carpeta nueva) y el login de prueba, aunque apps/server/.env
+      // tenga Supabase: vacías, el .env no las pisa.
+      env: {
+        PORT: String(PUERTO_SERVIDOR),
+        TRUCO_BOT_MS: '0',
+        TRUCO_TURNO_MS: '60000',
+        DATABASE_URL: '',
+        SUPABASE_URL: '',
+        TRUCO_DIR_BASE: join(tmpdir(), `truco-e2e-${Date.now()}`),
+      },
       reuseExistingServer: false,
       timeout: 60_000,
     },

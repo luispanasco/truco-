@@ -21,15 +21,16 @@ export function datosUnirse(p: Perfil): OpcionesUnirse {
   }
 }
 
-/** Título de las pantallas online, con la flecha para volver. */
-export function CabeceraOnline({ titulo, alVolver }: { titulo: string; alVolver?: () => void }) {
+/** Título de las pantallas online, con la flecha para volver (y, a la derecha, `extra`: el saldo en la tienda). */
+export function CabeceraOnline({ titulo, alVolver, extra }: { titulo: string; alVolver?: () => void; extra?: ReactNode }) {
   const navegar = useNavigate()
   return (
-    <header className="online-cabecera">
+    <header className={`online-cabecera${extra ? ' con-extra' : ''}`}>
       <button type="button" className="online-volver" aria-label="Volver" onClick={alVolver ?? (() => navegar('/'))}>
         ‹
       </button>
       <h1>{titulo}</h1>
+      {extra}
     </header>
   )
 }

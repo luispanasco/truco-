@@ -36,12 +36,15 @@ const guardar = (perfil: object) => localStorage.setItem('truco.perfil', JSON.st
 const sombreroPago = CATALOGO_AVATAR.sombrero.findIndex((p) => p.precio > 0)
 const avatarPago = codificarAvatar({ ...AVATAR_BASE, sombrero: sombreroPago })
 
+/** El menú con el engranaje abierto: ahí están la mesa y la tienda de prueba. */
 function inicio() {
-  return render(
+  const r = render(
     <MemoryRouter>
       <Inicio />
     </MemoryRouter>,
   )
+  fireEvent.click(screen.getByRole('button', { name: 'Ajustes' }))
+  return r
 }
 
 const interruptorTienda = () => screen.getByRole('switch', { name: /Desbloquear la tienda/ })

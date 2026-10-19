@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router'
+import { TEXTO_ESTADO } from '../pantallas/Amigos'
+import { Avatar } from './Avatar'
 import { useCuenta } from '../cuenta/cuenta'
-import { cargarAmigos, descartarInvitacion, invitarAmigo, useAmigos } from '../cuenta/amigos'
+import { cargarAmigos, descartarInvitacion, invitarAmigo, useAmigos, type Amigo } from '../cuenta/amigos'
 import { useJuego } from '../estado'
 
 /**
@@ -38,12 +40,18 @@ export function AvisoInvitacion() {
   )
 }
 
-/** En la sala de espera: tus amigos conectados, para invitarlos. */
-export function InvitarAmigos() {
-  const adentro = useCuenta((s) => s.estado === 'adentro')
-  const lista = useAmigos((s) => s.lista)
-  const [invitados, setInvitados] = useState<Set<string>>(new Set())
-  const [error, setError] = useState<string | null>(null)
+/** A quién invitar apenas se cree la sala (se elige desde el menú, en "Tus amigos"). */
+export interface InvitarAlCrear {
+  invitar: { id: string; apodo: string }
+}
+
+export function invitacionPendiente(estado: unknown): InvitarAlCrear['invitar'] | null {
+  const i = (estado as Partial<InvitarAlCrear> | null)?.invitar
+  return i && typeof i.id === 'string' && typeof i.apodo === 'string' ? i : null
+}
+
+/** Con la cuenta abierta, la lista de amigos se pide al entrar y cada 15 s mientras se ve. */
+function useCargarAmigos(adentro: boolean) {
   useEffect(() => {
     if (!adentro) return
     const cargar = () => void cargarAmigos().catch(() => {})
@@ -51,6 +59,28 @@ export function InvitarAmigos() {
     const t = setInterval(cargar, 15_000)
     return () => clearInterval(t)
   }, [adentro])
+}
+
+/** En la sala de espera: tus amigos conectados, para invitarlos. */
+export function InvitarAmigos() {
+  const adentro = useCuenta((s) => s.estado === 'adentro')
+  const lista = useAmigos((s) => s.lista)
+  const [invitados, setInvitados] = useState<Set<string>>(new Set())
+  const [error, setError] = useState<string | null>(null)
+  useCargarAmigos(adentro)
+
+  // Si se creó la sala desde "Invitar" en el menú, el amigo se invita solo, una vez.
+  const pendiente = invitacionPendiente(useLocation().state)
+  const yaInvitado = useRef(false)
+  useEffect(() => {
+    if (!adentro || !pendiente || yaInvitado.current) return
+    yaInvitado.current = true
+    void invitarAmigo(pendiente.id).then((motivo) => {
+      setError(motivo)
+      if (!motivo) setInvitados((s) => new Set(s).add(pendiente.id))
+    })
+  }, [adentro, pendiente])
+
   if (!adentro || !lista || lista.amigos.length === 0) return null
   const disponibles = lista.amigos.filter((a) => a.estado === 'conectado' || a.estado === 'enSala')
   return (
@@ -83,3 +113,74 @@ export function InvitarAmigos() {
     </section>
   )
 }
+
+const ORDEN_ESTADO: Record<Amigo['estado'], number> = { enSala: 0, conectado: 1, jugando: 2, desconectado: 3 }
+
+/**
+ * En el menú, en "Jugar": tus amigos que están en la app. Al que espera en una sala te unís;
+ * al que está conectado lo invitás (se crea tu sala y le llega la invitación).
+ */
+export function AmigosConectados({ deshabilitado }: { deshabilitado: boolean }) {
+  const adentro = useCuenta((s) => s.estado === 'adentro')
+  const lista = useAmigos((s) => s.lista)
+  const navegar = useNavigate()
+  useCargarAmigos(adentro)
+  if (!adentro) return null
+
+  const enLaApp = (lista?.amigos ?? []).filter((a) => a.estado !== 'desconectado').sort((a, b) => ORDEN_ESTADO[a.estado] - ORDEN_ESTADO[b.estado])
+  const pedidos = lista?.recibidas.length ?? 0
+  return (
+    <section className="tarjeta amigos-menu" aria-labelledby="titulo-amigos-menu">
+      <h2 id="titulo-amigos-menu">
+        <span aria-hidden="true">🧉</span> Tus amigos
+        <Link className="boton-texto" to="/amigos">
+          {pedidos > 0 ? `${pedidos} ${pedidos === 1 ? 'solicitud' : 'solicitudes'}` : 'Ver todos'}
+        </Link>
+      </h2>
+      {!lista && <p className="nota">Cargando…</p>}
+      {lista && lista.amigos.length === 0 && (
+        <p className="nota-izq">
+          Todavía no agregaste a nadie. En <Link to="/amigos">Amigos</Link> está tu código para pasarle a los demás.
+        </p>
+      )}
+      {lista && lista.amigos.length > 0 && enLaApp.length === 0 && <p className="nota-izq">Ninguno de tus amigos está conectado ahora.</p>}
+      {enLaApp.length > 0 && (
+        <ul className="amigos">
+          {enLaApp.map((a) => (
+            <li key={a.id} className={`amigo estado-${a.estado}`}>
+              <span className="amigo-avatar">
+                <Avatar codigo={a.avatar} apodo={a.apodo} />
+              </span>
+              <span className="amigo-nombre">
+                {a.apodo}
+                <small className="amigo-estado">
+                  <span className="amigo-punto" aria-hidden="true" /> {TEXTO_ESTADO[a.estado]}
+                </small>
+              </span>
+              <span className="amigo-acciones">
+                {a.sala ? (
+                  <button type="button" className="boton" disabled={deshabilitado} onClick={() => navegar(`/s/${a.sala}`)}>
+                    Unirme
+                  </button>
+                ) : (
+                  a.estado === 'conectado' && (
+                    <button
+                      type="button"
+                      className="boton boton-secundario"
+                      aria-label={`Invitar a ${a.apodo}`}
+                      disabled={deshabilitado}
+                      onClick={() => navegar('/crear', { state: { invitar: { id: a.id, apodo: a.apodo } } satisfies InvitarAlCrear })}
+                    >
+                      Invitar
+                    </button>
+                  )
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
