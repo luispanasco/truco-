@@ -539,11 +539,14 @@
 
 /* ── Barra de abajo ───────────────────────────────────────────── */
 
-/* Sin fondo: solo los íconos sobre el paño, con una rayita del acento bajo el elegido. */
+/*
+ * Sin fondo: solo los íconos sobre el paño, con una rayita del acento bajo el elegido. Pegada al
+ * borde de abajo: del margen del celular (la barra de gestos) usa solo lo justo para no pisarla.
+ */
 .menu-barra {
   position: relative;
   z-index: 5;
-  padding: 4px 16px calc(6px + env(safe-area-inset-bottom));
+  padding: 0 16px max(2px, calc(env(safe-area-inset-bottom) - 14px));
   border-top: 1px solid var(--menu-filo);
 }
 .menu-barra-pestanias {
@@ -556,7 +559,7 @@
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 54px;
+  min-height: 44px;
   padding: 0;
   border: 0;
   border-radius: 14px;
@@ -585,7 +588,7 @@
 .menu-pestania-marca {
   position: absolute;
   left: 50%;
-  bottom: 5px;
+  bottom: 2px;
   width: 22px;
   height: 3px;
   margin-left: -11px;
