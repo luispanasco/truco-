@@ -67,8 +67,9 @@ export function esperandoA(estado: EstadoPartida): number[] {
     if (pend === 'flor') {
       return e.participantes.filter((a) => equipoDe(a) === responde && !e.retirados.includes(a) && e.flor.cantadas.some((f) => f.asiento === a))
     }
-    // Al envido no lo contesta el equipo: lo anula el que tiene flor, cantándola.
-    const conFlor = pend === 'envido' ? florSinCantarDelEquipo(estado, e, responde) : []
+    // Al envido no lo contesta el equipo: lo anula el que tiene flor, cantándola. Y al truco
+    // tampoco, hasta que la cante: la flor va primero.
+    const conFlor = pend === 'envido' || pend === 'truco' ? florSinCantarDelEquipo(estado, e, responde) : []
     if (conFlor.length > 0) return conFlor
     // Con "toques y gritos del pie", al truco y al envido contesta el pie.
     const lider = liderDe(estado, e, responde)

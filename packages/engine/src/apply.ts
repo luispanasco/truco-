@@ -186,11 +186,14 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
         const p = e.truco.pendiente!
         if (p.equipo === eq) return 'Esperá la respuesta del rival'
         if (p.nivel === 4) return 'No se puede subir más'
+        // La flor va primero: antes de contestar el truco, el que tiene flor la canta.
+        if (florDelEquipo.length > 0) return motivoFlorDelEquipo
         if (!esLider) return 'Contesta el pie'
         return null
       }
       if (pend) return MENSAJE_PENDIENTE[pend]
       if (e.turno !== a) return 'No es tu turno'
+      if (debeCantar && cfg.florObligatoria) return 'Tenés flor: cantala primero (o "flor y truco")'
       if (e.truco.valor === 4) return 'No se puede subir más'
       if (e.truco.puedeSubir !== null && e.truco.puedeSubir !== eq) {
         return 'Solo puede subir el equipo que aceptó el último canto'
@@ -275,6 +278,8 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if ((pend === 'truco' || pend === 'envido') && !esLider) return 'Contesta el pie'
       if (pend === 'envido' && debeCantar) return 'Tenés flor: cantala'
       if (pend === 'envido' && florDelEquipo.length > 0) return motivoFlorDelEquipo
+      // La flor va primero que el truco: el equipo no contesta hasta que la canta el que la tiene.
+      if (pend === 'truco' && florDelEquipo.length > 0) return motivoFlorDelEquipo
       // A la contraflor contesta solo el que tiene flor; los demás esperan.
       if (pend === 'flor' && !cantoFlor) return 'Contesta el que tiene flor'
       if (accion.cantaLaMesa) {

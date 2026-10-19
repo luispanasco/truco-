@@ -141,6 +141,8 @@ export function cartasAjenasEnVista(v: VistaPartida): Carta[] {
     ...v.mano.enfrentamientos.flatMap((e) => e.vueltas.flatMap((vu) => vu.jugadas.map((j) => j.carta))),
     // Las que se dieron vuelta al terminar (flor o envido ganado) son públicas.
     ...v.mano.enfrentamientos.flatMap((e) => e.resultado?.mostradas.flatMap((m) => m.cartas) ?? []),
+    // Y las que se tiraron al cantar la mesa.
+    ...v.mano.enfrentamientos.flatMap((e) => Object.values(e.flor.mesa?.mostradas ?? {}).flat()),
   ]
   return cartasDentro(v).filter((c) => !publicas.some((p) => p !== null && mismaCarta(p, c)))
 }

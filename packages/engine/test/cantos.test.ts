@@ -319,6 +319,19 @@ describe('flor', () => {
     expect(estado.puntos).toEqual([4, 0])
   })
 
+  it('la flor va primero que el truco: el que tiene flor la canta antes de contestar', () => {
+    // a no tiene flor y grita; b tiene flor.
+    const p = partidaCon(['1e 7o 5c', '7b 6b 4b'], '3c')
+    let { estado } = jugar(p, ['truco', 'a'])
+    expect(esperandoA(estado)).toEqual([1])
+    rechaza(estado, ['quiero', 'b'], 'Tenés flor')
+    rechaza(estado, ['truco', 'b'], 'Tenés flor')
+    ;({ estado } = jugar(estado, ['flor', 'b'], ['quiero', 'b']))
+    expect(enfrentamientoActual(estado).truco.valor).toBe(2)
+    // Con flor sin cantar no se grita en tu turno: primero la flor (o "flor y truco").
+    rechaza(partidaCon(['7e 6e 5e', '1b 2o 4o'], '3c'), ['truco', 'a'], 'cantala primero')
+  })
+
   describe('contraflor', () => {
     const antesDeContra = () => jugar(conFlor('7b 6b 4b'), ['flor', 'a'], ['flor', 'b'], ['jugar', 'a', '7e']).estado
 

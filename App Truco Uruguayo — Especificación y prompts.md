@@ -117,6 +117,7 @@ Dos cartas de igual orden empatan la vuelta (parda).
 - La contraflor al resto es el partido: querida, se dicen las flores en el momento, en orden desde el mano, y el que la gana gana la partida ahí, sin seguir jugando la mano.
 - "Canta la mesa": el que quiere la contraflor al resto puede decir "quiero, canta la mesa". En vez de decir los números, los que tienen flor tiran sus cartas de a una (la que elijan), en orden desde el mano, hasta mostrar las tres, y la suma se va viendo. La carta que ya jugaron en la primera cuenta como tirada.
 - "Flor y truco": el que tiene flor puede cantar las dos cosas juntas en su turno; primero se resuelve la flor y después se contesta el truco.
+- La flor va primero que el truco: si te gritan truco y alguien de tu equipo tiene flor sin cantar, la canta antes de que el equipo conteste. Y con flor sin cantar no se puede gritar en tu turno: primero la flor (o "flor y truco").
 - La flor que alguien no llegó a cantar porque el rival se fue al mazo se cobra igual.
 
 ### Puntaje
