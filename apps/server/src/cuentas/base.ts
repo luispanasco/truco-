@@ -18,7 +18,8 @@ export async function basePostgres(url: string): Promise<Base> {
   const { default: pg } = await import('pg')
   // Los bigint (sumas de monedas) llegan como texto: se pasan a número, que alcanza de sobra.
   pg.types.setTypeParser(20, (v) => Number(v))
-  const pool = new pg.Pool({ connectionString: url, max: 5 })
+  // Con un tope para conectarse: si la red no deja llegar a la base (VPN, red pública), avisa en vez de quedarse colgado.
+  const pool = new pg.Pool({ connectionString: url, max: 5, connectionTimeoutMillis: 15_000 })
   const sobre = (c: { query: (s: string, p?: unknown[]) => Promise<{ rows: unknown[] }> }): Base => ({
     consultar: async <T>(sql: string, p?: unknown[]) => (await c.query(sql, p)).rows as T[],
     transaccion: () => Promise.reject(new Error('Ya estás en una transacción')),
