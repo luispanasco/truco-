@@ -835,9 +835,30 @@ input {
   font-size: 0.75rem;
   z-index: 2;
 }
+/* Las cartas de los demás, en abanico: encimadas y apenas abiertas, como en la mano. */
 .asiento-cartas {
   display: flex;
-  gap: 2px;
+  justify-content: center;
+  padding-top: 3px;
+}
+.asiento-cartas > .carta {
+  transform-origin: 50% 110%;
+  rotate: var(--giro, 0deg);
+}
+.asiento-cartas > .carta + .carta {
+  margin-left: calc(var(--ancho) * -0.6);
+}
+.asiento-cartas > .carta:first-child:nth-last-child(3) {
+  --giro: -14deg;
+}
+.asiento-cartas > .carta:nth-child(3):last-child {
+  --giro: 14deg;
+}
+.asiento-cartas > .carta:first-child:nth-last-child(2) {
+  --giro: -8deg;
+}
+.asiento-cartas > .carta:nth-child(2):last-child {
+  --giro: 8deg;
 }
 .asiento-avatar {
   position: relative;

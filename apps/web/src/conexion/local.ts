@@ -81,7 +81,7 @@ const DEMORA_BOTS: [number, number] = [1000, 1800]
 /** Si no le decís nada a tu bot (sos su pie), después de este rato decide solo. */
 const ESPERA_ORDEN_TUYA_MS = 25_000
 /** La pausa entre manos coincide con la de la interfaz (PAUSA_ENTRE_MANOS), más un margen. */
-const PAUSAS = { vuelta: 3000, mano: 5000 }
+const PAUSAS = { vuelta: 3000, mano: 1200 }
 const id = (asiento: number) => `j${asiento}`
 
 /**

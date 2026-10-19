@@ -56,8 +56,6 @@ export interface VistaPartida {
     picaPica: boolean
     actual: number
     misCartas: Carta[]
-    /** Si sos el pie de bots: sus cartas (las ves para decirles qué tirar). Nunca las de una persona. */
-    misBots: { asiento: number; cartas: Carta[] }[]
     /** Tu tanto real; el de los demás no se muestra hasta la verificación. */
     miTanto: { envido: number; flor: number | null }
     enfrentamientos: VistaEnfrentamiento[]
@@ -89,13 +87,6 @@ export function vistaPara(estado: EstadoPartida, jugadorId: string): VistaPartid
       picaPica: mano.picaPica,
       actual: mano.actual,
       misCartas: mano.cartas[yo.asiento] ?? [],
-      misBots: (() => {
-        const e = mano.enfrentamientos[mano.actual]
-        if (!e || cortando) return []
-        return e.participantes
-          .filter((x) => x !== yo.asiento && equipoDe(x) === yo.equipo && esBotMandado(estado, e, x) && liderDe(estado, e, yo.equipo) === yo.asiento)
-          .map((x) => ({ asiento: x, cartas: mano.cartas[x] ?? [] }))
-      })(),
       miTanto: { envido: tanto.envidoReal, flor: tanto.florReal },
       enfrentamientos: mano.enfrentamientos.map((e): VistaEnfrentamiento => {
         // En el pica-pica las piezas de los duelos ajenos van por abajo.

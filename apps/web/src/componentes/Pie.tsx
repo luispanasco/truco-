@@ -1,6 +1,5 @@
-import { mismaCarta, nombreCarta, type Accion, type QueManda, type VistaPartida } from '@truco/engine'
+import { type Accion, type QueManda, type VistaPartida } from '@truco/engine'
 import { TEXTO_ORDEN } from '@truco/shared'
-import { Carta } from './Carta'
 
 type Mandar = Extract<Accion, { tipo: 'mandar' }>
 
@@ -14,7 +13,7 @@ interface Props {
   esperando?: number | null
 }
 
-/** El orden de los botones de cada compañero (los de "vamos a" y las cartas van aparte). */
+/** El orden de los botones de cada compañero (los de "vamos a" van aparte). */
 const ORDEN_BOTONES: QueManda[] = ['dejala', 'matala', 'jugaAlgo', 'veni', 'tocar', 'gritar']
 
 /** Si sos el pie del duelo en curso: a quiénes les podés decir algo y qué. */
@@ -58,10 +57,10 @@ export function BotonPie({
 }
 
 /**
- * Lo del pie (2v2 y 3v3, fuera del pica-pica). A tus bots les mandás: tocás una de sus cartas
- * ("tirá el 3") o les decís "dejala" (la más baja), "matala" (la más alta), "jugá algo" (la del
- * medio), "vení", "vamos a X", "tocá" o "gritá"; no juegan hasta que les digas (salvo la flor). A
- * una persona solo se lo insinuás: decide ella. Flota sobre el borde del paño y se cierra al elegir.
+ * Lo del pie (2v2 y 3v3, fuera del pica-pica): a tus compañeros les decís "dejala" (la más baja),
+ * "matala" (la más alta), "jugá algo" (la del medio), "vení", "vamos a X", "tocá" o "gritá". Sus
+ * cartas no las ves. Tus bots no juegan hasta que les digas (salvo la flor); a una persona solo se
+ * lo insinuás: decide ella. Flota sobre el borde del paño y se cierra al elegir.
  */
 export function PanelPie({ vista, apodo, alElegir, alCerrar, esperando = null }: Props) {
   const op = opcionesDelPie(vista)
@@ -70,42 +69,28 @@ export function PanelPie({ vista, apodo, alElegir, alCerrar, esperando = null }:
     alElegir(a)
     alCerrar?.()
   }
-  // El que espera tu orden, primero.
+  // El que espera tu orden, primero. El nombre va solo si tenés más de un compañero.
   const companieros = [...op.companieros].sort((x, y) => Number(y === esperando) - Number(x === esperando))
+  const conNombre = companieros.length > 1
   return (
     <div className="panel-pie" role="group" aria-label="Lo que les decís como pie">
       {companieros.map((c) => {
         const suyas = op.mandar.filter((m) => m.a === c)
-        const bot = vista.mano.misBots.find((b) => b.asiento === c)
-        const cartas = bot ? bot.cartas.filter((carta) => suyas.some((m) => m.que === 'carta' && m.carta && mismaCarta(m.carta, carta))) : []
         const botones = ORDEN_BOTONES.flatMap((que) => suyas.filter((m) => m.que === que))
         const vamos = suyas.filter((m) => m.que === 'vamosA')
+        const etiqueta = conNombre ? (c === esperando ? `${apodo(c)}: ¿qué juega?` : apodo(c)) : c === esperando ? '¿Qué juega?' : null
         return (
-          <div key={c} className={`pie-companiero${c === esperando ? ' espera' : ''}`}>
-            <span className="pie-nombre">
-              {c === esperando ? `${apodo(c)} espera: ¿qué juega?` : bot ? `A ${apodo(c)}` : `A ${apodo(c)} (se lo insinuás)`}
-            </span>
-            {cartas.length > 0 && (
-              <span className="pie-cartas">
-                {cartas.map((carta) => {
-                  const a = suyas.find((m) => m.que === 'carta' && m.carta && mismaCarta(m.carta, carta))!
-                  return (
-                    <button key={`${carta.numero}${carta.palo}`} type="button" className="pie-carta" aria-label={`Tirá el ${nombreCarta(carta)}`} onClick={elegir(a)}>
-                      <Carta carta={carta} tam="chica" />
-                    </button>
-                  )
-                })}
-              </span>
-            )}
+          <div key={c} className={`pie-companiero${c === esperando ? ' espera' : ''}`} role="group" aria-label={`A ${apodo(c)}`}>
+            {etiqueta && <span className="pie-nombre">{etiqueta}</span>}
             <span className="pie-botones">
               {botones.map((m) => (
                 <button key={m.que} type="button" className={`boton-pie manda-${m.que}`} onClick={elegir(m)}>
-                  {TEXTO_ORDEN[m.que]('', '')}
+                  {TEXTO_ORDEN[m.que]('')}
                 </button>
               ))}
               {vamos.map((m) => (
                 <button key={`vamos-${m.vamosA}`} type="button" className="boton-pie manda-vamosA" onClick={elegir(m)}>
-                  {TEXTO_ORDEN.vamosA('', apodo(m.vamosA!))}
+                  {TEXTO_ORDEN.vamosA(apodo(m.vamosA!))}
                 </button>
               ))}
             </span>

@@ -122,7 +122,7 @@ export const TIEMPOS_DEFAULT: Tiempos = {
   ofrecerBotMs: 30_000,
   reconexionS: 20,
   pausaVueltaMs: 3_000,
-  pausaManoMs: 5_000,
+  pausaManoMs: 1_200,
   esperaOrdenMs: ESPERA_ORDEN_MS,
 }
 

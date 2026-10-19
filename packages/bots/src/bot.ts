@@ -216,15 +216,13 @@ export function mandadoPorPersona(v: VistaPartida): boolean {
 }
 
 /**
- * La carta que pidió el pie: la que nombró; "dejala", la más baja; "matala", la más alta; "jugá
+ * La carta que pidió el pie: "dejala", la más baja; "matala", la más alta; "jugá
  * algo", la del medio (la segunda más grande); "vení" y "vamos a", la más baja (la vuelta la lleva otro).
  */
 function cartaDeOrden(ctx: Contexto, o: Orden | undefined): Carta | null {
   if (!o || ctx.misCartas.length === 0) return null
   const cs = ordenadas(ctx, ctx.misCartas)
   switch (o.que) {
-    case 'carta':
-      return o.carta && ctx.misCartas.some((c) => c.numero === o.carta!.numero && c.palo === o.carta!.palo) ? o.carta : null
     case 'matala':
       return cs[cs.length - 1]!
     case 'jugaAlgo':

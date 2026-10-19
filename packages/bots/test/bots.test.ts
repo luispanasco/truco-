@@ -232,8 +232,6 @@ describe('bots', () => {
       expect(crearBot(nivel, 1).decidir(vistaPara(dejala, 'c'))).toMatchObject({ tipo: 'jugarCarta', carta: c('4o') })
       const algo = aplicar(p, { tipo: 'mandar', jugador: 'a', a: 2, que: 'jugaAlgo' })
       expect(crearBot(nivel, 1).decidir(vistaPara(algo, 'c'))).toMatchObject({ tipo: 'jugarCarta', carta: c('7e') })
-      const carta = aplicar(p, { tipo: 'mandar', jugador: 'a', a: 2, que: 'carta', carta: c('7e') })
-      expect(crearBot(nivel, 1).decidir(vistaPara(carta, 'c'))).toMatchObject({ tipo: 'jugarCarta', carta: c('7e') })
     }
     p = conBot()
   })

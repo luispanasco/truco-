@@ -115,9 +115,11 @@ export class Jugador {
   private jugarSiLeToca() {
     const v = this.vista
     if (this.autoRng === null || !v || v.ganador !== null) return
-    // Como pie de un bot: cuando le toca a él, le dice qué carta jugar.
+    // Como pie de un bot: cuando le toca a él, le dice qué jugar.
     const e = v.mano.enfrentamientos[v.mano.actual]
-    const bot = v.esperandoA.length === 1 && v.mano.misBots.some((b) => b.asiento === v.esperandoA[0]) ? v.esperandoA[0]! : null
+    const yo = v.yo.asiento
+    const esMiBot = (x: number) => x !== yo && x % 2 === yo % 2 && !!v.jugadores[x]?.bot && e?.lideres[yo % 2] === yo
+    const bot = v.esperandoA.length === 1 && esMiBot(v.esperandoA[0]!) ? v.esperandoA[0]! : null
     // Solo cuando le toca jugar (no si tiene que declarar o contestar) y todavía no le dijo nada.
     const leTocaJugar =
       bot !== null && e?.turno === bot && e.envido.estado !== 'declarando' && !e.truco.pendiente && e.flor.estado !== 'pendiente' && !e.ordenes.some((o) => o.asiento === bot)
@@ -162,8 +164,6 @@ export function cartasAjenasEnVista(v: VistaPartida): Carta[] {
     ...v.mano.enfrentamientos.flatMap((e) => e.vueltas.flatMap((vu) => vu.jugadas.map((j) => j.carta))),
     // Las que se dieron vuelta al terminar (flor o envido ganado) son públicas.
     ...v.mano.enfrentamientos.flatMap((e) => e.resultado?.mostradas.flatMap((m) => m.cartas) ?? []),
-    // Las de los bots que manda (si es su pie): las ve para decirles qué tirar.
-    ...v.mano.misBots.flatMap((b) => b.cartas),
     // Y las que se tiraron al cantar la mesa.
     ...v.mano.enfrentamientos.flatMap((e) => Object.values(e.flor.mesa?.mostradas ?? {}).flat()),
   ]

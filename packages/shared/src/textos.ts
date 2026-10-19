@@ -14,17 +14,16 @@ export const TEXTO_CANTO: Record<string, string> = {
 
 /**
  * Lo que el pie le dice a un compañero, como lo dice (para el botón, el globo y el registro).
- * `carta` es el nombre de la carta (con "carta") y `quien`, el del compañero (con "vamos a").
+ * `quien` es el compañero que lleva la vuelta (con "vamos a").
  */
-export const TEXTO_ORDEN: Record<QueManda, (carta: string, quien: string) => string> = {
+export const TEXTO_ORDEN: Record<QueManda, (quien: string) => string> = {
   tocar: () => '¡Tocá!',
   gritar: () => '¡Gritá!',
-  carta: (carta) => `Tirá el ${carta}`,
   dejala: () => 'Dejala',
   matala: () => '¡Matala!',
   jugaAlgo: () => 'Jugá algo',
   veni: () => '¡Vení a mí!',
-  vamosA: (_carta, quien) => (quien ? `¡Vamos a ${quien}!` : '¡Vamos a…!'),
+  vamosA: (quien) => (quien ? `¡Vamos a ${quien}!` : '¡Vamos a…!'),
 }
 
 export function describirAccion(vista: VistaPartida, a: Accion): string {
@@ -60,7 +59,7 @@ export function describirAccion(vista: VistaPartida, a: Accion): string {
     case 'noPedirVer':
       return 'No pedir ver'
     case 'mandar':
-      return TEXTO_ORDEN[a.que](a.carta ? nombreCarta(a.carta) : '', '')
+      return TEXTO_ORDEN[a.que]('')
     case 'cortar':
       return TEXTO_CORTE[a.corte]
     case 'mostrarFlor':
@@ -120,7 +119,8 @@ export function describirEvento(
     case 'alMazo':
       return `  ${nombre(ev.asiento)} se va al mazo${ev.solo ? ' (el equipo sigue)' : ''}`
     case 'orden':
-      return `  ${nombre(ev.asiento)} a ${nombre(ev.a)}: ${TEXTO_ORDEN[ev.que](ev.carta ? nombreCarta(ev.carta) : '', ev.vamosA !== undefined ? nombre(ev.vamosA) : '')}`
+      // Sin a quién se lo dice: solo lo que dice el pie.
+      return `  ${nombre(ev.asiento)}: ${TEXTO_ORDEN[ev.que](ev.vamosA !== undefined ? nombre(ev.vamosA) : '')}`
     case 'esperandoCorte':
       return `
 ━━━━━━━━ Mano ${ev.numero} · corta ${nombre(ev.asiento)} ━━━━━━━━`

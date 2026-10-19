@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Evento } from '@truco/engine'
 import type { Conexion, MensajeServidor } from '../src/conexion/tipos'
 import { PAUSA_ENTRE_MANOS, useJuego } from '../src/estado'
+import { CORTE_MS, GIRO_MS, REPARTO_MS } from '../src/componentes/Mazo'
 
 /** Conexión de mentira: el test decide qué mensajes llegan. */
 function conexionFalsa() {
@@ -198,5 +199,24 @@ describe('la tirada de reyes en la mesa', () => {
     vi.advanceTimersByTime(20_000)
     expect(useJuego.getState().reyes).toBeNull()
     expect(useJuego.getState().turno.asientos).toEqual([1])
+  })
+})
+
+describe('las señas durante el reparto', () => {
+  it('esperan a que termine el corte y el reparto, y después se ven', () => {
+    vi.useFakeTimers()
+    const { c, llegar } = conexionFalsa()
+    useJuego.getState().conectar(c)
+    llegar({ tipo: 'eventos', datos: [{ tipo: 'corte', asiento: 1, corte: 'convencional' }] })
+    llegar({ tipo: 'senia', datos: { de: 2, senia: 'pieza2', mano: 1 } })
+    llegar({ tipo: 'seniaPescada', datos: { de: 1, senia: null } })
+    expect(useJuego.getState().senias).toEqual([])
+    expect(useJuego.getState().pescadas).toEqual([])
+    vi.advanceTimersByTime(CORTE_MS.convencional + REPARTO_MS + GIRO_MS + 10)
+    expect(useJuego.getState().senias.map((s) => s.senia)).toEqual(['pieza2'])
+    expect(useJuego.getState().pescadas).toHaveLength(1)
+    // Con las cartas ya en la mano, llegan al instante.
+    llegar({ tipo: 'senia', datos: { de: 2, senia: 'pieza4', mano: 1 } })
+    expect(useJuego.getState().senias).toHaveLength(2)
   })
 })

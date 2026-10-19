@@ -1238,3 +1238,15 @@ Pedido del usuario (rama `menu-nuevo`), con el plan aprobado.
 - La opción "El pie puede ser un bot" pasó al panel nuevo de contra la compu (`menu/PanelLobby.tsx`).
 - **e2e:** el servidor de las pruebas arranca siempre con la base local en una carpeta nueva y con el login de prueba (`DATABASE_URL` y `SUPABASE_URL` vacías, `TRUCO_DIR_BASE` en el temporal). Así no depende del `apps/server/.env` con Supabase ni de la red.
 - **Tests:** web 312, engine 170, bots 25, server 103, e2e 12.
+
+## Ajustes de la mesa: el pie sin cartas, pausa corta, señas, abanico — 2026-10-19
+
+Pedido del usuario tras probar, con el plan aprobado.
+
+- **El pie ya no ve las cartas de sus bots.** Se fue la orden "Tirá el ___" (`QueManda` sin `carta`) y `vista.mano.misBots`. El panel del pie tiene solo las frases (Dejala, ¡Matala!, Jugá algo, ¡Vení a mí!, Vamos a X, ¡Tocá!, ¡Gritá!); el nombre del compañero aparece solo si tenés dos (3v3). Cuando tu bot espera, dice "¿Qué juega?".
+- **El globo de una orden dice solo la frase** ("¡Matala!"), sin "Bot X:". En el registro: "Ana: ¡Matala!".
+- **Pausa entre manos de 1 s** (`PAUSA_ENTRE_MANOS` 1000; servidor y contra la compu, 1,2 s para que la mano nueva llegue apenas termina la de la pantalla).
+- **Señas después del reparto:** las señas y las pescadas que llegan mientras se corta, se reparte y se da vuelta la muestra esperan en `estado.ts` hasta que termina la animación (`CORTE_MS` + `REPARTO_MS` + `GIRO_MS`). Así también el resumen de señas.
+- **Las cartas de los demás, en abanico:** encimadas y abiertas (−14°, 0°, +14°; con dos, ±8°), solo CSS.
+- **Pica-pica, envido con pieza:** era lo esperado (la pieza va por abajo: solo la ve el rival del duelo; el tanto lo oyen todos). Quedó una prueba que lo fija.
+- **Tests:** engine 171, web 313 (los del panel del pie, rehechos; señas que esperan al reparto).

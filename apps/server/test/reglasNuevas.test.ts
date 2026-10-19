@@ -71,7 +71,6 @@ describe('el pie y sus bots', () => {
     const vuelta = e().vueltas.length
     const turno = a.de('turno').filter((t) => t.pie === 0).at(-1)!
     expect(turno.asientos).toEqual([2])
-    expect(a.vista!.mano.misBots.map((b) => b.asiento)).toEqual([2])
     // Le dice "matala": juega su carta más alta.
     a.enviar('accion', { accion: { tipo: 'mandar', jugador: 'j0', a: 2, que: 'matala' } })
     await a.esperar(() => e().vueltas[vuelta - 1]!.jugadas.some((j) => j.asiento === 2) || e().vueltas.length > vuelta, 10_000, 'la carta del bot')

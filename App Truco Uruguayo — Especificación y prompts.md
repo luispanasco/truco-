@@ -90,14 +90,13 @@ Dos cartas de igual orden empatan la vuelta (parda).
   - **Siempre una persona** (por defecto): si el equipo tiene personas, el pie es la última de ellas en jugar la primera. Un equipo de vos y bots: vos siempre.
   - **Puede ser un bot:** el último, aunque sea un bot.
 - **El pie dicta el juego:** es el que sabe las cartas del equipo. Contesta él el truco y el envido por todo el equipo; si te gritan y no sos pie, "gritale al pie". El envido lo declara cada uno.
-- **A sus bots les manda** (un bot que manda una persona no hace nada por su cuenta salvo cantar la flor, y no juega hasta que el pie le dice):
-  - una carta puntual ("tirá el 3"; el pie ve las cartas de sus bots),
+- **A sus bots les manda** con frases, sin ver sus cartas (un bot que manda una persona no hace nada por su cuenta salvo cantar la flor, y no juega hasta que el pie le dice):
   - "dejala" (la más baja), "matala" (la más alta), "jugá algo" (la del medio),
   - "vení" (a mí) y "vamos a X" (otro compañero que todavía no jugó en la vuelta),
   - "tocá" y "gritá", en su turno.
   Si el pie no le dice nada en el tiempo del turno, el bot decide solo.
-- **A una persona solo le insinúa** lo mismo (salvo la carta puntual): decide ella, y canta por su cuenta si quiere.
-- Las órdenes de qué carta tirar las ven solo el pie y el que la recibe; "vení", "vamos a", "tocá" y "gritá" se dicen en voz alta.
+- **A una persona solo le insinúa** lo mismo: decide ella, y canta por su cuenta si quiere.
+- Las órdenes de qué carta tirar las ven solo el pie y el que la recibe; "vení", "vamos a", "tocá" y "gritá" se dicen en voz alta. El globo dice solo la frase, sin nombrar a quién.
 - Con chat de voz, lo que se le insinúa a una persona se dice hablando; a los bots se les manda igual desde la mesa.
 - Los bots siguen haciendo sus señas (aunque el pie vea sus cartas).
 

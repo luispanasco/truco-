@@ -333,11 +333,6 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       // Qué carta jugar: solo antes de que juegue en esta vuelta.
       const vuelta = ultimo(e.vueltas)
       if (vuelta.jugadas.some((j) => j.asiento === comp)) return 'Ya jugó en esta vuelta'
-      if (accion.que === 'carta') {
-        // Solo a un bot que mandás vos: ves sus cartas.
-        if (!esBotMandado(estado, e, comp)) return 'Solo a un bot le decís qué carta tirar'
-        if (!accion.carta || !mano.cartas[comp]!.some((c) => mismaCarta(c, accion.carta!))) return 'Esa carta no la tiene'
-      }
       if (accion.que === 'vamosA') {
         const x = accion.vamosA
         if (x === undefined || x === comp || x === a || !e.participantes.includes(x) || equipoDe(x) !== eq) return '"Vamos a" es a otro compañero'
@@ -591,7 +586,6 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
       const orden: Orden = {
         asiento: accion.a,
         que: accion.que,
-        ...(accion.que === 'carta' && accion.carta ? { carta: accion.carta } : {}),
         ...(accion.que === 'vamosA' && accion.vamosA !== undefined ? { vamosA: accion.vamosA } : {}),
       }
       // Una orden de qué carta jugar reemplaza a la anterior.

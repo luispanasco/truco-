@@ -40,21 +40,22 @@ describe('el panel del pie', () => {
     const { container } = render(<PanelPie vista={vistaPara(p, 'a')} apodo={apodo} alElegir={alElegir} />)
     expect(container.querySelector('.panel-pie')).toBeNull()
     render(<PanelPie vista={vistaPara(p, 'c')} apodo={apodo} alElegir={alElegir} />)
-    expect(screen.getByText('A A (se lo insinuás)')).toBeTruthy()
-    expect(document.querySelector('.pie-carta')).toBeNull()
+    // Con un solo compañero no se nombra a quién: solo las frases.
+    expect(document.querySelector('.pie-nombre')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: '¡Matala!' }))
     expect(alElegir).toHaveBeenCalledWith({ tipo: 'mandar', jugador: 'c', a: 0, que: 'matala' })
     for (const texto of ['Dejala', 'Jugá algo', '¡Vení a mí!', '¡Tocá!', '¡Gritá!']) expect(screen.getByRole('button', { name: texto })).toBeTruthy()
   })
 
-  it('a tu bot le decís qué carta tirar: ves sus cartas', () => {
+  it('a tu bot no le ves las cartas: le decís una frase', () => {
     // a es persona y pie; c es su bot.
     const p = dosVsDos({}, [1, 2, 3])
     const alElegir = vi.fn()
     render(<PanelPie vista={vistaPara(p, 'a')} apodo={apodo} alElegir={alElegir} esperando={2} />)
-    expect(screen.getByText('C espera: ¿qué juega?')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'Tirá el 12 de bastos' }))
-    expect(alElegir).toHaveBeenCalledWith({ tipo: 'mandar', jugador: 'a', a: 2, que: 'carta', carta: c(12, 'basto') })
+    expect(screen.getByText('¿Qué juega?')).toBeTruthy()
+    expect(document.querySelector('.panel-pie .carta')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Jugá algo' }))
+    expect(alElegir).toHaveBeenCalledWith({ tipo: 'mandar', jugador: 'a', a: 2, que: 'jugaAlgo' })
   })
 
   it('se abre con el botón "Pie" (marcado si tu bot espera) y se cierra al elegir', () => {

@@ -36,8 +36,6 @@ export function accionesValidas(estado: EstadoPartida, jugadorId: string): Accio
     ...companieros.flatMap((c) => [
       ...ORDENES.map((que) => ({ tipo: 'mandar' as const, ...jugadorAccion, a: c.asiento, que })),
       ...companieros.filter((x) => x.asiento !== c.asiento).map((x) => ({ tipo: 'mandar' as const, ...jugadorAccion, a: c.asiento, que: 'vamosA' as const, vamosA: x.asiento })),
-      // La carta puntual, solo a un bot (el pie ve sus cartas): la valida el motor.
-      ...(estado.mano.cartas[c.asiento] ?? []).map((carta) => ({ tipo: 'mandar' as const, ...jugadorAccion, a: c.asiento, que: 'carta' as const, carta })),
     ]),
     ...CANTOS_ENVIDO.map((canto) => ({ tipo: 'cantarEnvido' as const, ...jugadorAccion, canto })),
     { tipo: 'cantarTruco', ...jugadorAccion },

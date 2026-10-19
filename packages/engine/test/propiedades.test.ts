@@ -123,12 +123,8 @@ describe('propiedades', () => {
               ...(e.resultado?.mostradas ?? []),
               ...Object.entries(e.flor.mesa?.mostradas ?? {}).map(([asiento, cartas]) => ({ asiento: Number(asiento), cartas })),
             ])
-            // El pie de bots ve las cartas de sus bots (y solo de bots de su equipo).
-            for (const b of vista.mano.misBots) {
-              expect(estado.jugadores[b.asiento]!.bot && b.asiento % 2 === j.asiento % 2).toBe(true)
-            }
             const ocultas = estado.mano.cartas.flatMap((cs, asiento) =>
-              asiento === j.asiento || vista.mano.misBots.some((b) => b.asiento === asiento)
+              asiento === j.asiento
                 ? []
                 : cs.filter((c) => !mostradas.some((m) => m.asiento === asiento && m.cartas.some((x) => mismaCarta(x, c)))),
             )

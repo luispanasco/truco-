@@ -18,6 +18,7 @@ import { sonarEfecto, sonarEvento } from './sonido'
 import { aplicarTemaDeSala, aplicarTemaPropio } from './temaSala'
 import { planReyes } from './tiradaReyes'
 import { useCuenta } from './cuenta/cuenta'
+import { CORTE_MS, GIRO_MS, REPARTO_MS } from './componentes/Mazo'
 
 export interface Jugada {
   asiento: number
@@ -116,7 +117,7 @@ const DURACION_GLOBO = 2600
  * Al terminar una mano, las cartas quedan a la vista este tiempo con el resultado y después
  * se levantan. Lo que llegue mientras tanto (la mano nueva) espera en cola.
  */
-export const PAUSA_ENTRE_MANOS = 4800
+export const PAUSA_ENTRE_MANOS = 1000
 
 let contador = 0
 let desuscribir: (() => void) | null = null
@@ -131,6 +132,13 @@ let timerPausa: ReturnType<typeof setTimeout> | null = null
 let enReyes = false
 let timerReyes: ReturnType<typeof setTimeout> | null = null
 let porReproducir: MensajeServidor[] = []
+/**
+ * Las señas (y las pescadas) que llegan mientras se corta y se reparte esperan a que todos tengan
+ * sus cartas: si no, un compañero señaría antes de tenerlas.
+ */
+let seniasHasta = 0
+let seniasEnEspera: MensajeServidor[] = []
+let timerSenias: ReturnType<typeof setTimeout> | null = null
 
 /** Al pasar lo que esperó a los reyes: cuánto dejar ver cada tanda antes de la siguiente. */
 function esperaTras(eventos: Evento[]): number {
@@ -205,12 +213,13 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         mostrarGlobo(ev.asiento, ev.yTruco ? '¡Flor y truco!' : `¡${TEXTO_CANTO[ev.canto]}!`)
         break
       case 'orden':
-        // El pie lo dice (las de qué carta tirar las ven solo él y el que la recibe).
-        mostrarGlobo(ev.asiento, `${nombre(ev.a)}: ${TEXTO_ORDEN[ev.que](ev.carta ? nombreCarta(ev.carta) : '', ev.vamosA !== undefined ? nombre(ev.vamosA) : '')}`)
+        // El pie lo dice, sin nombrar a quién (las de qué carta tirar las ven solo él y el que la recibe).
+        mostrarGlobo(ev.asiento, TEXTO_ORDEN[ev.que](ev.vamosA !== undefined ? nombre(ev.vamosA) : ''))
         break
       case 'corte':
         mostrarGlobo(ev.asiento, TEXTO_CORTE[ev.corte])
         set({ corte: { asiento: ev.asiento, corte: ev.corte, id: ++contador } })
+        if (!movimientoReducido()) seniasHasta = Date.now() + CORTE_MS[ev.corte] + REPARTO_MS + (ev.corte === 'sacarMuestra' ? 0 : GIRO_MS)
         break
       case 'cantoEnvido':
         mostrarGlobo(ev.asiento, `${ev.primeroEstaElEnvido ? 'Envido va primero. ' : ''}¡${TEXTO_CANTO[ev.canto]}!`)
@@ -276,6 +285,14 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     }
   }
 
+  /** Terminó el reparto: se ven las señas que esperaban (si se volvió a cortar, siguen esperando). */
+  const soltarSenias = () => {
+    timerSenias = null
+    const pendientes = seniasEnEspera
+    seniasEnEspera = []
+    for (const m of pendientes) alMensaje(m)
+  }
+
   /** Terminó la tirada de reyes: sigue lo que quedó esperando. */
   const terminarReyes = () => {
     if (timerReyes) clearTimeout(timerReyes)
@@ -305,6 +322,11 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     // Mientras se tiran reyes, también; la sala no (trae los lugares nuevos y lleva a la mesa).
     if ((enPausa || (enReyes && m.tipo !== 'sala')) && m.tipo !== 'chat' && m.tipo !== 'error') {
       cola.push(m)
+      return
+    }
+    if ((m.tipo === 'senia' || m.tipo === 'seniaPescada') && Date.now() < seniasHasta) {
+      seniasEnEspera.push(m)
+      timerSenias ??= setTimeout(soltarSenias, seniasHasta - Date.now())
       return
     }
     switch (m.tipo) {
@@ -429,6 +451,10 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       enReyes = false
       porReproducir = []
       cola = []
+      if (timerSenias) clearTimeout(timerSenias)
+      timerSenias = null
+      seniasEnEspera = []
+      seniasHasta = 0
       const conexion = get().conexion
       conexion?.salir()
       // Fuera de la sala vuelven tu mesa y tu baraja.

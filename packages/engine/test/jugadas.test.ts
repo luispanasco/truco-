@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  accionesValidas,
   apply,
   crearPartida,
   enfrentamientoActual,
@@ -11,6 +12,7 @@ import {
   type Accion,
   type ConfigSala,
   type EstadoPartida,
+  type Evento,
 } from '../src'
 import { c, jugar, partidaCon, rechaza } from './helpers'
 
@@ -147,15 +149,15 @@ describe('el pie', () => {
     jugar(conBots([]), ['jugar', 'a', '1e'], ['jugar', 'b', '1b'], ['truco', 'c'])
   })
 
-  it('el pie le dice a su bot qué carta tirar; a una persona solo se lo insinúa', () => {
+  it('el pie le dice a su bot qué jugar (sin ver sus cartas); a una persona solo se lo insinúa', () => {
     const estado = conBots([2])
-    const r = apply(estado, { tipo: 'mandar', jugador: 'a', a: 2, que: 'carta', carta: c('12b') })
-    expect(r.ok && r.eventos).toEqual([{ tipo: 'orden', asiento: 0, a: 2, que: 'carta', carta: c('12b') }])
-    expect(apply(estado, { tipo: 'mandar', jugador: 'a', a: 2, que: 'carta', carta: c('1b') })).toMatchObject({ ok: false, motivo: 'Esa carta no la tiene' })
+    const r = apply(estado, { tipo: 'mandar', jugador: 'a', a: 2, que: 'matala' })
+    expect(r.ok && r.eventos).toEqual([{ tipo: 'orden', asiento: 0, a: 2, que: 'matala' }])
     expect(apply(estado, { tipo: 'mandar', jugador: 'c', a: 0, que: 'dejala' })).toMatchObject({ ok: false, motivo: 'Manda el pie' })
-    // A una persona no se le dice la carta, pero sí "matala", "dejala" o "jugá algo".
+    // La carta puntual ya no se dice: el pie no ve las de sus bots.
+    expect(accionesValidas(estado, 'a').some((x) => x.tipo === 'mandar' && x.que === ('carta' as never))).toBe(false)
+    expect(vistaPara(estado, 'a').mano).not.toHaveProperty('misBots')
     const personas = partidaCon(MANOS_2V2, '3c')
-    expect(apply(personas, { tipo: 'mandar', jugador: 'c', a: 0, que: 'carta', carta: c('1e') })).toMatchObject({ ok: false })
     expect(apply(personas, { tipo: 'mandar', jugador: 'c', a: 0, que: 'matala' }).ok).toBe(true)
   })
 
@@ -236,6 +238,21 @@ describe('piezas por abajo en el pica-pica', () => {
     // Las cartas comunes se ven.
     const comun = aplicar(r.estado, { tipo: 'jugarCarta', jugador: 'd', carta: c('3e') })
     expect(vistaPara(comun, 'b').mano.enfrentamientos[0]!.vueltas[0]!.jugadas[1]!.carta).toEqual(c('3e'))
+  })
+
+  it('un envido con pieza: el tanto lo oyen todos, pero la pieza la ve solo el rival del duelo', () => {
+    const p = partidaCon(MANOS, '3c', { picaPicaAlternado: false })
+    const tanto = p.mano.tantos[0]!.envidoReal
+    const { estado, eventos } = jugar(p, ['envido', 'a'], ['quiero', 'd'], ['declarar', 'a', tanto], ['declarar', 'd', 'sonBuenas'], ['mazo', 'd'])
+    const declarado = eventos.find((ev) => ev.tipo === 'tantoDeclarado' && ev.asiento === 0)!
+    for (const asiento of [1, 2, 3]) expect(eventosPara([declarado], asiento)).toEqual([declarado])
+    const mostradas = (id: string) => vistaPara(estado, id).mano.enfrentamientos[0]!.resultado!.mostradas.flatMap((m) => m.cartas)
+    expect(mostradas('d')).toContainEqual(c('2c'))
+    for (const id of ['b', 'c', 'e', 'f']) expect(mostradas(id)).not.toContainEqual(c('2c'))
+    const fin = eventos.find((ev) => ev.tipo === 'enfrentamientoTerminado')!
+    const enEvento = (asiento: number) => (eventosPara([fin], asiento)[0] as Extract<Evento, { tipo: 'enfrentamientoTerminado' }>).resultado.mostradas.flatMap((m) => m.cartas)
+    expect(enEvento(3)).toContainEqual(c('2c'))
+    expect(enEvento(2)).not.toContainEqual(c('2c'))
   })
 })
 
