@@ -149,6 +149,13 @@ export const MOTIVO_SIN_SENIAS = 'En esta mesa no se hacen señas'
 /** Cada cuánto se le puede pedir a un compañero que repita las señas. */
 export const ESPERA_PEDIR_SENIAS_MS = 10_000
 
+/**
+ * Lo que tarda en verse el reparto en la mesa (el corte, las cartas volando y la muestra que se da
+ * vuelta), con un margen. Las señas de los bots les llegan a las personas recién después: si no,
+ * se verían antes de que estén las cartas. Los bots igual las tienen al instante (juegan con ellas).
+ */
+export const ESPERA_REPARTO_MS = 2_300
+
 // ── Cliente → servidor ──────────────────────────────────────────────
 
 /** Opciones al entrar a cualquier sala. */

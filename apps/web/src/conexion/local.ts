@@ -33,6 +33,7 @@ import {
   normalizarTirarReyes,
   tirarReyes,
   ESPERA_ORDEN_MS,
+  ESPERA_REPARTO_MS,
   yaJugoEnLaMano,
   type ConfigSenias,
   type InfoSala,
@@ -73,6 +74,8 @@ export interface OpcionesLocal {
   demoraBots?: [number, number]
   /** Espera extra al cerrar una vuelta y al terminar una mano, para que se vea el resultado. */
   pausas?: { vuelta: number; mano: number }
+  /** Lo que tarda en verse el reparto: antes no te llegan las señas (`ESPERA_REPARTO_MS`; 0 en tests). */
+  esperaRepartoMs?: number
   semilla?: number
 }
 
@@ -98,6 +101,8 @@ export class ConexionLocal implements Conexion {
   private senias: SeniasRecibidas[] = []
   /** Mano en curso y si ya se cortó: los bots hacen sus señas recién con las cartas en la mano. */
   private claveMano = ''
+  /** Hasta cuándo (hora) tus señas de esta mano esperan: la pausa entre manos y el reparto. */
+  private seniasVisiblesDesde = 0
   /** Lo que sugeriste como pie, válido en la vuelta en que lo dijiste. */
   /** Nombre de cada asiento: con los reyes, los bots cambian de lugar (la persona sigue en el 0). */
   private nombres: string[] = []
@@ -233,7 +238,23 @@ export class ConexionLocal implements Conexion {
     const nueva = !this.claveMano.startsWith(`${m.numero}-`)
     this.claveMano = clave
     if (nueva) this.senias = this.estado.jugadores.map(() => ({}))
-    if (m.cortando === null) this.alNuevaMano()
+    if (m.cortando === null) {
+      // Te llegan cuando ya ves tus cartas: después de la pausa entre manos y del reparto.
+      const reparto = this.op.esperaRepartoMs ?? (this.op.demoraBots?.[1] === 0 ? 0 : ESPERA_REPARTO_MS)
+      const pausa = (this.op.pausas ?? PAUSAS).mano
+      this.seniasVisiblesDesde = reparto > 0 ? Date.now() + reparto + (nueva ? pausa : 0) : 0
+      this.alNuevaMano()
+    }
+  }
+
+  /** Una seña de esta mano te llega recién cuando ya tenés las cartas a la vista. */
+  private cuandoSeVean(emitir: () => void) {
+    const falta = this.seniasVisiblesDesde - Date.now()
+    if (falta <= 0) return emitir()
+    const clave = this.claveMano
+    setTimeout(() => {
+      if (this.claveMano === clave && this.oyentes.size > 0) emitir()
+    }, falta)
   }
 
   /**
@@ -412,7 +433,9 @@ export class ConexionLocal implements Conexion {
         this.senias[b]![de] = [...(this.senias[b]![de] ?? []), ...senias]
         if (senias.includes('envido')) anotarEnvido(b)
       }
-      if (b === 0) for (const senia of senias) this.emitir('senia', { de, senia, mano, ...conNumero(senia), ...(repetida ? { repetida } : {}) })
+      if (b === 0) this.cuandoSeVean(() => {
+        for (const senia of senias) this.emitir('senia', { de, senia, mano, ...conNumero(senia), ...(repetida ? { repetida } : {}) })
+      })
     }
     const { pescar, probabilidadPescar } = this.configSenias
     if (pescar === 'nunca') return
@@ -421,7 +444,7 @@ export class ConexionLocal implements Conexion {
       for (const senia of senias) {
         if (!(azar() < probabilidadPescar)) continue
         const vista = pescar === 'gestoYCarta' ? senia : null
-        if (r === 0) this.emitir('seniaPescada', { de, senia: vista, ...(vista ? conNumero(vista) : {}) })
+        if (r === 0) this.cuandoSeVean(() => this.emitir('seniaPescada', { de, senia: vista, ...(vista ? conNumero(vista) : {}) }))
         else if (vista && !(repetida && this.senias[r]![de]?.includes(vista))) {
           this.senias[r]![de] = [...(this.senias[r]![de] ?? []), vista]
           if (vista === 'envido') anotarEnvido(r)

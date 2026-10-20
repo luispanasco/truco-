@@ -61,7 +61,7 @@ describe('editor de avatar', () => {
     const colores = screen.getByRole('radiogroup', { name: 'Color de pelo' })
     fireEvent.click(within(colores).getByRole('radio', { name: 'Colorado' }))
     expect(leerAvatar(cambios.at(-1))!.colorPelo).toBe(3)
-  })
+  }, 15_000) // Dibuja todos los peinados con cada color: con la suite entera puede pasar de 5 s.
 
   it('las piezas de la tienda muestran el precio y no se pueden elegir', () => {
     const cambios: string[] = []

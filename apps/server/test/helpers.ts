@@ -14,7 +14,7 @@ export async function levantar(
 ): Promise<{ colyseus: ColyseusTestServer; dirDatos: string }> {
   const dirDatos = mkdtempSync(join(tmpdir(), 'truco-'))
   // Sin la pausa con la que un bot cumple una orden del pie (salvo que el test la pida), así las partidas no se alargan.
-  const colyseus = await boot(crearServidor({ dirDatos, ...op, tiempos: { esperaOrdenMs: [0, 0], ...op.tiempos } }), puerto)
+  const colyseus = await boot(crearServidor({ dirDatos, ...op, tiempos: { esperaOrdenMs: [0, 0], esperaRepartoMs: 0, ...op.tiempos } }), puerto)
   return { colyseus, dirDatos }
 }
 

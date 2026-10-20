@@ -1,7 +1,7 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mismaCarta, siguienteAleatorio, type Carta, type Formato, type VistaPartida } from '@truco/engine'
-import { MOTIVO_ENVIDO_CON_FLOR, MOTIVO_SENIA_TARDE, MOTIVO_SIN_SENIAS, yaJugoEnLaMano, type MensajesCliente } from '@truco/shared'
+import { ESPERA_REPARTO_MS, MOTIVO_ENVIDO_CON_FLOR, MOTIVO_SENIA_TARDE, MOTIVO_SIN_SENIAS, yaJugoEnLaMano, type MensajesCliente } from '@truco/shared'
 import { ENVIDO_PARA_SENIAR } from '@truco/bots'
 import { ConexionLocal, type OpcionesLocal } from '../src/conexion/local'
 import type { MensajeServidor } from '../src/conexion/tipos'
@@ -156,7 +156,7 @@ describe('conexión local', () => {
   it('pedirle las señas al compañero bot: las repite enseguida sin anotarlas de nuevo, y si no tiene, avisa', async () => {
     /** Arranca un 2v2, pide las señas al bot 2 y junta lo que llega después del pedido. */
     const pedir = async (semilla: number) => {
-      const c = new ConexionLocal({ apodo: 'Test', avatar: null, formato: '2v2', nivelBots: 'medio', demoraBots: [60_000, 60_000], semilla, senias: { pescar: 'nunca' } })
+      const c = new ConexionLocal({ apodo: 'Test', avatar: null, formato: '2v2', nivelBots: 'medio', demoraBots: [60_000, 60_000], esperaRepartoMs: 0, semilla, senias: { pescar: 'nunca' } })
       const antes: MensajeServidor[] = []
       const despues: MensajeServidor[] = []
       let pedido = false
@@ -273,4 +273,29 @@ describe('conexión local', () => {
     // Las demás señas no llevan número.
     expect(mensajes.some((m) => (m.tipo === 'senia' || m.tipo === 'seniaPescada') && m.datos.senia !== 'envido' && 'tanto' in m.datos)).toBe(false)
   }, 30_000)
+})
+
+describe('las señas de los bots, después del reparto', () => {
+  it('te llegan recién cuando ya tenés las cartas a la vista (pausa y reparto)', () => {
+    vi.useFakeTimers()
+    try {
+      // Una semilla en la que tu compañero bot te seña algo en la primera mano.
+      for (let semilla = 1; semilla < 40; semilla++) {
+        const c = new ConexionLocal({ apodo: 'Test', avatar: null, formato: '2v2', nivelBots: 'medio', demoraBots: [60_000, 60_000], semilla })
+        const mensajes: MensajeServidor[] = []
+        c.escuchar((m) => mensajes.push(m))
+        vi.advanceTimersByTime(ESPERA_REPARTO_MS - 100)
+        const antes = mensajes.filter((m) => m.tipo === 'senia').length
+        vi.advanceTimersByTime(6_000)
+        const despues = mensajes.filter((m) => m.tipo === 'senia').length
+        c.salir()
+        if (despues === 0) continue
+        expect(antes).toBe(0)
+        return
+      }
+      throw new Error('Ninguna semilla con señas del compañero en la primera mano')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

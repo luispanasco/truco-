@@ -157,6 +157,12 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
   /** Compañeros (o uno mismo) con flor sin cantar: el equipo no toca el envido. */
   const florDelEquipo = florSinCantarDelEquipo(estado, e, eq)
   const motivoFlorDelEquipo = florDelEquipo.includes(a) ? 'Tenés flor: cantala' : 'Tu compañero tiene flor: la tiene que cantar'
+  /**
+   * Compañeros con flor sin cantar (aunque la flor no sea obligatoria): mientras no la canten, el
+   * equipo no grita. La propia no frena: está "flor y truco".
+   */
+  const companierosConFlor = (eq: Equipo, salvo: number) =>
+    e.participantes.filter((x) => x !== salvo && equipoDe(x) === eq && debeCantarFlor(estado, e, x))
 
   // Alguien cantó flor: primero la cantan todos los que la tienen.
   const porCantar = floresPorCantar(estado, e)
@@ -197,6 +203,7 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if (pend) return MENSAJE_PENDIENTE[pend]
       if (e.turno !== a) return 'No es tu turno'
       if (debeCantar && cfg.florObligatoria) return 'Tenés flor: cantala primero (o "flor y truco")'
+      if (companierosConFlor(eq, a).length > 0) return 'Tu compañero tiene flor: hasta que la cante no se grita'
       if (e.truco.valor === 4) return 'No se puede subir más'
       if (e.truco.puedeSubir !== null && e.truco.puedeSubir !== eq) {
         return 'Solo puede subir el equipo que aceptó el último canto'
@@ -328,6 +335,7 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
           return 'Ya no se puede tocar'
         }
         if (accion.que === 'gritar' && e.truco.valor === 4) return 'No se puede subir más'
+        if (accion.que === 'gritar' && companierosConFlor(eq, comp).length > 0) return 'Hay flor en el equipo: hasta que se cante no se grita'
         return null
       }
       // Qué carta jugar: solo antes de que juegue en esta vuelta.

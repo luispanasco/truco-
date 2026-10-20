@@ -1287,3 +1287,12 @@ Pedido del usuario.
 - **Con la última carta del compañero, el pie solo dice "¡Gritá!" o "Callado"** (orden nueva `callado`: que la juegue sin cantar). Ya no hay cuál elegir, así que "dejala", "matala", "jugá algo", "vení" y "vamos a" no van (el motor las rechaza: "Con la última carta: que grite o callado"); y "callado" solo va con la última. Es privada, como las de qué carta tirar. Al bot que la recibe le alcanza para jugar su carta.
 - **1 vs 1: el mazo ya no pisa el nombre del de enfrente.** Cuando reparte él, el mazo va a la mitad del costado izquierdo (antes, arriba a la izquierda, al lado de su nombre; durante el corte y el reparto el mazo pasa por encima de los asientos).
 - **Tests:** engine 172 (el pie con la última carta).
+
+## Las señas, de verdad después del reparto; y sin truco con flor en el equipo — 2026-10-20
+
+Pedido del usuario: "siguen haciendo señas antes de que estén las cartas en la mesa" y "está prohibido gritar si un compañero tuyo tiene flor; es el bug más grande".
+
+- **Por qué no alcanzaba lo anterior:** el servidor (y contra la compu) hacía las señas de los bots *antes* de mandar el reparto; la pantalla las recibía antes de enterarse del corte y no las frenaba. Ahora, como propuso el usuario, **una espera después de repartir**: las señas (y las pescadas) les llegan a las personas recién pasada la pausa entre manos y el reparto (`ESPERA_REPARTO_MS` = 2,3 s, en `@truco/shared`; `tiempos.esperaRepartoMs` en el servidor, `esperaRepartoMs` contra la compu; 0 en los tests). Es igual en 2v2 y 3v3. Los bots las siguen teniendo al instante (juegan con ellas). Si la mano cambió mientras tanto, no se mandan. La retención en la pantalla durante el corte queda como segunda red.
+- **Con flor en el equipo no se grita:** mientras un compañero tenga flor sin cantar, nadie de su equipo puede cantar truco (ni aparece el botón) y el pie no puede mandar "¡Gritá!", aunque la flor no sea obligatoria. La flor propia no frena: está "flor y truco". Los rivales gritan normal.
+- El test de los colores del avatar tiene 15 s: con la suite entera pasaba de 5 s.
+- **Tests:** engine 173, server 103, web 319.

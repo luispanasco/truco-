@@ -36,6 +36,7 @@ import {
   normalizarAvatar,
   permisosDe,
   ESPERA_PEDIR_SENIAS_MS,
+  ESPERA_REPARTO_MS,
   MOTIVO_ENVIDO_CON_FLOR,
   MOTIVO_SENIA_TARDE,
   MOTIVO_SENIA_TEMPRANO,
@@ -110,6 +111,8 @@ export interface Tiempos {
   pausaManoMs: number
   /** Lo que tarda un bot en cumplir una orden del pie (ver `ESPERA_ORDEN_MS`). */
   esperaOrdenMs: [number, number]
+  /** Lo que tarda en verse el reparto: antes, las señas no les llegan a las personas (`ESPERA_REPARTO_MS`). */
+  esperaRepartoMs: number
 }
 
 export const TIEMPOS_DEFAULT: Tiempos = {
@@ -124,6 +127,7 @@ export const TIEMPOS_DEFAULT: Tiempos = {
   pausaVueltaMs: 3_000,
   pausaManoMs: 1_200,
   esperaOrdenMs: ESPERA_ORDEN_MS,
+  esperaRepartoMs: ESPERA_REPARTO_MS,
 }
 
 /** Nivel del bot que juega por un humano desconectado o que se quedó sin tiempo. */
@@ -225,6 +229,8 @@ export class SalaTruco extends Room {
   private bots: (Bot | null)[] = []
   private reemplazos: Bot[] = []
   private senias: SeniasRecibidas[] = []
+  /** Hasta cuándo (hora) las señas esperan para llegarles a las personas: la pausa y el reparto. */
+  private seniasVisiblesDesde = 0
   /** Mano en curso y si ya se cortó: las señas de los bots se hacen recién con las cartas en la mano. */
   private claveMano = ''
   /** Si la última tirada de reyes cambió a alguien de lugar (la mesa anima el cambio). */
@@ -937,7 +943,22 @@ export class SalaTruco extends Room {
     this.claveMano = clave
     if (nuevaMano) this.senias = this.lugares.map(() => ({}))
     // Hasta que no se corta no hay cartas para señar.
-    if (m.cortando === null) this.alNuevaMano()
+    if (m.cortando === null) {
+      // En la mesa, la mano nueva se ve después de la pausa entre manos; y el reparto lleva su tiempo.
+      const espera = this.tiempos.esperaRepartoMs > 0 ? this.tiempos.esperaRepartoMs + (nuevaMano ? this.tiempos.pausaManoMs : 0) : 0
+      this.seniasVisiblesDesde = Date.now() + espera
+      this.alNuevaMano()
+    }
+  }
+
+  /** Les manda a las personas una seña de esta mano recién cuando ya tienen las cartas a la vista. */
+  private cuandoSeVean(enviar: () => void) {
+    const falta = this.seniasVisiblesDesde - Date.now()
+    if (falta <= 0) return enviar()
+    const numero = this.estado!.mano.numero
+    this.clock.setTimeout(() => {
+      if (this.estado?.mano.numero === numero) enviar()
+    }, falta)
   }
 
   private alNuevaMano() {
@@ -972,7 +993,9 @@ export class SalaTruco extends Room {
         if (senias.includes('envido')) anotarEnvido(b)
       }
       if (this.humanoConectado(b)) {
-        for (const senia of senias) this.enviarA(b, 'senia', { de, senia, mano, ...conNumero(senia), ...(repetida ? { repetida } : {}) })
+        this.cuandoSeVean(() => {
+          for (const senia of senias) this.enviarA(b, 'senia', { de, senia, mano, ...conNumero(senia), ...(repetida ? { repetida } : {}) })
+        })
       }
     }
     const { pescar, probabilidadPescar } = this.configSenias
@@ -981,7 +1004,7 @@ export class SalaTruco extends Room {
       for (const senia of senias) {
         if (!(Math.random() < probabilidadPescar)) continue
         const vista = pescar === 'gestoYCarta' ? senia : null
-        if (this.humanoConectado(r)) this.enviarA(r, 'seniaPescada', { de, senia: vista, ...(vista ? conNumero(vista) : {}) })
+        if (this.humanoConectado(r)) this.cuandoSeVean(() => this.enviarA(r, 'seniaPescada', { de, senia: vista, ...(vista ? conNumero(vista) : {}) }))
         // Los bots (y los reemplazos) usan lo que pescaron para imaginar la mano del rival.
         else if (vista && !(repetida && this.senias[r]![de]?.includes(vista))) {
           this.senias[r]![de] = [...(this.senias[r]![de] ?? []), vista]

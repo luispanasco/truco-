@@ -161,6 +161,24 @@ describe('el pie', () => {
     expect(apply(personas, { tipo: 'mandar', jugador: 'c', a: 0, que: 'matala' }).ok).toBe(true)
   })
 
+  it('con flor en el equipo no se grita hasta que se cante: ni el truco ni la orden de gritar', () => {
+    // c (compañero de a, y su pie) tiene flor de oros; a es mano y juega primero.
+    const conFlor = ['4e 6b 12o', '1b 2e 6o', '1o 5o 7o', '3e 7b 11b']
+    for (const config of [{}, { florObligatoria: false }]) {
+      const estado = partidaCon(conFlor, '3c', config)
+      expect(accionesValidas(estado, 'a').some((x) => x.tipo === 'cantarTruco')).toBe(false)
+      expect(apply(estado, { tipo: 'cantarTruco', jugador: 'a' })).toMatchObject({ ok: false, motivo: 'Tu compañero tiene flor: hasta que la cante no se grita' })
+      // El pie (c) tampoco le puede decir a a que grite: primero, su flor.
+      expect(apply(estado, { tipo: 'mandar', jugador: 'c', a: 0, que: 'gritar' })).toMatchObject({ ok: false })
+      // Los rivales sí gritan.
+      const otraVuelta = jugar(estado, ['jugar', 'a', '4e']).estado
+      expect(accionesValidas(otraVuelta, 'b').some((x) => x.tipo === 'cantarTruco')).toBe(true)
+    }
+    // Cantada la flor, se grita.
+    const cantada = jugar(partidaCon(conFlor, '3c'), ['jugar', 'a', '4e'], ['jugar', 'b', '2e'], ['flor', 'c']).estado
+    expect(apply(cantada, { tipo: 'mandar', jugador: 'c', a: 0, que: 'gritar' }).ok).toBe(true)
+  })
+
   it('con la última carta del compañero, el pie solo le dice que grite o callado', () => {
     // Tercera vuelta: a (equipo 0) tiene una sola carta; el pie de su equipo es c.
     const estado = dosVueltas()
