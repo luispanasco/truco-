@@ -6,7 +6,7 @@ const CANTOS_ENVIDO: CantoEnvido[] = ['envido', 'realEnvido', 'faltaEnvido']
 const CANTOS_FLOR: CantoFlor[] = ['flor', 'contraflor', 'contraflorAlResto']
 const CORTES: TipoCorte[] = ['convencional', 'sacarMuestra', 'darAlMano']
 /** Lo que el pie le dice a un compañero (las de carta puntual y "vamos a" se arman aparte). */
-const ORDENES: QueManda[] = ['tocar', 'gritar', 'dejala', 'matala', 'jugaAlgo', 'veni']
+const ORDENES: QueManda[] = ['tocar', 'gritar', 'dejala', 'matala', 'jugaAlgo', 'veni', 'callado']
 
 /**
  * Acciones que el jugador puede hacer ahora. Sirve para mostrar solo los botones

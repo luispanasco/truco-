@@ -161,6 +161,17 @@ describe('el pie', () => {
     expect(apply(personas, { tipo: 'mandar', jugador: 'c', a: 0, que: 'matala' }).ok).toBe(true)
   })
 
+  it('con la última carta del compañero, el pie solo le dice que grite o callado', () => {
+    // Tercera vuelta: a (equipo 0) tiene una sola carta; el pie de su equipo es c.
+    const estado = dosVueltas()
+    const aA = accionesValidas(estado, 'c').filter((x): x is Extract<Accion, { tipo: 'mandar' }> => x.tipo === 'mandar' && x.a === 0)
+    expect(aA.map((x) => x.que).sort()).toEqual(['callado', 'gritar'])
+    expect(apply(estado, { tipo: 'mandar', jugador: 'c', a: 0, que: 'matala' })).toMatchObject({ ok: false, motivo: 'Con la última carta: que grite o callado' })
+    expect(aplicar(estado, { tipo: 'mandar', jugador: 'c', a: 0, que: 'callado' }).mano.enfrentamientos[0]!.ordenes).toContainEqual({ asiento: 0, que: 'callado' })
+    // Antes de la última, "callado" no va.
+    expect(apply(partidaCon(MANOS_2V2, '3c'), { tipo: 'mandar', jugador: 'c', a: 0, que: 'callado' })).toMatchObject({ ok: false })
+  })
+
   it('las órdenes de qué carta tirar: una reemplaza a la otra y se cumplen al jugar', () => {
     let estado = conBots([2])
     estado = aplicar(estado, { tipo: 'mandar', jugador: 'a', a: 2, que: 'dejala' })

@@ -23,6 +23,7 @@ export const TEXTO_ORDEN: Record<QueManda, (quien: string) => string> = {
   matala: () => '¡Matala!',
   jugaAlgo: () => 'Jugá algo',
   veni: () => '¡Vení a mí!',
+  callado: () => 'Callado',
   vamosA: (quien) => (quien ? `¡Vamos a ${quien}!` : '¡Vamos a…!'),
 }
 

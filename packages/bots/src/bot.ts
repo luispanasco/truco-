@@ -230,6 +230,7 @@ function cartaDeOrden(ctx: Contexto, o: Orden | undefined): Carta | null {
     case 'dejala':
     case 'veni':
     case 'vamosA':
+    case 'callado':
       return cs[0]!
     default:
       return null

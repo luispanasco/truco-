@@ -10,9 +10,10 @@ import { aLocal, asientoEnPanio, centro } from '../perspectiva'
  * lado del mano, pegado al borde para no tapar las cartas jugadas.
  */
 const POSICIONES: Record<number, [number, number][]> = {
+  // Cuando reparte el de enfrente, a la mitad del costado: arriba pisaba su nombre.
   2: [
     [84, 66],
-    [17, 16],
+    [16, 36],
   ],
   4: [
     [82, 86],
@@ -40,7 +41,7 @@ const POSICIONES: Record<number, [number, number][]> = {
 const POSICIONES_PERSPECTIVA: Record<number, [number, number][]> = {
   2: [
     [85, 80],
-    [18, 14],
+    [14, 36],
   ],
   4: [
     [88, 86],

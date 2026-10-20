@@ -333,6 +333,10 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       // Qué carta jugar: solo antes de que juegue en esta vuelta.
       const vuelta = ultimo(e.vueltas)
       if (vuelta.jugadas.some((j) => j.asiento === comp)) return 'Ya jugó en esta vuelta'
+      // Con la última carta no hay cuál elegir: que la juegue callado (o que grite).
+      const ultimaCarta = (mano.cartas[comp]?.length ?? 0) <= 1
+      if (ultimaCarta && accion.que !== 'callado') return 'Con la última carta: que grite o callado'
+      if (!ultimaCarta && accion.que === 'callado') return '"Callado" es con la última carta'
       if (accion.que === 'vamosA') {
         const x = accion.vamosA
         if (x === undefined || x === comp || x === a || !e.participantes.includes(x) || equipoDe(x) !== eq) return '"Vamos a" es a otro compañero'

@@ -1279,3 +1279,11 @@ Pedido del usuario: "la mesa en 3 vs 3 en celular está súper apretada", "la ti
 - En perspectiva a 360×740 con la mano apilada, una pila de un costado todavía roza la esquina del mazo (unos px); la carta queda encima.
 - En escritorio (3 contra 3, paño bajito) la tercera carta de los costados roza los dorsos del asiento: ya pasaba.
 - Celular acostado en 3 contra 3: el paño queda de 200 px de alto y se pisa todo; ya pasaba, es otro trabajo.
+
+## El pie con la última carta, y el mazo de 1 vs 1 — 2026-10-20
+
+Pedido del usuario.
+
+- **Con la última carta del compañero, el pie solo dice "¡Gritá!" o "Callado"** (orden nueva `callado`: que la juegue sin cantar). Ya no hay cuál elegir, así que "dejala", "matala", "jugá algo", "vení" y "vamos a" no van (el motor las rechaza: "Con la última carta: que grite o callado"); y "callado" solo va con la última. Es privada, como las de qué carta tirar. Al bot que la recibe le alcanza para jugar su carta.
+- **1 vs 1: el mazo ya no pisa el nombre del de enfrente.** Cuando reparte él, el mazo va a la mitad del costado izquierdo (antes, arriba a la izquierda, al lado de su nombre; durante el corte y el reparto el mazo pasa por encima de los asientos).
+- **Tests:** engine 172 (el pie con la última carta).

@@ -14,7 +14,7 @@ interface Props {
 }
 
 /** El orden de los botones de cada compañero (los de "vamos a" van aparte). */
-const ORDEN_BOTONES: QueManda[] = ['dejala', 'matala', 'jugaAlgo', 'veni', 'tocar', 'gritar']
+const ORDEN_BOTONES: QueManda[] = ['dejala', 'matala', 'jugaAlgo', 'veni', 'tocar', 'gritar', 'callado']
 
 /** Si sos el pie del duelo en curso: a quiénes les podés decir algo y qué. */
 export function opcionesDelPie(vista: VistaPartida) {

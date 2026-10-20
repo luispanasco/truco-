@@ -34,17 +34,18 @@ export type TipoCorte = 'convencional' | 'sacarMuestra' | 'darAlMano'
  * Lo que el pie le dice a un compañero. A un bot se lo manda (lo cumple: es lo único que hace,
  * salvo cantar la flor); a una persona se lo insinúa (decide ella).
  * - `tocar` / `gritar`: cantar envido / truco en su turno.
- * - `carta`: tirá esta carta (solo a un bot: el pie ve sus cartas).
  * - `dejala`: la más baja; `matala`: la más alta; `jugaAlgo`: la del medio.
  * - `veni`: "vení a mí" (la vuelta la lleva el pie); `vamosA`: la lleva otro compañero que juega después.
+ * - `callado`: con la última carta (no hay cuál elegir), que la juegue sin cantar. Con la última,
+ *   el pie solo dice eso o `gritar`.
  */
-export type QueManda = 'tocar' | 'gritar' | 'dejala' | 'matala' | 'jugaAlgo' | 'veni' | 'vamosA'
+export type QueManda = 'tocar' | 'gritar' | 'dejala' | 'matala' | 'jugaAlgo' | 'veni' | 'vamosA' | 'callado'
 
 /** Las órdenes que tienen que ver con qué carta jugar (valen hasta que el compañero juega). */
-export const ORDENES_DE_CARTA: readonly QueManda[] = ['dejala', 'matala', 'jugaAlgo', 'veni', 'vamosA']
+export const ORDENES_DE_CARTA: readonly QueManda[] = ['dejala', 'matala', 'jugaAlgo', 'veni', 'vamosA', 'callado']
 
 /** Las que no se dicen en voz alta: solo las ve el equipo. */
-export const ORDENES_PRIVADAS: readonly QueManda[] = ['dejala', 'matala', 'jugaAlgo']
+export const ORDENES_PRIVADAS: readonly QueManda[] = ['dejala', 'matala', 'jugaAlgo', 'callado']
 
 export interface Orden {
   asiento: number
