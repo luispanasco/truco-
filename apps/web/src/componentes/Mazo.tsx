@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import type { Carta as TCarta, TipoCorte } from '@truco/engine'
 import { Carta } from './Carta'
@@ -15,13 +15,61 @@ const POSICIONES: Record<number, [number, number][]> = {
     [17, 16],
   ],
   4: [
-    [85, 86],
-    [84, 24],
+    [82, 86],
+    [84, 21],
     [17, 15],
     // Bien abajo: más arriba pisa las cartas del de la izquierda (en escritorio el paño es bajito).
     [16, 83],
   ],
-  // En 3 contra 3 va a las esquinas: el medio de arriba y de abajo es de los asientos y del registro.
+  // En 3 contra 3, siempre en una esquina (del lado del mano): el medio de arriba y de abajo es
+  // de los asientos y del registro, y en el medio de los costados la muestra pisaba las pilas.
+  6: [
+    [84, 89],
+    [80, 8],
+    [80, 8],
+    [22, 9],
+    [16, 89],
+    [16, 89],
+  ],
+}
+
+/**
+ * En la mesa en perspectiva (en % del paño inclinado): sin asientos encima, el mazo va a las
+ * esquinas. Las de cerca, un poco más adentro: abajo de todo está el registro y cerca se ve más grande.
+ */
+const POSICIONES_PERSPECTIVA: Record<number, [number, number][]> = {
+  2: [
+    [85, 80],
+    [18, 14],
+  ],
+  4: [
+    [88, 86],
+    [84, 16],
+    [13, 19],
+    [12, 86],
+  ],
+  // En 3 contra 3, siempre en una esquina (del lado del mano): a los costados, entre las dos
+  // pilas de cada lado, no entra. Las de cerca, bien en la punta y arriba del registro.
+  6: [
+    [91, 91],
+    [86, 12],
+    [86, 12],
+    [14, 12],
+    [9, 91],
+    [9, 91],
+  ],
+}
+
+export function lugarMazo(n: number, reparteRel: number, perspectiva = false): [number, number] {
+  const tabla = perspectiva ? POSICIONES_PERSPECTIVA : POSICIONES
+  return (tabla[n] ?? tabla[2]!)[reparteRel] ?? [50, 50]
+}
+
+/**
+ * En un paño bajito y ancho (escritorio, celular acostado) los de los costados de 3 contra 3 van
+ * acostados: el medio de los costados queda libre y las esquinas de abajo, cerca de sus nombres.
+ */
+const POSICIONES_ANCHA: Record<number, [number, number][]> = {
   6: [
     [84, 91],
     [86, 50],
@@ -33,40 +81,13 @@ const POSICIONES: Record<number, [number, number][]> = {
 }
 
 /**
- * En la mesa en perspectiva (en % del paño inclinado): sin asientos encima, el mazo va a las
- * esquinas. Las de cerca, un poco más adentro: abajo de todo está el registro y cerca se ve más grande.
+ * El lugar del mazo, en variables: el CSS elige (con una container query) entre el del paño
+ * angosto y el del paño bajito y ancho.
  */
-const POSICIONES_PERSPECTIVA: Record<number, [number, number][]> = {
-  2: [
-    [82, 72],
-    [18, 14],
-  ],
-  4: [
-    [86, 80],
-    [87, 19],
-    [13, 19],
-    [14, 80],
-  ],
-  // En 3 contra 3, siempre en una esquina (del lado del mano): a los costados, entre las dos
-  // pilas de cada lado, no entra. Las de cerca, bien en la punta y arriba del registro.
-  6: [
-    [91, 87],
-    [88, 14],
-    [88, 14],
-    [12, 14],
-    [9, 87],
-    [9, 87],
-  ],
-}
-
-export function lugarMazo(n: number, reparteRel: number, perspectiva = false): [number, number] {
-  const tabla = perspectiva ? POSICIONES_PERSPECTIVA : POSICIONES
-  return (tabla[n] ?? tabla[2]!)[reparteRel] ?? [50, 50]
-}
-
-export function posicionMazo(n: number, reparteRel: number, perspectiva = false): { left: string; top: string } {
+export function posicionMazo(n: number, reparteRel: number, perspectiva = false): CSSProperties {
   const [x, y] = lugarMazo(n, reparteRel, perspectiva)
-  return { left: `${x}%`, top: `${y}%` }
+  const [xa, ya] = (!perspectiva && POSICIONES_ANCHA[n]?.[reparteRel]) || [x, y]
+  return { '--mazo-x': `${x}%`, '--mazo-y': `${y}%`, '--mazo-x-ancha': `${xa}%`, '--mazo-y-ancha': `${ya}%` } as CSSProperties
 }
 
 /** Lo que dura el corte en el mazo, según el tipo; después se reparte y se da vuelta la muestra. */
@@ -373,9 +394,12 @@ export function Mazo({ muestra, n, reparteRel, avisoCorte = null, corte = null, 
   const demoraGiro = tipo === 'sacarMuestra' && fase === 'corte' ? (CORTE_MS.sacarMuestra / 1000) * 0.55 : 0
   // El orden del reparto: desde el mano, en sentido antihorario (las posiciones crecen así).
   const orden = useMemo(() => Array.from({ length: n }, (_, k) => (manoRel + k) % n), [n, manoRel])
+  // Pasa por encima de todo solo mientras vuelan las cartas (corte y reparto). Al dar vuelta la
+  // muestra ya se puede estar jugando (el mano no espera): la carta tirada no queda debajo.
+  const volando = fase === 'corte' || fase === 'reparto'
   return (
     <div
-      className={`mazo${n === 6 ? ' mazo-chico' : ''}${esperando ? ' mazo-esperando-corte' : ''}${fase ? ' mazo-cortando' : ''}`}
+      className={`mazo${n === 6 ? ' mazo-chico' : ''}${esperando ? ' mazo-esperando-corte' : ''}${volando ? ' mazo-cortando' : ''}`}
       style={posicionMazo(n, reparteRel, perspectiva)}
       aria-label={muestra ? 'Mazo y muestra' : 'Mazo sin cortar'}
       data-fase={fase ?? undefined}

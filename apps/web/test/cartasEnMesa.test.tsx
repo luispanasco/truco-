@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import type { Carta } from '@truco/engine'
 import { CartasEnMesa, MUESTRA_VUELTA_MS } from '../src/componentes/CartasEnMesa'
+import { lugarMazo, Mazo, posicionMazo } from '../src/componentes/Mazo'
 import type { MesaVisible } from '../src/estado'
 
 const c = (numero: Carta['numero'], palo: Carta['palo']): Carta => ({ numero, palo })
@@ -101,5 +102,54 @@ describe('cartas que se levantan en cada vuelta', () => {
     const { container } = render(<CartasEnMesa {...props} levantar={false} mesa={cerrada} />)
     await esperar(MUESTRA_VUELTA_MS + 300)
     expect(container.querySelectorAll('.jugada')).toHaveLength(2)
+  })
+})
+
+describe('la carta tirada y el mazo', () => {
+  const mesa: MesaVisible = {
+    jugadas: [
+      { asiento: 4, carta: c(1, 'espada'), vuelta: 0 },
+      { asiento: 5, carta: c(7, 'oro'), vuelta: 0 },
+      { asiento: 4, carta: c(4, 'oro'), vuelta: 1 },
+    ],
+    vueltas: [{ resultado: 1, ganador: 5 }],
+  }
+
+  it('cada jugada queda por encima del mazo (z-index 1), también la de la primera vuelta', () => {
+    const { container } = render(<CartasEnMesa n={6} rel={(a) => a} apodo={(a) => `J${a}`} nuestro={0} mesa={mesa} mostradas={[]} />)
+    const z = [...container.querySelectorAll<HTMLElement>('.jugada')].map((j) => Number(j.style.zIndex))
+    expect(z).toHaveLength(3)
+    for (const x of z) expect(x).toBeGreaterThan(1)
+  })
+
+  it('el mazo pasa por encima de todo solo mientras vuelan las cartas, no al dar vuelta la muestra', () => {
+    const corte = { corte: 'convencional' as const, id: 1 }
+    const { container, rerender } = render(<Mazo muestra={c(3, 'copa')} n={6} reparteRel={0} corte={corte} fase="corte" />)
+    expect(container.querySelector('.mazo-cortando')).not.toBeNull()
+    rerender(<Mazo muestra={c(3, 'copa')} n={6} reparteRel={0} corte={corte} fase="reparto" />)
+    expect(container.querySelector('.mazo-cortando')).not.toBeNull()
+    // Dando vuelta la muestra el mano ya puede tirar: su carta no queda debajo del mazo.
+    rerender(<Mazo muestra={c(3, 'copa')} n={6} reparteRel={0} corte={corte} fase="muestra" />)
+    expect(container.querySelector('.mazo-cortando')).toBeNull()
+  })
+
+  it('en 3 contra 3 el mazo va siempre a una esquina, lejos de las pilas de los costados', () => {
+    for (let rel = 0; rel < 6; rel++) {
+      const [x, y] = lugarMazo(6, rel)
+      expect(x < 25 || x > 75).toBe(true)
+      expect(y < 12 || y > 88).toBe(true)
+    }
+  })
+
+  it('el lugar va en variables: uno para el paño angosto y otro para el bajito y ancho', () => {
+    const estilo = posicionMazo(6, 4) as Record<string, string>
+    expect(estilo['--mazo-x']).toBe('16%')
+    expect(estilo['--mazo-y']).toBe('89%')
+    // En el paño ancho los de los costados van acostados: el medio del costado está libre.
+    expect(estilo['--mazo-x-ancha']).toBe('14%')
+    expect(estilo['--mazo-y-ancha']).toBe('50%')
+    // En perspectiva hay un solo lugar.
+    const p = posicionMazo(6, 4, true) as Record<string, string>
+    expect(p['--mazo-x-ancha']).toBe(p['--mazo-x'])
   })
 })

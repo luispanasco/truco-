@@ -251,7 +251,8 @@ export function TiradaEnMesa({ reyes, sala, vistaMesa, alTerminar }: PropsMesa) 
           <div
             key={i}
             className={`jugada pos-${relViejo(t.asiento)}`}
-            style={{ '--vuelta': 1 + Math.min(delMismo[i]!, 6) * 0.14, zIndex: i + 1 } as CSSProperties}
+            // Arriba del mazo (z-index 1), como las jugadas.
+            style={{ '--vuelta': 1 + Math.min(delMismo[i]!, 6) * 0.14, zIndex: i + 2 } as CSSProperties}
             aria-label={`${reyes.apodos[t.asiento] ?? ''}: ${t.carta.numero === 12 ? 'rey' : 'carta'}`}
           >
             <CartaDeReyes carta={t.carta} giro={((i * 37) % 13) - 6} />

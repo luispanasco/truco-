@@ -114,8 +114,8 @@ describe('el mazo en la mesa en perspectiva', () => {
     }
   })
 
-  it('las otras vistas no cambian', () => {
-    expect(lugarMazo(6, 1)).toEqual([86, 50])
+  it('las otras vistas tienen su propio lugar', () => {
+    expect(lugarMazo(6, 1)).toEqual([80, 8])
     expect(lugarMazo(4, 3)).toEqual([16, 83])
   })
 })

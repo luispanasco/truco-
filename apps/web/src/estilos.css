@@ -1738,6 +1738,9 @@ input {
 /* Mazo: la muestra boca arriba y cruzada, con el mazo encima dejándola ver. */
 .mazo {
   position: absolute;
+  /* El lugar sale de Mazo.tsx (posicionMazo): uno para el paño angosto y otro para el ancho. */
+  left: var(--mazo-x);
+  top: var(--mazo-y);
   width: 92px;
   height: 70px;
   transform: translate(-50%, -50%);
@@ -1938,6 +1941,46 @@ input {
   }
 }
 
+/*
+ * 3 contra 3 en el celular: cinco asientos alrededor de un paño angosto. Tu mano va más chica
+ * (abierta, 56 px: se sigue tocando cómodo) y el lugar que deja es para el paño; el marco de
+ * madera, más finito. (--carta-mano se vuelve a calcular acá: la de :root sale de la grande de :root.)
+ */
+@media (max-width: 719px), (max-height: 639px) {
+  .pantalla-mesa.n-6 {
+    --carta-grande: min(18vw, 72px);
+    --carta-mano: max(56px, calc(var(--carta-grande) * 0.75));
+  }
+  .n-6 .tapete {
+    margin: 6px 4px;
+    border-width: 5px;
+  }
+  /* Los cinco de alrededor, más compactos: avatar, nombre y dorsos un poco más chicos. */
+  .pantalla-mesa.n-6 .tapete {
+    --carta-chica: 22px;
+  }
+  .pantalla-mesa.n-6:not(.mesa-bustos, .mesa-perspectiva) .tapete .avatar:not(.avatar-chico) {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+  }
+  .n-6 .tapete .asiento {
+    gap: 2px;
+    font-size: 0.7rem;
+  }
+  /* También en 2 contra 2: los nombres de los costados quedan a la altura de las pilas. */
+  :is(.n-4, .n-6) .tapete .asiento-nombre {
+    max-width: 84px;
+    padding: 1px 7px 1px 5px;
+    gap: 4px;
+  }
+  /* Los de los costados de abajo, un poco más arriba: en las esquinas de abajo va el mazo. */
+  .n-6 .asiento.pos-1,
+  .n-6 .asiento.pos-5 {
+    bottom: 20%;
+  }
+}
+
 /* Escritorio: la mesa centrada como un tablero con marco, sin estirarse. */
 @media (min-width: 720px) and (min-height: 640px) {
   /* Con pantalla grande las cartas dejan de ser de tamaño celular. */
@@ -2057,6 +2100,14 @@ input {
   }
   :is(.n-2 .asiento.pos-1, .n-4 .asiento.pos-2, .n-6 .asiento.pos-3) .asiento-cartas {
     grid-area: cartas;
+  }
+}
+
+/* Paño bajito y ancho: el mazo en su lugar para esta mesa (ver posicionMazo). */
+@container mesa (max-height: 480px) and (min-width: 480px) {
+  .mazo {
+    left: var(--mazo-x-ancha);
+    top: var(--mazo-y-ancha);
   }
 }
 

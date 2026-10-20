@@ -19,8 +19,9 @@
 .n-2 .cartas-en-mesa {
   --w: clamp(34px, min(16cqw, var(--libre-alto) / 3), 58px);
 }
+/* Lo que queda a cada lado (80px) es para el asiento del costado: su nombre está a la altura de las pilas. */
 .n-4 .cartas-en-mesa {
-  --w: clamp(32px, min((50cqw - 70px) / 1.9, var(--libre-alto) / 3.3), 54px);
+  --w: clamp(32px, min((50cqw - 80px) / 1.9, var(--libre-alto) / 3.3), 54px);
 }
 .n-6 .cartas-en-mesa {
   --w: clamp(30px, min((50cqw - 70px) / 1.8, var(--libre-alto) / 4.65), 50px);
@@ -32,10 +33,12 @@
   --paso-x: calc(var(--w) * 0.3);
   --paso-y: 0px;
   --base: 1;
+  /* Despegada del paño (en la mesa en perspectiva): ver --alzada en estilos-mesa-perspectiva.css. */
+  --alzada: 0px;
   left: calc(50% + var(--ax));
   top: calc(50% + var(--centro-y) + var(--ay));
   transform: translate(-50%, -50%);
-  translate: calc((var(--vuelta) - var(--base)) * var(--paso-x)) calc((var(--vuelta) - var(--base)) * var(--paso-y));
+  translate: calc((var(--vuelta) - var(--base)) * var(--paso-x)) calc((var(--vuelta) - var(--base)) * var(--paso-y)) var(--alzada);
 }
 .cartas-en-mesa .carta {
   --ancho: var(--w);

@@ -151,7 +151,8 @@ export function CartasEnMesa({ n, rel, mesa, mostradas, apodo, nuestro, levantar
             <motion.div
               key={c.carta ? `${c.asiento}-${c.carta.numero}-${c.carta.palo}` : `${c.asiento}-tapada-${vuelta}`}
               className={`jugada pos-${pos}${pasada ? ' pasada' : ''}${c.mostrada ? ' mostrada' : ''}`}
-              style={{ '--vuelta': c.lugar, zIndex: c.lugar + 1 } as CSSProperties}
+              // Siempre arriba del mazo (z-index 1): si una pila llega a rozarlo, la carta tirada no queda tapada.
+              style={{ '--vuelta': c.lugar, zIndex: c.lugar + 2 } as CSSProperties}
               // La que se va queda debajo de todas, también de la que llega a su lugar.
               exit={{ zIndex: 0, transition: { duration: 0 } }}
             >

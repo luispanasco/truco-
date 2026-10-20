@@ -103,6 +103,15 @@
   transform-style: preserve-3d;
 }
 
+/*
+ * Las cartas tiradas, apenas despegadas del paño (hacia la cámara). En 3D el navegador ordena
+ * por profundidad y no le hace caso al z-index: con el mazo y las jugadas en el mismo plano, el
+ * mazo quedaba arriba de la carta que caía cerca de él. Así la jugada siempre queda encima.
+ */
+.mesa-perspectiva .tapete .cartas-en-mesa .jugada.jugada {
+  --alzada: 2px;
+}
+
 /* Lo que es interfaz y cae sobre el paño se para de frente, para leerlo derecho. */
 .mesa-perspectiva .mazo-aviso {
   transform-origin: 50% 100%;
@@ -133,6 +142,10 @@
 .mesa-perspectiva:is(.n-4, .n-6) .cartas-en-mesa {
   --centro-y: 3cqh;
 }
+/* En 3 contra 3, un poco más: en las esquinas de lejos va el mazo, cerca de las pilas de los costados. */
+.mesa-perspectiva.n-6 .cartas-en-mesa {
+  --centro-y: 5cqh;
+}
 .mesa-perspectiva.n-2 .cartas-en-mesa {
   --w: clamp(40px, min(21cqw, var(--libre-alto) / 3.2), 74px);
 }
@@ -140,7 +153,7 @@
   --w: clamp(34px, min((50cqw - 16px) / 2.5, var(--libre-alto) / 4), 58px);
 }
 .mesa-perspectiva.n-6 .cartas-en-mesa {
-  --w: clamp(30px, min((50cqw - 16px) / 2.4, var(--libre-alto) / 5.3), 52px);
+  --w: clamp(30px, min((50cqw - 16px) / 2.4, var(--libre-alto) / 7), 52px);
 }
 
 /* ── Los demás: recortes parados alrededor del paño ── */
@@ -395,10 +408,10 @@
   --ay: calc(var(--w) * -1.15);
 }
 .mesa-perspectiva.n-6 .cartas-en-mesa .jugada:is(.pos-1, .pos-2) {
-  --ax: calc(var(--w) * 1.7);
+  --ax: calc(var(--w) * 1.55);
 }
 .mesa-perspectiva.n-6 .cartas-en-mesa .jugada:is(.pos-4, .pos-5) {
-  --ax: calc(var(--w) * -1.7);
+  --ax: calc(var(--w) * -1.55);
 }
 
 /* El mazo, cerca de vos, se vería enorme: un poco más chico (el reparto mide esta escala). */
