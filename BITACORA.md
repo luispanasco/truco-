@@ -1296,3 +1296,11 @@ Pedido del usuario: "siguen haciendo señas antes de que estén las cartas en la
 - **Con flor en el equipo no se grita:** mientras un compañero tenga flor sin cantar, nadie de su equipo puede cantar truco (ni aparece el botón) y el pie no puede mandar "¡Gritá!", aunque la flor no sea obligatoria. La flor propia no frena: está "flor y truco". Los rivales gritan normal.
 - El test de los colores del avatar tiene 15 s: con la suite entera pasaba de 5 s.
 - **Tests:** engine 173, server 103, web 319.
+
+## Pescar señas, apagado por ahora — 2026-10-21
+
+Pedido del usuario: a los beta testers no les convenció.
+
+- **`PESCAR_SENIAS_DISPONIBLE = false`** (`@truco/shared`) y `SENIAS_DEFAULT.pescar` pasa a `'nunca'`. Al crear la sala ya no aparecen "Los rivales pescan señas" ni "Probabilidad de pescar", el resumen de la sala no lo nombra y en Ajustes se fue el interruptor "Pescar señas". Contra la compu y al crear la sala online se manda siempre `pescar: 'nunca'`, aunque el perfil guardado diga otra cosa.
+- El código de pescar sigue entero (servidor, contra la compu, globos y bots): para volver, `true` en la constante y `pescar: 'gesto'` en `SENIAS_DEFAULT`.
+- **Tests:** web 319, server 103 (sin cambios: los de pescar piden la opción a mano). e2e `senias.spec.ts` ya no elige "Nunca"; pasa, igual que `anfitrion.spec.ts`.

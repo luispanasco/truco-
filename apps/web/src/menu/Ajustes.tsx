@@ -1,3 +1,4 @@
+import { PESCAR_SENIAS_DISPONIBLE } from '@truco/shared'
 import { AjustesSonido } from '../componentes/AjustesSonido'
 import { SelectorCartasJugadas } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
@@ -62,12 +63,14 @@ export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Part
         />
         {perfil.seniasHabilitadas && (
           <>
-            <Interruptor
-              activo={perfil.pescarSenias}
-              alCambiar={(v) => cambiar({ pescarSenias: v })}
-              titulo="Pescar señas"
-              detalle="A veces se ve que un rival le hace una seña a su compañero (y a vos también te pueden ver)"
-            />
+            {PESCAR_SENIAS_DISPONIBLE && (
+              <Interruptor
+                activo={perfil.pescarSenias}
+                alCambiar={(v) => cambiar({ pescarSenias: v })}
+                titulo="Pescar señas"
+                detalle="A veces se ve que un rival le hace una seña a su compañero (y a vos también te pueden ver)"
+              />
+            )}
             <Interruptor
               activo={perfil.seniasAntesDeJugar}
               alCambiar={(v) => cambiar({ seniasAntesDeJugar: v })}

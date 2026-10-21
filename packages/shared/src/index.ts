@@ -42,7 +42,14 @@ export interface ConfigSenias {
   momento: MomentoSenias
 }
 
-export const SENIAS_DEFAULT: ConfigSenias = { habilitadas: true, pescar: 'gesto', probabilidadPescar: 0.2, momento: 'libre' }
+/**
+ * Pescar señas, apagado por ahora (no convenció en la beta): la pantalla no lo ofrece y las
+ * mesas se arman con `pescar: 'nunca'`. El servidor lo sigue sabiendo hacer; para volver,
+ * poner `true` y `pescar: 'gesto'` en `SENIAS_DEFAULT`.
+ */
+export const PESCAR_SENIAS_DISPONIBLE = false
+
+export const SENIAS_DEFAULT: ConfigSenias = { habilitadas: true, pescar: 'nunca', probabilidadPescar: 0.2, momento: 'libre' }
 
 /** Completa y valida la configuración de señas (lo que no sirve queda como estaba). */
 export function normalizarSenias(op: Partial<ConfigSenias> | undefined, base: ConfigSenias = SENIAS_DEFAULT): ConfigSenias {

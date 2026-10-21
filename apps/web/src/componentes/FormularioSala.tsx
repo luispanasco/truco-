@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Nivel } from '@truco/bots'
 import { CONFIG_DEFAULT, type ConfigSala, type Formato } from '@truco/engine'
-import { SENIAS_DEFAULT, type ConfigSenias, type InfoSala, type MensajesCliente, type PescarSenias } from '@truco/shared'
+import { PESCAR_SENIAS_DISPONIBLE, SENIAS_DEFAULT, type ConfigSenias, type InfoSala, type MensajesCliente, type PescarSenias } from '@truco/shared'
 import { normalizarTiempos, TIEMPOS_SALA_DEFAULT, type ConfigTiempos } from '@truco/shared'
 import { CARTAS_JUGADAS_DEFAULT, normalizarCartasJugadas, type CartasJugadas } from '@truco/shared'
 import { normalizarTirarReyes, TIRAR_REYES_DEFAULT, type TirarReyes } from '@truco/shared'
@@ -119,7 +119,7 @@ export function opcionesParaServidor(o: OpcionesSala): MensajesCliente['configur
     botsEnVacios: o.botsEnVacios,
     nivelBots: o.nivelBots,
     ayudas: o.ayudas,
-    senias: o.senias,
+    senias: PESCAR_SENIAS_DISPONIBLE ? o.senias : { ...o.senias, pescar: 'nunca' },
     tiempos: o.tiempos,
     cartasJugadas: o.cartasJugadas,
     tirarReyes: o.tirarReyes,
@@ -424,14 +424,16 @@ export function FormularioSala({ valor, alCambiar }: { valor: OpcionesSala; alCa
           />
           {se.habilitadas && (
             <>
-              <Segmentado
-                titulo="Los rivales pescan señas"
-                valor={se.pescar}
-                opciones={(['nunca', 'gesto', 'gestoYCarta'] as const).map((v) => [v, TEXTO_PESCAR[v][0]])}
-                alCambiar={(pescar) => senia({ pescar })}
-                detalle={TEXTO_PESCAR[se.pescar][1]}
-              />
-              {se.pescar !== 'nunca' && (
+              {PESCAR_SENIAS_DISPONIBLE && (
+                <Segmentado
+                  titulo="Los rivales pescan señas"
+                  valor={se.pescar}
+                  opciones={(['nunca', 'gesto', 'gestoYCarta'] as const).map((v) => [v, TEXTO_PESCAR[v][0]])}
+                  alCambiar={(pescar) => senia({ pescar })}
+                  detalle={TEXTO_PESCAR[se.pescar][1]}
+                />
+              )}
+              {PESCAR_SENIAS_DISPONIBLE && se.pescar !== 'nunca' && (
                 <Segmentado
                   titulo="Probabilidad de pescar"
                   valor={se.probabilidadPescar}
@@ -487,12 +489,14 @@ export function resumenSala(o: OpcionesSala): string[] {
     if (!se.habilitadas) {
       partes.push('Sin señas')
     } else {
-      partes.push(
-        se.pescar === 'nunca'
-          ? 'Los rivales no pescan señas'
-          : `Los rivales pescan ${se.pescar === 'gesto' ? 'el gesto' : 'gesto y carta'} (${porcentaje(se.probabilidadPescar)})`,
-        se.momento === 'libre' ? 'Señas en cualquier momento' : 'Señas solo antes de jugar',
-      )
+      if (PESCAR_SENIAS_DISPONIBLE) {
+        partes.push(
+          se.pescar === 'nunca'
+            ? 'Los rivales no pescan señas'
+            : `Los rivales pescan ${se.pescar === 'gesto' ? 'el gesto' : 'gesto y carta'} (${porcentaje(se.probabilidadPescar)})`,
+        )
+      }
+      partes.push(se.momento === 'libre' ? 'Señas en cualquier momento' : 'Señas solo antes de jugar')
     }
   }
   return partes

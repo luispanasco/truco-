@@ -3,8 +3,8 @@ import { caja, cartasDeLaMano, crearSala, elegir, empezar, expect, persona, test
 
 /**
  * Señas en parejas, online: Ana y Beto son compañeros, Caro es rival (con un bot de
- * compañero). La sala se crea con "Los rivales pescan señas: Nunca", así que a Caro no le
- * tiene que llegar ninguna seña de Ana ni de Beto.
+ * compañero). Pescar señas está apagado, así que a Caro no le tiene que llegar ninguna
+ * seña de Ana ni de Beto.
  */
 
 /** El lugar de un jugador en la mesa de `page`, ubicado por su nombre (el menú de la persona). */
@@ -28,10 +28,7 @@ test('una seña le llega al compañero y no al rival', async ({ browser }) => {
 
   const codigo = await crearSala(ana, async (p) => {
     await elegir(p, 'Formato', /Parejas/)
-    await p.getByText('Reglas de la mesa').click()
-    await elegir(p, 'Los rivales pescan señas', 'Nunca')
   })
-  await expect(ana.getByText('Los rivales no pescan señas')).toBeVisible()
 
   // Beto se sienta enfrente de Ana (su compañero); Caro queda en el otro equipo.
   await unirse(beto, codigo)
@@ -95,8 +92,6 @@ test('tocando el avatar del compañero se ven sus señas y se le pide que las re
 
   const codigo = await crearSala(ana, async (p) => {
     await elegir(p, 'Formato', /Parejas/)
-    await p.getByText('Reglas de la mesa').click()
-    await elegir(p, 'Los rivales pescan señas', 'Nunca')
   })
   await unirse(beto, codigo)
   await beto.getByRole('button', { name: 'Lugar libre 3: sentarme acá' }).click()

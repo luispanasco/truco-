@@ -1,3 +1,4 @@
+import { PESCAR_SENIAS_DISPONIBLE } from '@truco/shared'
 import { ConexionLocal } from '../conexion/local'
 import type { Perfil } from '../perfil'
 
@@ -21,7 +22,7 @@ export function conexionContraLaCompu(perfil: Perfil): ConexionLocal {
     tirarReyes: perfil.tirarReyes,
     senias: {
       habilitadas: perfil.seniasHabilitadas,
-      pescar: perfil.pescarSenias ? 'gesto' : 'nunca',
+      pescar: PESCAR_SENIAS_DISPONIBLE && perfil.pescarSenias ? 'gesto' : 'nunca',
       momento: perfil.seniasAntesDeJugar ? 'antesDeJugar' : 'libre',
     },
     ...(perfil.rapido ? { demoraBots: [350, 700] as [number, number], pausas: { vuelta: 1500, mano: 1200 } } : {}),
