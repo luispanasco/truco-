@@ -301,30 +301,86 @@
   justify-items: center;
   padding: 0;
 }
+/* El logo de public/icono.svg: las piezas de oro con el sol detrás, la cinta roja con el nombre. */
 .jugar-logo .abanico {
+  position: relative;
+  isolation: isolate;
   height: 60px;
-  margin-bottom: 2px;
+  margin-bottom: 0;
 }
 .jugar-logo .abanico .carta {
   --ancho: 38px;
   margin: 0 -7px;
 }
+/*
+ * Como en la mano: cada carta arriba de la anterior (el abanico de inicio sube la del medio).
+ * Giran con rotate y translate, no con transform: ese lo usa la animación de la carta.
+ */
+.jugar-logo .abanico .carta:nth-child(1) {
+  rotate: -18deg;
+}
+.jugar-logo .abanico .carta:nth-child(2) {
+  z-index: auto;
+  translate: 0 -5px;
+}
+.jugar-logo .abanico .carta:nth-child(3) {
+  rotate: 18deg;
+}
+.jugar-logo-sol {
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 42%;
+  width: 128px;
+  height: 128px;
+  translate: -50% -50%;
+  fill: var(--acento);
+  opacity: 0.92;
+  pointer-events: none;
+}
 .jugar-logo h1 {
-  margin: 0;
+  position: relative;
+  z-index: 1;
+  margin: -6px 0 0;
+  padding: 0.14em 0.55em 0.08em;
   font-family: var(--fuente-titulo);
   font-weight: 400;
-  font-size: 2.3rem;
+  font-size: 1.9rem;
   line-height: 1;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--papel);
-  text-shadow:
-    0 3px 0 var(--menu-panio-tinta),
-    0 8px 18px rgb(0 0 0 / 0.35);
+  background: var(--dorso);
+  border: 2px solid var(--dorso-detalle);
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgb(0 0 0 / 0.35);
+  text-shadow: 0 2px 0 color-mix(in srgb, var(--dorso) 45%, black);
+}
+/* Las puntas de la cinta, más oscuras y un poco más abajo, con el corte en V. */
+.jugar-logo h1::before,
+.jugar-logo h1::after {
+  content: '';
+  position: absolute;
+  top: 0.3em;
+  bottom: -0.3em;
+  width: 0.8em;
+  background: color-mix(in srgb, var(--dorso) 62%, black);
+}
+.jugar-logo h1::before {
+  right: calc(100% + 2px);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 38% 50%);
+}
+.jugar-logo h1::after {
+  left: calc(100% + 2px);
+  clip-path: polygon(0 0, 100% 0, 62% 50%, 100% 100%, 0 100%);
 }
 .jugar-logo .subtitulo {
-  margin-top: 4px;
-  font-size: 0.78rem;
-  color: var(--menu-suave);
+  margin-top: 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--acento);
   opacity: 1;
 }
 

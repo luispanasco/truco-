@@ -1,6 +1,7 @@
 /**
- * Íconos de la PWA a partir de public/icono.svg, rasterizados con el Chromium de Playwright
- * (ya instalado para los tests, así no hace falta otra dependencia). Uso, desde apps/web:
+ * Íconos de la PWA a partir de public/icono.svg, rasterizados con el Chromium de Playwright (ya
+ * instalado para los tests, así no hace falta otra dependencia). El favicon, public/favicon.svg,
+ * va aparte y no pasa por acá. Uso, desde apps/web:
  *   node scripts/iconos.mjs
  * Deja en public/iconos/ los PNG que nombra el manifiesto (vite.config.ts) y el apple-touch-icon.
  */

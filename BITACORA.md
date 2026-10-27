@@ -1304,3 +1304,17 @@ Pedido del usuario: a los beta testers no les convenció.
 - **`PESCAR_SENIAS_DISPONIBLE = false`** (`@truco/shared`) y `SENIAS_DEFAULT.pescar` pasa a `'nunca'`. Al crear la sala ya no aparecen "Los rivales pescan señas" ni "Probabilidad de pescar", el resumen de la sala no lo nombra y en Ajustes se fue el interruptor "Pescar señas". Contra la compu y al crear la sala online se manda siempre `pescar: 'nunca'`, aunque el perfil guardado diga otra cosa.
 - El código de pescar sigue entero (servidor, contra la compu, globos y bots): para volver, `true` en la constante y `pescar: 'gesto'` en `SENIAS_DEFAULT`.
 - **Tests:** web 319, server 103 (sin cambios: los de pescar piden la opción a mano). e2e `senias.spec.ts` ya no elige "Nunca"; pasa, igual que `anfitrion.spec.ts`.
+
+## Logo nuevo: las piezas de oro con sol — 2026-10-27
+
+Pedido del usuario: pulir el logo antes de hacer un reel promocional. De tres bocetos (las cartas con sol, el mazo sobre la muestra y "¡Truco!" en un globo) eligió el primero, con el 2, el 4 y el 5 de oro.
+
+- **Ícono** (`public/icono.svg`): el 2, el 4 y el 5 de oro en abanico, como en la mano (cada una arriba de la anterior, con el número a la vista), y un sol de 24 rayos detrás, sobre el paño con marco de madera. Las cartas entran en el círculo seguro del maskable; los rayos pueden quedar recortados. Los números van en Georgia: el SVG, como imagen, no tiene las letras de la app. PNG regenerados con `scripts/iconos.mjs`.
+- **Favicon aparte** (`public/favicon.svg`, el que nombra `index.html`): a 16 y 32 px el abanico no se distingue, así que va un sol de 12 rayos y una sola carta, el 2 de oro.
+- **Menú** (encabezado de Jugar): las mismas tres piezas con la baraja elegida (`Carta`), el sol detrás (SVG en línea, `RAYOS_SOL`) y el nombre en una cinta roja con borde dorado y puntas en V; el subtítulo en mayúsculas doradas. Las cartas giran con `rotate`/`translate` y no con `transform`, que lo pisa la animación de la carta.
+- Revisado con capturas a 360×740 y 412×915, y el favicon a 16 y 32 px. Sin commitear.
+- **Tests:** web 319 (sin cambios).
+
+**Pendiente:**
+- El abanico de `.inicio-cabecera` (estilos.css) usa `transform` y probablemente tenga el mismo problema: las cartas salen derechas. No se tocó.
+- El reel promocional, sin voces por ahora.

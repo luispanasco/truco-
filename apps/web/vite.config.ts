@@ -62,7 +62,7 @@ const pwa = VitePWA({
       { src: '/iconos/icono-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   },
-  // Los PNG de los íconos los baja el sistema al instalar; la página no los usa (el favicon es el SVG).
+  // Los PNG de los íconos los baja el sistema al instalar; la página no los usa (el favicon es favicon.svg).
   includeManifestIcons: false,
   workbox: {
     // Solo woff2 (todos los navegadores que tienen service worker lo leen; los .woff sobran).

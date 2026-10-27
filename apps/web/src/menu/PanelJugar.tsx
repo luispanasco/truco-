@@ -13,6 +13,10 @@ import { leerPerfil, MODOS_JUGAR, type Perfil } from '../perfil'
 import { conexionContraLaCompu } from './contraLaCompu'
 import { IconoBuscar, IconoCompu, IconoCrear, IconoLlave } from './Iconos'
 
+/** Los 24 rayos del sol del logo, largos y cortos alternados (los mismos de public/icono.svg). */
+const RAYOS_SOL =
+  'M61.8,-5.4L205.0,0.0L61.8,5.4ZM61.1,10.8L144.9,38.8L58.3,21.2ZM56.2,26.2L177.5,102.5L50.8,35.6ZM47.5,39.9L106.1,106.1L39.9,47.5ZM35.6,50.8L102.5,177.5L26.2,56.2ZM21.2,58.3L38.8,144.9L10.8,61.1ZM5.4,61.8L0.0,205.0L-5.4,61.8ZM-10.8,61.1L-38.8,144.9L-21.2,58.3ZM-26.2,56.2L-102.5,177.5L-35.6,50.8ZM-39.9,47.5L-106.1,106.1L-47.5,39.9ZM-50.8,35.6L-177.5,102.5L-56.2,26.2ZM-58.3,21.2L-144.9,38.8L-61.1,10.8ZM-61.8,5.4L-205.0,0.0L-61.8,-5.4ZM-61.1,-10.8L-144.9,-38.8L-58.3,-21.2ZM-56.2,-26.2L-177.5,-102.5L-50.8,-35.6ZM-47.5,-39.9L-106.1,-106.1L-39.9,-47.5ZM-35.6,-50.8L-102.5,-177.5L-26.2,-56.2ZM-21.2,-58.3L-38.8,-144.9L-10.8,-61.1ZM-5.4,-61.8L-0.0,-205.0L5.4,-61.8ZM10.8,-61.1L38.8,-144.9L21.2,-58.3ZM26.2,-56.2L102.5,-177.5L35.6,-50.8ZM39.9,-47.5L106.1,-106.1L47.5,-39.9ZM50.8,-35.6L177.5,-102.5L56.2,-26.2ZM58.3,-21.2L144.9,-38.8L61.1,-10.8Z'
+
 /** Un botón chico del menú (crear sala, unirme): ícono y título, con la explicación debajo. */
 function BotonChico({
   icono,
@@ -155,10 +159,16 @@ export function PanelJugar({
       <PartidaEnCurso perfil={perfil} enLinea={enLinea} />
 
       <header className="jugar-logo">
+        {/* El logo (el mismo de public/icono.svg): tres piezas de oro con un sol detrás y la cinta. */}
         <div className="abanico" aria-hidden="true">
-          <Carta carta={{ numero: 7, palo: 'oro' }} />
-          <Carta carta={{ numero: 1, palo: 'espada' }} />
-          <Carta carta={{ numero: 1, palo: 'basto' }} />
+          <Carta carta={{ numero: 2, palo: 'oro' }} />
+          <Carta carta={{ numero: 4, palo: 'oro' }} />
+          <Carta carta={{ numero: 5, palo: 'oro' }} />
+          {/* Va después de las cartas para no correr los :nth-child del abanico. */}
+          <svg className="jugar-logo-sol" viewBox="-210 -210 420 420">
+            <path d={RAYOS_SOL} />
+            <circle r="66" />
+          </svg>
         </div>
         <h1>Truco</h1>
         <p className="subtitulo">uruguayo · con muestra, piezas y flor</p>

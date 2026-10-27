@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!--
+    Favicon: el ícono de la app (icono.svg) simplificado para 16 y 32 px. Sin marco de madera, un
+    sol de 12 rayos y una sola carta, el 2 de oro: el abanico entero, tan chico, no se distingue.
+  -->
+  <defs>
+    <clipPath id="recorte"><rect width="64" height="64" rx="14" /></clipPath>
+  </defs>
+  <g clip-path="url(#recorte)">
+    <rect width="64" height="64" fill="#1f6b3a" />
+    <path fill="#f2c14e" d="M42.9,25.3L61.0,27.0L42.9,28.7ZM42.3,30.9L57.1,41.5L40.5,33.9ZM38.9,35.5L46.5,52.1L35.9,37.3ZM33.7,37.9L32.0,56.0L30.3,37.9ZM28.1,37.3L17.5,52.1L25.1,35.5ZM23.5,33.9L6.9,41.5L21.7,30.9ZM21.1,28.7L3.0,27.0L21.1,25.3ZM21.7,23.1L6.9,12.5L23.5,20.1ZM25.1,18.5L17.5,1.9L28.1,16.7ZM30.3,16.1L32.0,-2.0L33.7,16.1ZM35.9,16.7L46.5,1.9L38.9,18.5ZM40.5,20.1L57.1,12.5L42.3,23.1Z" />
+    <circle cx="32" cy="27" r="11" fill="#f2c14e" />
+  </g>
+  <g transform="rotate(-8 32 40)">
+    <rect x="19" y="16" width="26" height="40" rx="3.5" fill="#fbf6ea" stroke="#5a3510" stroke-width="1.5" />
+    <circle cx="32" cy="27" r="5.5" fill="#e0a82e" stroke="#8a5f0a" stroke-width="1.5" />
+    <circle cx="32" cy="45" r="5.5" fill="#e0a82e" stroke="#8a5f0a" stroke-width="1.5" />
+  </g>
+</svg>
