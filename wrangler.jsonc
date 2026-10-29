@@ -1,0 +1,13 @@
+// La web en Cloudflare Workers (ver INSTRUCTIVO-PUBLICAR.md): solo archivos estáticos, sin código
+// propio. Cloudflare compila con `pnpm --filter @truco/web build` (con las VITE_… como variables
+// de build) y publica apps/web/dist con `npx wrangler deploy`.
+{
+  "name": "truco-uy",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./apps/web/dist",
+    // La app es de una sola página: lo que no es un archivo (/ranking, /tienda…) va al index.html.
+    // /privacidad sí es un archivo (privacidad.html) y se sirve tal cual.
+    "not_found_handling": "single-page-application"
+  }
+}
