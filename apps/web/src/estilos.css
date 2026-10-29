@@ -582,6 +582,9 @@ input {
   font-size: 0.75rem;
   opacity: 0.55;
 }
+.inicio-pie a {
+  color: inherit;
+}
 
 /* ── Cartas (SVG) ─────────────────────────────────────────────── */
 

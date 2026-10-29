@@ -102,7 +102,9 @@ export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Part
       {/* Al final, como en cualquier app: entrar o salir de la cuenta. */}
       <TarjetaCuenta sinEnlaces />
       <InstalarApp />
-      <p className="inicio-pie">Truco uruguayo · versión de prueba</p>
+      <p className="inicio-pie">
+        Truco uruguayo · versión de prueba · <a href="/privacidad.html">Privacidad</a>
+      </p>
     </div>
   )
 }

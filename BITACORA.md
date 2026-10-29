@@ -1335,3 +1335,11 @@ Pedido del usuario: pulir el logo antes de hacer un reel promocional. De tres bo
 - `migrar()` corta las sentencias en cada ";" de fin de renglón: el bloque `do` tiene un solo ";" al final.
 - Verificado contra la base real después del deploy a Fly: las 8 tablas con RLS, `anon` no lee y `authenticated` no inserta; por la API, leer `cuentas` y `movimientos` o insertar en `movimientos` da `42501 permission denied`.
 - **Tests:** server 103. `reglasNuevas.test.ts` (pica-pica) falló una vez con la suite entera y pasa solo, con y sin el cambio: es de tiempos, no de la base.
+
+## Política de privacidad — 2026-10-29
+
+Google pide una página principal y una política de privacidad para pasar el login a producción.
+
+- `apps/web/public/privacidad.html`: página suelta (sin React, así Google la lee sin correr la app), en `https://truco-uy.pages.dev/privacidad`. Qué se guarda (sin cuenta, solo en el dispositivo; con cuenta: email, apodo, avatar, preferencias, monedas, inventario, Elo, amigos; registros de partidas y reportes con los últimos mensajes del chat), la voz que no se graba, los proveedores (Supabase, Fly.io, Cloudflare, Google), que las monedas no son dinero, borrado de la cuenta y derechos según la Ley 18.331, menores de 13. Contacto: luisalbertopanasco@gmail.com (elegido por el usuario). No es asesoramiento legal.
+- Link "Privacidad" en el pie de Ajustes.
+- **Tests:** web 319.
