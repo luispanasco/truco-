@@ -17,11 +17,11 @@ La configuración del servidor ya está armada en el repo (`Dockerfile` y `fly.t
 
 1. Entrá a https://fly.io/app/sign-up y registrate con GitHub, usando luispanasco.
 2. En **Billing**, cargá una tarjeta. Fly la pide para crear servidores, aunque cobra según el uso.
-3. Instalá el programa de Fly en Windows. Abrí **PowerShell** y pegá:
+3. El programa de Fly ya está instalado en tu PC (`fly` v0.4.118), así que este paso se saltea. Si algún día lo necesitás en otra compu, abrí **PowerShell** y pegá:
    ```
    iwr https://fly.io/install.ps1 -useb | iex
    ```
-4. Cerrá y volvé a abrir PowerShell, y entrá a tu cuenta:
+4. Abrí PowerShell y entrá a tu cuenta:
    ```
    fly auth login
    ```
@@ -83,6 +83,8 @@ Hoy solo pueden entrar con Google los mails que cargaste como **Test users**. Pa
 2. Tocá **Publish app** y confirmá.
 
 Como la app solo pide el mail y el nombre, Google no pide revisión.
+
+**No subas un logo** en la pantalla de consentimiento (Branding → App logo): con logo, Google pide una verificación que tarda semanas y mientras tanto muestra un aviso de "app no verificada".
 
 ---
 

@@ -1318,3 +1318,20 @@ Pedido del usuario: pulir el logo antes de hacer un reel promocional. De tres bo
 **Pendiente:**
 - El abanico de `.inicio-cabecera` (estilos.css) usa `transform` y probablemente tenga el mismo problema: las cartas salen derechas. No se tocó.
 - El reel promocional, sin voces por ahora.
+
+## Servidor publicado en Fly.io — 2026-10-28
+
+- App `truco-uy` en São Paulo (`gru`), una sola máquina siempre prendida (`fly deploy --ha=false`). Responde en `https://truco-uy.fly.dev/api/estado` con `{"cuentas":true,"loginDePrueba":false}`; al arrancar dice "Voz: con el TURN de Cloudflare." y "Cuentas: PostgreSQL, Supabase.".
+- Los secretos (`SUPABASE_URL`, `DATABASE_URL`, `TRUCO_TURN_ID`, `TRUCO_TURN_TOKEN`) los cargó el usuario con `fly secrets import`: el modo automático de Claude Code no deja escribir secretos.
+- **Tropiezo:** el primer deploy no arrancaba ("tenant/user … not found"): Supabase había pausado el proyecto por 7 días sin uso (plan gratis) y su dirección dejó de existir. Al reanudarlo tardó bastante más que los minutos habituales. Si la app pasa una semana sin partidas puede volver a pasar.
+- `INSTRUCTIVO-PUBLICAR.md`: `fly` ya estaba instalado; aviso de no subir logo a la pantalla de consentimiento de Google.
+
+**Falta:** Cloudflare Pages (la web), las URL de Supabase, publicar la app de Google y probar una partida online.
+
+## La base cerrada a la API pública de Supabase — 2026-10-29
+
+- **El agujero:** Supabase publica el esquema `public` en su API de datos (PostgREST) y la clave publicable va dentro de la web. Las tablas no tenían RLS, así que con esa clave cualquiera podía leer los emails de las cuentas y escribir monedas, inventario, Elo o amistades. Se vio antes de publicar la web: nadie lo aprovechó.
+- **Arreglo (migración 6):** RLS prendida en todas las tablas, sin políticas, y sin permisos para `anon` y `authenticated` (también para las tablas que se creen después). El servidor entra como dueño de las tablas por `DATABASE_URL` y no pasa por esa API: sigue igual. En la base local esos roles no existen y se saltean.
+- `migrar()` corta las sentencias en cada ";" de fin de renglón: el bloque `do` tiene un solo ";" al final.
+- Verificado contra la base real después del deploy a Fly: las 8 tablas con RLS, `anon` no lee y `authenticated` no inserta; por la API, leer `cuentas` y `movimientos` o insertar en `movimientos` da `42501 permission denied`.
+- **Tests:** server 103. `reglasNuevas.test.ts` (pica-pica) falló una vez con la suite entera y pasa solo, con y sin el cambio: es de tiempos, no de la base.

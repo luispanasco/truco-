@@ -84,4 +84,30 @@ export const MIGRACIONES: string[] = [
   );
   create index amistades_a on amistades (a);
   `,
+  // 6. Nadie más que el servidor: Supabase publica el esquema public en su API de datos y la clave
+  //    publicable va en la web, así que sin esto cualquiera leía los emails o se cargaba monedas.
+  //    RLS sin políticas cierra todo a esa API; el servidor entra como dueño de las tablas y no la
+  //    pasa. Los roles anon y authenticated solo existen en Supabase (no en la base local).
+  //    El bloque do tiene un solo ";" al final de renglón: migrar() corta las sentencias ahí.
+  `
+  alter table cuentas enable row level security;
+  alter table invitados enable row level security;
+  alter table movimientos enable row level security;
+  alter table elo enable row level security;
+  alter table elo_partidas enable row level security;
+  alter table inventario enable row level security;
+  alter table amistades enable row level security;
+  alter table migraciones enable row level security;
+  do $$ declare rol text; sentencia text; begin
+    foreach rol in array array['anon', 'authenticated'] loop
+      foreach sentencia in array array[
+        'revoke all on all tables in schema public from %I',
+        'revoke all on all sequences in schema public from %I',
+        'revoke all on all functions in schema public from %I',
+        'alter default privileges in schema public revoke all on tables from %I',
+        'alter default privileges in schema public revoke all on sequences from %I',
+        'alter default privileges in schema public revoke all on functions from %I'
+      ] loop
+        if exists (select 1 from pg_roles where rolname = rol) then execute format(sentencia, rol); end if; end loop; end loop; end $$;
+  `,
 ]
