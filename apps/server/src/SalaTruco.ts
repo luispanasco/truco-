@@ -149,7 +149,7 @@ interface Lugar {
   /** La mesa y la baraja que tiene elegidas (ya validadas): las del anfitrión son las de la sala. */
   mesa: IdMesa
   baraja: IdBaraja
-  /** Si se le aceptan cosas pagas (tienda de prueba prendida y desbloqueada en su navegador). */
+  /** Si se le aceptan cosas pagas: beta tester, o tienda de prueba prendida y desbloqueada en su navegador. */
   tienda: boolean
 }
 
@@ -285,18 +285,18 @@ export class SalaTruco extends Room {
   }
 
   /** Con un token de sesión, se verifica la cuenta; sin token se entra como invitado. */
-  override async onAuth(_client: Client, opciones: OpcionesUnirse): Promise<(Usuario & { inventario: string[] }) | true> {
+  override async onAuth(_client: Client, opciones: OpcionesUnirse): Promise<(Usuario & { inventario: string[]; beta: boolean }) | true> {
     const token = typeof opciones?.token === 'string' ? opciones.token : null
     if (!token || !this.cuentas) return true
     const usuario = await this.cuentas.verificar(token)
     if (!usuario) throw new Error('La sesión venció: volvé a entrar a tu cuenta')
     // Si nunca entró por la API (otra app, una sesión vieja), la cuenta se crea acá.
-    await entrar(this.cuentas.base, usuario, { invitadoId: opciones.invitadoId, apodo: opciones.apodo, avatar: opciones.avatar })
-    return { ...usuario, inventario: await inventario(this.cuentas.base, usuario.id) }
+    const cuenta = await entrar(this.cuentas.base, usuario, { invitadoId: opciones.invitadoId, apodo: opciones.apodo, avatar: opciones.avatar })
+    return { ...usuario, inventario: await inventario(this.cuentas.base, usuario.id), beta: cuenta.beta }
   }
 
   override onJoin(client: Client, opciones: OpcionesUnirse) {
-    const auth = typeof client.auth === 'object' && client.auth ? (client.auth as Usuario & { inventario: string[] }) : null
+    const auth = typeof client.auth === 'object' && client.auth ? (client.auth as Usuario & { inventario: string[]; beta: boolean }) : null
     const cuentaId = auth?.id ?? null
     const invitadoId = texto(opciones?.invitadoId, 64)
     const apodo = texto(opciones?.apodo, LIMITES.largoApodo)
@@ -321,7 +321,8 @@ export class SalaTruco extends Room {
     if (cuentaId) this.cuentas?.presencia?.entrarASala(cuentaId, this.enSala)
     lugar.inventario = auth?.inventario ?? []
     lugar.apodo = filtrarTexto(apodo)
-    lugar.tienda = this.tiendaDePrueba && opciones?.tiendaDesbloqueada === true
+    // Los beta testers (lo dice su cuenta, no el navegador) pueden usar todo lo de la tienda.
+    lugar.tienda = auth?.beta === true || (this.tiendaDePrueba && opciones?.tiendaDesbloqueada === true)
     // Un avatar inválido o con piezas que no tiene se reemplaza por uno armado desde el apodo.
     lugar.avatar =
       normalizarAvatar(opciones?.avatar, lugar.tienda ? TODO_PERMITIDO : permisosDe(lugar.inventario).avatar) ??

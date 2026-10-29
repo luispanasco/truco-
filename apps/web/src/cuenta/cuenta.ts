@@ -11,6 +11,8 @@ export interface DatosCuenta {
   apodo: string
   avatar: string | null
   preferencias: Record<string, unknown>
+  /** Beta tester: puede usar todo lo de la tienda sin comprarlo. */
+  beta?: boolean
   nueva: boolean
 }
 
@@ -107,7 +109,7 @@ export async function entrarConEmail(email: string) {
 
 export async function salir() {
   borrar(CLAVE_PRUEBA)
-  fijarInventario([])
+  fijarInventario([], false)
   await supabase?.auth.signOut()
   useCuenta.setState({ estado: 'afuera', cuenta: null, token: null, linkEnviado: null, saldo: null })
 }
@@ -148,7 +150,7 @@ async function entrar(token: string) {
     if (!r.ok) throw new Error(String(r.status))
     const { saldo, inventario, ...cuenta } = (await r.json()) as DatosCuenta & { saldo: number; inventario: string[] }
     // Primero lo comprado: así lo pago que tenga puesto la cuenta no vuelve a lo gratis.
-    fijarInventario(inventario ?? [])
+    fijarInventario(inventario ?? [], cuenta.beta === true)
     if (!cuenta.nueva) guardarPerfil(perfilDeCuenta(perfil, cuenta), 'cuenta')
     useCuenta.setState({ estado: 'adentro', cuenta, token, linkEnviado: null, saldo })
   } catch {

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { ColyseusTestServer } from '@colyseus/testing'
 import {
   AVATAR_BASE,
+  CATALOGO_AVATAR,
   CATALOGO_TIENDA,
   PRECIO_RAREZA,
   cambioDeVitrina,
@@ -126,5 +127,27 @@ describe('en la sala', () => {
     const b = await Jugador.crear(colyseus, { avatar, token: con.token })
     await b.esperar(() => b.sala?.yo != null)
     expect(leerAvatar(b.sala!.lugares[b.sala!.yo!]!.avatar)![capa]).toBe(pieza.pieza)
+  })
+
+  it('un beta tester usa todo lo de la tienda sin comprarlo; el aviso del navegador no alcanza', async () => {
+    const sombrero = CATALOGO_AVATAR.sombrero.findIndex((p) => p.precio > 0)
+    const avatar = codificarAvatar({ ...AVATAR_BASE, sombrero })
+
+    const comun = await cuentaCon(0)
+    const a = await Jugador.crear(colyseus, { avatar, token: comun.token, tiendaDesbloqueada: true, mesa: 'cantina' })
+    await a.esperar(() => a.sala?.yo != null)
+    expect(leerAvatar(a.sala!.lugares[a.sala!.yo!]!.avatar)!.sombrero).toBe(AVATAR_BASE.sombrero)
+    expect(a.sala!.mesa).toBe('boliche')
+    await a.room.leave()
+
+    const beta = await cuentaCon(0)
+    await base.consultar('update cuentas set beta = true where id = $1', [beta.id])
+    const b = await Jugador.crear(colyseus, { avatar, token: beta.token, mesa: 'cantina' })
+    await b.esperar(() => b.sala?.yo != null)
+    expect(leerAvatar(b.sala!.lugares[b.sala!.yo!]!.avatar)!.sombrero).toBe(sombrero)
+    expect(b.sala!.mesa).toBe('cantina')
+
+    const r = await colyseus.http.post('/api/entrar', { headers: { 'content-type': 'application/json', authorization: `Bearer ${beta.token}` }, body: {} })
+    expect((r.data as { beta: boolean }).beta).toBe(true)
   })
 })

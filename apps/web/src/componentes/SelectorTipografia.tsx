@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { TIPOGRAFIAS, idTipografia, type IdTipografia } from '@truco/shared'
-import { useInventario } from '../cuenta/inventario'
+import { useEsBeta, useInventario } from '../cuenta/inventario'
 import { cargarTipografia } from '../temaTipografia'
 import { CandadoAbierto, Precio } from './EditorAvatar'
 import '../estilos-tipografias.css'
@@ -13,12 +13,15 @@ import '../estilos-tipografias.css'
 export function SelectorTipografia({
   valor,
   alCambiar,
-  tiendaDesbloqueada = false,
+  tiendaDesbloqueada: dePrueba = false,
 }: {
   valor: IdTipografia
   alCambiar: (tipografia: IdTipografia) => void
   tiendaDesbloqueada?: boolean
 }) {
+  // Los beta testers también: pueden usar todo lo de la tienda.
+  const beta = useEsBeta()
+  const tiendaDesbloqueada = dePrueba || beta
   const [aviso, setAviso] = useState<string | null>(null)
   const tenes = useInventario()
   const elegida = TIPOGRAFIAS.find((t) => t.id === valor) ?? TIPOGRAFIAS[0]

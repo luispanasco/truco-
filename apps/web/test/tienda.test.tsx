@@ -4,15 +4,15 @@ import { MemoryRouter } from 'react-router'
 import { CATALOGO_TIENDA, NOMBRE_RAREZA, cambioDeVitrina, diaDeTienda } from '@truco/shared'
 import { Tienda } from '../src/pantallas/Tienda'
 import { useCuenta } from '../src/cuenta/cuenta'
-import { fijarInventario } from '../src/cuenta/inventario'
-import { leerPerfil } from '../src/perfil'
+import { esBeta, fijarInventario } from '../src/cuenta/inventario'
+import { cosmeticosPermitidos, leerPerfil } from '../src/perfil'
 
 const mesa = CATALOGO_TIENDA.find((i) => i.id === 'mesa:cantina')!
 const letra = CATALOGO_TIENDA.find((i) => i.tipo === 'tipografia')!
 
 beforeEach(() => {
   localStorage.clear()
-  fijarInventario([])
+  fijarInventario([], false)
   useCuenta.setState({ estado: 'adentro', token: 'prueba:ana@ejemplo.com', saldo: 1000, cuenta: { id: 'c1', email: 'ana@ejemplo.com', apodo: 'Ana', avatar: null, preferencias: {}, nueva: false } })
   vi.stubGlobal(
     'fetch',
@@ -101,5 +101,21 @@ describe('tienda', () => {
     expect(leerPerfil().mesa).toBe('cantina')
     expect(within(coleccion).getByRole('button', { name: 'Mesa Cantina: puesto' })).toBeTruthy()
     expect(within(coleccion).getByRole('button', { name: `Usar ${letra.nombre}` })).toBeTruthy()
+  })
+})
+
+describe('beta tester', () => {
+  it('usa lo de la tienda sin comprarlo, lo recuerda al comprar, y al salir de la cuenta vuelve lo gratis', () => {
+    const conCantina = () => cosmeticosPermitidos({ ...leerPerfil(), mesa: 'cantina' }).mesa
+    expect(conCantina()).not.toBe('cantina')
+    fijarInventario([], true)
+    expect(conCantina()).toBe('cantina')
+    expect(localStorage.getItem('truco.beta')).toBe('1')
+    // Comprar no dice nada del beta: sigue como estaba.
+    fijarInventario([letra.id])
+    expect(esBeta()).toBe(true)
+    fijarInventario([], false)
+    expect(conCantina()).not.toBe('cantina')
+    expect(localStorage.getItem('truco.beta')).toBeNull()
   })
 })

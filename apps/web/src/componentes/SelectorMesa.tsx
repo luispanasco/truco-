@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { MESAS, idMesa, type IdMesa } from '@truco/shared'
-import { useInventario } from '../cuenta/inventario'
+import { useEsBeta, useInventario } from '../cuenta/inventario'
 import { Carta } from './Carta'
 import { CandadoAbierto, Precio } from './EditorAvatar'
 import '../estilos-mesas.css'
@@ -13,12 +13,15 @@ import '../estilos-mesas.css'
 export function SelectorMesa({
   valor,
   alCambiar,
-  tiendaDesbloqueada = false,
+  tiendaDesbloqueada: dePrueba = false,
 }: {
   valor: IdMesa
   alCambiar: (mesa: IdMesa) => void
   tiendaDesbloqueada?: boolean
 }) {
+  // Los beta testers también: pueden usar todo lo de la tienda.
+  const beta = useEsBeta()
+  const tiendaDesbloqueada = dePrueba || beta
   const [aviso, setAviso] = useState<string | null>(null)
   const tenes = useInventario()
   const elegida = MESAS.find((m) => m.id === valor) ?? MESAS[0]

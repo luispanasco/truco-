@@ -11,6 +11,8 @@ export interface DatosCuenta {
   avatar: string | null
   /** Las preferencias del perfil del navegador (formato, nivel, mesa, letra…), tal cual. */
   preferencias: Record<string, unknown>
+  /** Beta tester: puede usar todo lo de la tienda sin comprarlo. */
+  beta: boolean
   /** Si se creó recién, con lo que traía el invitado. */
   nueva: boolean
 }
@@ -32,6 +34,7 @@ interface FilaCuenta {
   apodo: string
   avatar: string | null
   preferencias: Record<string, unknown>
+  beta: boolean
 }
 
 /**
@@ -41,14 +44,14 @@ interface FilaCuenta {
  */
 export async function entrar(base: Base, usuario: Usuario, perfil: PerfilEnviado): Promise<DatosCuenta> {
   return base.transaccion(async (b) => {
-    let [fila] = await b.consultar<FilaCuenta>('select id, email, apodo, avatar, preferencias from cuentas where id = $1', [usuario.id])
+    let [fila] = await b.consultar<FilaCuenta>('select id, email, apodo, avatar, preferencias, beta from cuentas where id = $1', [usuario.id])
     let nueva = false
     if (!fila) {
       nueva = true
       const apodo = apodoValido(perfil.apodo) ?? apodoDelEmail(usuario.email)
       ;[fila] = await b.consultar<FilaCuenta>(
         `insert into cuentas (id, email, apodo, avatar, preferencias) values ($1, $2, $3, $4, $5)
-         returning id, email, apodo, avatar, preferencias`,
+         returning id, email, apodo, avatar, preferencias, beta`,
         [usuario.id, usuario.email, apodo, avatarValido(perfil.avatar), preferenciasValidas(perfil.preferencias) ?? {}],
       )
     } else if (usuario.email && usuario.email !== fila.email) {
@@ -75,7 +78,7 @@ export async function guardarPerfil(base: Base, id: string, perfil: PerfilEnviad
        preferencias = coalesce($4, preferencias),
        actualizada = now()
      where id = $1
-     returning id, email, apodo, avatar, preferencias`,
+     returning id, email, apodo, avatar, preferencias, beta`,
     [id, apodo, avatar, preferencias],
   )
   return fila ? { ...fila, nueva: false } : null

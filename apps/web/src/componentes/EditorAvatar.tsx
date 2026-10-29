@@ -11,7 +11,7 @@ import {
   type CapaAvatar,
   idPieza,
 } from '@truco/shared'
-import { useInventario } from '../cuenta/inventario'
+import { useEsBeta, useInventario } from '../cuenta/inventario'
 import { GESTO, SENIAS, type Senia } from '@truco/bots'
 import { Avatar } from './Avatar'
 import { DURACION_GESTO } from '../gestos'
@@ -184,13 +184,15 @@ export function EditorAvatar({
   codigo,
   apodo,
   alCambiar,
-  tiendaDesbloqueada = false,
+  tiendaDesbloqueada: dePrueba = false,
 }: {
   codigo: string
   apodo: string
   alCambiar: (codigo: string) => void
   tiendaDesbloqueada?: boolean
 }) {
+  const beta = useEsBeta()
+  const tiendaDesbloqueada = dePrueba || beta
   const avatar = leerAvatar(codigo) ?? avatarAlAzar(apodo)
   const [pestania, setPestania] = useState(PESTANIAS_AVATAR[0]!.id)
   const [aviso, setAviso] = useState<string | null>(null)
@@ -281,7 +283,9 @@ export function EditorAvatar({
           ))}
           {hayPagas && (
             <p className="editor-tienda">
-              {tiendaDesbloqueada
+              {beta
+                ? 'Sos beta tester: las del candado abierto son de la tienda y las podés usar igual.'
+                : tiendaDesbloqueada
                 ? 'Tienda de prueba desbloqueada: las del candado abierto son de la tienda.'
                 : 'Las que tienen candado se compran con monedas en la tienda.'}
             </p>

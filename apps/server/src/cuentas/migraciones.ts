@@ -110,4 +110,8 @@ export const MIGRACIONES: string[] = [
       ] loop
         if exists (select 1 from pg_roles where rolname = rol) then execute format(sentencia, rol); end if; end loop; end loop; end $$;
   `,
+  // 7. Beta testers: pueden usar todo lo de la tienda sin comprarlo. Se prende a mano (pnpm beta).
+  `
+  alter table cuentas add column beta boolean not null default false;
+  `,
 ]

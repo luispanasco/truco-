@@ -8,7 +8,8 @@
     "start": "tsx src/index.ts",
     "test": "vitest run && tsx scripts/humo.ts",
     "typecheck": "tsc --noEmit",
-    "humo": "tsx scripts/humo.ts"
+    "humo": "tsx scripts/humo.ts",
+    "beta": "tsx scripts/beta.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.5.10",

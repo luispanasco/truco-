@@ -1,95 +1,82 @@
-# Instructivo: publicar el truco
+# Instructivo: cómo está publicado el truco
 
-Al final vas a tener un link fijo, por ejemplo `https://truco-uy.pages.dev`, que anda desde cualquier celular sin depender de tu PC ni del túnel.
+La app anda en **https://truco.luisalbertopanasco.workers.dev**, desde cualquier celular, sin depender de tu PC.
 
-| Parte | Dónde | Costo |
-| --- | --- | --- |
-| La web (la app instalable) | Cloudflare Pages | Gratis |
-| El servidor de juego (salas, cuentas, monedas) | Fly.io, en São Paulo | Unos 3 o 4 USD por mes |
-| Base de datos y login | Supabase (ya está) | Gratis |
-| Servidor de respaldo de la voz | TURN de Cloudflare (ya está) | Gratis hasta 1000 GB |
-
-La configuración del servidor ya está armada en el repo (`Dockerfile` y `fly.toml`) y la probé en tu PC con Docker. Vos creás las cuentas y yo hago los comandos.
+| Parte | Dónde | Dirección | Costo |
+| --- | --- | --- | --- |
+| La web (la app instalable) | Cloudflare Workers, Worker `truco` | `truco.luisalbertopanasco.workers.dev` | Gratis |
+| El servidor de juego (salas, cuentas, monedas) | Fly.io, app `truco-uy`, en São Paulo | `truco-uy.fly.dev` | Unos 3 o 4 USD por mes |
+| Base de datos y login | Supabase, en São Paulo | `oqdbvefzhsxodytqaqpo.supabase.co` | Gratis |
+| Servidor de respaldo de la voz | TURN de Cloudflare | — | Gratis hasta 1000 GB |
 
 ---
 
-## 1. Fly.io: crear la cuenta (vos)
+## Publicar una versión nueva
 
-1. Entrá a https://fly.io/app/sign-up y registrate con GitHub, usando luispanasco.
-2. En **Billing**, cargá una tarjeta. Fly la pide para crear servidores, aunque cobra según el uso.
-3. El programa de Fly ya está instalado en tu PC (`fly` v0.4.118), así que este paso se saltea. Si algún día lo necesitás en otra compu, abrí **PowerShell** y pegá:
+- **La web:** se publica sola cada vez que se sube algo a `main` en GitHub. Cloudflare compila con `pnpm --filter @truco/web build` y publica `apps/web/dist` con `npx wrangler deploy`, según `wrangler.jsonc`.
+- **El servidor:** desde la carpeta del proyecto,
+  ```
+  fly deploy --app truco-uy --ha=false
+  ```
+  Tiene que quedar **una sola máquina**: las salas viven en su memoria. Cada deploy corta las partidas que estén en juego, así que conviene hacerlo en horarios tranquilos.
+
+---
+
+## Cómo está configurado (por si hay que rehacerlo)
+
+### Fly.io
+- Cuenta con GitHub (luispanasco) y tarjeta en Billing. El programa `fly` ya está instalado en tu PC; para entrar: `fly auth login`.
+- Los secretos del servidor salen de `apps/server/.env`. Los carga el usuario, porque Claude Code no puede escribir secretos. En PowerShell, desde la carpeta del proyecto:
+  ```powershell
+  Get-Content apps/server/.env | Select-String '^(SUPABASE_URL|DATABASE_URL|TRUCO_TURN_ID|TRUCO_TURN_TOKEN)=.+' | ForEach-Object { $_.Line } | fly secrets import --app truco-uy --stage
+  ```
+  Con `fly secrets list --app truco-uy` se ven los nombres, nunca los valores.
+- Para comprobar que anda: `https://truco-uy.fly.dev/api/estado` tiene que responder `{"cuentas":true,"loginDePrueba":false}`.
+
+### Cloudflare Workers (la web)
+- Worker `truco`, conectado al repo `luispanasco/truco-`, rama `main`.
+- **Settings → Build:**
+  - Build command: `pnpm --filter @truco/web build`
+  - Deploy command: `npx wrangler deploy`
+- **Variables de build** (Build → Variables and secrets, no las de "cuando corre"):
+
+  | Nombre | Valor |
+  | --- | --- |
+  | `NODE_VERSION` | `24` |
+  | `PNPM_VERSION` | `10.34.6` |
+  | `VITE_SERVIDOR` | `wss://truco-uy.fly.dev` |
+  | `VITE_SUPABASE_URL` | `https://oqdbvefzhsxodytqaqpo.supabase.co` |
+  | `VITE_SUPABASE_PUBLISHABLE_KEY` | la de `apps/web/.env.local` (es pública: va dentro de la web) |
+
+### Supabase
+- **Authentication → URL Configuration:**
+  - Site URL: `https://truco.luisalbertopanasco.workers.dev`
+  - Redirect URLs: `https://truco.luisalbertopanasco.workers.dev/**` (más las de desarrollo: `localhost`, la red de casa y el túnel).
+- Las tablas tienen RLS prendida y sin permisos para la API pública (migración 6): la clave publicable no deja leer ni escribir nada. Solo el servidor entra a la base.
+- **Ojo:** en el plan gratis, Supabase **pausa el proyecto** después de 7 días sin uso. Si el servidor no arranca con "tenant/user … not found", entrá al panel y tocá **Restore project**.
+
+### Google (Plataforma de Google Auth, proyecto "Truco Uruguayo")
+- **Información de la marca:**
+  - Página principal: `https://truco.luisalbertopanasco.workers.dev`
+  - Política de privacidad: `https://truco.luisalbertopanasco.workers.dev/privacidad`
+  - Dominios autorizados: `luisalbertopanasco.workers.dev` y el de Supabase.
+  - **Sin logo:** con logo, Google pide una verificación que tarda semanas.
+- **Público:** publicada ("En producción"): puede entrar cualquiera con Google.
+
+---
+
+## Beta testers
+
+Pueden usar todo lo de la tienda sin comprarlo. Lo decide su cuenta en la base, no el navegador.
+
+1. El tester abre la app y entra una vez con Google: la cuenta se crea sola.
+2. Desde `apps/server`:
    ```
-   iwr https://fly.io/install.ps1 -useb | iex
+   pnpm beta lista                       las cuentas, con saldo y si son beta
+   pnpm beta marcar ana@gmail.com        lo hace beta tester
+   pnpm beta sacar ana@gmail.com         vuelve a valer solo lo que compró
+   pnpm beta monedas ana@gmail.com 500   le carga monedas (negativo, descuenta)
    ```
-4. Abrí PowerShell y entrá a tu cuenta:
-   ```
-   fly auth login
-   ```
-   Se abre el navegador: confirmá ahí.
-5. Avisame "listo Fly".
+3. El tester lo ve al volver a abrir la app o al entrar a una sala.
 
-**Después lo hago yo:**
-- creo la app `truco-uy` en São Paulo. Si ese nombre está tomado, elijo otro parecido y te aviso;
-- cargo las claves de `apps/server/.env` como secretos de Fly, sin mostrarlas;
-- publico el servidor y verifico que responda en `https://truco-uy.fly.dev/api/estado`.
-
----
-
-## 2. Cloudflare Pages: la web (vos, unos 5 minutos)
-
-Hacelo después de que el servidor de Fly esté andando, así ya sabemos su dirección.
-
-1. Entrá a https://dash.cloudflare.com, que es la misma cuenta del TURN.
-2. Andá a **Workers & Pages → Create** y elegí la pestaña **Pages**. Si solo ves Workers, buscá el link "Looking to deploy Pages? Get started".
-3. Tocá **Connect to Git** y conectá GitHub. Elegí el repo **`luispanasco/truco-`**.
-4. Configuración:
-   - **Project name:** `truco-uy`. Ese nombre da el link `truco-uy.pages.dev`.
-   - **Production branch:** `main`.
-   - **Framework preset:** None.
-   - **Build command:** `pnpm --filter @truco/web build`
-   - **Build output directory:** `apps/web/dist`
-   - **Root directory:** vacío, es la raíz.
-5. Abrí **Environment variables** y agregá estas cuatro:
-
-   | Nombre | Valor |
-   | --- | --- |
-   | `NODE_VERSION` | `24` |
-   | `VITE_SERVIDOR` | `wss://truco-uy.fly.dev`, o el nombre que te pase en el paso 1 |
-   | `VITE_SUPABASE_URL` | `https://oqdbvefzhsxodytqaqpo.supabase.co` |
-   | `VITE_SUPABASE_PUBLISHABLE_KEY` | la misma de `apps/web/.env.local` |
-
-6. Tocá **Save and Deploy**. Tarda unos minutos.
-
-Desde ahí, cada vez que subamos cambios a `main` en GitHub, Cloudflare publica la web nueva sola.
-
----
-
-## 3. Supabase: permitir el link nuevo (vos, 1 minuto)
-
-En **Authentication → URL Configuration**:
-
-- **Site URL:** `https://truco-uy.pages.dev`
-- **Redirect URLs:** agregá estas dos, sin borrar las que ya están:
-  - `https://truco-uy.pages.dev/**`
-  - `https://*.truco-uy.pages.dev/**` (las versiones de prueba de Cloudflare)
-
----
-
-## 4. Google: que entre cualquiera (vos, 1 minuto)
-
-Hoy solo pueden entrar con Google los mails que cargaste como **Test users**. Para abrirlo a todos:
-
-1. En https://console.cloud.google.com, con el proyecto **Truco Uruguayo**, andá a **Google Auth Platform → Audience** (o **OAuth consent screen**).
-2. Tocá **Publish app** y confirmá.
-
-Como la app solo pide el mail y el nombre, Google no pide revisión.
-
-**No subas un logo** en la pantalla de consentimiento (Branding → App logo): con logo, Google pide una verificación que tarda semanas y mientras tanto muestra un aviso de "app no verificada".
-
----
-
-## 5. Probar
-
-Abrí `https://truco-uy.pages.dev` en el celular, entrá con Google y jugá una partida. En el navegador del celular podés tocar **Agregar a la pantalla de inicio** para tenerla como app.
-
-Si algo no anda, pasame el mensaje de error.
+La tienda de prueba ("🧪 Pruebas" en Ajustes) solo existe en desarrollo.

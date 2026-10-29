@@ -1343,3 +1343,22 @@ Google pide una página principal y una política de privacidad para pasar el lo
 - `apps/web/public/privacidad.html`: página suelta (sin React, así Google la lee sin correr la app), en `https://truco-uy.pages.dev/privacidad`. Qué se guarda (sin cuenta, solo en el dispositivo; con cuenta: email, apodo, avatar, preferencias, monedas, inventario, Elo, amigos; registros de partidas y reportes con los últimos mensajes del chat), la voz que no se graba, los proveedores (Supabase, Fly.io, Cloudflare, Google), que las monedas no son dinero, borrado de la cuenta y derechos según la Ley 18.331, menores de 13. Contacto: luisalbertopanasco@gmail.com (elegido por el usuario). No es asesoramiento legal.
 - Link "Privacidad" en el pie de Ajustes.
 - **Tests:** web 319.
+
+## Web publicada en Cloudflare Workers — 2026-10-29
+
+- Cloudflare armó un **Worker** (`truco`) en vez de un proyecto de Pages; quedó así. `wrangler.jsonc` publica `apps/web/dist` como archivos estáticos, con `not_found_handling: "single-page-application"` para las rutas de la app; `/privacidad` es un archivo y se sirve tal cual. Se borró `public/_redirects` (de Pages): Workers lo leía y daba "Infinite loop detected".
+- Las `VITE_…` van como variables **de build** (las de "cuando corre" no llegan a Vite), más `PNPM_VERSION=10.34.6`.
+- Dirección: `https://truco.luisalbertopanasco.workers.dev`. Verificado: cargan el inicio, `/privacidad`, `/ranking`, el ícono y el favicon; el bundle apunta a Fly y a Supabase; la API de Fly acepta el origen.
+- Google: página principal, privacidad y dominio autorizado `luisalbertopanasco.workers.dev` (Google pide el dominio sin el `truco.`); app publicada. Supabase: Site URL y Redirect URL con la dirección nueva (con la vieja de Pages, el login volvía a una dirección que no existe).
+- `INSTRUCTIVO-PUBLICAR.md` rehecho: cómo está publicado, cómo se publica una versión nueva y los beta testers.
+
+## Beta testers, y sin "Pruebas" en la app publicada — 2026-10-29
+
+Pedido del usuario: que los testers se registren y después, desde la base, se les habilite la tienda.
+
+- **Migración 7:** `cuentas.beta` (apagada por defecto). Viaja en la cuenta (`/api/entrar`, `DatosCuenta.beta`).
+- **En la sala:** `lugar.tienda` (aceptar lo pago) es `beta` de la cuenta, o la tienda de prueba como antes. El aviso `tiendaDesbloqueada` del navegador sigue sin alcanzar en producción.
+- **La web:** el beta se guarda con el inventario (`truco.beta` en el navegador, así al recargar no se pierde lo puesto); `fijarInventario(ids, beta?)` (al comprar no se toca; al salir de la cuenta se apaga). `cosmeticosPermitidos` y los tres selectores (avatar, mesa, tipografía) dejan usar todo con beta; el editor de avatar dice "Sos beta tester…".
+- **Lo de prueba, solo en desarrollo:** la sección "🧪 Pruebas" de Ajustes y `perfil.tiendaDesbloqueada` (en producción se lee siempre apagado). El pie dice "versión beta".
+- **`pnpm beta`** (`apps/server/scripts/beta.ts`), contra la base del `.env`: `lista`, `marcar <email>`, `sacar <email>`, `monedas <email> <n>` (movimiento `ajuste`).
+- **Tests:** server 104 (un beta usa lo pago sin comprarlo; una cuenta común con el aviso del navegador, no), web 320 (el beta se recuerda, sigue al comprar y se apaga al salir).

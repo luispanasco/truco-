@@ -23,7 +23,7 @@ import {
   type IdTipografia,
 } from '@truco/shared'
 import type { Baraja } from './baraja'
-import { inventarioGuardado } from './cuenta/inventario'
+import { esBeta, inventarioGuardado } from './cuenta/inventario'
 
 /** Datos que se recuerdan en este navegador. Si el almacenamiento falla, se usan los valores por defecto. */
 export const MODOS_JUGAR = ['compu', 'buscar'] as const
@@ -151,7 +151,8 @@ export function leerPerfil(): Perfil {
     perfil.vistaMesa = vistaGuardada(guardado)
     // El campo viejo se reemplaza por el nuevo (una sola vez): la elección de cada uno se conserva.
     const migrada = !!guardado && (guardado.vistaMesa !== perfil.vistaMesa || 'mesaBustos' in guardado)
-    perfil.tiendaDesbloqueada = perfil.tiendaDesbloqueada === true
+    // La tienda de prueba es solo para desarrollar; en la app publicada, lo pago es de los beta testers.
+    perfil.tiendaDesbloqueada = import.meta.env.DEV && perfil.tiendaDesbloqueada === true
     perfil.cartasJugadas = normalizarCartasJugadas(perfil.cartasJugadas)
     perfil.tirarReyes = normalizarTirarReyes(perfil.tirarReyes)
     if (![20, 30, 40].includes(perfil.puntosPartida)) perfil.puntosPartida = 30
@@ -174,7 +175,7 @@ export function leerPerfil(): Perfil {
  * salvo con la tienda de prueba desbloqueada. La tipografía no viaja, pero sigue la misma regla.
  */
 export function cosmeticosPermitidos(p: Perfil): Pick<Perfil, 'avatar' | 'mesa' | 'baraja' | 'tipografia'> {
-  const todo = p.tiendaDesbloqueada
+  const todo = p.tiendaDesbloqueada || esBeta()
   // Lo comprado en la tienda (fase 2) también se puede usar.
   const tenes = permisosDe(inventarioGuardado())
   return {

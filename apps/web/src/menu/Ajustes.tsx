@@ -87,23 +87,26 @@ export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Part
         )}
       </section>
 
-      <section className="tarjeta" aria-labelledby="ajustes-pruebas">
-        <h2 id="ajustes-pruebas">
-          <span aria-hidden="true">🧪</span> Pruebas
-        </h2>
-        <Interruptor
-          activo={perfil.tiendaDesbloqueada}
-          alCambiar={cambiarTienda}
-          titulo="Desbloquear la tienda (prueba)"
-          detalle="Mientras no hay tienda: elegís cualquier pieza del avatar, mesa o tipografía sin monedas. Al apagarlo, vuelve lo gratis"
-        />
-      </section>
+      {/* Solo para desarrollar: en la app publicada, lo pago lo usan los beta testers (su cuenta). */}
+      {import.meta.env.DEV && (
+        <section className="tarjeta" aria-labelledby="ajustes-pruebas">
+          <h2 id="ajustes-pruebas">
+            <span aria-hidden="true">🧪</span> Pruebas
+          </h2>
+          <Interruptor
+            activo={perfil.tiendaDesbloqueada}
+            alCambiar={cambiarTienda}
+            titulo="Desbloquear la tienda (prueba)"
+            detalle="Elegís cualquier pieza del avatar, mesa o tipografía sin monedas. Al apagarlo, vuelve lo gratis"
+          />
+        </section>
+      )}
 
       {/* Al final, como en cualquier app: entrar o salir de la cuenta. */}
       <TarjetaCuenta sinEnlaces />
       <InstalarApp />
       <p className="inicio-pie">
-        Truco uruguayo · versión de prueba · <a href="/privacidad.html">Privacidad</a>
+        Truco uruguayo · versión beta · <a href="/privacidad.html">Privacidad</a>
       </p>
     </div>
   )
