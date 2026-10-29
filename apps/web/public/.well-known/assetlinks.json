@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "uy.truco.app",
+      "sha256_cert_fingerprints": ["7A:4B:9F:6A:9B:12:55:15:81:22:99:68:F0:14:03:05:52:0E:1F:36:7D:8C:D6:45:EC:BC:99:AC:9F:57:79:38"]
+    }
+  }
+]

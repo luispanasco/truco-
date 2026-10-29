@@ -80,3 +80,20 @@ Pueden usar todo lo de la tienda sin comprarlo. Lo decide su cuenta en la base, 
 3. El tester lo ve al volver a abrir la app o al entrar a una sala.
 
 La tienda de prueba ("🧪 Pruebas" en Ajustes) solo existe en desarrollo.
+
+---
+
+## App de Android
+
+Es una TWA: abre la web publicada a pantalla completa. **Se actualiza sola** con cada deploy de la web; solo hace falta generar otra APK si cambian el dominio, el ícono, el nombre o la versión para Play Store.
+
+- Proyecto: `android/` (paquete `uy.truco.app`). La configuración está en `android/twa-manifest.json`.
+- **Llave de firma:** `secretos/android/truco.keystore` (contraseña en `LEEME-llave.txt`, en la misma carpeta). **Respaldala fuera de la PC**: si se pierde, no se puede actualizar más la app en Play Store.
+- **Generar de nuevo** (en PowerShell, desde `android/`):
+  ```powershell
+  Remove-Item Env:NoDefaultCurrentDirectoryInExePath -ErrorAction SilentlyContinue
+  npx @bubblewrap/cli@1.27.0 update      # si cambiaste twa-manifest.json (sube la versión)
+  npx @bubblewrap/cli@1.27.0 build       # pide la contraseña de la llave
+  ```
+  Sale `app-release-signed.apk` (para instalar directo) y `app-release-bundle.aab` (para Play Store).
+- **Para instalarla:** pasá la APK por WhatsApp o Drive; en el celular, al abrirla, Android pide permitir "instalar apps de orígenes desconocidos".

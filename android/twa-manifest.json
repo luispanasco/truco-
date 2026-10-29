@@ -1,0 +1,39 @@
+{
+  "packageId": "uy.truco.app",
+  "host": "truco.luisalbertopanasco.workers.dev",
+  "name": "Truco Uruguayo",
+  "launcherName": "Truco",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "themeColor": "#1F5130",
+  "themeColorDark": "#1F5130",
+  "navigationColor": "#1F5130",
+  "navigationColorDark": "#1F5130",
+  "navigationDividerColor": "#1F5130",
+  "navigationDividerColorDark": "#1F5130",
+  "backgroundColor": "#6B4226",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://truco.luisalbertopanasco.workers.dev/iconos/icono-512.png",
+  "maskableIconUrl": "https://truco.luisalbertopanasco.workers.dev/iconos/icono-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "../secretos/android/truco.keystore",
+    "alias": "truco"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://truco.luisalbertopanasco.workers.dev/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://truco.luisalbertopanasco.workers.dev/",
+  "minSdkVersion": 24
+}

@@ -1362,3 +1362,15 @@ Pedido del usuario: que los testers se registren y después, desde la base, se l
 - **Lo de prueba, solo en desarrollo:** la sección "🧪 Pruebas" de Ajustes y `perfil.tiendaDesbloqueada` (en producción se lee siempre apagado). El pie dice "versión beta".
 - **`pnpm beta`** (`apps/server/scripts/beta.ts`), contra la base del `.env`: `lista`, `marcar <email>`, `sacar <email>`, `monedas <email> <n>` (movimiento `ajuste`).
 - **Tests:** server 104 (un beta usa lo pago sin comprarlo; una cuenta común con el aviso del navegador, no), web 320 (el beta se recuerda, sigue al comprar y se apaga al salir).
+
+## App de Android (TWA) — 2026-10-29
+
+Pedido del usuario: la APK.
+
+- **TWA** (Trusted Web Activity) con Bubblewrap 1.27: una app chica que abre la web publicada con el Chrome del celular, a pantalla completa. Se actualiza sola con cada deploy de la web; solo hace falta otra APK si cambian el dominio, el ícono o los datos de la app. Paquete **`uy.truco.app`** (no se puede cambiar una vez publicada), versión 1.0.0 (código 1), vertical, Android 7 o más (la librería de TWA pide API 24).
+- Proyecto en `android/` (`twa-manifest.json` es la fuente; `bubblewrap update` regenera el resto). Lo compilado (`*.apk`, `*.aab`, `build/`) no va a git.
+- **La llave de firma** en `secretos/android/` (`truco.keystore` y `LEEME-llave.txt` con la contraseña). Sin ella no se puede publicar ninguna actualización en Play Store: hay que respaldarla fuera de la PC.
+- **Vínculo web ↔ app:** `apps/web/public/.well-known/assetlinks.json` con la huella SHA-256 de la llave; sin él la app muestra la barra de direcciones. Si se sube a Play Store con "Play App Signing", hay que sumar la huella de la llave de Google.
+- **Herramientas** en `C:\Users\Luisito\.bubblewrap\`: JDK 17 (Bubblewrap no acepta el 21 instalado) y el SDK de Android con las command-line tools en `cmdline-tools/latest` (en la raíz, Gradle no encontraba la plataforma android-36). Las licencias del SDK de Android se aceptaron al instalar build-tools y plataforma.
+- **Tropiezos en Windows:** Claude Code prende `NoDefaultCurrentDirectoryInExePath`, y Bubblewrap llama a `gradlew.bat` sin `.\`: hay que sacar esa variable para compilar. Desde Git Bash tampoco anda; desde PowerShell sí.
+- Salidas: `Truco-Uruguayo-1.0.0.apk` (para pasar a los testers) y `.aab` (Play Store), copiadas en Descargas.
