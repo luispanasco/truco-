@@ -4,6 +4,10 @@
 {
   "name": "truco",
   "compatibility_date": "2026-10-01",
+  // El link de producción (main) y los de prueba de las otras ramas (develop → develop-truco…).
+  // Van acá y no solo en el panel: cada deploy aplica lo que dice este archivo.
+  "workers_dev": true,
+  "preview_urls": true,
   "assets": {
     "directory": "./apps/web/dist",
     // La app es de una sola página: lo que no es un archivo (/ranking, /tienda…) va al index.html.
