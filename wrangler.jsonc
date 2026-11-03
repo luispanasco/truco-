@@ -8,6 +8,8 @@
   // Van acá y no solo en el panel: cada deploy aplica lo que dice este archivo.
   "workers_dev": true,
   "preview_urls": true,
+  // Lo pide `wrangler preview` (el comando de las ramas que no son main). Vacío: usa lo de arriba.
+  "previews": {},
   "assets": {
     "directory": "./apps/web/dist",
     // La app es de una sola página: lo que no es un archivo (/ranking, /tienda…) va al index.html.
