@@ -29,6 +29,19 @@ test('el menú se desliza con el dedo y el banner muestra la cuenta', async ({ b
   await expect(pestania('Tienda')).toHaveAttribute('aria-selected', 'true')
   await expect(page.locator('#panel-tienda').getByRole('heading', { name: 'Tienda' })).toBeInViewport()
 
+  // Del todo a la izquierda, el avatar; desde ahí se abre el visor de las cartas del mazo.
+  await pestania('Avatar').click()
+  await expect(pestania('Avatar')).toHaveAttribute('aria-selected', 'true')
+  await page.locator('#panel-avatar').getByRole('button', { name: 'Ver las cartas' }).click()
+  const visor = page.getByRole('dialog', { name: 'Las cartas del mazo' })
+  await visor.getByRole('radio', { name: 'Oro' }).click()
+  await expect(visor.getByLabel('7 de oros')).toBeVisible()
+  await visor.getByRole('button', { name: 'Cerrar' }).click()
+
+  // Del todo a la derecha, los grupos (todavía próximamente).
+  await pestania('Grupos').click()
+  await expect(page.locator('#panel-grupos').getByText('Próximamente')).toBeInViewport()
+
   // La barra de abajo vuelve al medio.
   await pestania('Jugar').click()
   await expect(page.getByRole('button', { name: /Crear sala/ })).toBeInViewport()
@@ -36,7 +49,7 @@ test('el menú se desliza con el dedo y el banner muestra la cuenta', async ({ b
   // El engranaje abre los ajustes.
   await page.getByRole('button', { name: 'Ajustes' }).click()
   const ajustes = page.getByRole('dialog', { name: 'Ajustes' })
-  await expect(ajustes.getByRole('radiogroup', { name: 'Mesa', exact: true })).toBeVisible()
+  await expect(ajustes.getByRole('switch', { name: /Se juega con señas/ })).toBeVisible()
   await ajustes.getByRole('button', { name: 'Cerrar' }).click()
   await expect(ajustes).toBeHidden()
 

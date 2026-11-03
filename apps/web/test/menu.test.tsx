@@ -87,6 +87,8 @@ describe('menú principal', () => {
     // Las de los costados no se alcanzan mientras no están a la vista.
     expect(panel('tienda').hasAttribute('inert')).toBe(true)
     expect(panel('lobby').hasAttribute('inert')).toBe(true)
+    // Cinco pestañas: avatar a la izquierda de todo y grupos a la derecha de todo.
+    expect(screen.getAllByRole('tab').map((t) => t.getAttribute('aria-label'))).toEqual(['Avatar', 'Tienda', 'Jugar', 'Lobby', 'Grupos'])
 
     fireEvent.click(pestania('Tienda'))
     expect(pestania('Tienda').getAttribute('aria-selected')).toBe('true')
@@ -95,11 +97,16 @@ describe('menú principal', () => {
 
     // Con las flechas, como cualquier grupo de pestañas (y da la vuelta).
     fireEvent.keyDown(pestania('Tienda'), { key: 'ArrowLeft' })
+    expect(pestania('Avatar').getAttribute('aria-selected')).toBe('true')
+    fireEvent.keyDown(pestania('Avatar'), { key: 'ArrowLeft' })
+    expect(pestania('Grupos').getAttribute('aria-selected')).toBe('true')
+    expect(within(panel('grupos')).getByText('Próximamente')).toBeTruthy()
+    fireEvent.keyDown(pestania('Grupos'), { key: 'ArrowLeft' })
     expect(pestania('Lobby').getAttribute('aria-selected')).toBe('true')
     expect(within(panel('lobby')).getByRole('button', { name: 'Jugar' })).toBeTruthy()
     expect(within(panel('lobby')).getByText('Contra la compu')).toBeTruthy()
     fireEvent.keyDown(pestania('Lobby'), { key: 'ArrowRight' })
-    expect(pestania('Tienda').getAttribute('aria-selected')).toBe('true')
+    expect(pestania('Grupos').getAttribute('aria-selected')).toBe('true')
   })
 
   it('al deslizar con el dedo, la barra marca la pantalla que quedó a la vista', () => {
@@ -107,12 +114,15 @@ describe('menú principal', () => {
     menu()
     const carril = panel('jugar').parentElement!
     Object.defineProperty(carril, 'clientWidth', { value: 400 })
-    carril.scrollLeft = 800
+    carril.scrollLeft = 1200
     fireEvent.scroll(carril)
     expect(pestania('Lobby').getAttribute('aria-selected')).toBe('true')
-    carril.scrollLeft = 10
+    carril.scrollLeft = 410
     fireEvent.scroll(carril)
     expect(pestania('Tienda').getAttribute('aria-selected')).toBe('true')
+    carril.scrollLeft = 10
+    fireEvent.scroll(carril)
+    expect(pestania('Avatar').getAttribute('aria-selected')).toBe('true')
   })
 
   it('el modo se cambia con las flechas y queda guardado; el botón grande hace lo del modo', () => {
@@ -157,21 +167,56 @@ describe('menú principal', () => {
     expect(screen.getByRole('button', { name: 'Anita' })).toBeTruthy()
   })
 
-  it('el engranaje abre los ajustes: sonido, mesa, letra, baraja, señas y la tienda de prueba', () => {
+  it('el engranaje abre los ajustes del juego: sonido, señas, ayudas y la tienda de prueba (nada cosmético)', () => {
     servidorFalso()
     menu()
     fireEvent.click(screen.getByRole('button', { name: 'Ajustes' }))
     const hoja = screen.getByRole('dialog', { name: 'Ajustes' })
     expect(within(hoja).getByText('Sonido')).toBeTruthy()
-    expect(within(hoja).getByRole('radiogroup', { name: 'Mesa' })).toBeTruthy()
-    expect(within(hoja).getByRole('radiogroup', { name: 'Tipografía' })).toBeTruthy()
-    expect(within(hoja).getByRole('radiogroup', { name: 'Baraja' })).toBeTruthy()
+    expect(within(hoja).queryByRole('radiogroup', { name: 'Mesa' })).toBeNull()
+    expect(within(hoja).queryByRole('radiogroup', { name: 'Tipografía' })).toBeNull()
+    expect(within(hoja).queryByRole('radiogroup', { name: 'Baraja' })).toBeNull()
     expect(within(hoja).getByRole('switch', { name: /Se juega con señas/ })).toBeTruthy()
     expect(within(hoja).getByRole('switch', { name: /Ayudas/ })).toBeTruthy()
     fireEvent.click(within(hoja).getByRole('switch', { name: /Desbloquear la tienda/ }))
     expect(leerPerfil().tiendaDesbloqueada).toBe(true)
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+})
+
+describe('pantalla Avatar', () => {
+  it('junta el avatar, el mazo, el paño y la letra; el visor muestra las cartas de cada palo', () => {
+    servidorFalso()
+    menu()
+    fireEvent.click(pestania('Avatar'))
+    const avatar = within(panel('avatar'))
+    expect(avatar.getByRole('radiogroup', { name: 'Mesa' })).toBeTruthy()
+    expect(avatar.getByRole('radiogroup', { name: 'Tipografía' })).toBeTruthy()
+    expect(avatar.getByRole('radiogroup', { name: 'Baraja' })).toBeTruthy()
+
+    // El avatar se edita en la misma hoja que desde el banner.
+    fireEvent.click(avatar.getByRole('button', { name: 'Cambiar avatar y apodo' }))
+    expect(screen.getByRole('dialog', { name: 'Tu perfil' })).toBeTruthy()
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    fireEvent.click(avatar.getByRole('button', { name: 'Ver las cartas' }))
+    const visor = within(screen.getByRole('dialog', { name: 'Las cartas del mazo' }))
+    const cartas = () => visor.getAllByRole('listitem').map((li) => li.querySelector('.carta')!.getAttribute('aria-label'))
+    expect(cartas()).toHaveLength(10)
+    expect(cartas()[0]).toBe('1 de espadas')
+    fireEvent.click(visor.getByRole('radio', { name: 'Copa' }))
+    expect(cartas()).toEqual([1, 2, 3, 4, 5, 6, 7, 10, 11, 12].map((n) => `${n} de copas`))
+    // Solo las que mandan: las piezas de la más alta a la más baja (en copa no hay matas).
+    fireEvent.click(visor.getByRole('switch', { name: /Solo las que mandan/ }))
+    expect(cartas()).toEqual([2, 4, 5, 11, 10].map((n) => `${n} de copas`))
+    fireEvent.click(visor.getByRole('radio', { name: 'Espada' }))
+    expect(cartas()).toEqual(['2', '4', '5', '11', '10', '1', '7'].map((n) => `${n} de espadas`))
+    expect(visor.getByText('Perico')).toBeTruthy()
+    // Se mira cualquier baraja sin cambiar la tuya.
+    fireEvent.click(visor.getByRole('radio', { name: 'El Cid' }))
+    expect(visor.getAllByRole('listitem')[0]!.querySelector('img')!.getAttribute('src')).toMatch(/cid-1888\/2-espada\.webp$/)
+    expect(leerPerfil().baraja).toBe('propia')
   })
 })
 

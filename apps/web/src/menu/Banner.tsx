@@ -4,7 +4,7 @@ import { Avatar } from '../componentes/Avatar'
 import { direccionApi, iniciarCuenta, useCuenta } from '../cuenta/cuenta'
 import type { Perfil } from '../perfil'
 import { BanderaUruguay } from './BanderaUruguay'
-import { IconoAjustes, IconoLobby } from './Iconos'
+import { IconoAjustes, IconoGrupos, IconoLobby, IconoPercha } from './Iconos'
 
 /** El Elo con el que arranca cualquiera (como en el servidor, `ELO.inicial`). */
 export const ELO_INICIAL = 1200
@@ -47,12 +47,17 @@ export function Banner({
   alEntrar,
   alAjustes,
   alTienda,
+  alPersonalizar,
+  alGrupos,
 }: {
   perfil: Perfil
   alEditarPerfil: () => void
   alEntrar: () => void
   alAjustes: () => void
   alTienda: () => void
+  /** En la compu, donde no está la barra de abajo: abren el avatar y los grupos en hojas. */
+  alPersonalizar?: () => void
+  alGrupos?: () => void
 }) {
   const { estado, saldo } = useCuenta()
   useEffect(() => void iniciarCuenta(), [])
@@ -101,9 +106,21 @@ export function Banner({
             <span className="banner-invitado">{estado === 'cargando' ? '…' : 'Jugás como invitado'}</span>
           )}
         </div>
-        <button type="button" className="banner-ajustes" aria-label="Ajustes" aria-haspopup="dialog" onClick={alAjustes}>
-          <IconoAjustes />
-        </button>
+        <div className="banner-botones">
+          {alPersonalizar && (
+            <button type="button" className="banner-ajustes banner-extra" aria-label="Personalizá" aria-haspopup="dialog" onClick={alPersonalizar}>
+              <IconoPercha />
+            </button>
+          )}
+          {alGrupos && (
+            <button type="button" className="banner-ajustes banner-extra" aria-label="Grupos" aria-haspopup="dialog" onClick={alGrupos}>
+              <IconoGrupos />
+            </button>
+          )}
+          <button type="button" className="banner-ajustes" aria-label="Ajustes" aria-haspopup="dialog" onClick={alAjustes}>
+            <IconoAjustes />
+          </button>
+        </div>
       </div>
     </header>
   )

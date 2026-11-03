@@ -16,31 +16,30 @@ const mesaDe = (page: Page) => page.locator('html').getAttribute('data-mesa')
  */
 test('la mesa y la baraja de la sala son las del anfitrión', async ({ browser }) => {
   const ana = await persona(browser, 'Ana')
-  // La mesa, la baraja y la tienda de prueba están en el engranaje del banner.
+  // La tienda de prueba está en el engranaje del banner; la mesa y la baraja, en la pantalla Avatar.
   await ana.getByRole('button', { name: 'Ajustes' }).click()
-  // Con la tienda cerrada, Bordó tiene candado.
-  await expect(ana.getByRole('radio', { name: /^Bordó: 800 monedas/ })).toHaveAttribute('aria-disabled', 'true')
   await ana.getByText('Desbloquear la tienda (prueba)').click()
   await expect(ana.getByRole('switch', { name: /Desbloquear la tienda/ })).toBeChecked()
+  await ana.getByRole('dialog', { name: 'Ajustes' }).getByRole('button', { name: 'Cerrar' }).click()
+  await ana.getByRole('tab', { name: 'Avatar' }).click()
   const bordo = ana.getByRole('radiogroup', { name: 'Mesa' }).getByRole('radio', { name: 'Bordó' })
   await bordo.click()
   await expect(bordo).toHaveAttribute('aria-checked', 'true')
   await ana.getByRole('radio', { name: /^Clásica 1878/ }).click()
   await expect.poll(() => mesaDe(ana)).toBe('bordo')
-  await ana.getByText('Desbloquear la tienda (prueba)').scrollIntoViewIfNeeded()
   await captura(ana, '1-inicio-tienda-desbloqueada')
-  await ana.getByRole('dialog', { name: 'Ajustes' }).getByRole('button', { name: 'Cerrar' }).click()
+  await ana.getByRole('tab', { name: 'Jugar' }).click()
 
   const codigo = await crearSala(ana)
   await expect(ana.getByText('Mesa Bordó · Baraja clásica, las tuyas')).toBeVisible()
 
   const beto = await persona(browser, 'Beto')
-  await beto.getByRole('button', { name: 'Ajustes' }).click()
+  await beto.getByRole('tab', { name: 'Avatar' }).click()
   const azul = beto.getByRole('radiogroup', { name: 'Mesa' }).getByRole('radio', { name: 'Azul' })
   await azul.click()
   await expect(azul).toHaveAttribute('aria-checked', 'true')
   await expect.poll(() => mesaDe(beto)).toBe('azul')
-  await beto.keyboard.press('Escape')
+  await beto.getByRole('tab', { name: 'Jugar' }).click()
   // Su baraja es la propia: el abanico del inicio no tiene imágenes.
   await expect(beto.locator('.abanico .carta-img')).toHaveCount(0)
 

@@ -3,16 +3,14 @@ import { AjustesSonido } from '../componentes/AjustesSonido'
 import { SelectorCartasJugadas } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
 import { InstalarApp } from '../componentes/Pwa'
-import { SelectorBaraja } from '../componentes/SelectorBaraja'
-import { SelectorMesa } from '../componentes/SelectorMesa'
-import { SelectorTipografia } from '../componentes/SelectorTipografia'
 import { SelectorVistaMesa } from '../componentes/SelectorVistaMesa'
 import { TarjetaCuenta } from '../componentes/TarjetaCuenta'
 import { cosmeticosPermitidos, type Perfil } from '../perfil'
 
 /**
- * Lo que abre el engranaje del banner: el sonido, cómo se ve la mesa (mesa, letra,
- * baraja, vista), las señas, las ayudas y la tienda de prueba. Las reglas de la partida contra
+ * Lo que abre el engranaje del banner, solo lo del juego: el sonido, cómo se ve la partida
+ * (vista, cartas jugadas, ojear), las ayudas, las señas y la tienda de prueba. Lo cosmético (avatar,
+ * mazo, paño y letra) está en la pantalla Avatar. Las reglas de la partida contra
  * la compu quedan al lado del botón de jugar, en el lobby. Al final, tu cuenta.
  */
 export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Partial<Perfil>) => void }) {
@@ -26,15 +24,8 @@ export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Part
 
       <section className="tarjeta" aria-labelledby="ajustes-mesa">
         <h2 id="ajustes-mesa">
-          <span aria-hidden="true">🃏</span> La mesa y las cartas
+          <span aria-hidden="true">🃏</span> La partida
         </h2>
-        <SelectorMesa valor={perfil.mesa} alCambiar={(mesa) => cambiar({ mesa })} tiendaDesbloqueada={perfil.tiendaDesbloqueada} />
-        <SelectorTipografia
-          valor={perfil.tipografia}
-          alCambiar={(tipografia) => cambiar({ tipografia })}
-          tiendaDesbloqueada={perfil.tiendaDesbloqueada}
-        />
-        <SelectorBaraja baraja={perfil.baraja} alElegir={(b) => cambiar({ baraja: b })} />
         <SelectorVistaMesa valor={perfil.vistaMesa} alCambiar={(vistaMesa) => cambiar({ vistaMesa })} />
         <SelectorCartasJugadas valor={perfil.cartasJugadas} alCambiar={(cartasJugadas) => cambiar({ cartasJugadas })} />
         <Interruptor

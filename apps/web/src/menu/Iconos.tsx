@@ -109,3 +109,24 @@ export function IconoCompu({ clase }: { clase?: string }) {
     </Icono>
   )
 }
+
+/** Personalizar (avatar, mazo y mesa): una percha. */
+export function IconoPercha({ clase }: { clase?: string }) {
+  return (
+    <Icono clase={clase}>
+      <path d="M9.8 6.2a2.2 2.2 0 1 1 3.1 2c-.5.3-.9.8-.9 1.4v.4" />
+      <path d="M12 10 3.6 16a1.2 1.2 0 0 0 .7 2.2h15.4a1.2 1.2 0 0 0 .7-2.2Z" />
+    </Icono>
+  )
+}
+
+/** Los grupos (como clanes): un escudo con gente. */
+export function IconoGrupos({ clase }: { clase?: string }) {
+  return (
+    <Icono clase={clase}>
+      <path d="M12 2.8 4.6 5.6v5.6c0 4.6 3.1 8.4 7.4 9.9 4.3-1.5 7.4-5.3 7.4-9.9V5.6Z" />
+      <circle cx="12" cy="10" r="2.1" />
+      <path d="M8.4 16a3.8 3.8 0 0 1 7.2 0" />
+    </Icono>
+  )
+}

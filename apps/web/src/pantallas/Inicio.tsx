@@ -5,26 +5,33 @@ import { mostrarBaraja } from '../baraja'
 import { EditorAvatar } from '../componentes/EditorAvatar'
 import { Hoja } from '../componentes/Hoja'
 import { TarjetaCuenta } from '../componentes/TarjetaCuenta'
+import { VisorMazo } from '../componentes/VisorMazo'
 import { usePerfil } from '../componentes/TarjetaPerfil'
 import { useCuenta } from '../cuenta/cuenta'
 import { useEnLinea } from '../enLinea'
 import { Ajustes } from '../menu/Ajustes'
 import { Banner } from '../menu/Banner'
-import { IconoJugar, IconoLobby, IconoTienda } from '../menu/Iconos'
+import { IconoGrupos, IconoJugar, IconoLobby, IconoPercha, IconoTienda } from '../menu/Iconos'
+import { PanelGrupos } from '../menu/PanelGrupos'
 import { PanelJugar } from '../menu/PanelJugar'
 import { PanelLobby } from '../menu/PanelLobby'
+import { PanelPersonalizar } from '../menu/PanelPersonalizar'
 import { aplicarMesa } from '../temaMesa'
 import { aplicarTipografia } from '../temaTipografia'
 import { VitrinaDelDia } from './Tienda'
 import '../menu/estilos-menu.css'
 
-/** Las tres pantallas del menú, de izquierda a derecha. Abre en la del medio: jugar. */
+/** Las cinco pantallas del menú, de izquierda a derecha. Abre en la del medio: jugar. */
 const PANELES = [
+  { id: 'avatar', titulo: 'Avatar', Icono: IconoPercha },
   { id: 'tienda', titulo: 'Tienda', Icono: IconoTienda },
   { id: 'jugar', titulo: 'Jugar', Icono: IconoJugar },
   { id: 'lobby', titulo: 'Lobby', Icono: IconoLobby },
+  { id: 'grupos', titulo: 'Grupos', Icono: IconoGrupos },
 ] as const
-const JUGAR = 1
+const JUGAR = 2
+/** En la compu van a la vista solo las del medio (tienda, jugar y lobby); las otras dos se abren en hojas. */
+const DE_LOS_COSTADOS = new Set<string>(['avatar', 'grupos'])
 
 /** En qué pantalla quedó el menú: al volver de una sala o del ranking, se vuelve a la misma (hasta recargar). */
 let ultimoPanel = JUGAR
@@ -39,11 +46,11 @@ function suscribirAncho(avisar: () => void) {
 }
 const esAncha = () => typeof matchMedia === 'function' && matchMedia(ANCHO).matches
 
-type HojaMenu = 'perfil' | 'cuenta' | 'ajustes' | 'apodo' | null
+type HojaMenu = 'perfil' | 'cuenta' | 'ajustes' | 'apodo' | 'cartas' | 'avatar' | 'grupos' | null
 
 /**
- * El menú principal, como en los juegos de celular: el banner con tu cuenta arriba, tres
- * pantallas que se deslizan con el dedo (tienda, jugar y lobby) y la barra de abajo
+ * El menú principal, como en los juegos de celular: el banner con tu cuenta arriba, cinco
+ * pantallas que se deslizan con el dedo (avatar, tienda, jugar, lobby y grupos) y la barra de abajo
  * para saltar de una a otra. Deslizar es scroll horizontal con "snap": lo hace el navegador,
  * así se siente como en una app.
  */
@@ -96,6 +103,11 @@ export function Inicio() {
     setActual(i)
   }
 
+  // Las pantallas de los costados no están en la compu: si quedó una, se vuelve a jugar.
+  useEffect(() => {
+    if (ancha && DE_LOS_COSTADOS.has(PANELES[actual]!.id)) fijar(JUGAR)
+  }, [ancha, actual])
+
   /** Al deslizar con el dedo: la pantalla que quedó más a la vista. */
   const alDeslizar = () => {
     const c = carril.current
@@ -123,11 +135,19 @@ export function Inicio() {
 
   const contenido = [
     <>
+      <h2 className="panel-titulo">Personalizá</h2>
+      <PanelPersonalizar perfil={perfil} cambiar={cambiar} alEditarAvatar={() => setHoja('perfil')} alVerCartas={() => setHoja('cartas')} />
+    </>,
+    <>
       <h2 className="panel-titulo">Tienda</h2>
       <VitrinaDelDia alEntrar={() => setHoja('cuenta')} />
     </>,
-    <PanelJugar perfil={perfil} cambiar={cambiar} enLinea={enLinea} conApodo={conApodo} alConfigurarCompu={() => irA(2)} />,
+    <PanelJugar perfil={perfil} cambiar={cambiar} enLinea={enLinea} conApodo={conApodo} alConfigurarCompu={() => irA(3)} />,
     <PanelLobby perfil={perfil} cambiar={cambiar} conApodo={conApodo} />,
+    <>
+      <h2 className="panel-titulo">Grupos</h2>
+      <PanelGrupos />
+    </>,
   ]
 
   return (
@@ -137,23 +157,26 @@ export function Inicio() {
         alEditarPerfil={() => setHoja('perfil')}
         alEntrar={() => setHoja('cuenta')}
         alAjustes={() => setHoja('ajustes')}
-        alTienda={() => irA(0)}
+        alTienda={() => irA(1)}
+        {...(ancha && { alPersonalizar: () => setHoja('avatar'), alGrupos: () => setHoja('grupos') })}
       />
 
       <div className="menu-carril" ref={carril} onScroll={alDeslizar}>
-        {PANELES.map((p, i) => (
-          <section
-            key={p.id}
-            id={`panel-${p.id}`}
-            className={`menu-panel panel-${p.id}`}
-            role={ancha ? 'region' : 'tabpanel'}
-            {...(ancha ? { 'aria-label': p.titulo } : { 'aria-labelledby': `pestania-${p.id}` })}
-            // Las de los costados no se alcanzan con el teclado mientras no están a la vista.
-            inert={!ancha && i !== actual}
-          >
-            <div className="menu-panel-contenido">{contenido[i]}</div>
-          </section>
-        ))}
+        {PANELES.map((p, i) =>
+          ancha && DE_LOS_COSTADOS.has(p.id) ? null : (
+            <section
+              key={p.id}
+              id={`panel-${p.id}`}
+              className={`menu-panel panel-${p.id}`}
+              role={ancha ? 'region' : 'tabpanel'}
+              {...(ancha ? { 'aria-label': p.titulo } : { 'aria-labelledby': `pestania-${p.id}` })}
+              // Las de los costados no se alcanzan con el teclado mientras no están a la vista.
+              inert={!ancha && i !== actual}
+            >
+              <div className="menu-panel-contenido">{contenido[i]}</div>
+            </section>
+          ),
+        )}
       </div>
 
       {!ancha && (
@@ -225,6 +248,21 @@ export function Inicio() {
         <Hoja titulo="Entrar a tu cuenta" alCerrar={cerrarHoja} clase="hoja-menu" claseFondo="hoja-fija">
           <div className="hoja-menu-contenido">
             <TarjetaCuenta sinEnlaces />
+          </div>
+        </Hoja>
+      )}
+      {hoja === 'cartas' && <VisorMazo baraja={perfil.baraja} alCerrar={cerrarHoja} />}
+      {hoja === 'avatar' && (
+        <Hoja titulo="Personalizá" alCerrar={cerrarHoja} clase="hoja-menu hoja-ajustes" claseFondo="hoja-fija">
+          <div className="hoja-menu-contenido">
+            <PanelPersonalizar perfil={perfil} cambiar={cambiar} alEditarAvatar={() => setHoja('perfil')} alVerCartas={() => setHoja('cartas')} />
+          </div>
+        </Hoja>
+      )}
+      {hoja === 'grupos' && (
+        <Hoja titulo="Grupos" alCerrar={cerrarHoja} clase="hoja-menu" claseFondo="hoja-fija">
+          <div className="hoja-menu-contenido">
+            <PanelGrupos />
           </div>
         </Hoja>
       )}

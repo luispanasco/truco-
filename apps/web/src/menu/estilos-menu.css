@@ -849,10 +849,10 @@ button.selector-modo-detalle:hover {
   border-top: 1px solid var(--menu-filo);
 }
 .menu-barra-pestanias {
-  max-width: 420px;
+  max-width: 480px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, 1fr);
 }
 .menu-pestania {
   position: relative;
@@ -927,6 +927,92 @@ button.selector-modo-detalle:hover {
   border-radius: 3px;
   background: var(--menu-oro);
   box-shadow: 0 0 8px color-mix(in srgb, var(--menu-oro) 60%, transparent);
+}
+
+.banner-botones {
+  display: flex;
+  gap: 10px;
+}
+/* En la compu, los botones del avatar y los grupos van junto al engranaje (sin girar). */
+.banner-extra:hover .icono-menu,
+.banner-extra:focus-visible .icono-menu {
+  rotate: none;
+}
+
+/* ── Avatar (personalizar) y grupos ───────────────────────────── */
+
+.personalizar-avatar-fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.personalizar-avatar-img {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--menu-oro);
+  background: rgb(0 0 0 / 0.2);
+  font-size: 2rem;
+  font-weight: 800;
+}
+.personalizar-avatar-img .avatar-dibujo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  clip-path: circle(50%);
+}
+.personalizar-avatar-fila .boton {
+  flex: 1;
+}
+.grupos-pronto {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.grupos-pronto h2 {
+  margin: 0;
+}
+.grupos-pronto p {
+  margin: 0;
+  color: var(--menu-suave);
+}
+.grupos-pronto-icono {
+  font-size: 3.2rem;
+  color: var(--menu-oro);
+}
+
+/* El visor de las cartas del mazo: de a un palo, en una grilla. */
+.hoja.hoja-visor-mazo {
+  height: 90dvh;
+}
+.visor-barajas button,
+.visor-palos button {
+  padding: 8px 2px;
+  font-size: 0.85rem;
+}
+.visor-cartas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 12px 8px;
+  justify-items: center;
+}
+.visor-carta {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+.visor-etiqueta {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--menu-oro);
+  min-height: 1.2em;
 }
 
 /* ── Hojas del menú (cuenta, ajustes y perfil) ────────────────── */

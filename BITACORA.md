@@ -1392,3 +1392,14 @@ Pedidos del usuario sobre la primera:
 - **Salas privadas y chat de voz:** escena nueva con la tarjeta del código de la sala, tres amigos que entran al ritmo y el micrófono con ondas ("¡Hablá mientras jugás!"). Es animación, no un clip: grabar una sala real pide levantar el servidor de juego y los permisos de Claude Code bloquearon ese arranque (el `.env` del servidor apunta a producción).
 - **Cierre:** sin el link de la web; "¡Ya salió la beta!", "Gratis para Android", "Próximamente para iPhone", @truco_uruguayo y "Bajala desde el link en la bio".
 - Las escenas ahora cortan en pulsos (57 en total). Remotion usa el puerto 3123: en el 3000 había otro proyecto corriendo y lo confundía.
+
+## Avatar, visor de cartas y lugar para Grupos — 2026-11-03
+
+Pedido del usuario (en `develop`): ver las cartas del mazo que usás, cambiando de palo, y dos íconos más en la barra de abajo: el del avatar a la izquierda de todo y el de grupos (como clanes, para más adelante) a la derecha de todo.
+
+- **La barra de abajo, de 3 a 5:** Avatar · Tienda · Jugar · Lobby · Grupos. Jugar sigue en el medio y es donde abre el menú. Íconos nuevos a trazo: la percha (`IconoPercha`) y el escudo con gente (`IconoGrupos`).
+- **Pantalla Avatar** (`menu/PanelPersonalizar.tsx`, título "Personalizá"): tu avatar (el botón abre la misma hoja "Tu perfil" que el banner), el mazo con "Ver las cartas", el paño (mesa) y la tipografía. **Ajustes queda solo con lo del juego:** sonido, vista, cartas jugadas, ojear, ayudas, señas y la tienda de prueba.
+- **Visor del mazo** (`componentes/VisorMazo.tsx`): una hoja con la baraja que mirás (arranca con la tuya; se puede mirar cualquiera, también las de la tienda, sin cambiar la elegida), el palo (Espada, Basto, Oro, Copa) y las 10 cartas del palo con su etiqueta (Pieza, Perico, Perica o Mata). Con "Solo las que mandan" quedan las piezas (contando que la muestra es de ese palo) y las matas, de la más alta a la más baja, ordenadas con `fuerza` del motor.
+- **Pantalla Grupos** (`menu/PanelGrupos.tsx`): por ahora solo "Próximamente". No toca el servidor ni la base.
+- **En la compu** (1100 px o más) siguen a la vista Tienda, Jugar y Lobby. Avatar y Grupos se abren en hojas desde dos botones redondos del banner, junto al engranaje.
+- **Tests:** web 321 (el visor: palos, solo las que mandan, mirar otra baraja sin cambiar la tuya; las 5 pestañas y las flechas que dan la vuelta; Ajustes sin lo cosmético). E2E `menu`, `anfitrion` y `avatar` pasan (el anfitrión ahora elige la mesa y la baraja en la pantalla Avatar).
