@@ -34,6 +34,7 @@ function servidorFalso({ conElo = true } = {}) {
         })
       }
       if (url.endsWith('/amigos/latido')) return Response.json({ invitaciones: [] })
+      if (url.endsWith('/grupos')) return Response.json({ tuyos: [], buscar: [], quedan: 10 })
       if (url.endsWith('/tienda')) return Response.json({ dia: '2026-10-18', cambia: new Date(Date.now() + 3_600_000).toISOString(), items: [] })
       return Response.json({})
     }),
@@ -100,7 +101,7 @@ describe('menú principal', () => {
     expect(pestania('Avatar').getAttribute('aria-selected')).toBe('true')
     fireEvent.keyDown(pestania('Avatar'), { key: 'ArrowLeft' })
     expect(pestania('Grupos').getAttribute('aria-selected')).toBe('true')
-    expect(within(panel('grupos')).getByText('Próximamente')).toBeTruthy()
+    expect(within(panel('grupos')).getByText('Armá tu grupo')).toBeTruthy()
     fireEvent.keyDown(pestania('Grupos'), { key: 'ArrowLeft' })
     expect(pestania('Lobby').getAttribute('aria-selected')).toBe('true')
     expect(within(panel('lobby')).getByRole('button', { name: 'Jugar' })).toBeTruthy()

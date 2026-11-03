@@ -114,4 +114,41 @@ export const MIGRACIONES: string[] = [
   `
   alter table cuentas add column beta boolean not null default false;
   `,
+  // 8. Grupos (como clanes): con roles (un líder, capitanes y miembros), solicitudes para entrar y
+  //    la foto chica guardada acá mismo (la achica la app: unos 30 KB). La versión cambia con cada
+  //    foto, para que la web no use una vieja de la caché.
+  `
+  create table grupos (
+    id uuid primary key,
+    nombre text not null,
+    sigla text not null,
+    descripcion text not null default '',
+    ingreso text not null check (ingreso in ('abierto', 'solicitud', 'cerrado')),
+    cupo int,
+    codigo text not null unique,
+    foto bytea,
+    foto_tipo text,
+    foto_version int not null default 0,
+    creado timestamptz not null default now()
+  );
+  create unique index grupos_nombre on grupos (lower(nombre));
+  create table grupo_miembros (
+    grupo_id uuid not null references grupos (id) on delete cascade,
+    cuenta_id uuid not null references cuentas (id),
+    rol text not null check (rol in ('lider', 'capitan', 'miembro')),
+    desde timestamptz not null default now(),
+    primary key (grupo_id, cuenta_id)
+  );
+  create index grupo_miembros_cuenta on grupo_miembros (cuenta_id);
+  create unique index grupo_un_lider on grupo_miembros (grupo_id) where rol = 'lider';
+  create table grupo_solicitudes (
+    grupo_id uuid not null references grupos (id) on delete cascade,
+    cuenta_id uuid not null references cuentas (id),
+    creada timestamptz not null default now(),
+    primary key (grupo_id, cuenta_id)
+  );
+  alter table grupos enable row level security;
+  alter table grupo_miembros enable row level security;
+  alter table grupo_solicitudes enable row level security;
+  `,
 ]

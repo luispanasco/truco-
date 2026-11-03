@@ -28,6 +28,7 @@ import './estilos.css'
 import { Ranking } from './pantallas/Ranking'
 import { Tienda } from './pantallas/Tienda'
 import { Amigos } from './pantallas/Amigos'
+import { Grupo } from './pantallas/Grupo'
 import { AvisoInvitacion } from './componentes/Amistad'
 import './estilos-online.css'
 
@@ -62,6 +63,7 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/ranking" element={<Ranking />} />
           <Route path="/tienda" element={<Tienda />} />
           <Route path="/amigos" element={<Amigos />} />
+          <Route path="/grupos/:id" element={<Grupo />} />
         </Routes>
       </BrowserRouter>
     </MotionConfig>

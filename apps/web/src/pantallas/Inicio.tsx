@@ -146,7 +146,7 @@ export function Inicio() {
     <PanelLobby perfil={perfil} cambiar={cambiar} conApodo={conApodo} />,
     <>
       <h2 className="panel-titulo">Grupos</h2>
-      <PanelGrupos />
+      <PanelGrupos alEntrar={() => setHoja('cuenta')} />
     </>,
   ]
 
@@ -262,7 +262,7 @@ export function Inicio() {
       {hoja === 'grupos' && (
         <Hoja titulo="Grupos" alCerrar={cerrarHoja} clase="hoja-menu" claseFondo="hoja-fija">
           <div className="hoja-menu-contenido">
-            <PanelGrupos />
+            <PanelGrupos alEntrar={() => setHoja('cuenta')} />
           </div>
         </Hoja>
       )}

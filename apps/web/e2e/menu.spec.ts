@@ -38,9 +38,9 @@ test('el menú se desliza con el dedo y el banner muestra la cuenta', async ({ b
   await expect(visor.getByLabel('7 de oros')).toBeVisible()
   await visor.getByRole('button', { name: 'Cerrar' }).click()
 
-  // Del todo a la derecha, los grupos (todavía próximamente).
+  // Del todo a la derecha, los grupos (sin cuenta, invitan a entrar).
   await pestania('Grupos').click()
-  await expect(page.locator('#panel-grupos').getByText('Próximamente')).toBeInViewport()
+  await expect(page.locator('#panel-grupos').getByText('Armá tu grupo')).toBeInViewport()
 
   // La barra de abajo vuelve al medio.
   await pestania('Jugar').click()

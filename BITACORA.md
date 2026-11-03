@@ -1403,3 +1403,19 @@ Pedido del usuario (en `develop`): ver las cartas del mazo que usás, cambiando 
 - **Pantalla Grupos** (`menu/PanelGrupos.tsx`): por ahora solo "Próximamente". No toca el servidor ni la base.
 - **En la compu** (1100 px o más) siguen a la vista Tienda, Jugar y Lobby. Avatar y Grupos se abren en hojas desde dos botones redondos del banner, junto al engranaje.
 - **Tests:** web 321 (el visor: palos, solo las que mandan, mirar otra baraja sin cambiar la tuya; las 5 pestañas y las flechas que dan la vuelta; Ajustes sin lo cosmético). E2E `menu`, `anfitrion` y `avatar` pasan (el anfitrión ahora elige la mesa y la baraja en la pantalla Avatar).
+
+## Grupos (como clanes) — 2026-11-03
+
+Pedido del usuario: grupos con foto, un tope de 10 en la beta, una persona en varios grupos, con roles y configuración.
+
+- **Reglas** (`@truco/shared`, `grupos.ts`, las usan el servidor y la web): `MAX_GRUPOS = 10` en toda la app y `MAX_GRUPOS_POR_PERSONA = 5`. Código de invitación de 7 (el de amigo es de 6 y el de sala de 5). `validarConfigGrupo` (nombre de 3 a 24, sigla de 2 a 4 letras o números, descripción hasta 140, cupo de 2 a 100 o sin cupo) y `PUEDE` (qué hace cada rol).
+- **Roles:** líder (uno solo; configura, nombra y saca capitanes, expulsa, pasa el liderazgo y borra el grupo), capitán (acepta solicitudes, expulsa miembros, ve y renueva el código) y miembro. Si el líder se va, hereda el capitán más antiguo; sin capitanes, el miembro más antiguo; si no queda nadie, el grupo se borra.
+- **Cómo se entra:** abierto (desde la lista), con solicitud (la aprueba un capitán o el líder) o cerrado (no aparece en la lista). Con el código se entra siempre, sea como sea el grupo.
+- **Migración 8:** `grupos` (con la foto en `bytea`, su tipo y una versión), `grupo_miembros` (un solo líder por grupo, con un índice único parcial) y `grupo_solicitudes`, con RLS. El tope de 10 se controla con un `lock table` para que dos que crean a la vez no lo pasen.
+- **La foto:** la app la recorta cuadrada, la achica a 256 × 256 y la pasa a WebP (JPEG si el navegador no hace WebP); pesa unos 30 KB. El servidor solo acepta WebP, JPEG o PNG (lo revisa por los primeros bytes) de hasta 100 KB. Se sube con `PUT /api/grupos/:id/foto` y se sirve en `GET /api/grupos/:id/foto?v=N` con caché larga (la versión cambia con cada foto). Queda en la base y no en Supabase Storage, que pedía una llave de servicio nueva. No hay moderación de fotos: antes de producción conviene un "Reportar".
+- **API:** `GET /grupos` (los tuyos, los que se pueden buscar y cuántos quedan) y `POST /grupos/` + `crear`, `detalle`, `entrar`, `codigo`, `cancelar`, `salir`, `responder`, `rol`, `liderazgo`, `expulsar`, `configurar`, `renovar-codigo`, `borrar`, `sacar-foto`. Los permisos se revisan en el servidor.
+- **La web:**
+  - La pantalla Grupos del menú (`PanelGrupos`): tus grupos con tu rol, crear (en una hoja, con `FormularioGrupo`), unirme con código y buscar grupos. Sin cuenta, invita a entrar.
+  - La pantalla de un grupo (`/grupos/:id`, `pantallas/Grupo.tsx`): la cabecera con foto, el código (capitanes y líder), las solicitudes, los miembros con un "⋯" con lo que tu rol permite, la configuración (el líder) y salir o borrar, con confirmación.
+- **Tests:** server 114 (10 nuevos: los topes, cada rol, la herencia del liderazgo, cerrado y código, cupo y foto), web 328 (7 nuevos). E2E `grupos.spec.ts`: Ana crea uno cerrado con foto y Beto entra con el código y queda capitán.
+- **Para que ande en la web publicada (también en el link de develop) hay que publicar el servidor en Fly:** hay uno solo, el de producción. La migración 8 solo agrega tablas.
