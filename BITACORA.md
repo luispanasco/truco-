@@ -1374,3 +1374,21 @@ Pedido del usuario: la APK.
 - **Herramientas** en `C:\Users\Luisito\.bubblewrap\`: JDK 17 (Bubblewrap no acepta el 21 instalado) y el SDK de Android con las command-line tools en `cmdline-tools/latest` (en la raíz, Gradle no encontraba la plataforma android-36). Las licencias del SDK de Android se aceptaron al instalar build-tools y plataforma.
 - **Tropiezos en Windows:** Claude Code prende `NoDefaultCurrentDirectoryInExePath`, y Bubblewrap llama a `gradlew.bat` sin `.\`: hay que sacar esa variable para compilar. Desde Git Bash tampoco anda; desde PowerShell sí.
 - Salidas: `Truco-Uruguayo-1.0.0.apk` (para pasar a los testers) y `.aab` (Play Store), copiadas en Descargas.
+
+## Reel promocional — 2026-11-03
+
+Pedido del usuario: un reel de ~30 s para Instagram (@truco_uruguayo), sin voces, con la música que dejó en `music/` (un tema funk de Pixabay).
+
+- **`promo/`:** proyecto de Remotion 4.0.537 (fuera del workspace de pnpm: `npm install`). `npm run render` (con música), `npm run render:sin-musica` (solo los ruidos de cartas, para ponerle un tema de Instagram) y `npm run portada`. Salen en `promo/salida/` (no va a git, como los clips y la música).
+- **Al ritmo:** el tema a 114,1 BPM desde su primer compás (2,24 s), normalizado a −14 LUFS con fundido al final (`public/musica.mp3`). Cada escena empieza en un compás y los textos y globos entran en los pulsos (`src/ritmo.ts`).
+- **Guion:** carta que cae + "¡TRUCO!" → el logo armándose (sol, abanico 2-4-5 de oro, cinta) → reparto y muestra ("Con muestra, piezas y flor") → cantos con globos sincronizados con los de la app ("Cantá como en el boliche") → seña del compañero con zoom → 1 vs 1 / 2 vs 2 / 3 vs 3 ("Contra la compu o con amigos", chat de voz) → avatar y mesas → cierre con logo, "¡Jugá gratis!", web y Android, @truco_uruguayo, link en la bio.
+- **Clips de la app:** los grabó un agente con Playwright (CDP screencast, 1170×2532, contra la compu, vista en perspectiva y sentados, mesa Cantina), en `promo/clips/`. Ruidos de cartas de Kenney (CC0), los mismos de la app.
+- Revisado con hojas de cuadros: el primer cuadro ya muestra la carta (Instagram lo usa de vista previa); textos dentro de la zona que no tapa Instagram.
+
+### Reel: segunda versión — 2026-11-03
+
+Pedidos del usuario sobre la primera:
+- **Señas de piezas, no de matas** (las matas son muy de truco argentino): clip nuevo donde el compañero hace la seña del "4 de la muestra", con zoom y un globo "¡El 4 de la muestra!". El reparto de contra la compu es al azar (sin semilla), así que se buscó repitiendo manos; la toma con el 2 de la muestra mostraba la etiqueta medio segundo y se descartó.
+- **Salas privadas y chat de voz:** escena nueva con la tarjeta del código de la sala, tres amigos que entran al ritmo y el micrófono con ondas ("¡Hablá mientras jugás!"). Es animación, no un clip: grabar una sala real pide levantar el servidor de juego y los permisos de Claude Code bloquearon ese arranque (el `.env` del servidor apunta a producción).
+- **Cierre:** sin el link de la web; "¡Ya salió la beta!", "Gratis para Android", "Próximamente para iPhone", @truco_uruguayo y "Bajala desde el link en la bio".
+- Las escenas ahora cortan en pulsos (57 en total). Remotion usa el puerto 3123: en el 3000 había otro proyecto corriendo y lo confundía.

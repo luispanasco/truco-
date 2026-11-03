@@ -1,0 +1,6 @@
+node_modules/
+salida/
+# Los clips grabados de la app y la música van aparte (pesan y la música es de Pixabay).
+clips/
+public/clips/
+public/musica.mp3

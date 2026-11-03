@@ -1,0 +1,23 @@
+{
+  "name": "truco-promo",
+  "private": true,
+  "type": "module",
+  "description": "Reel promocional de Truco Uruguayo, hecho con Remotion. Fuera del workspace de pnpm: se instala con npm.",
+  "scripts": {
+    "estudio": "remotion studio src/index.ts --port=3123",
+    "render": "remotion render src/index.ts Reel salida/truco-reel.mp4 --codec h264 --crf 16 --audio-bitrate 320k --port=3123",
+    "render:sin-musica": "remotion render src/index.ts ReelSinMusica salida/truco-reel-sin-musica.mp4 --codec h264 --crf 16 --audio-bitrate 320k --port=3123",
+    "portada": "remotion still src/index.ts Reel salida/truco-portada.png --frame=880 --port=3123"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.537",
+    "@remotion/google-fonts": "4.0.537",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.537"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "typescript": "7.0.2"
+  }
+}

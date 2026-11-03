@@ -12,3 +12,6 @@ __pycache__/
 .env
 .env.local
 secretos/
+
+# La música de los reels (de Pixabay): va aparte, no al repo.
+music/
