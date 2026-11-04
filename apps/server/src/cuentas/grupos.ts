@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import {
+  ESPERA_CONVOCAR_MS,
   LARGO_CODIGO_GRUPO,
   MAX_BYTES_FOTO_GRUPO,
   MAX_GRUPOS,
@@ -14,6 +15,7 @@ import {
 } from '@truco/shared'
 import { generarCodigo } from '../codigos'
 import type { Base } from './base'
+import type { Presencia } from './presencia'
 
 /** Un rechazo con un motivo para mostrar (404 si el grupo no existe o no lo podés ver). */
 export class GruposRechazo extends Error {
@@ -34,6 +36,7 @@ interface FilaGrupo {
   descripcion: string
   ingreso: ResumenGrupo['ingreso']
   cupo: number | null
+  convocan: ResumenGrupo['convocan']
   codigo: string
   foto_version: number
   tiene_foto: boolean
@@ -44,7 +47,7 @@ interface FilaGrupo {
 
 /** Los grupos con lo que ve `yo` de cada uno (su rol, si pidió entrar y cuántos son). */
 const SELECT_GRUPOS = `
-  select g.id, g.nombre, g.sigla, g.descripcion, g.ingreso, g.cupo, g.codigo, g.foto_version,
+  select g.id, g.nombre, g.sigla, g.descripcion, g.ingreso, g.cupo, g.convocan, g.codigo, g.foto_version,
     (g.foto is not null) as tiene_foto,
     (select count(*)::int from grupo_miembros m where m.grupo_id = g.id) as miembros,
     (select rol from grupo_miembros m where m.grupo_id = g.id and m.cuenta_id = $1) as rol,
@@ -59,6 +62,7 @@ function resumen(f: FilaGrupo): ResumenGrupo {
     descripcion: f.descripcion,
     ingreso: f.ingreso,
     cupo: f.cupo,
+    convocan: f.convocan,
     miembros: f.miembros,
     foto: f.tiene_foto ? f.foto_version : null,
     rol: f.rol,
@@ -127,19 +131,22 @@ export async function listaDeGrupos(base: Base, yo: string) {
   }
 }
 
-/** Un grupo con sus miembros. Uno cerrado solo lo ven los de adentro; el código y las solicitudes, capitanes y líder. */
-export async function detalleGrupo(base: Base, yo: string, id: unknown): Promise<DetalleGrupo> {
+/**
+ * Un grupo con sus miembros (y si están conectados o esperando en una sala, para unirse). Uno
+ * cerrado solo lo ven los de adentro; el código y las solicitudes, capitanes y líder.
+ */
+export async function detalleGrupo(base: Base, presencia: Presencia, yo: string, id: unknown): Promise<DetalleGrupo> {
   const g = await grupoDe(base, yo, id)
   if (!g.rol && g.ingreso === 'cerrado') throw NO_EXISTE()
   const orden: Record<RolGrupo, number> = { lider: 0, capitan: 1, miembro: 2 }
   const lista = (
-    await base.consultar<MiembroGrupo & { desde: Date }>(
+    await base.consultar<Omit<MiembroGrupo, 'estado' | 'sala'> & { desde: Date }>(
       `select c.id, c.apodo, c.avatar, m.rol, m.desde from grupo_miembros m join cuentas c on c.id = m.cuenta_id
        where m.grupo_id = $1 order by m.desde`,
       [g.id],
     )
   )
-    .map((m) => ({ ...m, desde: new Date(m.desde).toISOString() }))
+    .map((m) => ({ ...m, desde: new Date(m.desde).toISOString(), ...presencia.estado(m.id) }))
     .sort((x, y) => orden[x.rol] - orden[y.rol])
   const solicitudes = PUEDE.manejarSolicitudes(g.rol)
     ? await base.consultar<{ id: string; apodo: string; avatar: string | null }>(
@@ -164,8 +171,8 @@ export async function crearGrupo(base: Base, yo: string, datos: Record<string, u
     await nombreLibre(b, config.nombre, null)
     const id = randomUUID()
     await b.consultar(
-      'insert into grupos (id, nombre, sigla, descripcion, ingreso, cupo, codigo) values ($1, $2, $3, $4, $5, $6, $7)',
-      [id, config.nombre, config.sigla, config.descripcion, config.ingreso, config.cupo, await codigoLibre(b)],
+      'insert into grupos (id, nombre, sigla, descripcion, ingreso, cupo, convocan, codigo) values ($1, $2, $3, $4, $5, $6, $7, $8)',
+      [id, config.nombre, config.sigla, config.descripcion, config.ingreso, config.cupo, config.convocan, await codigoLibre(b)],
     )
     await b.consultar(`insert into grupo_miembros (grupo_id, cuenta_id, rol) values ($1, $2, 'lider')`, [id, yo])
     return { id }
@@ -272,7 +279,7 @@ export async function expulsar(base: Base, yo: string, id: unknown, cuenta: unkn
   })
 }
 
-/** Cambiar el nombre, la sigla, la descripción, cómo se entra y el cupo (solo el líder). */
+/** Cambiar el nombre, la sigla, la descripción, cómo se entra, el cupo y quién arma partidas (solo el líder). */
 export async function configurarGrupo(base: Base, yo: string, id: unknown, datos: Record<string, unknown>) {
   const config = validarConfigGrupo(datos)
   if (typeof config === 'string') throw new GruposRechazo(config)
@@ -281,17 +288,38 @@ export async function configurarGrupo(base: Base, yo: string, id: unknown, datos
     if (!PUEDE.configurar(g.rol)) throw new GruposRechazo('Solo el líder cambia la configuración')
     if (config.cupo !== null && config.cupo < g.miembros) throw new GruposRechazo(`Ya son ${g.miembros}: el cupo no puede ser menos`)
     await nombreLibre(b, config.nombre, g.id)
-    await b.consultar('update grupos set nombre = $2, sigla = $3, descripcion = $4, ingreso = $5, cupo = $6 where id = $1', [
+    await b.consultar('update grupos set nombre = $2, sigla = $3, descripcion = $4, ingreso = $5, cupo = $6, convocan = $7 where id = $1', [
       g.id,
       config.nombre,
       config.sigla,
       config.descripcion,
       config.ingreso,
       config.cupo,
+      config.convocan,
     ])
     // Abierto, los que esperaban ya pueden entrar solos: los pedidos se borran.
     if (config.ingreso !== 'solicitud') await b.consultar('delete from grupo_solicitudes where grupo_id = $1', [g.id])
   })
+}
+
+/**
+ * Llamar a todo el grupo a la sala privada en la que esperás: a cada uno le llega la invitación
+ * (a los que no tienen la app abierta, si la abren en los próximos minutos). Según la
+ * configuración, llaman todos o solo el líder y los capitanes. Devuelve a cuántos les llegó.
+ */
+export async function convocarGrupo(base: Base, presencia: Presencia, yo: string, id: unknown): Promise<{ invitados: number }> {
+  const g = await grupoConRol(base, yo, id)
+  if (!PUEDE.convocar(g.rol, g.convocan)) throw new GruposRechazo('En este grupo solo el líder y los capitanes arman partidas')
+  const sala = presencia.salaDe(yo)
+  if (!sala) throw new GruposRechazo('Para llamar al grupo tenés que estar en una sala privada, antes de empezar')
+  const otros = await base.consultar<{ id: string }>('select cuenta_id as id from grupo_miembros where grupo_id = $1 and cuenta_id <> $2', [g.id, yo])
+  if (otros.length === 0) throw new GruposRechazo('Todavía no hay nadie más en el grupo')
+  if (!presencia.puedeConvocar(yo, g.id, ESPERA_CONVOCAR_MS)) throw new GruposRechazo('Ya llamaste al grupo hace un ratito')
+  const [c] = await base.consultar<{ apodo: string }>('select apodo from cuentas where id = $1', [yo])
+  // A los que ya están en esta misma sala no hace falta avisarles.
+  const invitados = otros.filter((o) => presencia.salaDe(o.id) !== sala)
+  for (const o of invitados) presencia.invitar(o.id, { de: yo, apodo: c?.apodo ?? 'Alguien del grupo', sala, grupo: `[${g.sigla}] ${g.nombre}` })
+  return { invitados: invitados.length }
 }
 
 /** Un código de invitación nuevo: el viejo deja de servir (capitanes y líder). */

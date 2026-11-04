@@ -87,7 +87,7 @@ export const LORELEI: EstiloAvatar = {
     const piel = PIELES[a.piel] ?? PIELES[0]
     // La ropa va encima del cuello de Lorelei (que termina en un pecho sin contorno) y debajo
     // del pelo de adelante, que cae sobre los hombros. Sus coordenadas son las del viewBox.
-    const ropa = `<g class="capa capa-ropa" transform="translate(-10 60)">${ROPAS[a.ropa]?.(piel) ?? ''}</g>`
+    const ropa = `<g class="capa capa-ropa" transform="translate(-10 60) translate(481 786) scale(1.08) translate(-481 -818)">${ROPAS[a.ropa]?.(piel) ?? ''}</g>`
     const sombrero = a.sombrero > 0 ? SOMBREROS[a.sombrero - 1] : undefined
     const cabeza = `<g transform="translate(10 -60)">${componer('{{pelo}}', a, ropa)}</g>`
     return [

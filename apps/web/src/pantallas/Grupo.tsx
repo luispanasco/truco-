@@ -4,6 +4,7 @@ import { NOMBRE_INGRESO, NOMBRE_ROL, PUEDE, type DetalleGrupo, type MiembroGrupo
 import { Avatar } from '../componentes/Avatar'
 import { EscudoGrupo } from '../componentes/EscudoGrupo'
 import { FormularioGrupo } from '../componentes/FormularioGrupo'
+import type { ConvocarAlCrear } from '../componentes/Amistad'
 import { CabeceraOnline, MensajeError } from '../componentes/Online'
 import { iniciarCuenta, useCuenta } from '../cuenta/cuenta'
 import {
@@ -21,14 +22,17 @@ import {
   subirFoto,
 } from '../cuenta/grupos'
 import { textoMiembros } from '../menu/PanelGrupos'
+import { useJuego } from '../estado'
+import { TEXTO_ESTADO } from './Amigos'
 import '../estilos-grupos.css'
 
 type Resultado = { ok: true } | { ok: false; motivo: string }
 
 /**
- * Un grupo: su foto, nombre y descripción, el código de invitación y las solicitudes (capitanes y
- * líder), los miembros con lo que tu rol te deja hacer con cada uno, la configuración (el líder)
- * y salir. Se actualiza solo mientras está abierta.
+ * Un grupo: su foto, nombre y descripción, jugar con el grupo (armar una partida y llamar a todos,
+ * o unirse a la sala de alguno), el código de invitación y las solicitudes (capitanes y líder),
+ * los miembros con lo que tu rol te deja hacer con cada uno, la configuración (el líder) y salir.
+ * Se actualiza solo mientras está abierta.
  */
 export function Grupo() {
   const { id = '' } = useParams()
@@ -124,6 +128,8 @@ export function Grupo() {
       )}
       {error && <MensajeError>{error}</MensajeError>}
 
+      {rol && <JugarConElGrupo grupo={grupo} yo={yo} />}
+
       {grupo.codigo && (
         <section className="tarjeta" aria-labelledby="grupo-codigo">
           <h2 id="grupo-codigo">Código de invitación</h2>
@@ -183,7 +189,14 @@ export function Grupo() {
           <FormularioGrupo
             id={grupo.id}
             foto={grupo.foto}
-            inicial={{ nombre: grupo.nombre, sigla: grupo.sigla, descripcion: grupo.descripcion, ingreso: grupo.ingreso, cupo: grupo.cupo }}
+            inicial={{
+              nombre: grupo.nombre,
+              sigla: grupo.sigla,
+              descripcion: grupo.descripcion,
+              ingreso: grupo.ingreso,
+              cupo: grupo.cupo,
+              convocan: grupo.convocan,
+            }}
             textoBoton="Guardar cambios"
             alGuardar={async (config, foto) => {
               const r = await configurarGrupo(grupo.id, config)
@@ -244,6 +257,56 @@ export function Grupo() {
   )
 }
 
+/**
+ * Las salas en las que esperan los del grupo (para unirse) y armar una partida: se crea tu sala
+ * y, apenas está, les llega el aviso a todos (si la configuración te deja llamarlos).
+ */
+function JugarConElGrupo({ grupo, yo }: { grupo: DetalleGrupo; yo: string | null }) {
+  const navegar = useNavigate()
+  const otros = grupo.lista.filter((m) => m.id !== yo)
+  const conectados = otros.filter((m) => m.estado !== 'desconectado').length
+  // Una fila por sala, con todos los del grupo que esperan en ella.
+  const salas = new Map<string, string[]>()
+  for (const m of otros) if (m.sala) salas.set(m.sala, [...(salas.get(m.sala) ?? []), m.apodo])
+  const unirse = (sala: string) => {
+    // Si estabas en otra sala, se sale antes de entrar a la nueva.
+    if (useJuego.getState().conexion) useJuego.getState().salir()
+    navegar(`/s/${sala}`)
+  }
+  const armar = () => navegar('/crear', { state: { convocar: { id: grupo.id, nombre: `[${grupo.sigla}] ${grupo.nombre}` } } satisfies ConvocarAlCrear })
+  return (
+    <section className="tarjeta grupo-jugar" aria-labelledby="grupo-jugar">
+      <h2 id="grupo-jugar">Jugar con el grupo</h2>
+      {salas.size > 0 && (
+        <ul className="amigos">
+          {[...salas].map(([sala, quienes]) => (
+            <li key={sala} className="amigo amigo-chico">
+              <span className="amigo-nombre">Sala de {quienes.join(' y ')}</span>
+              <button type="button" className="boton" onClick={() => unirse(sala)}>
+                Unirme
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="nota-izq">
+        {conectados === 0
+          ? 'Nadie más del grupo está conectado ahora. Igual, si abren la app en los próximos minutos, les llega el aviso.'
+          : conectados === 1
+            ? 'Hay 1 conectado ahora.'
+            : `Hay ${conectados} conectados ahora.`}
+      </p>
+      {PUEDE.convocar(grupo.rol, grupo.convocan) ? (
+        <button type="button" className="boton boton-relieve" disabled={otros.length === 0} onClick={armar}>
+          Armar partida
+        </button>
+      ) : (
+        <p className="nota-izq">En este grupo arman partidas el líder y los capitanes.</p>
+      )}
+    </section>
+  )
+}
+
 /** Un miembro, con su rol y, tocando "⋯", lo que tu rol te deja hacer con él. */
 function FilaMiembro({
   miembro: m,
@@ -278,6 +341,11 @@ function FilaMiembro({
         {m.apodo}
         {soyYo && ' (vos)'}
         <small className={`grupo-rol rol-${m.rol}`}>{NOMBRE_ROL[m.rol]}</small>
+        {!soyYo && (
+          <small className={`amigo-estado estado-${m.estado}`}>
+            <span className="amigo-punto" aria-hidden="true" /> {TEXTO_ESTADO[m.estado]}
+          </small>
+        )}
       </span>
       {conAcciones && (
         <span className="amigo-acciones">

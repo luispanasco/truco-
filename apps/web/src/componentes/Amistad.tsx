@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
+import { PUEDE } from '@truco/shared'
 import { TEXTO_ESTADO } from '../pantallas/Amigos'
 import { Avatar } from './Avatar'
 import { useCuenta } from '../cuenta/cuenta'
 import { cargarAmigos, descartarInvitacion, invitarAmigo, useAmigos, type Amigo } from '../cuenta/amigos'
+import { cargarGrupos, convocarGrupo, useGrupos } from '../cuenta/grupos'
 import { useJuego } from '../estado'
 
 /**
@@ -26,7 +28,15 @@ export function AvisoInvitacion() {
   return (
     <div className="aviso-invitacion" role="alertdialog" aria-label="Invitación a una sala">
       <p>
-        <strong>{inv.apodo}</strong> te invita a su sala.
+        {inv.grupo ? (
+          <>
+            <strong>{inv.apodo}</strong> llama a <strong>{inv.grupo}</strong> a jugar en su sala.
+          </>
+        ) : (
+          <>
+            <strong>{inv.apodo}</strong> te invita a su sala.
+          </>
+        )}
       </p>
       <div className="aviso-invitacion-botones">
         <button type="button" className="boton" onClick={entrar}>
@@ -48,6 +58,16 @@ export interface InvitarAlCrear {
 export function invitacionPendiente(estado: unknown): InvitarAlCrear['invitar'] | null {
   const i = (estado as Partial<InvitarAlCrear> | null)?.invitar
   return i && typeof i.id === 'string' && typeof i.apodo === 'string' ? i : null
+}
+
+/** A qué grupo llamar apenas se cree la sala (se elige en la pantalla del grupo, con "Armar partida"). */
+export interface ConvocarAlCrear {
+  convocar: { id: string; nombre: string }
+}
+
+export function convocatoriaPendiente(estado: unknown): ConvocarAlCrear['convocar'] | null {
+  const c = (estado as Partial<ConvocarAlCrear> | null)?.convocar
+  return c && typeof c.id === 'string' && typeof c.nombre === 'string' ? c : null
 }
 
 /** Con la cuenta abierta, la lista de amigos se pide al entrar y cada 15 s mientras se ve. */
@@ -110,6 +130,62 @@ export function InvitarAmigos() {
         </ul>
       )}
       {error && <p className="nota-izq">{error}</p>}
+    </section>
+  )
+}
+
+/**
+ * En la sala de espera: tus grupos, para llamar a todos a jugar (los que la configuración de cada
+ * grupo te deja). Si se creó la sala desde "Armar partida" en un grupo, a ese se lo llama solo, una vez.
+ */
+export function InvitarGrupos() {
+  const adentro = useCuenta((s) => s.estado === 'adentro')
+  const lista = useGrupos((s) => s.lista)
+  const [llamados, setLlamados] = useState<Set<string>>(new Set())
+  const [aviso, setAviso] = useState<string | null>(null)
+
+  const llamar = async (id: string) => {
+    const r = await convocarGrupo(id)
+    if (!r.ok) return setAviso(r.motivo)
+    setLlamados((s) => new Set(s).add(id))
+    const n = r.datos.invitados
+    setAviso(n === 1 ? 'Le llegó el aviso a 1 del grupo.' : `Les llegó el aviso a ${n} del grupo.`)
+  }
+
+  useEffect(() => {
+    if (adentro && !lista) void cargarGrupos().catch(() => {})
+  }, [adentro, lista])
+
+  const pendiente = convocatoriaPendiente(useLocation().state)
+  const yaLlamado = useRef(false)
+  useEffect(() => {
+    if (!adentro || !pendiente || yaLlamado.current) return
+    yaLlamado.current = true
+    void llamar(pendiente.id)
+  }, [adentro, pendiente])
+
+  const grupos = (lista?.tuyos ?? []).filter((g) => PUEDE.convocar(g.rol, g.convocan))
+  if (!adentro || grupos.length === 0) return null
+  return (
+    <section className="tarjeta">
+      <h2>Llamar a tu grupo</h2>
+      <ul className="amigos">
+        {grupos.map((g) => (
+          <li key={g.id} className="amigo amigo-chico">
+            <span className="amigo-nombre">
+              [{g.sigla}] {g.nombre}
+            </span>
+            <button type="button" className="boton" disabled={llamados.has(g.id)} aria-label={`Llamar a ${g.nombre}`} onClick={() => void llamar(g.id)}>
+              {llamados.has(g.id) ? 'Llamado' : 'Llamar'}
+            </button>
+          </li>
+        ))}
+      </ul>
+      {aviso && (
+        <p className="nota-izq" role="status">
+          {aviso}
+        </p>
+      )}
     </section>
   )
 }

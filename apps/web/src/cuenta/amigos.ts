@@ -19,6 +19,8 @@ export interface Invitacion {
   de: string
   apodo: string
   sala: string
+  /** Si llama a todo un grupo: "[BOL] Los del Boliche". */
+  grupo?: string
   hora: number
 }
 

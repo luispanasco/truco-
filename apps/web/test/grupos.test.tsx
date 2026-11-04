@@ -7,6 +7,7 @@ import { Grupo } from '../src/pantallas/Grupo'
 import { useCuenta } from '../src/cuenta/cuenta'
 import { useAmigos } from '../src/cuenta/amigos'
 import { useGrupos } from '../src/cuenta/grupos'
+import { AvisoInvitacion, InvitarGrupos } from '../src/componentes/Amistad'
 
 let pedidos: { url: string; cuerpo: Record<string, unknown> | null }[] = []
 let detalle: DetalleGrupo
@@ -18,6 +19,7 @@ const resumen = (extra: Partial<ResumenGrupo>): ResumenGrupo => ({
   descripcion: '',
   ingreso: 'abierto',
   cupo: null,
+  convocan: 'todos',
   miembros: 3,
   foto: null,
   rol: null,
@@ -40,6 +42,7 @@ function servidor({ quedan = 8 } = {}) {
       if (url.endsWith('/grupos/detalle')) return Response.json(detalle)
       if (url.endsWith('/grupos/entrar')) return Response.json({ adentro: false })
       if (url.endsWith('/grupos/crear')) return Response.json({ id: 'g9' })
+      if (url.endsWith('/grupos/convocar')) return Response.json({ invitados: 2 })
       if (url.endsWith('/grupos/codigo')) return Response.json({ motivo: 'No hay ningún grupo con ese código' }, { status: 409 })
       return Response.json({ ok: true })
     }),
@@ -70,9 +73,9 @@ beforeEach(() => {
   detalle = {
     ...resumen({ rol: 'lider' }),
     lista: [
-      { id: 'a', apodo: 'Ana', avatar: null, rol: 'lider', desde: '2026-11-01T00:00:00Z' },
-      { id: 'b', apodo: 'Beto', avatar: null, rol: 'capitan', desde: '2026-11-02T00:00:00Z' },
-      { id: 'c', apodo: 'Caro', avatar: null, rol: 'miembro', desde: '2026-11-03T00:00:00Z' },
+      { id: 'a', apodo: 'Ana', avatar: null, rol: 'lider', desde: '2026-11-01T00:00:00Z', estado: 'conectado', sala: null },
+      { id: 'b', apodo: 'Beto', avatar: null, rol: 'capitan', desde: '2026-11-02T00:00:00Z', estado: 'enSala', sala: 'ABCDE' },
+      { id: 'c', apodo: 'Caro', avatar: null, rol: 'miembro', desde: '2026-11-03T00:00:00Z', estado: 'desconectado', sala: null },
     ],
     codigo: 'ABC2345',
     solicitudes: [{ id: 'd', apodo: 'Dani', avatar: null }],
@@ -131,8 +134,13 @@ describe('grupos en el menú', () => {
     fireEvent.change(hoja.getByPlaceholderText('BOL'), { target: { value: 'pi b' } })
     fireEvent.click(hoja.getByRole('radio', { name: 'Cerrado' }))
     fireEvent.change(hoja.getByPlaceholderText('Sin cupo'), { target: { value: '12' } })
+    // Por defecto arman partidas todos.
+    expect(hoja.getByRole('radio', { name: 'Todos' }).getAttribute('aria-checked')).toBe('true')
+    fireEvent.click(hoja.getByRole('radio', { name: 'Líder y capitanes' }))
     fireEvent.click(hoja.getByRole('button', { name: 'Crear grupo' }))
-    await waitFor(() => expect(cuerpo('/grupos/crear')).toEqual({ nombre: 'Los Pibes', sigla: 'PIB', descripcion: '', ingreso: 'cerrado', cupo: 12 }))
+    await waitFor(() =>
+      expect(cuerpo('/grupos/crear')).toEqual({ nombre: 'Los Pibes', sigla: 'PIB', descripcion: '', ingreso: 'cerrado', cupo: 12, convocan: 'capitanes' }),
+    )
     await waitFor(() => expect(pedidos.some((p) => p.url.endsWith('/grupos/detalle') && p.cuerpo?.id === 'g9')).toBe(true))
   })
 })
@@ -185,4 +193,62 @@ describe('pantalla de un grupo', () => {
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Tus grupos' })).toBeTruthy())
     expect(cuerpo('/grupos/salir')).toEqual({ id: 'g1' })
   })
+
+  it('jugar con el grupo: se ve quién está conectado, se une a la sala de otro y arma partida', async () => {
+    servidor()
+    montar('/grupos/g1')
+    expect(await screen.findByText('Hay 1 conectado ahora.')).toBeTruthy()
+    expect(screen.getByText('En una sala, esperando')).toBeTruthy()
+    expect(screen.getByText('Desconectado')).toBeTruthy()
+    fireEvent.click(within(screen.getByRole('region', { name: 'Jugar con el grupo' })).getByRole('button', { name: 'Unirme' }))
+    expect(screen.getByTestId('ruta').textContent).toBe('/s/ABCDE')
+  })
+
+  it('armar partida lleva a crear la sala; con "líder y capitanes", un miembro no la arma', async () => {
+    servidor()
+    montar('/grupos/g1')
+    fireEvent.click(await screen.findByRole('button', { name: 'Armar partida' }))
+    expect(screen.getByTestId('ruta').textContent).toBe('/crear')
+    cleanup()
+    detalle = { ...detalle, rol: 'miembro', convocan: 'capitanes', codigo: null, solicitudes: null }
+    montar('/grupos/g1')
+    expect(await screen.findByText('En este grupo arman partidas el líder y los capitanes.')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Armar partida' })).toBeNull()
+  })
 })
+
+describe('llamar al grupo desde la sala', () => {
+  it('desde "Armar partida" se llama solo, una vez; los grupos que no te dejan llamar no aparecen', async () => {
+    servidor()
+    useGrupos.setState({
+      lista: {
+        tuyos: [resumen({ rol: 'capitan' }), resumen({ id: 'g3', nombre: 'Los Otros', rol: 'miembro', convocan: 'capitanes' })],
+        buscar: [],
+        quedan: 8,
+      },
+    })
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/sala', state: { convocar: { id: 'g1', nombre: '[BOL] Los del Boliche' } } }]}>
+        <InvitarGrupos />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByText('Les llegó el aviso a 2 del grupo.')).toBeTruthy()
+    expect(pedidos.filter((p) => p.url.endsWith('/grupos/convocar')).map((p) => p.cuerpo)).toEqual([{ id: 'g1' }])
+    expect(screen.getByRole('button', { name: 'Llamar a Los del Boliche' })).toHaveProperty('disabled', true)
+    expect(screen.queryByText(/Los Otros/)).toBeNull()
+  })
+
+  it('el aviso dice qué grupo te llama', () => {
+    useAmigos.setState({ invitaciones: [{ de: 'b', apodo: 'Beto', sala: 'ABCDE', grupo: '[BOL] Los del Boliche', hora: 0 }] })
+    montarAviso()
+    expect(screen.getByRole('alertdialog').textContent).toBe('Beto llama a [BOL] Los del Boliche a jugar en su sala.EntrarAhora no')
+  })
+})
+
+function montarAviso() {
+  return render(
+    <MemoryRouter>
+      <AvisoInvitacion />
+    </MemoryRouter>,
+  )
+}

@@ -15,6 +15,8 @@ export interface Invitacion {
   de: string
   apodo: string
   sala: string
+  /** Si llama a todo un grupo: "[BOL] Los del Boliche". */
+  grupo?: string
   hora: number
 }
 
@@ -29,6 +31,8 @@ export class Presencia {
   private latidos = new Map<string, number>()
   private salas = new Map<string, EnSala>()
   private invitaciones = new Map<string, Invitacion[]>()
+  /** La última vez que alguien llamó a un grupo (clave "cuenta:grupo"). */
+  private convocatorias = new Map<string, number>()
 
   constructor(private readonly ahora: () => number = Date.now) {}
 
@@ -56,6 +60,15 @@ export class Presencia {
   salaDe(cuentaId: string): string | null {
     const sala = this.salas.get(cuentaId)
     return sala && !sala.jugando() ? sala.codigo : null
+  }
+
+  /** Si `de` puede volver a llamar a ese grupo (pasó la espera desde la última vez), y lo anota. */
+  puedeConvocar(de: string, grupo: string, espera: number): boolean {
+    const clave = `${de}:${grupo}`
+    const antes = this.convocatorias.get(clave)
+    if (antes !== undefined && this.ahora() - antes < espera) return false
+    this.convocatorias.set(clave, this.ahora())
+    return true
   }
 
   invitar(a: string, invitacion: Omit<Invitacion, 'hora'>) {

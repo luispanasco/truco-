@@ -128,24 +128,44 @@ function ribete(escote: Punto[], color: string, ancho = 22): string {
   return `<path d="${camino([...afuera, ...adentro])}Z" ${fino(NEGRO, 8, color)}/>`
 }
 
+/**
+ * La sombra que la ropa hace sobre el cuello: una franja de piel más oscura justo arriba del
+ * escote (la tapa la prenda, que va encima). Es lo que hace que la ropa se lea puesta.
+ */
+function sombraCuello(escote: Punto[], piel: string, alto = 24): string {
+  const borde = curva(escote)
+  // Se afina hacia los costados, así no asoma por fuera del cuello.
+  const arriba = borde.map(([x, y], i) => [x, y - alto * Math.sqrt(Math.sin((Math.PI * i) / (borde.length - 1)))] as Punto)
+  return `<path d="${camino([...arriba, ...borde.reverse()])}Z" fill="${tono(piel, -0.1)}"/>`
+}
+
+/** Una prenda con la sombra en el cuello de su escote. */
+const conSombra =
+  (escote: Punto[], dibujo: () => string) =>
+  (piel: string): string =>
+    sombraCuello(escote, piel) + dibujo()
+
 const LINEA_REDONDA = silueta(ESCOTE_REDONDO)
 const LINEA_V = silueta(ESCOTE_V)
 
 /** Remera lisa, cuello redondo. */
-const remera = (color: string) => () =>
-  torso(LINEA_REDONDA, color) + MANGAS + ribete(ESCOTE_REDONDO, tono(color, -0.12))
+const remera = (color: string) =>
+  conSombra(ESCOTE_REDONDO, () =>
+  torso(LINEA_REDONDA, color) + MANGAS + ribete(ESCOTE_REDONDO, tono(color, -0.12)))
 
 /** Camiseta de fútbol celeste con cuello en V blanco y puños blancos (sin escudo). */
-const camiseta = (color: string, cuello: string) => () =>
+const camiseta = (color: string, cuello: string) =>
+  conSombra(ESCOTE_V, () =>
   torso(LINEA_V, color) +
   MANGAS +
   ribete(ESCOTE_V, cuello, 26) +
   // Una costura al costado, como en las camisetas de juego.
   `<path d="M300 905c10 30 14 62 14 95M650 905c-10 30-14 62-14 95" stroke="${tono(color, -0.2)}" stroke-width="10" fill="none" stroke-linecap="round"/>` +
-  borde(LINEA_V)
+  borde(LINEA_V))
 
 /** Camiseta a rayas verticales (cuello redondo del color de la raya oscura). */
-const rayas = (fondo: string, raya: string) => () => {
+const rayas = (fondo: string, raya: string) =>
+  conSombra(ESCOTE_REDONDO, () => {
   const ancho = 64
   // La raya del medio queda centrada en el pecho (x≈480).
   const franjas: string[] = []
@@ -153,14 +173,14 @@ const rayas = (fondo: string, raya: string) => () => {
     franjas.push(`<path d="${franja(LINEA_REDONDA, Math.max(80, x), Math.min(880, x + ancho))}" fill="${raya}"/>`)
   }
   return torso(LINEA_REDONDA, fondo, false) + franjas.join('') + borde(LINEA_REDONDA) + MANGAS + ribete(ESCOTE_REDONDO, raya)
-}
+})
 
 /**
  * Camiseta con cuello en V de un color y un vivo de otro adentro del cuello y en los puños:
  * la blanca tricolor (cuello azul, vivo rojo).
  */
-const camisetaConVivo = (color: string, cuello: string, vivo: string) => () =>
-  camiseta(color, cuello)() +
+const camisetaConVivo = (color: string, cuello: string, vivo: string) => (piel: string) =>
+  camiseta(color, cuello)(piel) +
   `<path d="${camino(curva(ESCOTE_V.map(([x, y]) => [x, y + 20] as Punto)))}" stroke="${vivo}" stroke-width="9" fill="none" stroke-linecap="round"/>` +
   `<path d="M184 958c-6 14-8 28-8 42M776 958c6 14 8 28 8 42" stroke="${vivo}" stroke-width="14" fill="none" stroke-linecap="round"/>`
 
@@ -169,7 +189,8 @@ const camisetaConVivo = (color: string, cuello: string, vivo: string) => () =>
  * la derecha de la pantalla) hasta la cadera del otro lado. La franja se recorta a mano con la
  * silueta: para cada x, el tramo entre los dos bordes de la franja que cae debajo de los hombros.
  */
-const conFranjaDiagonal = (fondo: string, banda: string, cuello: string) => () => {
+const conFranjaDiagonal = (fondo: string, banda: string, cuello: string) =>
+  conSombra(ESCOTE_V, () => {
   const linea = LINEA_V
   // Bordes de la franja: rectas y = y0 + m (x - 480), con el pecho (x=480) a media altura.
   const m = -0.62
@@ -186,13 +207,14 @@ const conFranjaDiagonal = (fondo: string, banda: string, cuello: string) => () =
   }
   const banda_ = arriba.length > 1 ? `<path d="${camino([...arriba, ...abajo.reverse()])}Z" fill="${banda}"/>` : ''
   return torso(linea, fondo, false) + banda_ + borde(linea) + MANGAS + ribete(ESCOTE_V, cuello, 26)
-}
+})
 
 /**
  * Camiseta celeste "de época" (como las de 1930): cuello redondo blanco con una abertura en el
  * pecho cerrada con cordón cruzado.
  */
-const deEpoca = (color: string, cuello: string) => () =>
+const deEpoca = (color: string, cuello: string) =>
+  conSombra(ESCOTE_REDONDO, () =>
   torso(LINEA_REDONDA, color) +
   MANGAS +
   ribete(ESCOTE_REDONDO, cuello, 30) +
@@ -200,10 +222,11 @@ const deEpoca = (color: string, cuello: string) => () =>
   `<path d="M480 896v74" ${fino(NEGRO, 8)}/>` +
   `<path d="M462 906l36 18M498 906l-36 18M462 932l36 18M498 932l-36 18" stroke="${NEGRO}" stroke-width="13" stroke-linecap="round" fill="none"/>` +
   `<path d="M462 906l36 18M498 906l-36 18M462 932l36 18M498 932l-36 18" stroke="${cuello}" stroke-width="6" stroke-linecap="round" fill="none"/>` +
-  `<circle cx="462" cy="906" r="5" fill="${NEGRO}"/><circle cx="498" cy="906" r="5" fill="${NEGRO}"/>`
+  `<circle cx="462" cy="906" r="5" fill="${NEGRO}"/><circle cx="498" cy="906" r="5" fill="${NEGRO}"/>`)
 
 /** Buzo con la capucha caída sobre los hombros y los cordones. */
-const buzo = (color: string) => () => {
+const buzo = (color: string) =>
+  conSombra(ESCOTE_REDONDO, () => {
   const oscuro = tono(color, -0.18)
   return (
     torso(LINEA_REDONDA, color) +
@@ -216,10 +239,11 @@ const buzo = (color: string) => () => {
     `<path d="M438 898c-4 30-2 52 4 72M528 898c4 30 2 52-4 72" stroke="#f1f1ee" stroke-width="9" stroke-linecap="round" fill="none"/>` +
     `<path d="M442 970v14M524 970v14" stroke="${NEGRO}" stroke-width="22" stroke-linecap="round"/>`
   )
-}
+})
 
 /** Campera de jean abierta sobre una remera blanca, con cuello, botones y costuras. */
-const campera = (color: string) => () => {
+const campera = (color: string) =>
+  conSombra(ESCOTE_REDONDO, () => {
   const hilo = '#e0a95a'
   const claro = tono(color, 0.18)
   return (
@@ -239,13 +263,14 @@ const campera = (color: string) => () => {
     `<path d="M226 944l70-12M706 932l52 14" stroke="${hilo}" stroke-width="5" stroke-dasharray="10 9" fill="none"/>` +
     MANGAS
   )
-}
+})
 
 /**
  * Poncho de lana a rayas: cae recto desde el cuello, más ancho que los hombros, con las franjas
  * a lo largo, una guarda de rombos y los pliegues del paño.
  */
-const poncho = (color: string, raya: string, guarda: string) => () => {
+const poncho = (color: string, raya: string, guarda: string) =>
+  conSombra(ESCOTE_REDONDO, () => {
   // Del cuello baja casi en línea recta hasta afuera del cuadro, como una carpa.
   const linea: Punto[] = [
     ...curva([
@@ -288,10 +313,11 @@ const poncho = (color: string, raya: string, guarda: string) => () => {
     // El cuello del poncho, un ribete grueso apenas más oscuro.
     ribete(ESCOTE_REDONDO, tono(color, -0.15), 26)
   )
-}
+})
 
 /** Chaleco de campo abierto sobre una camisa blanca de cuello, con botones y bolsillos. */
-const chaleco = (color: string, camisa: string) => () => {
+const chaleco = (color: string, camisa: string) =>
+  conSombra(ESCOTE_V, () => {
   const claro = tono(color, 0.2)
   // Mitad izquierda del chaleco (a la izquierda de la pantalla); la derecha es su espejo.
   const izq: Punto[] = [
@@ -323,7 +349,7 @@ const chaleco = (color: string, camisa: string) => () => {
     `<path d="M296 948h68M598 948h68" stroke="${claro}" stroke-width="4" stroke-linecap="round"/>` +
     botones
   )
-}
+})
 
 /** Ropas, en el orden del catálogo (`CATALOGO_AVATAR.ropa`). */
 export const ROPAS: readonly ((piel: string) => string)[] = [

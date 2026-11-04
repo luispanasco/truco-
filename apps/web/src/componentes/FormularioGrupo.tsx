@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { LIMITES_GRUPO, NOMBRE_INGRESO, validarConfigGrupo, type ConfigGrupo, type IngresoGrupo } from '@truco/shared'
+import { LIMITES_GRUPO, NOMBRE_CONVOCAN, NOMBRE_INGRESO, validarConfigGrupo, type ConfigGrupo, type ConvocanGrupo, type IngresoGrupo } from '@truco/shared'
 import { achicarFoto } from '../cuenta/grupos'
 import { EscudoGrupo } from './EscudoGrupo'
 import { MensajeError } from './Online'
@@ -10,14 +10,19 @@ const DETALLE_INGRESO: Record<IngresoGrupo, string> = {
   cerrado: 'No aparece en la lista: se entra solo con el código',
 }
 
-export const CONFIG_NUEVA: ConfigGrupo = { nombre: '', sigla: '', descripcion: '', ingreso: 'abierto', cupo: null }
+const DETALLE_CONVOCAN: Record<ConvocanGrupo, string> = {
+  todos: 'Cualquiera del grupo arma una partida y llama a todos',
+  capitanes: 'Solo el líder y los capitanes llaman a todo el grupo',
+}
+
+export const CONFIG_NUEVA: ConfigGrupo = { nombre: '', sigla: '', descripcion: '', ingreso: 'abierto', cupo: null, convocan: 'todos' }
 
 /** Lo que cambió de la foto: una nueva (ya achicada), sacarla, o nada. */
 export type CambioFoto = { tipo: 'nueva'; blob: Blob } | { tipo: 'sacar' } | null
 
 /**
  * La configuración de un grupo (para crearlo y para que el líder la cambie): la foto, el nombre,
- * la sigla, la descripción, cómo se entra y el cupo. Valida igual que el servidor antes de mandar.
+ * la sigla, la descripción, cómo se entra, el cupo y quién arma partidas. Valida igual que el servidor antes de mandar.
  */
 export function FormularioGrupo({
   inicial,
@@ -148,6 +153,17 @@ export function FormularioGrupo({
           onChange={(e) => cambiar({ cupo: e.target.value === '' ? null : Number(e.target.value) })}
         />
       </label>
+      <div className="campo">
+        <span id="grupo-convocan">Quién arma partidas</span>
+        <div className="segmentado" role="radiogroup" aria-labelledby="grupo-convocan">
+          {(Object.keys(NOMBRE_CONVOCAN) as ConvocanGrupo[]).map((q) => (
+            <button key={q} type="button" role="radio" aria-checked={c.convocan === q} className={c.convocan === q ? 'elegido' : ''} onClick={() => cambiar({ convocan: q })}>
+              {NOMBRE_CONVOCAN[q]}
+            </button>
+          ))}
+        </div>
+        <small className="nota-izq">{DETALLE_CONVOCAN[c.convocan]}</small>
+      </div>
       {error && <MensajeError>{error}</MensajeError>}
       <button type="submit" className="boton boton-grande boton-relieve" disabled={mandando}>
         {mandando ? 'Guardando…' : textoBoton}

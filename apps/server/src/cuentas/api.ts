@@ -14,6 +14,7 @@ import {
   cancelarPedido,
   configurarGrupo,
   crearGrupo,
+  convocarGrupo,
   detalleGrupo,
   entrarAGrupo,
   entrarConCodigo,
@@ -185,7 +186,8 @@ export function rutasCuentas(c: Cuentas | null): Router {
     }),
   )
   rutaGrupo('crear', (b, c, u) => crearGrupo(c.base, u.id, b))
-  rutaGrupo('detalle', (b, c, u) => detalleGrupo(c.base, u.id, b.id))
+  rutaGrupo('detalle', (b, c, u) => detalleGrupo(c.base, presencia, u.id, b.id))
+  rutaGrupo('convocar', (b, c, u) => convocarGrupo(c.base, presencia, u.id, b.id))
   rutaGrupo('entrar', (b, c, u) => entrarAGrupo(c.base, u.id, b.id))
   rutaGrupo('codigo', (b, c, u) => entrarConCodigo(c.base, u.id, b.codigo))
   rutaGrupo('cancelar', (b, c, u) => cancelarPedido(c.base, u.id, b.id))

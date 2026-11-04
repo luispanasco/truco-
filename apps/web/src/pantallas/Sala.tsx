@@ -10,7 +10,7 @@ import { SelectorBaraja } from '../componentes/SelectorBaraja'
 import { SelectorMesa } from '../componentes/SelectorMesa'
 import { usePerfil } from '../componentes/TarjetaPerfil'
 import { useJuego } from '../estado'
-import { InvitarAmigos } from '../componentes/Amistad'
+import { InvitarAmigos, InvitarGrupos } from '../componentes/Amistad'
 import '../estilos-avatar.css'
 
 const linkDe = (codigo: string) => `${location.origin}/s/${codigo}`
@@ -286,6 +286,7 @@ export function Sala() {
       <AvisoConexion />
       {sala.codigo && <Invitar codigo={sala.codigo} />}
       {sala.codigo && <InvitarAmigos />}
+      {sala.codigo && <InvitarGrupos />}
       <Lugares sala={sala} />
       <MesaYBaraja sala={sala} esAnfitrion={esAnfitrion} />
       <Configuracion sala={sala} esAnfitrion={esAnfitrion} />

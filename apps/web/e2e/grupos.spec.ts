@@ -13,7 +13,7 @@ async function entrarConCuenta(page: Page, nombre: string) {
 
 /**
  * Los grupos de punta a punta: Ana crea uno cerrado con foto (la app la achica antes de subirla),
- * Beto no lo ve en la lista pero entra con el código, y Ana lo hace capitán.
+ * Beto no lo ve en la lista pero entra con el código, Ana lo hace capitán y lo llama a jugar.
  */
 test('crear un grupo con foto y sumar a alguien con el código', async ({ browser }) => {
   const ana = await persona(browser, 'Ana')
@@ -66,4 +66,22 @@ test('crear un grupo con foto y sumar a alguien con el código', async ({ browse
   await beto.reload()
   await expect(beto.getByText(/Sos capitán/)).toBeVisible()
   await expect(beto.getByText('Código de invitación')).toBeVisible()
+
+  // Ana arma una partida: se crea su sala y a Beto le llega el aviso del grupo.
+  await ana.getByRole('button', { name: 'Armar partida' }).click()
+  await expect(ana).toHaveURL(/\/crear$/)
+  await expect(ana.getByText(/les llega el aviso a todos los de \[PIB\]/)).toBeVisible()
+  await ana.getByRole('button', { name: 'Crear sala' }).click()
+  await expect(ana).toHaveURL(/\/sala$/)
+  await expect(ana.getByText('Le llegó el aviso a 1 del grupo.')).toBeVisible()
+  await expect(ana.getByRole('button', { name: /^Llamar a Los Pibes/ })).toBeDisabled()
+
+  // Al recargar, Beto late y le llega el aviso; además, en el grupo ve la sala de Ana.
+  await beto.reload()
+  const aviso = beto.getByRole('alertdialog', { name: 'Invitación a una sala' })
+  await expect(aviso).toContainText(/Ana llama a \[PIB\] Los Pibes \d+ a jugar en su sala/)
+  await expect(beto.getByText('Sala de Ana')).toBeVisible()
+  await aviso.getByRole('button', { name: 'Entrar' }).click()
+  await expect(beto).toHaveURL(/\/sala$/)
+  await expect(beto.getByText('Esperando que el anfitrión empiece')).toBeVisible()
 })

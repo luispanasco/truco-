@@ -57,6 +57,8 @@ export const cambiarRol = (id: string, cuenta: string, rol: Exclude<RolGrupo, 'l
 export const pasarLiderazgo = (id: string, cuenta: string) => hacer('/grupos/liderazgo', { id, cuenta })
 export const expulsar = (id: string, cuenta: string) => hacer('/grupos/expulsar', { id, cuenta })
 export const configurarGrupo = (id: string, config: ConfigGrupo) => hacer('/grupos/configurar', { id, ...config })
+/** Llamar a todo el grupo a la sala privada en la que esperás. */
+export const convocarGrupo = (id: string) => hacer<{ invitados: number }>('/grupos/convocar', { id })
 export const renovarCodigo = (id: string) => hacer<{ codigo: string }>('/grupos/renovar-codigo', { id })
 export const borrarGrupo = (id: string) => hacer('/grupos/borrar', { id })
 export const sacarFoto = (id: string) => hacer('/grupos/sacar-foto', { id })

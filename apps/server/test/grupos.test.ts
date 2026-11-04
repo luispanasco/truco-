@@ -1,9 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { ColyseusTestServer } from '@colyseus/testing'
 import { MAX_GRUPOS, MAX_GRUPOS_POR_PERSONA } from '@truco/shared'
+import { Presencia } from '../src/cuentas/presencia'
 import { baseLocal, type Base } from '../src/cuentas/base'
 import { verificadorDePrueba } from '../src/cuentas/auth'
-import { levantar } from './helpers'
+import { Jugador, levantar } from './helpers'
 
 let base: Base
 let colyseus: ColyseusTestServer
@@ -196,5 +197,51 @@ describe('grupos', () => {
     expect((await api('POST', '/grupos/borrar', beto.token, { id })).datos.motivo).toBe('No estás en ese grupo')
     expect((await api('POST', '/grupos/borrar', ana.token, { id })).datos).toEqual({ ok: true })
     expect((await api('GET', '/grupos', ana.token)).datos).toMatchObject({ tuyos: [], buscar: [], quedan: MAX_GRUPOS })
+  })
+
+  it('armar partida: llama a todo el grupo a tu sala; quién llama se configura, y hay una espera entre llamadas', async () => {
+    const [ana, beto, caro] = [await persona('Ana'), await persona('Beto'), await persona('Caro')]
+    const id = await crear(ana.token, 'Los del Truco')
+    for (const p of [beto, caro]) await api('POST', '/grupos/entrar', p.token, { id })
+    expect((await detalle(ana.token, id)).convocan).toBe('todos')
+    // Sin sala, no.
+    expect((await api('POST', '/grupos/convocar', beto.token, { id })).datos.motivo).toMatch(/sala privada/)
+
+    const sala = await Jugador.crear(colyseus, { config: { formato: '2v2' }, token: beto.token })
+    await sala.esperar(() => sala.sala !== null)
+    // En el grupo se ve que Beto espera en una sala, para unirse.
+    const lista = (await detalle(ana.token, id)).lista as Datos[]
+    expect(lista.find((m) => m.apodo === 'Beto')).toMatchObject({ estado: 'enSala', sala: sala.room.roomId })
+
+    expect((await api('POST', '/grupos/convocar', beto.token, { id })).datos).toEqual({ invitados: 2 })
+    const llega = (await api('POST', '/amigos/latido', caro.token)).datos.invitaciones as Datos[]
+    expect(llega).toEqual([expect.objectContaining({ de: beto.id, apodo: 'Beto', sala: sala.room.roomId, grupo: '[TRU] Los del Truco' })])
+    expect((await api('POST', '/amigos/latido', beto.token)).datos.invitaciones).toEqual([])
+    // Enseguida de nuevo, no.
+    expect((await api('POST', '/grupos/convocar', beto.token, { id })).datos.motivo).toBe('Ya llamaste al grupo hace un ratito')
+    // Alguien de afuera tampoco.
+    const otro = await persona('Otro')
+    expect((await api('POST', '/grupos/convocar', otro.token, { id })).datos.motivo).toBe('No estás en ese grupo')
+
+    // Con "líder y capitanes", un miembro ya no llama.
+    expect((await api('POST', '/grupos/configurar', ana.token, { id, ...config('Los del Truco', { convocan: 'capitanes' }) })).status).toBe(200)
+    expect((await api('POST', '/grupos/convocar', caro.token, { id })).datos.motivo).toMatch(/solo el líder y los capitanes/)
+    expect((await api('POST', '/grupos/configurar', ana.token, { id, ...config('Los del Truco', { convocan: 'nadie' }) })).datos.motivo).toBe(
+      'Elegí quién arma partidas',
+    )
+    await sala.room.leave()
+  })
+})
+
+describe('la espera entre llamadas al grupo', () => {
+  it('es por persona y por grupo', () => {
+    let ahora = 0
+    const p = new Presencia(() => ahora)
+    expect(p.puedeConvocar('a', 'g1', 1000)).toBe(true)
+    expect(p.puedeConvocar('a', 'g1', 1000)).toBe(false)
+    expect(p.puedeConvocar('a', 'g2', 1000)).toBe(true)
+    expect(p.puedeConvocar('b', 'g1', 1000)).toBe(true)
+    ahora = 1000
+    expect(p.puedeConvocar('a', 'g1', 1000)).toBe(true)
   })
 })

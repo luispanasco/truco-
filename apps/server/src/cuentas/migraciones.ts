@@ -151,4 +151,8 @@ export const MIGRACIONES: string[] = [
   alter table grupo_miembros enable row level security;
   alter table grupo_solicitudes enable row level security;
   `,
+  // 9. Grupos: quién puede armar una partida y llamar a todo el grupo (todos, o líder y capitanes).
+  `
+  alter table grupos add column convocan text not null default 'todos' check (convocan in ('todos', 'capitanes'));
+  `,
 ]

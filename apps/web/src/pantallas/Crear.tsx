@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { invitacionPendiente } from '../componentes/Amistad'
+import { convocatoriaPendiente, invitacionPendiente } from '../componentes/Amistad'
 import { FormularioSala, opcionesIniciales, opcionesParaServidor } from '../componentes/FormularioSala'
 import { CabeceraOnline, datosUnirse, MensajeError } from '../componentes/Online'
 import { TarjetaPerfil, usePerfil } from '../componentes/TarjetaPerfil'
@@ -20,6 +20,8 @@ export function Crear() {
   // Si se llegó desde "Invitar" en el menú, al amigo se lo invita apenas está la sala.
   const estadoRuta = useLocation().state as unknown
   const invitar = invitacionPendiente(estadoRuta)
+  // Y si se llegó desde "Armar partida" en un grupo, se llama a todo el grupo.
+  const convocar = convocatoriaPendiente(estadoRuta)
 
   const crear = async () => {
     setCreando(true)
@@ -37,7 +39,7 @@ export function Crear() {
     try {
       const c = await ConexionOnline.crearSala({ ...datosUnirse(perfil), ...opcionesParaServidor(opciones) })
       useJuego.getState().conectar(c)
-      navegar('/sala', invitar ? { state: estadoRuta } : undefined)
+      navegar('/sala', invitar || convocar ? { state: estadoRuta } : undefined)
     } catch (e) {
       setError(motivoError(e))
       setCreando(false)
@@ -60,7 +62,9 @@ export function Crear() {
       <p className="nota">
         {invitar
           ? `Al crearla, le llega tu invitación a ${invitar.apodo}.`
-          : 'Después te damos un código y un link para pasarle a los demás.'}
+          : convocar
+            ? `Al crearla, les llega el aviso a todos los de ${convocar.nombre}.`
+            : 'Después te damos un código y un link para pasarle a los demás.'}
       </p>
     </div>
   )

@@ -29,8 +29,13 @@ export type IngresoGrupo = 'abierto' | 'solicitud' | 'cerrado'
 
 export const NOMBRE_ROL: Record<RolGrupo, string> = { lider: 'Líder', capitan: 'Capitán', miembro: 'Miembro' }
 export const NOMBRE_INGRESO: Record<IngresoGrupo, string> = { abierto: 'Abierto', solicitud: 'Con solicitud', cerrado: 'Cerrado' }
+/** Quién puede armar una partida y llamar a todo el grupo. */
+export type ConvocanGrupo = 'todos' | 'capitanes'
+export const NOMBRE_CONVOCAN: Record<ConvocanGrupo, string> = { todos: 'Todos', capitanes: 'Líder y capitanes' }
+/** Entre una llamada a jugar y la siguiente del mismo, para no llenar de avisos a nadie. */
+export const ESPERA_CONVOCAR_MS = 30_000
 
-/** Lo que se configura de un grupo (nombre, sigla, descripción, cómo se entra y el cupo). */
+/** Lo que se configura de un grupo (nombre, sigla, descripción, cómo se entra, el cupo y quién arma partidas). */
 export interface ConfigGrupo {
   nombre: string
   sigla: string
@@ -38,6 +43,7 @@ export interface ConfigGrupo {
   ingreso: IngresoGrupo
   /** Cuántos miembros como mucho; null, sin cupo. */
   cupo: number | null
+  convocan: ConvocanGrupo
 }
 
 /** Un grupo en una lista (los tuyos o los que se pueden buscar). */
@@ -48,6 +54,7 @@ export interface ResumenGrupo {
   descripcion: string
   ingreso: IngresoGrupo
   cupo: number | null
+  convocan: ConvocanGrupo
   miembros: number
   /** Cambia con cada foto nueva (para la caché); null, sin foto. */
   foto: number | null
@@ -63,6 +70,10 @@ export interface MiembroGrupo {
   avatar: string | null
   rol: RolGrupo
   desde: string
+  /** Si tiene la app abierta, si espera en una sala o si está jugando (como los amigos). */
+  estado: 'desconectado' | 'conectado' | 'enSala' | 'jugando'
+  /** El código de la sala privada en la que espera, para unirse. */
+  sala: string | null
 }
 
 export interface DetalleGrupo extends ResumenGrupo {
@@ -79,6 +90,8 @@ export const PUEDE = {
   verCodigo: (r: RolGrupo | null) => r === 'lider' || r === 'capitan',
   cambiarRoles: (r: RolGrupo | null) => r === 'lider',
   /** El líder expulsa a cualquiera; un capitán, solo a los miembros. */
+  /** Armar una partida y llamar a todo el grupo: según la configuración, todos o líder y capitanes. */
+  convocar: (r: RolGrupo | null, convocan: ConvocanGrupo) => r !== null && (convocan === 'todos' || r !== 'miembro'),
   expulsar: (yo: RolGrupo | null, otro: RolGrupo) => (yo === 'lider' && otro !== 'lider') || (yo === 'capitan' && otro === 'miembro'),
 }
 
@@ -101,7 +114,9 @@ export function validarConfigGrupo(c: Partial<Record<keyof ConfigGrupo, unknown>
   if (ingreso !== 'abierto' && ingreso !== 'solicitud' && ingreso !== 'cerrado') return 'Elegí cómo se entra al grupo'
   const cupo = c.cupo === null || c.cupo === undefined || c.cupo === '' ? null : Number(c.cupo)
   if (cupo !== null && (!Number.isInteger(cupo) || cupo < L.cupoMin || cupo > L.cupoMax)) return `El cupo va de ${L.cupoMin} a ${L.cupoMax}`
-  return { nombre, sigla, descripcion, ingreso, cupo }
+  const convocan = c.convocan ?? 'todos'
+  if (convocan !== 'todos' && convocan !== 'capitanes') return 'Elegí quién arma partidas'
+  return { nombre, sigla, descripcion, ingreso, cupo, convocan }
 }
 
 /** Si los bytes son una imagen WebP, JPEG o PNG (por cómo empiezan), y cuál. */
