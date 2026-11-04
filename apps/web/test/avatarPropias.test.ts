@@ -69,11 +69,21 @@ describe('dibujos propios de Lorelei', () => {
     const doc = parsear(LORELEI.dibujar({ ...AVATAR_BASE, pelo: 1, sombrero: 2 }))
     const cabeza = doc.querySelector('.capa-cabeza')!
     expect(cabeza.nextElementSibling?.classList.contains('capa-ropa')).toBe(true)
-    const recortado = doc.querySelector('[clip-path]')!
+    const recortado = doc.querySelector('[clip-path*="sombrero"]')!
     expect(recortado.querySelector('.capa-pelo')).not.toBeNull()
     expect(doc.getElementById(recortado.getAttribute('clip-path')!.slice(5, -1))).not.toBeNull()
-    // Sin sombrero no hay recorte.
-    expect(LORELEI.dibujar({ ...AVATAR_BASE, pelo: 1 })).not.toContain('clip-path')
+    // Sin sombrero no hay recorte del pelo.
+    expect(LORELEI.dibujar({ ...AVATAR_BASE, pelo: 1 })).not.toContain('recorte-sombrero')
+  })
+
+  it('el cuello: la cabeza se recorta debajo de la pera y los costados del cuello van con la ropa', () => {
+    for (let cabeza = 0; cabeza < 4; cabeza++) {
+      const doc = parsear(LORELEI.dibujar({ ...AVATAR_BASE, cabeza }))
+      const id = doc.querySelector('.capa-cabeza')!.getAttribute('clip-path')!.slice(5, -1)
+      expect(id).toBe(`lorelei-recorte-cuello-${cabeza}`)
+      expect(doc.getElementById(id)).not.toBeNull()
+      expect(doc.querySelector('.capa-ropa > path')!.getAttribute('stroke')).toBe('#000')
+    }
   })
 
   it('la mano del mate usa el color de piel', () => {
