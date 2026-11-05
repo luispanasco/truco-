@@ -85,3 +85,9 @@
   opacity: 0.75;
   margin: 0;
 }
+
+/* Las del modo historia que todavía no ganaste: se ven, pero apagadas. */
+.baraja-opcion.bloqueada .baraja-muestras {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}

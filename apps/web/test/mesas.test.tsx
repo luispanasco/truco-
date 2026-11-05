@@ -19,9 +19,13 @@ describe('catálogo de mesas', () => {
   it('ids únicos, boliche primera y gratis, y las de la tienda con precio', () => {
     const ids = MESAS.map((m) => m.id)
     expect(new Set(ids).size).toBe(ids.length)
-    expect(ids).toEqual(['boliche', 'azul', 'bordo', 'pizarra', 'celeste', 'parrillero', 'cantina'])
+    expect(ids).toEqual(['boliche', 'azul', 'bordo', 'pizarra', 'celeste', 'parrillero', 'cantina', 'rocha'])
     expect(MESAS[0].id).toBe(MESA_DEFAULT)
-    expect(MESAS.filter((m) => m.precio === 0).map((m) => m.id)).toEqual(['boliche', 'azul'])
+    expect(MESAS.filter((m) => mesaGratis(m.id)).map((m) => m.id)).toEqual(['boliche', 'azul'])
+    // La de Rocha no se compra: se gana en el modo historia.
+    expect(mesaGratis('rocha')).toBe(false)
+    expect(normalizarMesa('rocha')).toBe('boliche')
+    expect(normalizarMesa('rocha', () => true)).toBe('rocha')
     for (const m of MESAS) {
       expect(m.nombre.length).toBeGreaterThan(0)
       expect(Number.isInteger(m.precio) && m.precio >= 0).toBe(true)

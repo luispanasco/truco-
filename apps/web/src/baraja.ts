@@ -36,7 +36,7 @@ const CARPETAS: Record<Exclude<Baraja, 'propia'>, string> = {
   grabado: 'grabado-nocturno',
 }
 
-export const BARAJAS: { id: Baraja; nombre: string; precio: number; corto: string; credito?: string }[] = CATALOGO_BARAJAS.map(
+export const BARAJAS: { id: Baraja; nombre: string; precio: number; recompensa?: string; corto: string; credito?: string }[] = CATALOGO_BARAJAS.map(
   (b) => ({ ...b, ...EXTRA[b.id] }),
 )
 

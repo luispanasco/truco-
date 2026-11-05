@@ -1,4 +1,4 @@
-import type { MensajesCliente, MensajesServidor } from '@truco/shared'
+import type { IdDepartamento, MensajesCliente, MensajesServidor } from '@truco/shared'
 
 export type MensajeServidor = {
   [K in keyof MensajesServidor]: { tipo: K; datos: MensajesServidor[K] }
@@ -20,4 +20,12 @@ export interface Conexion {
   /** Estado de la conexión (solo online). Devuelve una función para dejar de escuchar. */
   observarEstado?(oyente: (e: EstadoConexion) => void): () => void
   salir(): void
+  /** Si es un nivel del modo historia: la mesa es la del lugar y, al ganar, se anota. */
+  readonly historia?: NivelJugado
+}
+
+/** Un nivel del modo historia en juego. */
+export interface NivelJugado {
+  departamento: IdDepartamento
+  nivel: number
 }

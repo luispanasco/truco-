@@ -13,6 +13,7 @@ export const BARRA_MESA: Record<IdMesa, string> = {
   celeste: '#2f5a70',
   parrillero: '#4f3d26',
   cantina: '#6e1a1e',
+  rocha: '#173f55',
 }
 
 /**

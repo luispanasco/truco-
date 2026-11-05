@@ -1,7 +1,8 @@
 import express, { type Request, type Response, type Router } from 'express'
 import type { Base } from './base'
 import type { Usuario, Verificador } from './auth'
-import { entrar, guardarPerfil } from './cuentas'
+import { entrar, esAdmin, guardarPerfil } from './cuentas'
+import { ganarNivel, HistoriaRechazo, progresoHistoria } from './historia'
 import { saldo, ultimosMovimientos } from './monedas'
 import { ranking } from './elo'
 import { comprar, CompraRechazada, inventario, vitrina } from './tienda'
@@ -106,6 +107,35 @@ export function rutasCuentas(c: Cuentas | null): Router {
         res.status(409).json({ motivo: e.message })
       }
     }),
+  )
+
+  // Modo historia: mientras se arma, solo para los admins.
+  const conHistoria =
+    (fn: (req: Request, res: Response, c: Cuentas, u: Usuario) => Promise<void>) => async (req: Request, res: Response, c: Cuentas, u: Usuario) => {
+      if (!esAdmin(u.email)) return void res.status(403).json({ motivo: 'El modo historia todavía no está abierto' })
+      try {
+        await fn(req, res, c, u)
+      } catch (e) {
+        if (!(e instanceof HistoriaRechazo)) throw e
+        res.status(409).json({ motivo: e.message })
+      }
+    }
+  r.get(
+    '/historia',
+    conSesion(
+      conHistoria(async (_req, res, c, u) => {
+        res.json({ progreso: await progresoHistoria(c.base, u.id) })
+      }),
+    ),
+  )
+  r.post(
+    '/historia/ganar',
+    conSesion(
+      conHistoria(async (req, res, c, u) => {
+        const b = (req.body ?? {}) as { departamento?: unknown; nivel?: unknown }
+        res.json(await ganarNivel(c.base, u.id, b.departamento, b.nivel))
+      }),
+    ),
   )
 
   // Amigos. El latido avisa que la app sigue abierta y trae las invitaciones a una sala.

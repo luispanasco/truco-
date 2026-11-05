@@ -181,7 +181,7 @@ export function cosmeticosPermitidos(p: Perfil): Pick<Perfil, 'avatar' | 'mesa' 
   return {
     avatar: normalizarAvatar(p.avatar, todo ? TODO_PERMITIDO : tenes.avatar) ?? avatarDe(p.apodo || p.invitadoId),
     mesa: normalizarMesa(p.mesa, todo ? TODO_PERMITIDO : tenes.mesa),
-    baraja: normalizarBaraja(p.baraja, todo ? TODO_PERMITIDO : undefined),
+    baraja: normalizarBaraja(p.baraja, todo ? TODO_PERMITIDO : tenes.baraja),
     tipografia: normalizarTipografia(p.tipografia, todo ? TODO_PERMITIDO : tenes.tipografia),
   }
 }

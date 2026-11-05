@@ -3,7 +3,8 @@
  * es la misma para todos y cambia a la medianoche de Uruguay; lo comprado queda para siempre.
  */
 import { CAPAS_AVATAR, CATALOGO_AVATAR, type CapaAvatar } from './avatar'
-import { MESAS, type IdMesa } from './mesas'
+import { mesaGratis, MESAS, type IdMesa } from './mesas'
+import { barajaGratis, type IdBaraja } from './barajas'
 import { TIPOGRAFIAS, type IdTipografia } from './tipografias'
 import type { Rareza } from './rarezas'
 
@@ -24,6 +25,8 @@ export interface ItemTienda {
 
 export const idPieza = (capa: CapaAvatar, pieza: number) => `avatar:${capa}:${pieza}`
 export const idMesa = (id: IdMesa) => `mesa:${id}`
+/** Las barajas no se venden: se ganan en el modo historia y quedan en el inventario. */
+export const idBaraja = (id: IdBaraja) => `baraja:${id}`
 export const idTipografia = (id: IdTipografia) => `tipografia:${id}`
 
 /** Todo lo que se vende (lo pago de los catálogos). */
@@ -72,7 +75,8 @@ export function permisosDe(inventario: ReadonlySet<string> | readonly string[]) 
   const tiene = inventario instanceof Set ? inventario : new Set(inventario as readonly string[])
   return {
     avatar: (capa: CapaAvatar, pieza: number) => (CATALOGO_AVATAR[capa][pieza]?.precio ?? 1) === 0 || tiene.has(idPieza(capa, pieza)),
-    mesa: (id: IdMesa) => MESAS.find((m) => m.id === id)?.precio === 0 || tiene.has(idMesa(id)),
+    mesa: (id: IdMesa) => mesaGratis(id) || tiene.has(idMesa(id)),
+    baraja: (id: IdBaraja) => barajaGratis(id) || tiene.has(idBaraja(id)),
     tipografia: (id: IdTipografia) => TIPOGRAFIAS.find((t) => t.id === id)?.precio === 0 || tiene.has(idTipografia(id)),
   }
 }

@@ -86,6 +86,16 @@ export function IconoLlave({ clase }: { clase?: string }) {
   )
 }
 
+/** Modo historia: un mapa plegado con un camino. */
+export function IconoMapa({ clase }: { clase?: string }) {
+  return (
+    <Icono clase={clase}>
+      <path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20Z" />
+      <path d="M9 4v13.5M15 6.5V20" />
+    </Icono>
+  )
+}
+
 /** Buscar partida: una lupa sobre el mundo. */
 export function IconoBuscar({ clase }: { clase?: string }) {
   return (

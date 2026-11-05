@@ -32,19 +32,23 @@ export function SelectorMesa({
         {MESAS.map((m) => {
           const deTienda = m.precio > 0
           const paga = deTienda && !tiendaDesbloqueada && !tenes.has(idMesa(m.id))
+          // Las del modo historia no se compran: se ganan en su departamento.
+          const recompensa = 'recompensa' in m ? m.recompensa : undefined
+          const falta = !!recompensa && !tiendaDesbloqueada && !tenes.has(idMesa(m.id))
           return (
             <button
               key={m.id}
               type="button"
               role="radio"
               aria-checked={valor === m.id}
-              aria-disabled={paga || undefined}
-              aria-label={paga ? `${m.nombre}: ${m.precio} monedas, en la tienda` : m.nombre}
-              title={paga ? `${m.precio} monedas · Buscala en la tienda` : m.detalle}
-              className={`mesa-opcion${valor === m.id ? ' elegida' : ''}${paga ? ' paga' : ''}`}
-              // Las pagas no se eligen, pero se pueden tocar: avisan cuánto cuestan.
+              aria-disabled={paga || falta || undefined}
+              aria-label={paga ? `${m.nombre}: ${m.precio} monedas, en la tienda` : falta ? `${m.nombre}: se gana en ${recompensa}` : m.nombre}
+              title={paga ? `${m.precio} monedas · Buscala en la tienda` : falta ? `Se gana en ${recompensa}, en el modo historia` : m.detalle}
+              className={`mesa-opcion${valor === m.id ? ' elegida' : ''}${paga || falta ? ' paga' : ''}`}
+              // Las pagas no se eligen, pero se pueden tocar: avisan cuánto cuestan (o dónde se ganan).
               onClick={() => {
                 if (paga) return setAviso(`La mesa ${m.nombre} cuesta ${m.precio} monedas. Buscala en la tienda.`)
+                if (falta) return setAviso(`La mesa ${m.nombre} se gana en ${recompensa}, en el modo historia.`)
                 setAviso(null)
                 alCambiar(m.id)
               }}
@@ -55,6 +59,7 @@ export function SelectorMesa({
               </span>
               <span className="mesa-nombre">{m.nombre}</span>
               {paga && <Precio monedas={m.precio} />}
+              {falta && <span className="pieza-precio" aria-hidden="true">🔒</span>}
               {deTienda && !paga && <CandadoAbierto />}
             </button>
           )

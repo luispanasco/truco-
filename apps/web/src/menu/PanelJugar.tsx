@@ -11,7 +11,8 @@ import { FORMATOS, NIVELES } from '../componentes/FormularioSala'
 import { useJuego } from '../estado'
 import { leerPerfil, MODOS_JUGAR, type Perfil } from '../perfil'
 import { conexionContraLaCompu } from './contraLaCompu'
-import { IconoBuscar, IconoCompu, IconoCrear, IconoLlave } from './Iconos'
+import { IconoBuscar, IconoCompu, IconoCrear, IconoLlave, IconoMapa } from './Iconos'
+import { useCuenta } from '../cuenta/cuenta'
 
 /** Los 24 rayos del sol del logo, largos y cortos alternados (los mismos de public/icono.svg). */
 const RAYOS_SOL =
@@ -24,15 +25,17 @@ function BotonChico({
   detalle,
   deshabilitado,
   alTocar,
+  clase = '',
 }: {
   icono: ReactNode
   titulo: string
   detalle: string
   deshabilitado: boolean
   alTocar: () => void
+  clase?: string
 }) {
   return (
-    <button type="button" className="boton-chico" disabled={deshabilitado} onClick={alTocar}>
+    <button type="button" className={`boton-chico ${clase}`} disabled={deshabilitado} onClick={alTocar}>
       <span className="boton-chico-icono" aria-hidden="true">
         {icono}
       </span>
@@ -144,6 +147,7 @@ export function PanelJugar({
     cambiar({ modoJugar: MODOS_JUGAR[(i + paso + MODOS_JUGAR.length) % MODOS_JUGAR.length]! })
   }
   const modo = perfil.modoJugar
+  const admin = useCuenta((s) => s.estado === 'adentro' && s.cuenta?.admin === true)
   const sinRed = modo === 'buscar' && !enLinea
   const detalle = (texto: string) => (enLinea ? texto : 'Sin conexión')
 
@@ -251,6 +255,17 @@ export function PanelJugar({
           deshabilitado={!enLinea}
           alTocar={() => conApodo(() => navegar('/unirme'))}
         />
+        {/* El modo historia, mientras se arma, solo para el admin. */}
+        {admin && (
+          <BotonChico
+            clase="boton-historia"
+            icono={<IconoMapa />}
+            titulo="Modo historia"
+            detalle="Recorré Uruguay, departamento por departamento"
+            deshabilitado={false}
+            alTocar={() => conApodo(() => navegar('/historia'))}
+          />
+        )}
       </div>
       {!enLinea && (
         <p className="sin-conexion" role="status">

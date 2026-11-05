@@ -607,7 +607,7 @@ export class SalaTruco extends Room {
   private elegirMesaYBaraja(lugar: Lugar, op: { mesa?: unknown; baraja?: unknown }) {
     const puede = lugar.tienda ? TODO_PERMITIDO : undefined
     if (op.mesa !== undefined) lugar.mesa = normalizarMesa(op.mesa, puede ?? permisosDe(lugar.inventario).mesa)
-    if (op.baraja !== undefined) lugar.baraja = normalizarBaraja(op.baraja, puede)
+    if (op.baraja !== undefined) lugar.baraja = normalizarBaraja(op.baraja, puede ?? permisosDe(lugar.inventario).baraja)
   }
 
   /** El anfitrión pone la mesa y la baraja; la cola pública no tiene, así que van las de siempre. */

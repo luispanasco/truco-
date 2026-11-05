@@ -1476,3 +1476,31 @@ Pedido del usuario: que los huecos de los cortes del marco sean más grandes en 
 - **Las cuatro en imagen** (Oriental, Costa Uruguaya, Colonial y Grabado Nocturno): los huecos pasaron de 20 a 51 px, arriba y abajo, en las 120 cartas con cortes de cada una. Lo hace `scripts/barajas-propias-cortes.py`: rehace cada hueco centrado donde estaba y rellena con el papel de unas filas más adentro de la misma carta (sin parches). Correrlo dos veces da lo mismo. El ojeo no cambia: la línea sigue a la misma altura.
 - **La propia (SVG, `Marco` en `dibujo.tsx`):** el hueco pasó de 14 a 25 sobre una línea de 172, la misma proporción.
 - Revisado en el visor de cartas. Tests: web 340.
+
+## Modo historia, etapa 1: Rocha — 2026-11-05
+
+Plan del usuario: recorrer Uruguay por departamento, sin pasaje entre ellos; un personaje por departamento; tantos niveles como su tamaño, cada uno más difícil; 1v1, 2v2 y 3v3; recompensas fijas (la baraja de la costa en Rocha, ropa…); una cinemática corta antes de cada nivel con el rival diciendo un par de cosas; la mesa ambientada en el lugar. Decidido: se arranca por Rocha con Julio el Pescador de jefe, cada nivel con su formato fijo, y el cooperativo online es la etapa 2. Mientras se arma, todo es solo para el admin.
+
+- **Datos** (`historia.ts` en `@truco/shared`): los 19 departamentos con su superficie. Los niveles salen del tamaño: menos de 6.000 km², 3; hasta 10.000, 4; más, 5. Rocha tiene 5:
+
+  | Nivel | Lugar | Mesa | Bots | Puntos | Premio |
+  |---|---|---|---|---|---|
+  | 1 | Punta del Diablo | 1v1 | Fácil | 15 | Gorro de pescador |
+  | 2 | La Paloma | 2v2 | Medio | 15 | Impermeable amarillo |
+  | 3 | La Pedrera | 1v1 | Difícil | 30 | Caña de pescar |
+  | 4 | Cabo Polonio | 3v3 | Muy difícil | 30 | Tabla de surf |
+  | 5 | El faro de Punta del Diablo | 1v1 | Máster | 30 | Baraja Costa Uruguaya y Mesa Rocha |
+
+  Julio siempre se sienta en el 1 (`elencoDelNivel`). En las mesas grandes lo acompañan Nico y Luna, y tus compañeros son Cacho y Doña Rosa. Cada nivel tiene tres frases de Julio. Dentro del departamento, cada nivel se abre al ganar el anterior (`nivelAbierto`); los ganados se repiten.
+- **Recompensas:** van al inventario de la cuenta a precio 0, solo la primera vez. Las barajas propias (`recompensa` en el catálogo) y la mesa de Rocha ya no son gratis: se ganan en el modo historia. `barajaGratis`/`mesaGratis` las dejan afuera, `permisosDe` suma `baraja` y `baraja:<id>` va al inventario. Los selectores las muestran con candado y "Se gana en Rocha". El servidor valida la baraja de cada lugar con el inventario, como la mesa. Los beta y el admin las usan igual.
+- **Servidor:** migración 10 (`historia`: cuenta, departamento, nivel). `GET /historia` (el progreso) y `POST /historia/ganar` (anota y devuelve las recompensas nuevas), solo para admins (403 si no). Las partidas contra bots corren en el navegador, así que el servidor confía en que ganaste: las recompensas son cosméticas.
+- **Web:**
+  - "Modo historia" en Jugar (solo el admin) → el mapa (`/historia`): los 19 departamentos, Rocha con Julio y su progreso, los demás "Próximamente · N niveles".
+  - Rocha (`/historia/rocha`): Julio con la presentación y los niveles, con candado, ✓ y premio.
+  - La previa (`/historia/rocha/N`): el lugar de fondo, Julio grande con un globo por frase ("Seguir"), el formato y la dificultad, "¡A jugar!" y "Saltar".
+  - La partida: `conexionHistoria` arma la partida local con el formato, la dificultad y los puntos del nivel, el elenco en su lugar, sin tirar reyes y en la mesa de Rocha. Durante la partida, de fondo va el lugar (`data-lugar`).
+  - El final (`FinHistoria`): al ganar se anota y se ven los premios, con "Siguiente nivel" o "Volver a Rocha"; al perder, la revancha.
+- **Ambientación provisoria:** la mesa de Rocha es azul de mar con madera de barco, y el fondo es un degradé de cielo, mar y arena (`estilos-historia.css`), hasta que lleguen el paño, el motivo, la madera y los fondos con el formato que se le pasó a quien los va a hacer.
+- Revisado con capturas: el botón en Jugar, el mapa, Rocha, la previa y la mesa.
+- **Tests:** server 120 (los niveles de a uno, las recompensas una sola vez, la API solo para admins), web 350 (los datos, el mapa, los candados, la previa, el elenco en la mesa y el final, ganando y perdiendo).
+- **Hay que publicar el servidor en Fly** (migración 10 y la API). Como solo lo ve el admin, hace falta `ADMINS` (ver INSTRUCTIVO-CUENTAS.md).

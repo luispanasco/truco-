@@ -155,4 +155,15 @@ export const MIGRACIONES: string[] = [
   `
   alter table grupos add column convocan text not null default 'todos' check (convocan in ('todos', 'capitanes'));
   `,
+  // 10. Modo historia: los niveles ganados de cada departamento (las recompensas van al inventario).
+  `
+  create table historia (
+    cuenta_id uuid not null references cuentas (id),
+    departamento text not null,
+    nivel int not null,
+    ganado timestamptz not null default now(),
+    primary key (cuenta_id, departamento, nivel)
+  );
+  alter table historia enable row level security;
+  `,
 ]

@@ -11,6 +11,8 @@ export interface Baraja {
   id: string
   nombre: string
   precio: number
+  /** Dónde se gana en el modo historia: no se compra, hay que ganarla (o ser beta). */
+  recompensa?: string
 }
 
 export const BARAJAS = [
@@ -18,11 +20,11 @@ export const BARAJAS = [
   { id: 'fournier1878', nombre: 'Clásica 1878', precio: 0 },
   { id: 'cid1888', nombre: 'El Cid 1888', precio: 0 },
   { id: 'grimaud1860', nombre: 'Grimaud 1860', precio: 0 },
-  // Diseños propios. Gratis por ahora: van a ser recompensas del mapa del modo historia.
-  { id: 'oriental', nombre: 'Oriental', precio: 0 },
-  { id: 'costa', nombre: 'Costa Uruguaya', precio: 0 },
-  { id: 'colonial', nombre: 'Colonial', precio: 0 },
-  { id: 'grabado', nombre: 'Grabado Nocturno', precio: 0 },
+  // Diseños propios: se ganan en el modo historia (la de la costa, en Rocha).
+  { id: 'oriental', nombre: 'Oriental', precio: 0, recompensa: 'el modo historia' },
+  { id: 'costa', nombre: 'Costa Uruguaya', precio: 0, recompensa: 'Rocha' },
+  { id: 'colonial', nombre: 'Colonial', precio: 0, recompensa: 'el modo historia' },
+  { id: 'grabado', nombre: 'Grabado Nocturno', precio: 0, recompensa: 'el modo historia' },
 ] as const satisfies readonly Baraja[]
 
 export type IdBaraja = (typeof BARAJAS)[number]['id']
@@ -33,8 +35,10 @@ export function buscarBaraja(id: unknown): Baraja | undefined {
   return BARAJAS.find((b) => b.id === id)
 }
 
+/** Se puede usar sin tenerla: gratis y no es recompensa del modo historia. */
 export function barajaGratis(id: unknown): boolean {
-  return buscarBaraja(id)?.precio === 0
+  const b = buscarBaraja(id)
+  return b?.precio === 0 && !b.recompensa
 }
 
 /** La baraja que se puede usar: una que no existe (o que no se tiene) vuelve a la propia. */

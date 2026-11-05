@@ -1,11 +1,16 @@
-import { PESCAR_SENIAS_DISPONIBLE } from '@truco/shared'
-import { ConexionLocal } from '../conexion/local'
+import { mesaDeDepartamento, nivelDeHistoria, PESCAR_SENIAS_DISPONIBLE } from '@truco/shared'
+import { ConexionLocal, type OpcionesLocal } from '../conexion/local'
+import type { NivelJugado } from '../conexion/tipos'
 import { useCuenta } from '../cuenta/cuenta'
 import type { Perfil } from '../perfil'
 
 /** La partida contra la compu con lo elegido en el perfil (formato, nivel, reglas y señas). */
 export function conexionContraLaCompu(perfil: Perfil): ConexionLocal {
-  return new ConexionLocal({
+  return new ConexionLocal(conexionContraLaCompuOpciones(perfil))
+}
+
+function conexionContraLaCompuOpciones(perfil: Perfil): OpcionesLocal {
+  return {
     apodo: perfil.apodo.trim(),
     avatar: perfil.avatar,
     formato: perfil.formato,
@@ -29,5 +34,26 @@ export function conexionContraLaCompu(perfil: Perfil): ConexionLocal {
       momento: perfil.seniasAntesDeJugar ? 'antesDeJugar' : 'libre',
     },
     ...(perfil.rapido ? { demoraBots: [350, 700] as [number, number], pausas: { vuelta: 1500, mano: 1200 } } : {}),
+  }
+}
+
+/**
+ * Un nivel del modo historia: el formato, la dificultad y los puntos son los del nivel; los bots,
+ * su elenco; la mesa, la del lugar. Lo demás (ayudas, señas, baraja) es lo tuyo. Sin tirar reyes,
+ * así cada personaje queda en su lugar.
+ */
+export function conexionHistoria(perfil: Perfil, jugado: NivelJugado): ConexionLocal {
+  const nivel = nivelDeHistoria(jugado.departamento, jugado.nivel)
+  if (!nivel) throw new Error('Ese nivel no existe')
+  const base = conexionContraLaCompuOpciones(perfil)
+  return new ConexionLocal({
+    ...base,
+    formato: nivel.formato,
+    nivelBots: nivel.nivelBots,
+    config: { ...base.config, picaPica: false, puntosPartida: nivel.puntos },
+    tirarReyes: 'no',
+    mesa: mesaDeDepartamento(jugado.departamento) ?? base.mesa,
+    personajes: false,
+    historia: jugado,
   })
 }

@@ -31,6 +31,7 @@ import { guardarPerfil, leerPerfil } from '../perfil'
 import { estiloAsiento, haciaAsiento, PanioEnPerspectiva, useMesaEnPerspectiva } from '../componentes/Perspectiva'
 import '../estilos-mesa-online.css'
 import { MonedasGanadas } from '../componentes/MonedasGanadas'
+import { FinHistoria } from '../componentes/FinHistoria'
 import '../estilos-mesa-bustos.css'
 
 export function Mesa() {
@@ -518,14 +519,19 @@ export function Mesa() {
               </div>
             </div>
             <MonedasGanadas />
-            <div className="modal-botones">
-              <button type="button" className="boton boton-grande" onClick={() => enviar('revancha', {})} disabled={online && pediRevancha}>
-                {textoRevancha}
-              </button>
-              <button type="button" className="boton boton-secundario" onClick={salirDeLaMesa}>
-                Volver al inicio
-              </button>
-            </div>
+            {conexion?.historia ? (
+              // Un nivel del modo historia: se anota al ganar y se sigue por el departamento.
+              <FinHistoria jugado={conexion.historia} ganamos={ganamos} revancha={() => enviar('revancha', {})} />
+            ) : (
+              <div className="modal-botones">
+                <button type="button" className="boton boton-grande" onClick={() => enviar('revancha', {})} disabled={online && pediRevancha}>
+                  {textoRevancha}
+                </button>
+                <button type="button" className="boton boton-secundario" onClick={salirDeLaMesa}>
+                  Volver al inicio
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

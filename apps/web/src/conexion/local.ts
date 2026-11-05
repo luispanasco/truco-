@@ -28,6 +28,8 @@ import {
   MOTIVO_SIN_SENIAS,
   envidoDeSenia,
   avatarAlAzar,
+  elencoDelNivel,
+  nivelDeHistoria,
   PERSONAJES,
   personajesParaBots,
   codificarAvatar,
@@ -52,7 +54,7 @@ import {
   type IdBaraja,
   type IdMesa,
 } from '@truco/shared'
-import type { Conexion, MensajeServidor } from './tipos'
+import type { Conexion, MensajeServidor, NivelJugado } from './tipos'
 
 export interface OpcionesLocal {
   apodo: string
@@ -81,6 +83,8 @@ export interface OpcionesLocal {
   semilla?: number
   /** Los bots son los personajes del modo historia (por ahora, solo para el admin). */
   personajes?: boolean
+  /** Un nivel del modo historia: los bots son su elenco (rivales y compañeros, cada uno en su lugar). */
+  historia?: NivelJugado
 }
 
 const NOMBRES_BOTS = ['Bot Pepe', 'Bot Chela', 'Bot Tito', 'Bot Mirta', 'Bot Ruben']
@@ -117,7 +121,10 @@ export class ConexionLocal implements Conexion {
   private terminada = false
   private configSenias: ConfigSenias
 
+  readonly historia?: NivelJugado
+
   constructor(private readonly op: OpcionesLocal) {
+    this.historia = op.historia
     this.config = crearConfig({ ...op.config, formato: op.formato, modoSucio: false })
     this.semilla = op.semilla ?? Math.floor(Math.random() * 2 ** 31)
     this.configSenias = normalizarSenias(op.senias)
@@ -207,7 +214,8 @@ export class ConexionLocal implements Conexion {
     const n = cantidadJugadores(this.config.formato)
     this.terminada = false
     if (this.nombres.length !== n) {
-      const personajes = this.op.personajes ? personajesParaBots(String(this.semilla), n - 1) : []
+      const nivel = this.op.historia && nivelDeHistoria(this.op.historia.departamento, this.op.historia.nivel)
+      const personajes = nivel ? elencoDelNivel(nivel) : this.op.personajes ? personajesParaBots(String(this.semilla), n - 1) : []
       this.nombres = Array.from({ length: n }, (_, a) => (a === 0 ? this.op.apodo : (personajes[a - 1]?.nombre ?? NOMBRES_BOTS[(a - 1) % NOMBRES_BOTS.length]!)))
     }
     // En la primera partida se pueden tirar reyes: el primer rey reparte y, con equipos, los

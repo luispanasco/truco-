@@ -567,6 +567,9 @@ button.selector-modo-detalle:hover {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
+.jugar-secundarios .boton-historia {
+  grid-column: 1 / -1;
+}
 .boton-chico {
   display: grid;
   grid-template-columns: auto 1fr;

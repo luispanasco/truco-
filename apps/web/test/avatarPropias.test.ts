@@ -59,7 +59,8 @@ describe('dibujos propios de Lorelei', () => {
       }
     }
     expect(LORELEI.dibujar(AVATAR_BASE)).not.toContain('capa-enBoca')
-  })
+    // Son todas las combinaciones (con los bigotes, más de 400 SVG): con la máquina cargada tarda.
+  }, 30_000)
 
   it('cada accesorio y cada bufanda arman un SVG válido, y la bufanda va debajo de la mano', () => {
     for (let accesorio = 0; accesorio <= ACCESORIOS.length; accesorio++) {

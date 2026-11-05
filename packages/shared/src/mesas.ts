@@ -15,6 +15,8 @@ export interface Mesa {
   detalle: string
   precio: number
   rareza?: Rareza
+  /** Dónde se gana en el modo historia: no está en la tienda, hay que ganarla (o ser beta). */
+  recompensa?: string
 }
 
 /** `precio` acá es el de la fase 1: dice la rareza, y el precio final es el de la rareza. */
@@ -27,6 +29,8 @@ export const MESAS = conRarezas(
   { id: 'celeste', nombre: 'Celeste', detalle: 'Paño celeste y madera clara', precio: 400 },
   { id: 'parrillero', nombre: 'Parrillero', detalle: 'Arpillera y madera rústica', precio: 500 },
   { id: 'cantina', nombre: 'Cantina', detalle: 'Mantel a cuadros y madera clara', precio: 600 },
+  // Las del modo historia: una por departamento, se gana en su último nivel.
+  { id: 'rocha', nombre: 'Rocha', detalle: 'Paño azul de mar y madera de barco', precio: 0, recompensa: 'Rocha' },
   ] as const satisfies readonly Mesa[]
 )
 
@@ -38,8 +42,10 @@ export function buscarMesa(id: unknown): Mesa | undefined {
   return MESAS.find((m) => m.id === id)
 }
 
+/** Se puede usar sin tenerla: gratis y no es recompensa del modo historia. */
 export function mesaGratis(id: unknown): boolean {
-  return buscarMesa(id)?.precio === 0
+  const m = buscarMesa(id)
+  return m?.precio === 0 && !m.recompensa
 }
 
 /**
