@@ -6,6 +6,7 @@ import type { Accion, Carta, ConfigSala, Evento, Formato, VistaPartida } from '@
 import { envidoParaSenia, type Nivel, type Senia } from '@truco/bots'
 import type { IdBaraja } from './barajas'
 import type { IdMesa } from './mesas'
+import type { IdDepartamento } from './historia'
 import type { EstadoVoz, SenalVoz } from './voz'
 
 /** Nombres de las salas registradas en el servidor. */
@@ -204,6 +205,17 @@ export interface OpcionesCrearSala extends OpcionesUnirse {
   tirarReyes?: TirarReyes
   /** Chat de voz (solo salas privadas; prendido si no se dice nada). Con voz, lo del pie se dice hablando. */
   voz?: boolean
+  /**
+   * Un nivel del modo historia en cooperativo (2v2 o 3v3): el nivel manda el formato, la
+   * dificultad y los puntos; las personas van en el mismo equipo y los demás son el elenco.
+   */
+  historia?: NivelHistoriaJugado
+}
+
+/** Un nivel del modo historia que se está jugando. */
+export interface NivelHistoriaJugado {
+  departamento: IdDepartamento
+  nivel: number
 }
 
 export type CanalChat = 'general' | 'equipo'
@@ -283,6 +295,8 @@ export interface InfoSala {
   yo: number | null
   /** Terminada la partida: asientos que ya pidieron la revancha (vacío en otra fase). */
   revancha: number[]
+  /** Si la sala es un nivel del modo historia (cooperativo). */
+  historia?: NivelHistoriaJugado | null
 }
 
 export interface MensajeChat {
@@ -303,6 +317,8 @@ export interface MensajesServidor {
   sala: InfoSala
   /** Fase 2, solo a quien entró con su cuenta: lo que cobró por la partida y su saldo. */
   monedas: { movimientos: MovimientoMonedas[]; saldo: number }
+  /** Modo historia en cooperativo: ganaron y se te anotó el nivel (con las recompensas nuevas), o no se pudo (`anotado: false`, sin el nivel anterior). */
+  historia: { nuevas: string[]; anotado: boolean }
   /** Fase 2, en partidas entre personas con cuenta: cómo se movió tu Elo en ese formato. */
   elo: { formato: Formato; antes: number; despues: number }
   /** Lo que ve este jugador: nunca incluye cartas ajenas sin jugar. */

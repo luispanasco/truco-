@@ -27,6 +27,10 @@ import { crearBot, NIVELES_BOT, SENIAS, type Bot, type Nivel, type Senia, type S
 import {
   avatarAlAzar,
   personajesParaBots,
+  elencoDelNivel,
+  mesaDeDepartamento,
+  nivelDeHistoria,
+  type NivelHistoriaJugado,
   BARAJA_DEFAULT,
   codificarAvatar,
   MESA_DEFAULT,
@@ -80,6 +84,7 @@ import { pagarPartida } from './cuentas/monedas'
 import { actualizarElo } from './cuentas/elo'
 import { entrar } from './cuentas/cuentas'
 import { inventario } from './cuentas/tienda'
+import { ganarNivel, HistoriaRechazo } from './cuentas/historia'
 import type { EnSala } from './cuentas/presencia'
 import { VozDeSala } from './voz'
 
@@ -217,6 +222,8 @@ export class SalaTruco extends Room {
   override maxMessagesPerSecond = 30
 
   private codigo: string | null = null
+  /** Si la sala es un nivel del modo historia en cooperativo. */
+  private historia: NivelHistoriaJugado | null = null
   private fase: FaseSala = 'esperando'
   private config: ConfigSala = crearConfig()
   private botsEnVacios = true
@@ -276,7 +283,23 @@ export class SalaTruco extends Room {
       this.ayudas = false
       this.nivelBots = NIVEL_REEMPLAZO
     } else {
-      this.aplicarConfiguracion(opciones)
+      // Un nivel del modo historia: el nivel manda cómo se juega (y no se cambia en la espera).
+      const pedido = opciones.historia
+      const nivel = pedido && nivelDeHistoria(pedido.departamento, pedido.nivel)
+      if (pedido && !nivel) throw new Error('Ese nivel no existe')
+      if (nivel && nivel.formato === '1v1') throw new Error('Ese nivel es mano a mano: no se juega de a dos')
+      if (nivel) {
+        this.historia = { departamento: pedido!.departamento, nivel: pedido!.nivel }
+        this.aplicarConfiguracion({
+          ...opciones,
+          config: { formato: nivel.formato, puntosPartida: nivel.puntos, picaPica: false },
+          nivelBots: nivel.nivelBots,
+          botsEnVacios: true,
+          tirarReyes: 'no',
+        })
+      } else {
+        this.aplicarConfiguracion(opciones)
+      }
       this.codigo = await generarCodigoUnico(async (c) => (await matchMaker.getRoomById(c)) !== undefined)
       this.enSala.codigo = this.codigo
       this.roomId = this.codigo
@@ -315,7 +338,10 @@ export class SalaTruco extends Room {
       if (anterior && anterior !== client) anterior.leave()
     } else {
       if (this.fase !== 'esperando') throw new Error('La partida ya empezó')
-      lugar = this.lugares.find((l) => l.tipo === 'libre')
+      // El modo historia, mientras se arma, lo abre solo el admin (los amigos que invita entran igual).
+      if (this.historia && this.anfitrion === null && auth?.admin !== true) throw new Error('El modo historia todavía no está abierto')
+      // En el modo historia las personas van todas del mismo lado: los rivales son el elenco del nivel.
+      lugar = this.lugares.find((l) => l.tipo === 'libre' && (!this.historia || l.asiento % 2 === 0))
       if (!lugar) throw new Error('La sala está llena')
       lugar.tipo = 'humano'
       lugar.invitadoId = invitadoId
@@ -523,6 +549,7 @@ export class SalaTruco extends Room {
       if (this.fase !== 'esperando') throw new Rechazo('La partida ya empezó')
       const nuevo = this.lugares[Number(destino)]
       if (!nuevo || nuevo.tipo !== 'libre') throw new Rechazo('Ese lugar no está libre')
+      if (this.historia && nuevo.asiento % 2 === 1) throw new Rechazo('En el modo historia, ese lugar es de los rivales')
       this.lugares[nuevo.asiento] = { ...this.lugares[asiento]!, asiento: nuevo.asiento }
       this.lugares[asiento] = lugarLibre(asiento)
       const client = this.clients.get(this.lugares[nuevo.asiento]!.sessionId!)
@@ -533,6 +560,7 @@ export class SalaTruco extends Room {
     manejar('configurar', (_client, asiento, opciones) => {
       this.exigirAnfitrion(asiento)
       if (this.publica) throw new Rechazo('La sala pública no se configura')
+      if (this.historia) throw new Rechazo('En el modo historia se juega como dice el nivel')
       if (this.fase !== 'esperando') throw new Rechazo('La partida ya empezó')
       const antes = this.config.formato
       this.aplicarConfiguracion(opciones)
@@ -650,11 +678,14 @@ export class SalaTruco extends Room {
   private iniciar(completarConBots = this.botsEnVacios) {
     const libres = this.lugares.filter((l) => l.tipo === 'libre')
     if (libres.length > 0 && !completarConBots) throw new Rechazo('Faltan jugadores')
-    // Si la sala la armó un admin, los bots son los personajes del modo historia.
+    // En un nivel del modo historia, los bots son su elenco, cada uno en su lugar. Si la sala la
+    // armó un admin, también son personajes.
+    const nivel = this.historia && nivelDeHistoria(this.historia.departamento, this.historia.nivel)
+    const elenco = nivel ? elencoDelNivel(nivel) : null
     const personajes = this.delAnfitrion()?.admin ? personajesParaBots(this.roomId, libres.length) : []
     let numeroBot = 0
     for (const l of libres) {
-      const personaje = personajes[numeroBot]
+      const personaje = elenco ? elenco[l.asiento - 1] : personajes[numeroBot]
       numeroBot++
       l.tipo = 'bot'
       l.apodo = personaje?.nombre ?? `Bot ${numeroBot}`
@@ -778,6 +809,7 @@ export class SalaTruco extends Room {
       this.guardarRegistro()
       void this.pagarMonedas(this.registro, this.estado.ganador!)
       void this.contarElo(this.registro, this.estado.ganador!)
+      void this.anotarHistoria(this.estado.ganador!)
     }
     this.broadcast('turno', { asientos: [], venceEn: null })
     this.enviarSala()
@@ -1076,7 +1108,8 @@ export class SalaTruco extends Room {
       cartasJugadas: this.cartasJugadas,
       tirarReyes: this.tirarReyes,
       voz: this.conVoz(),
-      mesa: this.delAnfitrion()?.mesa ?? MESA_DEFAULT,
+      // En el modo historia, la mesa es la del lugar.
+      mesa: (this.historia && mesaDeDepartamento(this.historia.departamento)) || (this.delAnfitrion()?.mesa ?? MESA_DEFAULT),
       baraja: this.delAnfitrion()?.baraja ?? BARAJA_DEFAULT,
       chatEquipo: this.chatEquipo(),
       lugares: this.lugares.map((l) => ({
@@ -1089,6 +1122,7 @@ export class SalaTruco extends Room {
       })),
       yo,
       revancha: this.fase === 'terminada' ? [...this.pedidosRevancha].sort((x, y) => x - y) : [],
+      historia: this.historia,
     }
   }
 
@@ -1146,6 +1180,25 @@ export class SalaTruco extends Room {
       }
     } catch (e) {
       console.error('No se pudo actualizar el Elo:', e)
+    }
+  }
+
+  /**
+   * Modo historia en cooperativo: si ganó el equipo de las personas, a cada una (con cuenta y en
+   * la mesa) se le anota el nivel y se le dan sus recompensas. Si no tenía abierto el nivel (le
+   * falta el anterior), no se le anota.
+   */
+  private async anotarHistoria(ganador: Equipo) {
+    if (!this.cuentas || !this.historia || ganador !== 0) return
+    for (const l of this.lugares) {
+      if (l.tipo !== 'humano' || !l.cuentaId || l.sessionId === null) continue
+      try {
+        const r = await ganarNivel(this.cuentas.base, l.cuentaId, this.historia.departamento, this.historia.nivel)
+        this.enviarA(l.asiento, 'historia', { nuevas: r.nuevas, anotado: true })
+      } catch (e) {
+        if (!(e instanceof HistoriaRechazo)) console.error('No se pudo anotar el nivel:', e)
+        this.enviarA(l.asiento, 'historia', { nuevas: [], anotado: false })
+      }
     }
   }
 

@@ -94,6 +94,8 @@ interface EstadoJuego {
   monedas: MensajesServidor['monedas'] | null
   /** Fase 2: cómo se movió tu Elo en la partida que terminó (solo entre personas con cuenta). */
   elo: MensajesServidor['elo'] | null
+  /** Modo historia en cooperativo: si se te anotó el nivel que ganaron y lo que te tocó. */
+  premioHistoria: MensajesServidor['historia'] | null
   /** El último corte del mazo: la mesa lo anima antes de mostrar la muestra y repartir. */
   corte: { asiento: number; corte: TipoCorte; id: number } | null
   cerrarReyes(): void
@@ -333,12 +335,14 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       case 'sala':
         // Online, la mesa y la baraja son las del anfitrión; contra la compu, las tuyas (como siempre),
         // salvo en el modo historia, que se juega en la mesa del lugar.
-        if (get().conexion?.tipo === 'online' || get().conexion?.historia) aplicarTemaDeSala(m.datos, get().conexion?.historia?.departamento)
+        if (get().conexion?.tipo === 'online' || get().conexion?.historia) {
+          aplicarTemaDeSala(m.datos, (get().conexion?.historia ?? m.datos.historia)?.departamento)
+        }
         set({
           sala: m.datos,
           ...(m.datos.fase !== 'esperando' ? { ofrecerBot: false } : {}),
           // En la revancha, lo cobrado en la partida anterior ya no se muestra.
-          ...(m.datos.fase === 'jugando' ? { monedas: null, elo: null } : {}),
+          ...(m.datos.fase === 'jugando' ? { monedas: null, elo: null, premioHistoria: null } : {}),
         })
         break
       case 'vista':
@@ -394,6 +398,9 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       case 'elo':
         set({ elo: m.datos })
         break
+      case 'historia':
+        set({ premioHistoria: m.datos })
+        break
       case 'monedas':
         set({ monedas: m.datos })
         useCuenta.setState({ saldo: m.datos.saldo })
@@ -421,6 +428,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     reyes: null,
     expulsado: null,
     monedas: null,
+    premioHistoria: null,
     elo: null,
     corte: null,
 
@@ -480,6 +488,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
             reyes: null,
         expulsado: null,
         monedas: null,
+        premioHistoria: null,
         elo: null,
         corte: null,
       })

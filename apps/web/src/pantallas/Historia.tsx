@@ -14,25 +14,40 @@ import {
 } from '@truco/shared'
 import { Avatar } from '../componentes/Avatar'
 import { FORMATOS, NIVELES } from '../componentes/FormularioSala'
-import { useCuenta } from '../cuenta/cuenta'
+import { iniciarCuenta, useCuenta } from '../cuenta/cuenta'
 import { cargarHistoria, useHistoria } from '../cuenta/historia'
 import { conexionHistoria } from '../menu/contraLaCompu'
 import { leerPerfil } from '../perfil'
 import { useJuego } from '../estado'
+import { ConexionOnline, motivoError } from '../conexion/online'
+import { datosUnirse } from '../componentes/Online'
 import '../estilos-historia.css'
 
 const NOMBRE_FORMATO = Object.fromEntries(FORMATOS.map(([f, , corto]) => [f, corto]))
 const NOMBRE_NIVEL = Object.fromEntries(NIVELES)
 const personaje = (id: string) => PERSONAJES.find((p) => p.id === id)!
 
-/** Mientras se arma, el modo historia es solo para el admin: trae su progreso del servidor. */
-function useHistoriaDelAdmin(): { admin: boolean; progreso: ReturnType<typeof useHistoria.getState>['progreso'] } {
+/**
+ * Mientras se arma, el modo historia es solo para el admin: trae su progreso del servidor. Si se
+ * entra directo por la dirección, arranca la cuenta (y mientras tanto, `cargando`).
+ */
+function useHistoriaDelAdmin(): { admin: boolean; cargando: boolean; progreso: ReturnType<typeof useHistoria.getState>['progreso'] } {
+  const estado = useCuenta((s) => s.estado)
   const admin = useCuenta((s) => s.estado === 'adentro' && s.cuenta?.admin === true)
   const progreso = useHistoria((s) => s.progreso)
+  useEffect(() => void iniciarCuenta(), [])
   useEffect(() => {
     if (admin) void cargarHistoria().catch(() => {})
   }, [admin])
-  return { admin, progreso }
+  return { admin, cargando: estado === 'cargando' || estado === 'entrando', progreso }
+}
+
+function Cargando() {
+  return (
+    <main className="historia historia-cerrada">
+      <p role="status">Cargando…</p>
+    </main>
+  )
 }
 
 function EnPreparacion() {
@@ -60,8 +75,8 @@ function Volver({ a, texto = 'Volver' }: { a: string; texto?: string }) {
 /** El mapa: los 19 departamentos, cada uno por su cuenta. Los que todavía no están dicen "Próximamente". */
 export function Historia() {
   const navegar = useNavigate()
-  const { admin, progreso } = useHistoriaDelAdmin()
-  if (!admin) return <EnPreparacion />
+  const { admin, cargando, progreso } = useHistoriaDelAdmin()
+  if (!admin) return cargando ? <Cargando /> : <EnPreparacion />
   return (
     <main className="historia">
       <Volver a="/" texto="Inicio" />
@@ -102,10 +117,10 @@ export function Historia() {
 export function DepartamentoHistoria() {
   const navegar = useNavigate()
   const { departamento } = useParams()
-  const { admin, progreso } = useHistoriaDelAdmin()
+  const { admin, cargando, progreso } = useHistoriaDelAdmin()
   const dep = buscarDepartamento(departamento)
   const historia = dep && HISTORIAS[dep.id]
-  if (!admin) return <EnPreparacion />
+  if (!admin) return cargando ? <Cargando /> : <EnPreparacion />
   if (!dep || !historia) return <EnPreparacion />
   const jefe = personaje(historia.jefe)
   const ganados = progreso?.[dep.id] ?? []
@@ -170,21 +185,35 @@ export function DepartamentoHistoria() {
 export function PreviaNivel() {
   const navegar = useNavigate()
   const { departamento, nivel: textoNivel } = useParams()
-  const { admin, progreso } = useHistoriaDelAdmin()
+  const { admin, cargando, progreso } = useHistoriaDelAdmin()
   const [frase, setFrase] = useState(0)
+  const [conAmigo, setConAmigo] = useState<{ creando: boolean; error: string | null }>({ creando: false, error: null })
   const dep = buscarDepartamento(departamento)
   const historia = dep && HISTORIAS[dep.id]
   const n = Number(textoNivel)
   const nivel = historia?.niveles[n - 1]
+  if (!admin && cargando) return <Cargando />
   if (!admin || !dep || !historia || !nivel) return <EnPreparacion />
   // Sin el anterior ganado no se juega (si el progreso todavía no llegó, se espera).
   if (progreso && !nivelAbierto(progreso, dep.id, n)) return <EnPreparacion />
 
   const rival = personaje(nivel.rivales[0]!)
   const ultima = frase >= nivel.frases.length - 1
+  const jugado = { departamento: dep.id as IdDepartamento, nivel: n }
   const jugar = () => {
-    useJuego.getState().conectar(conexionHistoria(leerPerfil(), { departamento: dep.id as IdDepartamento, nivel: n }))
+    useJuego.getState().conectar(conexionHistoria(leerPerfil(), jugado))
     navegar('/mesa')
+  }
+  // En 2v2 y 3v3 se puede jugar con un amigo: se arma una sala privada del nivel y se le pasa el código.
+  const jugarConAmigo = async () => {
+    setConAmigo({ creando: true, error: null })
+    try {
+      const c = await ConexionOnline.crearSala({ ...datosUnirse(leerPerfil()), historia: jugado })
+      useJuego.getState().conectar(c)
+      navegar('/sala')
+    } catch (e) {
+      setConAmigo({ creando: false, error: motivoError(e) })
+    }
   }
   return (
     <main className="historia-previa" data-fondo={dep.id}>
@@ -229,9 +258,17 @@ export function PreviaNivel() {
       </div>
       <footer className="historia-previa-pie">
         {ultima ? (
-          <button type="button" className="boton boton-grande" onClick={jugar}>
-            ¡A jugar!
-          </button>
+          <>
+            <button type="button" className="boton boton-grande" onClick={jugar}>
+              ¡A jugar!
+            </button>
+            {nivel.formato !== '1v1' && (
+              <button type="button" className="boton boton-secundario" disabled={conAmigo.creando} onClick={() => void jugarConAmigo()}>
+                {conAmigo.creando ? 'Armando la sala…' : 'Jugar con un amigo'}
+              </button>
+            )}
+            {conAmigo.error && <p role="alert">⚠ {conAmigo.error}</p>}
+          </>
         ) : (
           <button type="button" className="boton boton-grande" onClick={() => setFrase((f) => f + 1)}>
             Seguir

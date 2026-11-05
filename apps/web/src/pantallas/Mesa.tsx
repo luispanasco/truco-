@@ -519,9 +519,16 @@ export function Mesa() {
               </div>
             </div>
             <MonedasGanadas />
-            {conexion?.historia ? (
-              // Un nivel del modo historia: se anota al ganar y se sigue por el departamento.
-              <FinHistoria jugado={conexion.historia} ganamos={ganamos} revancha={() => enviar('revancha', {})} />
+            {conexion?.historia || sala.historia ? (
+              // Un nivel del modo historia: se anota al ganar y se sigue por el departamento (en
+              // cooperativo lo anota el servidor).
+              <FinHistoria
+                jugado={(conexion?.historia ?? sala.historia)!}
+                ganamos={ganamos}
+                revancha={() => enviar('revancha', {})}
+                online={online}
+                pediRevancha={online && pediRevancha}
+              />
             ) : (
               <div className="modal-botones">
                 <button type="button" className="boton boton-grande" onClick={() => enviar('revancha', {})} disabled={online && pediRevancha}>

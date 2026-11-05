@@ -299,6 +299,7 @@
 }
 .historia-previa-pie {
   display: grid;
+  gap: 10px;
   width: 100%;
   max-width: 460px;
   margin: 16px auto 0;

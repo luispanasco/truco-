@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { buscarMesa, type InfoSala, type LugarPublico } from '@truco/shared'
+import { buscarDepartamento, buscarMesa, elencoDelNivel, nivelDeHistoria, type InfoSala, type LugarPublico } from '@truco/shared'
 import { BARAJAS } from '../baraja'
 import { FormularioSala, opcionesDeSala, opcionesParaServidor, resumenSala, type OpcionesSala } from '../componentes/FormularioSala'
 import { avatarDeLugar } from '../componentes/Asiento'
@@ -69,7 +69,21 @@ function Invitar({ codigo }: { codigo: string }) {
   )
 }
 
-function Lugar({ lugar, yo, alSentarse }: { lugar: LugarPublico; yo: number | null; alSentarse: () => void }) {
+function Lugar({ lugar, yo, alSentarse, rival }: { lugar: LugarPublico; yo: number | null; alSentarse: () => void; rival?: string }) {
+  // En un nivel del modo historia, los lugares del otro equipo son del elenco: no se ocupan.
+  if (lugar.tipo === 'libre' && rival) {
+    return (
+      <div className="lugar libre" aria-label={`Lugar ${lugar.asiento + 1}: ${rival}, rival del nivel`}>
+        <span className="lugar-avatar" aria-hidden="true">
+          ⚔
+        </span>
+        <span className="lugar-texto">
+          <strong>{rival}</strong>
+          <small>Rival del nivel</small>
+        </span>
+      </div>
+    )
+  }
   if (lugar.tipo === 'libre') {
     return (
       <button
@@ -117,6 +131,9 @@ function Lugares({ sala }: { sala: InfoSala }) {
   const enviar = useJuego((s) => s.enviar)
   const ocupados = sala.lugares.filter((l) => l.tipo !== 'libre').length
   const equipos = [0, 1].map((e) => sala.lugares.filter((l) => l.asiento % 2 === e))
+  const nivel = sala.historia && nivelDeHistoria(sala.historia.departamento, sala.historia.nivel)
+  const elenco = nivel ? elencoDelNivel(nivel) : null
+  const rival = (asiento: number) => (elenco && asiento % 2 === 1 ? elenco[asiento - 1]?.nombre : undefined)
   return (
     <section className="tarjeta">
       <h2>
@@ -133,17 +150,50 @@ function Lugares({ sala }: { sala: InfoSala }) {
               {sala.yo !== null && sala.yo % 2 === e && <span className="equipo-tuyo">tu equipo</span>}
             </h3>
             {lugares.map((l) => (
-              <Lugar key={l.asiento} lugar={l} yo={sala.yo} alSentarse={() => enviar('elegirAsiento', { asiento: l.asiento })} />
+              <Lugar
+                key={l.asiento}
+                lugar={l}
+                yo={sala.yo}
+                rival={rival(l.asiento)}
+                alSentarse={() => enviar('elegirAsiento', { asiento: l.asiento })}
+              />
             ))}
           </div>
         ))}
       </div>
       {ocupados < sala.lugares.length && (
         <p className="nota-izq">
-          {sala.botsEnVacios ? 'Si al empezar quedan lugares libres, los ocupan bots.' : 'Hace falta la mesa completa para empezar.'}
-          {sala.lugares.length > 2 && ' Tocá un lugar libre para cambiarte de equipo.'}
+          {elenco
+            ? 'Si no viene nadie a tu equipo, juegan los compañeros del nivel.'
+            : sala.botsEnVacios
+              ? 'Si al empezar quedan lugares libres, los ocupan bots.'
+              : 'Hace falta la mesa completa para empezar.'}
+          {sala.lugares.length > 2 && !elenco && ' Tocá un lugar libre para cambiarte de equipo.'}
         </p>
       )}
+    </section>
+  )
+}
+
+/** Un nivel del modo historia en cooperativo: dónde, contra quién y cómo, y que el amigo va de tu lado. */
+function NivelDeLaSala({ sala }: { sala: InfoSala }) {
+  const nivel = nivelDeHistoria(sala.historia!.departamento, sala.historia!.nivel)
+  const departamento = buscarDepartamento(sala.historia!.departamento)
+  if (!nivel || !departamento) return null
+  const rivales = elencoDelNivel(nivel)
+    .filter((_, i) => i % 2 === 0)
+    .map((p) => p.nombre)
+  return (
+    <section className="tarjeta" aria-labelledby="sala-nivel">
+      <h2 id="sala-nivel">
+        {departamento.nombre} · Nivel {sala.historia!.nivel}
+      </h2>
+      <p className="nota-izq">
+        {nivel.lugar}: {rivales.slice(0, -1).join(', ')}
+        {rivales.length > 1 ? ' y ' : ''}
+        {rivales.at(-1)} contra ustedes, a {nivel.puntos} puntos. Pasale el código a un amigo: juega de tu lado y, si ganan, a los dos se les anota
+        el nivel.
+      </p>
     </section>
   )
 }
@@ -287,9 +337,11 @@ export function Sala() {
       {sala.codigo && <Invitar codigo={sala.codigo} />}
       {sala.codigo && <InvitarAmigos />}
       {sala.codigo && <InvitarGrupos />}
+      {sala.historia && <NivelDeLaSala sala={sala} />}
       <Lugares sala={sala} />
-      <MesaYBaraja sala={sala} esAnfitrion={esAnfitrion} />
-      <Configuracion sala={sala} esAnfitrion={esAnfitrion} />
+      {/* En un nivel del modo historia, la mesa y las reglas las pone el nivel. */}
+      {!sala.historia && <MesaYBaraja sala={sala} esAnfitrion={esAnfitrion} />}
+      {!sala.historia && <Configuracion sala={sala} esAnfitrion={esAnfitrion} />}
       <ErrorServidor />
       {esAnfitrion ? (
         <>

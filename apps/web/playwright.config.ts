@@ -34,6 +34,8 @@ export default defineConfig({
         DATABASE_URL: '',
         SUPABASE_URL: '',
         TRUCO_DIR_BASE: join(tmpdir(), `truco-e2e-${Date.now()}`),
+        // El admin de los e2e (el modo historia, mientras se arma, es solo para admins).
+        ADMINS: 'admin-e2e@ejemplo.com',
       },
       reuseExistingServer: false,
       timeout: 60_000,

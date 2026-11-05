@@ -1,14 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
-import { barajaGratis, DEPARTAMENTOS, elencoDelNivel, HISTORIAS, idBaraja, nivelesPorTamanio, nombreRecompensa, permisosDe } from '@truco/shared'
+import { crearConfig } from '@truco/engine'
+import { barajaGratis, DEPARTAMENTOS, SENIAS_DEFAULT, type InfoSala, elencoDelNivel, HISTORIAS, idBaraja, nivelesPorTamanio, nombreRecompensa, permisosDe } from '@truco/shared'
 import { useCuenta } from '../src/cuenta/cuenta'
 import { useHistoria } from '../src/cuenta/historia'
 import { fijarInventario } from '../src/cuenta/inventario'
 import type { ConexionLocal } from '../src/conexion/local'
 import { conexionHistoria } from '../src/menu/contraLaCompu'
 import { leerPerfil } from '../src/perfil'
-import type { MensajeServidor } from '../src/conexion/tipos'
+import type { Conexion, MensajeServidor } from '../src/conexion/tipos'
+import { Sala } from '../src/pantallas/Sala'
 import { FinHistoria } from '../src/componentes/FinHistoria'
 import { DepartamentoHistoria, Historia, PreviaNivel } from '../src/pantallas/Historia'
 import { useJuego } from '../src/estado'
@@ -199,3 +201,102 @@ describe('la partida de un nivel', () => {
     expect(pedidos.some((p) => p.url.endsWith('/historia/ganar'))).toBe(false)
   })
 })
+
+/** Una sala online de mentira: lo que llega lo decide el test. */
+function conexionFalsa() {
+  let oyente: ((m: MensajeServidor) => void) | null = null
+  const c = {
+    tipo: 'online' as const,
+    roomId: 'NIVEL',
+    enviar: () => {},
+    escuchar: (o: (m: MensajeServidor) => void) => {
+      oyente = o
+      return () => (oyente = null)
+    },
+    salir: () => {},
+  }
+  return { c: c as Conexion, llegar: (m: MensajeServidor) => act(() => oyente!(m)) }
+}
+
+describe('cooperativo', () => {
+  it('"Jugar con un amigo" está en los niveles de equipos, no en los mano a mano', async () => {
+    servidorFalso({ rocha: [1] })
+    comoAdmin()
+    app('/historia/rocha/1')
+    await screen.findByRole('heading', { name: ROCHA.niveles[0]!.lugar })
+    for (let i = 1; i < ROCHA.niveles[0]!.frases.length; i++) fireEvent.click(await screen.findByRole('button', { name: 'Seguir' }))
+    await screen.findByRole('button', { name: '¡A jugar!' })
+    expect(screen.queryByRole('button', { name: 'Jugar con un amigo' })).toBeNull()
+    cleanup()
+    app('/historia/rocha/2')
+    await screen.findByRole('heading', { name: ROCHA.niveles[1]!.lugar })
+    for (let i = 1; i < ROCHA.niveles[1]!.frases.length; i++) fireEvent.click(await screen.findByRole('button', { name: 'Seguir' }))
+    expect(await screen.findByRole('button', { name: 'Jugar con un amigo' })).toBeTruthy()
+  })
+
+  it('la sala de espera del nivel: dónde y contra quién, los lugares rivales del elenco y sin configurar', async () => {
+    const f = conexionFalsa()
+    act(() => useJuego.getState().conectar(f.c))
+    const nivel = ROCHA.niveles[3]!
+    const sala: InfoSala = {
+      codigo: 'NIVEL',
+      publica: false,
+      fase: 'esperando',
+      formato: '3v3',
+      config: crearConfig({ formato: '3v3' }),
+      botsEnVacios: true,
+      nivelBots: nivel.nivelBots,
+      ayudas: true,
+      senias: SENIAS_DEFAULT,
+      tiempos: { turnoS: 30, primeraJugadaS: 60 },
+      cartasJugadas: 'quedan',
+      tirarReyes: 'no',
+      voz: false,
+      mesa: 'rocha',
+      baraja: 'propia',
+      chatEquipo: true,
+      lugares: Array.from({ length: 6 }, (_, a) => ({
+        asiento: a,
+        tipo: a === 0 ? ('humano' as const) : ('libre' as const),
+        apodo: a === 0 ? 'Luis' : '',
+        avatar: null,
+        conectado: a === 0,
+        anfitrion: a === 0,
+      })),
+      yo: 0,
+      revancha: [],
+      historia: { departamento: 'rocha', nivel: 4 },
+    }
+    render(
+      <MemoryRouter initialEntries={['/sala']}>
+        <Routes>
+          <Route path="/sala" element={<Sala />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    f.llegar({ tipo: 'sala', datos: sala })
+    expect(await screen.findByRole('heading', { name: 'Rocha · Nivel 4' })).toBeTruthy()
+    expect(screen.getByText(/Julio, Nico y Luna contra ustedes/)).toBeTruthy()
+    expect(screen.getByLabelText('Lugar 2: Julio, rival del nivel')).toBeTruthy()
+    // El nivel manda: no hay mesa ni reglas para cambiar.
+    expect(screen.queryByRole('button', { name: /Cambiar/ })).toBeNull()
+    expect(document.documentElement.dataset.lugar).toBe('rocha')
+  })
+
+  it('en cooperativo, lo que te tocó lo dice el servidor (y no se pide a la API)', async () => {
+    const pedidos = servidorFalso()
+    comoAdmin()
+    render(
+      <MemoryRouter>
+        <FinHistoria jugado={{ departamento: 'rocha', nivel: 2 }} ganamos revancha={() => {}} online />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('Anotando el nivel…')).toBeTruthy()
+    act(() => useJuego.setState({ premioHistoria: { nuevas: [...ROCHA.niveles[1]!.recompensas], anotado: true } }))
+    expect(screen.getByText(/Impermeable amarillo/)).toBeTruthy()
+    act(() => useJuego.setState({ premioHistoria: { nuevas: [], anotado: false } }))
+    expect(screen.getByText(/primero ganá el nivel anterior/)).toBeTruthy()
+    expect(pedidos.some((p) => p.url.endsWith('/historia/ganar'))).toBe(false)
+  })
+})
+

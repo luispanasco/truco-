@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { ColyseusTestServer } from '@colyseus/testing'
 import { HISTORIAS, idBaraja, idMesa } from '@truco/shared'
 import { baseLocal, type Base } from '../src/cuentas/base'
@@ -6,7 +6,8 @@ import { verificadorDePrueba } from '../src/cuentas/auth'
 import { entrar } from '../src/cuentas/cuentas'
 import { ganarNivel, progresoHistoria } from '../src/cuentas/historia'
 import { inventario } from '../src/cuentas/tienda'
-import { levantar } from './helpers'
+import { Jugador, levantar, salaEnServidor } from './helpers'
+import { elencoDelNivel } from '@truco/shared'
 
 let base: Base
 let colyseus: ColyseusTestServer
@@ -23,6 +24,7 @@ afterAll(async () => {
 afterEach(() => {
   delete process.env.ADMINS
 })
+beforeEach(async () => colyseus.cleanup())
 
 async function cuenta(): Promise<{ id: string; token: string; email: string }> {
   const email = `historia${++n}@ejemplo.com`
@@ -74,3 +76,44 @@ describe('modo historia', () => {
     expect(rechazo.status).toBe(409)
   })
 })
+
+describe('modo historia en cooperativo', () => {
+  it('la sala del nivel: la abre el admin, las personas van del mismo lado y los demás son el elenco', async () => {
+    const admin = await cuenta()
+    const amigo = await cuenta()
+    process.env.ADMINS = admin.email
+    // Sin ser admin no se abre.
+    await expect(Jugador.crear(colyseus, { token: amigo.token, historia: { departamento: 'rocha', nivel: 2 } })).rejects.toThrow()
+    // Un nivel mano a mano no es para jugar de a dos.
+    await expect(Jugador.crear(colyseus, { token: admin.token, historia: { departamento: 'rocha', nivel: 1 } })).rejects.toThrow()
+
+    const a = await Jugador.crear(colyseus, { token: admin.token, historia: { departamento: 'rocha', nivel: 4 }, config: { formato: '1v1' } })
+    await a.esperar(() => a.sala?.yo === 0)
+    const sala = a.sala!
+    // El nivel manda: 3v3, muy difícil, a 30, en la mesa de Rocha (aunque se pida otra cosa).
+    expect([sala.formato, sala.nivelBots, sala.config.puntosPartida, sala.mesa]).toEqual(['3v3', 'muyDificil', 30, 'rocha'])
+    expect(sala.historia).toEqual({ departamento: 'rocha', nivel: 4 })
+
+    const b = await Jugador.unirse(colyseus, sala.codigo!, undefined, 'Amigo', { token: amigo.token })
+    await b.esperar(() => b.sala?.yo != null)
+    expect(b.sala!.yo! % 2).toBe(0)
+    a.enviar('configurar', { config: { formato: '1v1' } })
+    await a.esperar(() => a.de('error').length > 0)
+
+    a.enviar('iniciar', {})
+    await a.esperar(() => a.sala?.fase === 'jugando')
+    const elenco = elencoDelNivel(HISTORIAS.rocha!.niveles[3]!)
+    for (const l of a.sala!.lugares) {
+      if (l.tipo === 'bot') expect(l.apodo).toBe(elenco[l.asiento - 1]!.nombre)
+    }
+
+    // Al ganar, a cada uno se le anota si tenía abierto el nivel (el amigo, que no tiene el 3, no).
+    for (let nivel = 1; nivel <= 3; nivel++) await ganarNivel(base, admin.id, 'rocha', nivel)
+    await (salaEnServidor(colyseus, a.room.roomId) as unknown as { anotarHistoria(g: 0 | 1): Promise<void> }).anotarHistoria(0)
+    await a.esperar(() => a.de('historia').length > 0)
+    expect(a.de('historia')[0]).toEqual({ nuevas: HISTORIAS.rocha!.niveles[3]!.recompensas, anotado: true })
+    await b.esperar(() => b.de('historia').length > 0)
+    expect(b.de('historia')[0]).toEqual({ nuevas: [], anotado: false })
+  })
+})
+

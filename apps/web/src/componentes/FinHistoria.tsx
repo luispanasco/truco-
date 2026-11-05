@@ -13,24 +13,45 @@ type Premio = { estado: 'anotando' } | { estado: 'listo'; nuevas: string[] } | {
  * y se ven las recompensas; los botones llevan al siguiente nivel o de vuelta al departamento. Al
  * perder, la revancha es la de siempre.
  */
-export function FinHistoria({ jugado, ganamos, revancha }: { jugado: NivelJugado; ganamos: boolean; revancha: () => void }) {
+export function FinHistoria({
+  jugado,
+  ganamos,
+  revancha,
+  online = false,
+  pediRevancha = false,
+}: {
+  jugado: NivelJugado
+  ganamos: boolean
+  revancha: () => void
+  /** En cooperativo, el nivel lo anota el servidor y avisa qué te tocó. */
+  online?: boolean
+  pediRevancha?: boolean
+}) {
   const navegar = useNavigate()
-  const [premio, setPremio] = useState<Premio>({ estado: 'anotando' })
+  const [anotado, setAnotado] = useState<Premio>({ estado: 'anotando' })
+  const delServidor = useJuego((s) => s.premioHistoria)
+  const premio: Premio = !online
+    ? anotado
+    : !delServidor
+      ? { estado: 'anotando' }
+      : delServidor.anotado
+        ? { estado: 'listo', nuevas: delServidor.nuevas }
+        : { estado: 'error', motivo: 'No se te anotó: primero ganá el nivel anterior' }
   const historia = HISTORIAS[jugado.departamento]
   const hayOtro = !!historia && jugado.nivel < historia.niveles.length
   const departamento = buscarDepartamento(jugado.departamento)?.nombre ?? 'el mapa'
 
   useEffect(() => {
-    if (!ganamos) return
+    if (!ganamos || online) return
     let vigente = true
     ganarNivelHistoria(jugado.departamento, jugado.nivel).then(
-      (nuevas) => vigente && setPremio({ estado: 'listo', nuevas }),
-      (e: unknown) => vigente && setPremio({ estado: 'error', motivo: e instanceof Error ? e.message : 'No se pudo anotar' }),
+      (nuevas) => vigente && setAnotado({ estado: 'listo', nuevas }),
+      (e: unknown) => vigente && setAnotado({ estado: 'error', motivo: e instanceof Error ? e.message : 'No se pudo anotar' }),
     )
     return () => {
       vigente = false
     }
-  }, [ganamos, jugado.departamento, jugado.nivel])
+  }, [ganamos, online, jugado.departamento, jugado.nivel])
 
   const ir = (a: string) => {
     useJuego.getState().salir()
@@ -66,8 +87,8 @@ export function FinHistoria({ jugado, ganamos, revancha }: { jugado: NivelJugado
             Siguiente nivel
           </button>
         ) : !ganamos ? (
-          <button type="button" className="boton boton-grande" onClick={revancha}>
-            Revancha
+          <button type="button" className="boton boton-grande" onClick={revancha} disabled={pediRevancha}>
+            {pediRevancha ? 'Esperando a los demás…' : 'Revancha'}
           </button>
         ) : null}
         <button type="button" className={`boton ${ganamos && !hayOtro ? 'boton-grande' : 'boton-secundario'}`} onClick={() => ir(`/historia/${jugado.departamento}`)}>

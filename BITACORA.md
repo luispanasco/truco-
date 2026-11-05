@@ -1504,3 +1504,15 @@ Plan del usuario: recorrer Uruguay por departamento, sin pasaje entre ellos; un 
 - Revisado con capturas: el botón en Jugar, el mapa, Rocha, la previa y la mesa.
 - **Tests:** server 120 (los niveles de a uno, las recompensas una sola vez, la API solo para admins), web 350 (los datos, el mapa, los candados, la previa, el elenco en la mesa y el final, ganando y perdiendo).
 - **Hay que publicar el servidor en Fly** (migración 10 y la API). Como solo lo ve el admin, hace falta `ADMINS` (ver INSTRUCTIVO-CUENTAS.md).
+
+## Modo historia, etapa 2: cooperativo online — 2026-11-05
+
+Los niveles de equipos (2v2 y 3v3) se pueden jugar con un amigo.
+
+- **Desde la previa:** "Jugar con un amigo" (solo en 2v2 y 3v3) arma una sala privada del nivel (`OpcionesCrearSala.historia`) y lleva a la sala de espera. El amigo entra con el código o el link, como siempre. La sala la abre solo un admin; los amigos que invita entran aunque no lo sean.
+- **El nivel manda:** formato, dificultad, puntos, sin pica-pica y sin tirar reyes. No se configura en la espera ("En el modo historia se juega como dice el nivel") y la mesa es la del lugar (`InfoSala.historia`; de fondo, el lugar).
+- **Asientos:** las personas van todas del mismo lado (los asientos pares); los del otro equipo son el elenco y no se pueden ocupar. En la sala de espera se ven como "Julio · Rival del nivel", con un aviso de dónde se juega y contra quién. Si no viene nadie al equipo, juegan los compañeros del nivel (Cacho, Doña Rosa). Al empezar, los bots son el elenco en su lugar.
+- **Al ganar:** el servidor le anota el nivel a cada persona con cuenta que sigue en la mesa (`anotarHistoria`) y le manda `historia` con sus recompensas nuevas. Si a alguien le falta el nivel anterior, no se le anota y se le avisa. En el cartel del final (`FinHistoria` con `online`), lo que te tocó lo dice el servidor; la revancha espera a los demás, como en cualquier sala.
+- **Arreglo de la etapa 1:** entrar directo por la dirección (o recargar) en una pantalla del modo historia no arrancaba la cuenta y quedaba en "Se está armando". Ahora la arranca y muestra "Cargando…" mientras tanto.
+- **Tests:** server 121 (la sala del nivel: solo la abre un admin, no en mano a mano, el nivel manda, las personas del mismo lado, el elenco en su lugar y el nivel anotado a quien lo tenía abierto), web 353 (el botón según el formato, la sala de espera del nivel y el premio que manda el servidor). E2E `historia.spec.ts`: el admin gana el nivel 1, arma la sala del nivel 2 y un amigo entra con el código; juegan juntos contra Julio y Nico en la mesa de Rocha. El servidor de los e2e tiene su propio admin (`admin-e2e@ejemplo.com`, en playwright.config.ts).
+- **Hay que publicar el servidor en Fly.**
