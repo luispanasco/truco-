@@ -77,11 +77,28 @@ export const ZONAS_GRIMAUD: ZonasOjeo = {
   tope: 0.032,
 }
 
+/**
+ * Los diseños propios (Oriental, Costa Uruguaya, Colonial y Grabado Nocturno) comparten el marco,
+ * medido en las 40 imágenes de cada una: la línea de los cortes va de 0,038 a 0,040 de la altura
+ * y el número de 0,103 a 0,163, igual en todas las cartas. Entre las dos queda una franja vacía
+ * ancha, como en la propia: el tope cae en el medio.
+ */
+export const ZONAS_PROPIAS_IMAGEN: ZonasOjeo = {
+  cortes: { desde: 0, hasta: 0.045 },
+  separacion: { desde: 0.045, hasta: 0.1 },
+  indice: { desde: 0.1, hasta: 0.17 },
+  tope: 0.0725,
+}
+
 export const ZONAS_OJEO: Record<Baraja, ZonasOjeo> = {
   propia: ZONAS_PROPIA,
   fournier1878: ZONAS_FOURNIER,
   cid1888: ZONAS_CID,
   grimaud1860: ZONAS_GRIMAUD,
+  oriental: ZONAS_PROPIAS_IMAGEN,
+  costa: ZONAS_PROPIAS_IMAGEN,
+  colonial: ZONAS_PROPIAS_IMAGEN,
+  grabado: ZONAS_PROPIAS_IMAGEN,
 }
 
 /**

@@ -18,6 +18,11 @@ export const BARAJAS = [
   { id: 'fournier1878', nombre: 'Clásica 1878', precio: 0 },
   { id: 'cid1888', nombre: 'El Cid 1888', precio: 0 },
   { id: 'grimaud1860', nombre: 'Grimaud 1860', precio: 0 },
+  // Diseños propios. Gratis por ahora: van a ser recompensas del mapa del modo historia.
+  { id: 'oriental', nombre: 'Oriental', precio: 0 },
+  { id: 'costa', nombre: 'Costa Uruguaya', precio: 0 },
+  { id: 'colonial', nombre: 'Colonial', precio: 0 },
+  { id: 'grabado', nombre: 'Grabado Nocturno', precio: 0 },
 ] as const satisfies readonly Baraja[]
 
 export type IdBaraja = (typeof BARAJAS)[number]['id']

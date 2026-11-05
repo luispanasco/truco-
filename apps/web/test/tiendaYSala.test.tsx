@@ -57,6 +57,10 @@ describe('barajas en el catálogo', () => {
       ['fournier1878', 0],
       ['cid1888', 0],
       ['grimaud1860', 0],
+      ['oriental', 0],
+      ['costa', 0],
+      ['colonial', 0],
+      ['grabado', 0],
     ])
     expect(normalizarBaraja('fournier1878')).toBe('fournier1878')
     expect(normalizarBaraja('tarot')).toBe('propia')

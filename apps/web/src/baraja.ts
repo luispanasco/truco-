@@ -4,10 +4,11 @@ import { BARAJAS as CATALOGO_BARAJAS, type IdBaraja } from '@truco/shared'
 import { guardarPerfil, leerPerfil } from './perfil'
 
 /**
- * Barajas para elegir (es solo cosmético): la propia, dibujada en SVG por código, y tres antiguas
- * de dominio público en imágenes WebP de 400 × 600: la clásica de Heraclio Fournier (1878), "El
- * Cid" (1888) y la de Grimaud (1860). Ver el CREDITOS.md de cada carpeta de public/barajas y los
- * scripts que las generan (scripts/baraja-fournier.py y scripts/baraja-gallica.py). El catálogo
+ * Barajas para elegir (es solo cosmético): la propia, dibujada en SVG por código, tres antiguas
+ * de dominio público en imágenes WebP de 400 × 600 (la clásica de Heraclio Fournier de 1878, "El
+ * Cid" de 1888 y la de Grimaud de 1860; ver los scripts que las generan, scripts/baraja-fournier.py
+ * y scripts/baraja-gallica.py) y cuatro diseños propios, también en WebP de 400 × 600: Oriental,
+ * Costa Uruguaya, Colonial y Grabado Nocturno. Los créditos, en el CREDITOS.md de cada carpeta. El catálogo
  * (ids y precios) está en @truco/shared: en una sala, la baraja la pone el anfitrión.
  */
 export type Baraja = IdBaraja
@@ -18,6 +19,10 @@ const EXTRA: Record<Baraja, { corto: string; credito?: string }> = {
   fournier1878: { corto: 'clásica', credito: 'Fournier 1878 · dominio público' },
   cid1888: { corto: 'El Cid', credito: 'Simeón Durá, Valencia 1888 · dominio público' },
   grimaud1860: { corto: 'Grimaud', credito: 'B. P. Grimaud 1860 · dominio público' },
+  oriental: { corto: 'Oriental', credito: 'Diseño propio' },
+  costa: { corto: 'Costa', credito: 'Diseño propio' },
+  colonial: { corto: 'Colonial', credito: 'Diseño propio' },
+  grabado: { corto: 'Grabado', credito: 'Diseño propio' },
 }
 
 /** Carpeta (en public/barajas) de cada baraja en imágenes. */
@@ -25,6 +30,10 @@ const CARPETAS: Record<Exclude<Baraja, 'propia'>, string> = {
   fournier1878: 'fournier-1878',
   cid1888: 'cid-1888',
   grimaud1860: 'grimaud-1860',
+  oriental: 'oriental',
+  costa: 'costa-uruguaya',
+  colonial: 'colonial',
+  grabado: 'grabado-nocturno',
 }
 
 export const BARAJAS: { id: Baraja; nombre: string; precio: number; corto: string; credito?: string }[] = CATALOGO_BARAJAS.map(

@@ -21,6 +21,7 @@ import {
   ZONAS_GRIMAUD,
   ZONAS_OJEO,
   ZONAS_PROPIA,
+  ZONAS_PROPIAS_IMAGEN,
   zonaVisible,
 } from '../src/ojeo'
 import { leerPerfil } from '../src/perfil'
@@ -65,8 +66,16 @@ describe('Carta según la baraja', () => {
     expect(imagen(screen.getByLabelText('carta boca abajo'))).toBe('/barajas/fournier-1878/dorso.webp')
   })
 
-  it('"El Cid" y Grimaud: cada carta y el dorso salen de su carpeta, y las 41 imágenes existen', () => {
-    for (const [baraja, carpeta] of [['cid1888', 'cid-1888'], ['grimaud1860', 'grimaud-1860']] as const) {
+  it('las barajas en imágenes: cada carta y el dorso salen de su carpeta, y las 41 imágenes existen', () => {
+    const barajas = [
+      ['cid1888', 'cid-1888'],
+      ['grimaud1860', 'grimaud-1860'],
+      ['oriental', 'oriental'],
+      ['costa', 'costa-uruguaya'],
+      ['colonial', 'colonial'],
+      ['grabado', 'grabado-nocturno'],
+    ] as const
+    for (const [baraja, carpeta] of barajas) {
       act(() => mostrarBaraja(baraja))
       render(
         <>
@@ -160,6 +169,18 @@ describe('zonas del ojeo por baraja', () => {
       expect(z.tope).toBeLessThanOrEqual(z.indice.desde)
       expect(z.indice.hasta).toBeLessThan(ZONA_INDICE.hasta)
     }
+  })
+
+  it('los diseños propios comparten zonas: el tope en la franja vacía, entre la línea y el número', () => {
+    for (const b of ['oriental', 'costa', 'colonial', 'grabado'] as const) expect(ZONAS_OJEO[b]).toBe(ZONAS_PROPIAS_IMAGEN)
+    const z = ZONAS_PROPIAS_IMAGEN
+    expect(z.cortes.hasta).toBe(z.separacion.desde)
+    expect(z.separacion.hasta).toBe(z.indice.desde)
+    // Medido: la línea termina en 0,040 y el número va de 0,103 a 0,163.
+    expect(z.tope).toBeGreaterThan(0.04)
+    expect(z.tope).toBeLessThan(0.103)
+    expect(z.indice.desde).toBeLessThanOrEqual(0.103)
+    expect(z.indice.hasta).toBeGreaterThanOrEqual(0.163)
   })
 
   it('con la clásica, una carta queda ojeada al asomar su franja (más corta)', () => {

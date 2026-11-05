@@ -1459,3 +1459,12 @@ Pedido del usuario: avatares típicos de Uruguay (un gaucho, un surfista, una hi
 - Se revisó con capturas: cada pieza nueva, los 10 personajes, la galería y una mesa 2v2 con personajes de bots. En la mesa, el nombre con el título no entraba ("Cacho el ..."): va solo el nombre.
 - **Tests:** web 339 (cada pieza arma un SVG válido, los bigotes con cada boca, los personajes, los bots distintos y estables, la galería del admin y los bots de la partida local), server 118 (el admin por `ADMINS` y los bots de su sala).
 - **Hay que volver a publicar el servidor en Fly y poner `ADMINS`** (ver INSTRUCTIVO-CUENTAS.md).
+
+## Cuatro barajas propias: Oriental, Costa Uruguaya, Colonial y Grabado Nocturno — 2026-11-05
+
+El usuario pasó un zip con cuatro barajas de diseño propio (generadas con IA, con autorización de uso en la app; ver el CREDITOS.md de cada carpeta). Decidido: **gratis por ahora; después van a ser recompensas del mapa del modo historia** (no de la tienda).
+
+- **Revisión del zip:** cada una tiene las 40 cartas y el dorso, con los nombres `número-palo.webp`, en WebP de 400 × 600 RGB, de 57 a 89 KB. Los cortes de la línea de arriba están bien (oro 0, copa 1, espada 2 y basto 3). Están en `public/barajas/oriental`, `costa-uruguaya`, `colonial` y `grabado-nocturno`. Pesan unos 3 MB cada una, el doble que las antiguas: como las otras, se bajan solo al elegirlas (el service worker las guarda al usarlas).
+- **Ojeo:** las cuatro comparten el marco y se midieron las 40 cartas de cada una. La línea de los cortes va de 0,038 a 0,040 de la altura y el número de 0,103 a 0,163, igual en todas las cartas. La franja vacía es ancha, como en la propia. `ZONAS_PROPIAS_IMAGEN` en `ojeo.ts`: cortes hasta 0,045, índice de 0,10 a 0,17 y el tope en 0,0725. En la mesa, al frenar en el tope se ven los cortes y nada del número.
+- **Catálogo:** `oriental`, `costa`, `colonial` y `grabado` en `@truco/shared` (precio 0). En la web, su carpeta, el nombre corto y "Diseño propio" como crédito. Se ven en el selector, en el visor de cartas y en la mesa (revisado con capturas).
+- **Tests:** web 340 (las 41 imágenes de cada una, el catálogo y las zonas del ojeo).
