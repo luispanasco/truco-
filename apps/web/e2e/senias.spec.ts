@@ -41,7 +41,8 @@ test('una seña le llega al compañero y no al rival', async ({ browser }) => {
 
   await empezar(ana, [ana, beto, caro])
 
-  // Ana le levanta las cejas desde la cara (2 de la muestra).
+  // Ana le levanta las cejas desde la cara (2 de la muestra): primero ojea, mientras tanto no hay señas.
+  await ana.getByRole('button', { name: 'Ver todas' }).click()
   await ana.getByRole('button', { name: 'Hacer una seña' }).click()
   await ana.getByRole('dialog', { name: 'Señas' }).getByRole('button', { name: 'Levantar las cejas (2 de la muestra)' }).click()
   await expect(ana.getByRole('status').filter({ hasText: 'Le hiciste la seña: levantar las cejas' })).toBeVisible()
@@ -98,7 +99,8 @@ test('tocando el avatar del compañero se ven sus señas y se le pide que las re
   await expect(ana.getByRole('group', { name: 'Equipo 1' }).getByText('Beto')).toBeVisible()
   await empezar(ana, [ana, beto])
 
-  // Beto le guiña el ojo derecho (perico).
+  // Beto le guiña el ojo derecho (perico): primero ojea, mientras tanto no hay señas.
+  await beto.getByRole('button', { name: 'Ver todas' }).click()
   await beto.getByRole('button', { name: 'Hacer una seña' }).click()
   await beto.getByRole('dialog', { name: 'Señas' }).getByRole('button', { name: 'Guiño derecho (perico)' }).click()
   await expect(asientoDe(ana, 'Beto').locator('[data-gesto="perico"]').first()).toBeVisible()

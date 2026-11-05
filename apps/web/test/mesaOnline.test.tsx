@@ -182,6 +182,7 @@ describe('globitos de chat', () => {
 describe('señas', () => {
   it('en 2v2 se abre la cara de señas y se hace una (modo local)', async () => {
     await entrar(local('2v2'))
+    fireEvent.click(screen.getByRole('button', { name: 'Ver todas' }))
     fireEvent.click(screen.getByRole('button', { name: 'Hacer una seña' }))
     const panel = screen.getByRole('dialog', { name: 'Señas' })
     fireEvent.click(within(panel).getByRole('button', { name: 'Guiño derecho (perico)' }))

@@ -132,7 +132,12 @@ export function describirEvento(
       const tanto = r.puntosTanto.some((p) => p > 0)
         ? ` · tanto: ${equipo(0)} ${r.puntosTanto[0]}, ${equipo(1)} ${r.puntosTanto[1]}`
         : ''
-      const lineas = [`  ✔ Truco: ${r.puntosTruco} ${r.puntosTruco === 1 ? 'punto' : 'puntos'}, ${gana(r.ganador, 'los')}${tanto}`]
+      // Con el tanto alcanzaba para salir: el truco no se jugó.
+      const lineas = [
+        r.motivo === 'tanto'
+          ? `  ✔ Salen con el tanto: el truco no se juega${tanto}`
+          : `  ✔ Truco: ${r.puntosTruco} ${r.puntosTruco === 1 ? 'punto' : 'puntos'}, ${gana(r.ganador, 'los')}${tanto}`,
+      ]
       for (const t of r.revelados) {
         lineas.push(`    ${nombre(t.asiento)} tenía ${t.flor !== null ? `flor de ${t.flor}` : `${t.envido} de envido`}`)
       }

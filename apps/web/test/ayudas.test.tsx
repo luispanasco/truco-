@@ -201,6 +201,12 @@ async function entrar(estado: EstadoPartida, yo: number, ayudas = true) {
   f.llegar({ tipo: 'sala', datos: sala })
   f.llegar({ tipo: 'vista', datos: vistaPara(estado, `j${yo}`) })
   await waitFor(() => expect(screen.getByLabelText('Mazo y muestra')).toBeTruthy())
+  // Con las tres cartas, la mano llega apilada para ojear: hasta abrirla no se ve el tanto.
+  const verTodas = screen.queryByRole('button', { name: 'Ver todas' })
+  if (verTodas) {
+    expect(screen.queryByRole('button', { name: /^(flor|envido) / })).toBeNull()
+    fireEvent.click(verTodas)
+  }
   return f
 }
 

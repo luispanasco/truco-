@@ -58,6 +58,10 @@ test('la mano llega apilada, se ojea deslizando y se juega arrastrando una carta
   const verTodas = page.getByRole('button', { name: 'Ver todas' })
   await expect(verTodas).toBeVisible()
   await expect(page.getByText('para ojear')).toBeVisible()
+  // Mientras se ojea no se hace nada: ni el tanto, ni los cantos, ni el mazo.
+  await expect(page.getByText('Terminá de ojear tus cartas')).toBeVisible()
+  await expect(page.locator('.mi-tanto')).toHaveCount(0)
+  await expect(page.locator('.acciones')).toHaveCount(0)
 
   // Apiladas, las tres ocupan el mismo lugar (cuando termina la animación del reparto).
   await expect
@@ -87,6 +91,8 @@ test('la mano llega apilada, se ojea deslizando y se juega arrastrando una carta
   // Ojeadas las tres, se abre sola en abanico: ya no hay "Ver todas" y las cartas se separan.
   await expect(verTodas).toBeHidden()
   await expect(page.getByText('para ojear')).toBeHidden()
+  await expect(page.getByText('Terminá de ojear tus cartas')).toBeHidden()
+  await expect(page.locator('.mi-tanto')).toBeVisible()
   await expect(cartas).toHaveCount(3)
   const [a, b, c] = [await cajaQuieta(cartas.nth(0)), await cajaQuieta(cartas.nth(1)), await cajaQuieta(cartas.nth(2))]
   expect(b.x - a.x).toBeGreaterThan(a.width / 2)

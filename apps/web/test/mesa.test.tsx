@@ -43,6 +43,14 @@ describe('interfaz', () => {
     // Espera a que le toque a la persona.
     await waitFor(() => expect(screen.getByText('Te toca')).toBeTruthy(), { timeout: 5000 })
 
+    // Mientras ojeás no se puede hacer nada: ni cantar, ni irse al mazo, ni ver el tanto.
+    expect(screen.getByText('Terminá de ojear tus cartas')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Truco' })).toBeNull()
+    expect(screen.queryByRole('button', { name: /mazo/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /^(flor|envido) / })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Ver todas' }))
+    expect(screen.queryByText('Terminá de ojear tus cartas')).toBeNull()
+
     // Los cantos disponibles aparecen como botones; el truco está entre ellos al empezar.
     const vista = useJuego.getState().vista!
     if (vista.accionesValidas.some((a) => a.tipo === 'cantarTruco')) {

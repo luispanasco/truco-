@@ -1277,6 +1277,14 @@ input {
   display: grid;
   align-content: center;
 }
+/* Mientras ojeás, en lugar de la botonera. */
+.ojea-primero {
+  margin: 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--texto-claro);
+  opacity: 0.8;
+}
 .mi-mano {
   min-height: calc(var(--carta-grande) * 1.5);
 }

@@ -59,9 +59,10 @@ export function Mesa() {
   } = useJuego()
   // Pasar en la tercera: la próxima carta que toques va tapada.
   const [pasando, setPasando] = useState(false)
-  // La contraflor al resto querida termina el partido de golpe: el cartel del final espera un
-  // poco, así se ven las flores (o la mesa cantada) antes.
-  const porFlor = vista?.ganador != null && vista.mano.enfrentamientos.some((x) => x.resultado?.motivo === 'contraflorAlResto')
+  // La contraflor al resto querida, o el tanto que alcanza para salir, terminan el partido de
+  // golpe: el cartel del final espera un poco, así se ven las flores (o la mesa cantada) antes.
+  const porTanto = vista?.ganador != null ? vista.mano.enfrentamientos.find((x) => x.resultado?.motivo === 'tanto') : undefined
+  const porFlor = vista?.ganador != null && (!!porTanto || vista.mano.enfrentamientos.some((x) => x.resultado?.motivo === 'contraflorAlResto'))
   const [finVisible, setFinVisible] = useState(true)
   useEffect(() => {
     if (!porFlor) return void setFinVisible(true)
@@ -215,6 +216,8 @@ export function Mesa() {
   }
   const manoAbierta = !ojear || misCartas.length !== 3 || abiertaEn === vista.mano.numero
   const conTira = hayCompanieros && !finDeMano && misCartas.length > 0 && manoAbierta && muestra !== null
+  // Mientras ojeás no se hace nada: ni el tanto, ni los cantos, ni el mazo (se vería la flor antes de tiempo).
+  const enJuego = !finDeMano && manoAbierta
   // Menú de jugador: solo online y solo sobre otras personas.
   const menuPara = (a: number) => (online && a !== yo && sala.lugares[a]?.tipo === 'humano' ? () => setMenuDe(a) : undefined)
   const lugarMenu = menuDe !== null ? sala.lugares[menuDe] : undefined
@@ -410,7 +413,7 @@ export function Mesa() {
           <div className="mi-quien">
             <span className="mi-nombre">{lugarYo.apodo}</span>
             {/* Mientras se corta todavía no hay cartas: no hay tanto que mostrar. */}
-            {sala.ayudas && cortando === null && !repartiendo && (
+            {sala.ayudas && cortando === null && !repartiendo && manoAbierta && (
               // Con flor, el envido no se juega: la ficha muestra la flor (el envido, en la explicación).
               <button type="button" className="mi-tanto" onClick={(ev) => explicar(explicarTanto(vista), ev.currentTarget)}>
                 {vista.mano.miTanto.flor !== null ? (
@@ -426,12 +429,12 @@ export function Mesa() {
           <span className="mi-estado">
             {meToca && (miReloj !== null ? <RelojPropio venceEn={miReloj} /> : <span className="te-toca">Te toca</span>)}
             {!participa(yo) && <span className="te-toca espera">Esperás tu duelo</span>}
-            {hayCompanieros && <BotonSenias alTocar={() => setPanel('senias')} cerrado={seniasCerradas} />}
-            {!finDeMano && <BotonPasar vista={vista} activo={pasando} alCambiar={setPasando} />}
-            {!finDeMano && (
+            {hayCompanieros && manoAbierta && <BotonSenias alTocar={() => setPanel('senias')} cerrado={seniasCerradas} />}
+            {enJuego && <BotonPasar vista={vista} activo={pasando} alCambiar={setPasando} />}
+            {enJuego && (
               <BotonPie vista={vista} abierto={pieAbierto} esperando={botEspera} alCambiar={(a) => setPieAbiertoEn(a ? vista.mano.numero : null)} />
             )}
-            {!finDeMano && <BotonMazo vista={vista} alElegir={jugar} />}
+            {enJuego && <BotonMazo vista={vista} alElegir={jugar} />}
           </span>
         </div>
         {/* La tira de señas va a los costados de la mano (no en una fila aparte): la mesa no se achica. */}
@@ -469,12 +472,16 @@ export function Mesa() {
                 <div key={i}>{l.trim().replace(/^✔\s*/, '')}</div>
               ))}
             </div>
-          ) : (
+          ) : manoAbierta ? (
             <Acciones vista={vista} alElegir={jugar} />
+          ) : (
+            <p className="ojea-primero" role="status">
+              Terminá de ojear tus cartas
+            </p>
           )}
         </div>
         {/* Lo del pie flota sobre el borde del paño, arriba de tu lugar: no tapa la mano ni los cantos. */}
-        {(pieAbierto || botEspera !== null) && (
+        {manoAbierta && (pieAbierto || botEspera !== null) && (
           <PanelPie
             vista={vista}
             apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
@@ -495,7 +502,10 @@ export function Mesa() {
             <h2 id="fin-titulo" className="modal-titulo fin-titulo">
               {ganamos ? (enEquipos ? '¡Ganaron!' : '¡Ganaste!') : enEquipos ? 'Perdieron' : 'Perdiste'}
             </h2>
-            <p className="modal-texto">{ganamos ? 'Partida ganada' : 'Esta vez no se dio'} · a {vista.config.puntosPartida} puntos</p>
+            <p className="modal-texto">
+              {textoFin(ganamos, porTanto ? (porTanto.flor.cantadas.length > 0 ? 'con la flor' : 'con el envido') : null)} · a{' '}
+              {vista.config.puntosPartida} puntos
+            </p>
             <div className="fin-resultado" aria-label="Resultado final">
               <div className={`fin-equipo nosotros${ganamos ? ' gano' : ''}`}>
                 <span>{nombreNuestro}</span>
@@ -620,4 +630,10 @@ export function Mesa() {
       )}
     </div>
   )
+}
+
+/** "Partida ganada", o con qué se salió si el tanto terminó el partido ("Salieron con la flor"). */
+function textoFin(ganamos: boolean, conTanto: string | null): string {
+  if (!conTanto) return ganamos ? 'Partida ganada' : 'Esta vez no se dio'
+  return ganamos ? `Partida ganada ${conTanto}` : `Salieron ${conTanto}`
 }

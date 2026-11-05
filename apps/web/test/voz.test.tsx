@@ -399,6 +399,7 @@ describe('con voz, el pie igual les dice a sus bots qué jugar', () => {
       f.llegar({ tipo: 'sala', datos: sala(voz, '2v2') })
       f.llegar({ tipo: 'vista', datos: vistaPara(estado, 'j0') })
       await waitFor(() => expect(screen.getByLabelText('Mazo y muestra')).toBeTruthy())
+      fireEvent.click(screen.getByRole('button', { name: 'Ver todas' }))
       expect(screen.queryByRole('button', { name: /pie/i })).toBeTruthy()
       act(() => useJuego.getState().salir())
       cleanup()

@@ -129,7 +129,7 @@ export interface TantoRevelado {
 }
 
 export interface ResultadoEnfrentamiento {
-  motivo: 'vueltas' | 'noQuiero' | 'mazo' | 'contraflorAlResto'
+  motivo: 'vueltas' | 'noQuiero' | 'mazo' | 'contraflorAlResto' | 'tanto'
   ganador: Equipo
   puntosTruco: number
   /** Puntos de envido o flor por equipo, ya con la verificación aplicada. */

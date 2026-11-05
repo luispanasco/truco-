@@ -112,6 +112,9 @@ async function entrar(datos: ReturnType<typeof partida2v2>) {
 }
 
 const abrir = () => {
+  // Mientras se ojea no hay señas: primero se abre la mano.
+  const verTodas = screen.queryByRole('button', { name: 'Ver todas' })
+  if (verTodas) fireEvent.click(verTodas)
   fireEvent.click(screen.getByRole('button', { name: 'Hacer una seña' }))
   return screen.getByRole('dialog', { name: 'Señas' })
 }

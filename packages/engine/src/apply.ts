@@ -52,6 +52,7 @@ export function apply(estado: EstadoPartida, accion: Accion): ResultadoApply {
   const nuevo = structuredClone(estado)
   const eventos: Evento[] = []
   ejecutar(nuevo, accion, eventos)
+  salirConElTanto(nuevo, eventos)
   return { ok: true, estado: nuevo, eventos }
 }
 
@@ -731,6 +732,32 @@ function resolverContraflorAlResto(estado: EstadoPartida, e: Enfrentamiento, eve
   e.flor.ganador = g
   eventos.push({ tipo: 'florResuelta', ganador: g, tantos: floresEnOrden(e), alResto: true })
   terminarJuego(estado, 'contraflorAlResto', g, 0, eventos)
+}
+
+/**
+ * Si el tanto de la mano (flor o envido) ya no puede cambiar y le alcanza a un equipo para llegar
+ * a los puntos del partido, se gana ahí: el truco no se juega. No puede cambiar si no hay nada
+ * pendiente ni flores por cantar y nadie puede cantar flor ni contraflor (sin flor obligatoria o
+ * en modo sucio, hasta que cada uno juegue su carta de la primera). En modo sucio igual se
+ * verifica: si mintió, no sale.
+ */
+function salirConElTanto(estado: EstadoPartida, eventos: Evento[]) {
+  const { mano } = estado
+  const e = mano.enfrentamientos[mano.actual]
+  if (estado.ganador !== null || mano.cortando !== null || mano.verificacion || !e || e.fin) return
+  const pend = pendienteActual(e)
+  if ((pend !== null && pend !== 'truco') || e.flor.mesa || floresPorCantar(estado, e).length > 0) return
+  const puntos = calcularPuntosTanto(estado, e)
+  const sale = ([0, 1] as const).find((eq) => puntos[eq] > 0 && estado.puntos[eq] + puntos[eq] >= estado.config.puntosPartida)
+  if (sale === undefined) return
+  const puedeCantar = e.participantes.some((a) => {
+    if (e.retirados.includes(a)) return false
+    const jugador = estado.jugadores.find((j) => j.asiento === a)!.id
+    const tanto = mano.tantos[a]?.florReal ?? 0
+    return (['flor', 'contraflor'] as const).some((canto) => validar(estado, { tipo: 'cantarFlor', jugador, canto, tanto }) === null)
+  })
+  if (puedeCantar) return
+  terminarJuego(estado, 'tanto', sale, 0, eventos)
 }
 
 /** Termina el juego de cartas del enfrentamiento y pasa a la verificación. */
