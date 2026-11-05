@@ -237,7 +237,8 @@ function Marco({ palo }: { palo: Palo }) {
   const c = COLOR_PALO[palo]
   const cortes = CORTES[palo]
   const [x0, x1, y0, y1] = [14, 186, 14, 286]
-  const hueco = 14
+  // Como en las barajas antiguas: el hueco es cerca del 15 % del largo de la línea.
+  const hueco = 25
   const tramos: [number, number][] = []
   let desde = x0
   for (let i = 1; i <= cortes; i++) {

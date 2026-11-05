@@ -1468,3 +1468,11 @@ El usuario pasó un zip con cuatro barajas de diseño propio (generadas con IA, 
 - **Ojeo:** las cuatro comparten el marco y se midieron las 40 cartas de cada una. La línea de los cortes va de 0,038 a 0,040 de la altura y el número de 0,103 a 0,163, igual en todas las cartas. La franja vacía es ancha, como en la propia. `ZONAS_PROPIAS_IMAGEN` en `ojeo.ts`: cortes hasta 0,045, índice de 0,10 a 0,17 y el tope en 0,0725. En la mesa, al frenar en el tope se ven los cortes y nada del número.
 - **Catálogo:** `oriental`, `costa`, `colonial` y `grabado` en `@truco/shared` (precio 0). En la web, su carpeta, el nombre corto y "Diseño propio" como crédito. Se ven en el selector, en el visor de cartas y en la mesa (revisado con capturas).
 - **Tests:** web 340 (las 41 imágenes de cada una, el catálogo y las zonas del ojeo).
+
+## Cortes más grandes en las barajas propias — 2026-11-05
+
+Pedido del usuario: que los huecos de los cortes del marco sean más grandes en los mazos propios, "parecido a las otras". En El Cid y en Grimaud el hueco es el 14–15 % del largo de la línea (unos 50 px de 330).
+
+- **Las cuatro en imagen** (Oriental, Costa Uruguaya, Colonial y Grabado Nocturno): los huecos pasaron de 20 a 51 px, arriba y abajo, en las 120 cartas con cortes de cada una. Lo hace `scripts/barajas-propias-cortes.py`: rehace cada hueco centrado donde estaba y rellena con el papel de unas filas más adentro de la misma carta (sin parches). Correrlo dos veces da lo mismo. El ojeo no cambia: la línea sigue a la misma altura.
+- **La propia (SVG, `Marco` en `dibujo.tsx`):** el hueco pasó de 14 a 25 sobre una línea de 172, la misma proporción.
+- Revisado en el visor de cartas. Tests: web 340.
