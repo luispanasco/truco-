@@ -13,6 +13,8 @@ export interface DatosCuenta {
   preferencias: Record<string, unknown>
   /** Beta tester: puede usar todo lo de la tienda sin comprarlo. */
   beta?: boolean
+  /** Admin: ve lo que está en preparación (los personajes del modo historia). */
+  admin?: boolean
   nueva: boolean
 }
 

@@ -967,6 +967,44 @@ button.selector-modo-detalle:hover {
 .personalizar-avatar-fila .boton {
   flex: 1;
 }
+/* Personajes del modo historia (solo el admin): avatar, texto y "Probarte". */
+.personajes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.personaje {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: start;
+  gap: 6px 12px;
+}
+.personaje .personalizar-avatar-img {
+  grid-row: span 2;
+}
+.personaje-texto {
+  display: grid;
+  gap: 2px;
+}
+.personaje-texto small {
+  color: var(--menu-oro);
+  font-weight: 700;
+}
+.personaje-texto span {
+  color: var(--menu-suave);
+  font-size: 0.9rem;
+}
+.personaje .boton {
+  grid-column: 2;
+  justify-self: start;
+  width: auto;
+  padding: 8px 18px;
+}
+.personaje-probado {
+  margin: 0;
+}
 .grupos-pronto {
   display: grid;
   justify-items: center;

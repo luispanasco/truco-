@@ -26,6 +26,7 @@ import {
 import { crearBot, NIVELES_BOT, SENIAS, type Bot, type Nivel, type Senia, type SeniasRecibidas } from '@truco/bots'
 import {
   avatarAlAzar,
+  personajesParaBots,
   BARAJA_DEFAULT,
   codificarAvatar,
   MESA_DEFAULT,
@@ -151,6 +152,8 @@ interface Lugar {
   baraja: IdBaraja
   /** Si se le aceptan cosas pagas: beta tester, o tienda de prueba prendida y desbloqueada en su navegador. */
   tienda: boolean
+  /** Admin (lo dice su cuenta): si arma la sala, los bots salen con los personajes del modo historia. */
+  admin: boolean
 }
 
 interface DatosCliente {
@@ -181,6 +184,7 @@ function lugarLibre(asiento: number): Lugar {
     mesa: MESA_DEFAULT,
     baraja: BARAJA_DEFAULT,
     tienda: false,
+    admin: false,
   }
 }
 
@@ -285,18 +289,18 @@ export class SalaTruco extends Room {
   }
 
   /** Con un token de sesión, se verifica la cuenta; sin token se entra como invitado. */
-  override async onAuth(_client: Client, opciones: OpcionesUnirse): Promise<(Usuario & { inventario: string[]; beta: boolean }) | true> {
+  override async onAuth(_client: Client, opciones: OpcionesUnirse): Promise<(Usuario & { inventario: string[]; beta: boolean; admin: boolean }) | true> {
     const token = typeof opciones?.token === 'string' ? opciones.token : null
     if (!token || !this.cuentas) return true
     const usuario = await this.cuentas.verificar(token)
     if (!usuario) throw new Error('La sesión venció: volvé a entrar a tu cuenta')
     // Si nunca entró por la API (otra app, una sesión vieja), la cuenta se crea acá.
     const cuenta = await entrar(this.cuentas.base, usuario, { invitadoId: opciones.invitadoId, apodo: opciones.apodo, avatar: opciones.avatar })
-    return { ...usuario, inventario: await inventario(this.cuentas.base, usuario.id), beta: cuenta.beta }
+    return { ...usuario, inventario: await inventario(this.cuentas.base, usuario.id), beta: cuenta.beta, admin: cuenta.admin }
   }
 
   override onJoin(client: Client, opciones: OpcionesUnirse) {
-    const auth = typeof client.auth === 'object' && client.auth ? (client.auth as Usuario & { inventario: string[]; beta: boolean }) : null
+    const auth = typeof client.auth === 'object' && client.auth ? (client.auth as Usuario & { inventario: string[]; beta: boolean; admin: boolean }) : null
     const cuentaId = auth?.id ?? null
     const invitadoId = texto(opciones?.invitadoId, 64)
     const apodo = texto(opciones?.apodo, LIMITES.largoApodo)
@@ -323,6 +327,7 @@ export class SalaTruco extends Room {
     lugar.apodo = filtrarTexto(apodo)
     // Los beta testers (lo dice su cuenta, no el navegador) pueden usar todo lo de la tienda.
     lugar.tienda = auth?.beta === true || (this.tiendaDePrueba && opciones?.tiendaDesbloqueada === true)
+    lugar.admin = auth?.admin === true
     // Un avatar inválido o con piezas que no tiene se reemplaza por uno armado desde el apodo.
     lugar.avatar =
       normalizarAvatar(opciones?.avatar, lugar.tienda ? TODO_PERMITIDO : permisosDe(lugar.inventario).avatar) ??
@@ -645,13 +650,16 @@ export class SalaTruco extends Room {
   private iniciar(completarConBots = this.botsEnVacios) {
     const libres = this.lugares.filter((l) => l.tipo === 'libre')
     if (libres.length > 0 && !completarConBots) throw new Rechazo('Faltan jugadores')
+    // Si la sala la armó un admin, los bots son los personajes del modo historia.
+    const personajes = this.delAnfitrion()?.admin ? personajesParaBots(this.roomId, libres.length) : []
     let numeroBot = 0
     for (const l of libres) {
+      const personaje = personajes[numeroBot]
       numeroBot++
       l.tipo = 'bot'
-      l.apodo = `Bot ${numeroBot}`
+      l.apodo = personaje?.nombre ?? `Bot ${numeroBot}`
       // Los bots pueden lucir piezas de la tienda; cada sala les arma caras distintas.
-      l.avatar = codificarAvatar(avatarAlAzar(`${this.roomId}-${numeroBot}`, false))
+      l.avatar = codificarAvatar(personaje?.avatar ?? avatarAlAzar(`${this.roomId}-${numeroBot}`, false))
       l.conectado = false
     }
     this.limpiarTimer('timerOfrecer')

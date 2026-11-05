@@ -240,7 +240,7 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     8,
     50,
   ),
-  barba: [gratis('Sin barba'), gratis('Barba corta'), gratis('Barba')],
+  barba: [gratis('Sin barba'), gratis('Barba corta'), gratis('Barba'), paga('Bigote', 100), paga('Bigote gaucho', 150)],
   lentes: [gratis('Sin lentes'), gratis('Lentes redondos'), paga('Lentes de sol', 100), paga('Lentes finos', 100), paga('Lentes de profe', 100), paga('Lentes de lectura', 150)],
   aros: [gratis('Sin aros'), paga('Argollas y arito', 100), paga('Arito', 100), paga('Aro colgante', 150)],
   pecas: [gratis('Sin pecas'), gratis('Pecas')],
@@ -270,8 +270,26 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     // Criollos.
     paga('Poncho', 350),
     paga('Chaleco de campo', 250),
+    // Personajes: el surfista, el candombero, la hippie, el murguista, el pescador, la doña y el pituco.
+    paga('Traje de neoprene', 300),
+    paga('Camisa floreada', 250),
+    paga('Remera teñida', 250),
+    paga('Levita de murga', 400),
+    paga('Impermeable amarillo', 250),
+    paga('Saco de lana tejido', 250),
+    paga('Camisa con buzo al hombro', 300),
   ],
-  sombrero: [gratis('Sin sombrero'), paga('Boina', 200), paga('Gorro de lana', 150), paga('Gorra', 150), paga('Sombrero de paja', 250), paga('Sombrero de gaucho', 300)],
+  sombrero: [
+    gratis('Sin sombrero'),
+    paga('Boina', 200),
+    paga('Gorro de lana', 150),
+    paga('Gorra', 150),
+    paga('Sombrero de paja', 250),
+    paga('Sombrero de gaucho', 300),
+    paga('Vincha hippie', 150),
+    paga('Galera de murga', 350),
+    paga('Gorro de pescador', 200),
+  ],
   accesorio: [
     gratis('Nada'),
     paga('Mate', 300),
@@ -290,6 +308,9 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     paga('Vaso de grappamiel', 200),
     paga('Facón de asador con vaina', 300),
     paga('Guitarra criolla', 400),
+    paga('Tabla de surf', 400),
+    paga('Tambor de candombe', 400),
+    paga('Caña de pescar', 300),
   ],
   // Con los colores de las camisetas (sin escudos ni nombres de clubes).
   bufanda: [
@@ -305,6 +326,7 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     paga('Pañuelo rojo', 150),
     paga('Pañuelo celeste', 150),
     paga('Pañuelo blanco', 150),
+    paga('Collar de cuentas', 150),
   ],
   // Lo que se tiene en la boca: aparte del accesorio, así se puede tener pipa y mate a la vez.
   enBoca: [gratis('Nada en la boca'), paga('Pipa', 300), paga('Pajita de pasto', 100), paga('Escarbadientes', 100)],
@@ -391,6 +413,9 @@ function hash(texto: string): number {
   for (let i = 0; i < texto.length; i++) h = Math.imul(h ^ texto.charCodeAt(i), 16777619)
   return h >>> 0
 }
+
+/** Números al azar estables a partir de un texto (el mismo texto, la misma serie). */
+export const azarDeTexto = (texto: string) => aleatorio(hash(texto))
 
 /**
  * Avatar al azar a partir de un texto (el apodo, el nombre de un bot). Con `soloGratis`, solo

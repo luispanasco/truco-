@@ -2,12 +2,14 @@ import { Avatar } from '../componentes/Avatar'
 import { SelectorBaraja } from '../componentes/SelectorBaraja'
 import { SelectorMesa } from '../componentes/SelectorMesa'
 import { SelectorTipografia } from '../componentes/SelectorTipografia'
+import { useCuenta } from '../cuenta/cuenta'
 import type { Perfil } from '../perfil'
+import { GaleriaPersonajes } from './GaleriaPersonajes'
 
 /**
  * Lo cosmético, todo junto: tu avatar (se edita en la hoja del perfil, como desde el banner),
  * el mazo (con el visor de sus cartas), el paño de la mesa y la letra. Lo pago se ve con candado
- * y precio, como en cada selector.
+ * y precio, como en cada selector. El admin ve además los personajes del modo historia.
  */
 export function PanelPersonalizar({
   perfil,
@@ -20,6 +22,7 @@ export function PanelPersonalizar({
   alEditarAvatar: () => void
   alVerCartas: () => void
 }) {
+  const admin = useCuenta((s) => s.estado === 'adentro' && s.cuenta?.admin === true)
   return (
     <>
       <section className="tarjeta personalizar-avatar" aria-labelledby="personalizar-avatar">
@@ -33,6 +36,8 @@ export function PanelPersonalizar({
           </button>
         </div>
       </section>
+
+      {admin && <GaleriaPersonajes perfil={perfil} cambiar={cambiar} />}
 
       <section className="tarjeta" aria-labelledby="personalizar-mazo">
         <h2 id="personalizar-mazo">El mazo</h2>

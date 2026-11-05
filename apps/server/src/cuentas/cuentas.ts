@@ -13,6 +13,8 @@ export interface DatosCuenta {
   preferencias: Record<string, unknown>
   /** Beta tester: puede usar todo lo de la tienda sin comprarlo. */
   beta: boolean
+  /** Admin (su email está en `ADMINS`): ve lo que está en preparación, como los personajes. */
+  admin: boolean
   /** Si se creó recién, con lo que traía el invitado. */
   nueva: boolean
 }
@@ -62,7 +64,7 @@ export async function entrar(base: Base, usuario: Usuario, perfil: PerfilEnviado
     if (invitadoId.length >= 8) {
       await b.consultar('insert into invitados (invitado_id, cuenta_id) values ($1, $2) on conflict do nothing', [invitadoId, usuario.id])
     }
-    return { ...fila!, nueva }
+    return conPermisos(fila!, nueva)
   })
 }
 
@@ -81,7 +83,23 @@ export async function guardarPerfil(base: Base, id: string, perfil: PerfilEnviad
      returning id, email, apodo, avatar, preferencias, beta`,
     [id, apodo, avatar, preferencias],
   )
-  return fila ? { ...fila, nueva: false } : null
+  return fila ? conPermisos(fila, false) : null
+}
+
+/**
+ * Los admins: los emails de la variable `ADMINS`, separados por comas. No se guarda en la base:
+ * se cambia en el servidor (en Fly, con `fly secrets set ADMINS=...`).
+ */
+export function esAdmin(email: string | null): boolean {
+  if (!email) return false
+  const admins = (process.env.ADMINS ?? '').split(',').map((e) => e.trim().toLowerCase())
+  return admins.includes(email.toLowerCase())
+}
+
+/** La cuenta como viaja: un admin, además, puede usar todo lo de la tienda (como un beta). */
+function conPermisos(fila: FilaCuenta, nueva: boolean): DatosCuenta {
+  const admin = esAdmin(fila.email)
+  return { ...fila, beta: fila.beta || admin, admin, nueva }
 }
 
 function apodoValido(x: unknown): string | null {

@@ -3,9 +3,11 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { useCuenta } from '../src/cuenta/cuenta'
 import { useAmigos } from '../src/cuenta/amigos'
+import { fijarInventario } from '../src/cuenta/inventario'
 import { Crear } from '../src/pantallas/Crear'
 import { Inicio } from '../src/pantallas/Inicio'
 import { guardarPerfil, leerPerfil } from '../src/perfil'
+import { codificarAvatar, PERSONAJES } from '@truco/shared'
 
 /** Un servidor de cuentas falso con el login de prueba, un ranking y dos amigos en la app. */
 function servidorFalso({ conElo = true } = {}) {
@@ -218,6 +220,30 @@ describe('pantalla Avatar', () => {
     fireEvent.click(visor.getByRole('radio', { name: 'El Cid' }))
     expect(visor.getAllByRole('listitem')[0]!.querySelector('img')!.getAttribute('src')).toMatch(/cid-1888\/2-espada\.webp$/)
     expect(leerPerfil().baraja).toBe('propia')
+    // Sin ser admin no están los personajes.
+    expect(avatar.queryByRole('heading', { name: 'Personajes del modo historia' })).toBeNull()
+  })
+
+  it('el admin ve los personajes del modo historia y se puede probar uno (y volver al suyo)', () => {
+    servidorFalso()
+    useCuenta.setState({
+      estado: 'adentro',
+      token: 'prueba:luis@ejemplo.com',
+      cuenta: { id: 'c1', email: 'luis@ejemplo.com', apodo: 'Luis', avatar: null, preferencias: {}, beta: true, admin: true, nueva: false },
+    })
+    // Como al entrar: el servidor marca al admin como beta, así puede usar las piezas pagas.
+    fijarInventario([], true)
+    menu()
+    fireEvent.click(pestania('Avatar'))
+    const avatar = within(panel('avatar'))
+    expect(avatar.getByRole('heading', { name: 'Personajes del modo historia' })).toBeTruthy()
+    expect(avatar.getAllByRole('button', { name: /^Probarte a / })).toHaveLength(PERSONAJES.length)
+    const antes = leerPerfil().avatar
+    fireEvent.click(avatar.getByRole('button', { name: 'Probarte a Ramón el Gaucho' }))
+    expect(leerPerfil().avatar).toBe(codificarAvatar(PERSONAJES.find((p) => p.id === 'gaucho')!.avatar))
+    expect(avatar.getByText(/Tenés puesto a Ramón el Gaucho/)).toBeTruthy()
+    fireEvent.click(avatar.getByRole('button', { name: 'Volver al tuyo' }))
+    expect(leerPerfil().avatar).toBe(antes)
   })
 })
 

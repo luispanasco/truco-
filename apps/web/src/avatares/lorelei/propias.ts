@@ -351,6 +351,205 @@ const chaleco = (color: string, camisa: string) =>
   )
 })
 
+/**
+ * Una zona del torso calculada columna por columna: para cada x, de `techo(x)` (pero nunca arriba
+ * de la línea de hombros) a `piso(x)`. Así se recortan a mano paneles, círculos y bandas.
+ */
+function zona(linea: readonly Punto[], desde: number, hasta: number, techo: (x: number) => number, piso: (x: number) => number = () => 1000): string {
+  const arriba: Punto[] = []
+  const abajo: Punto[] = []
+  for (let x = desde; x <= hasta; x += 6) {
+    const t = Math.max(alturaEn(linea, x), techo(x))
+    const p = Math.min(1000, piso(x))
+    if (p <= t) continue
+    arriba.push([x, t])
+    abajo.push([x, p])
+  }
+  return arriba.length > 1 ? camino([...arriba, ...abajo.reverse()]) + 'Z' : ''
+}
+
+/** Traje de neoprene: negro, con paneles de color en los hombros, cuello alto y el cierre. */
+const neoprene = (color: string, panel: string) =>
+  conSombra(ESCOTE_REDONDO, () => {
+    const linea = LINEA_REDONDA
+    // Los paneles bajan por los hombros, de afuera hasta antes del cuello.
+    const paneles = [
+      zona(linea, 90, 330, () => 0, (x) => alturaEn(linea, x) + 70),
+      zona(linea, 630, 870, () => 0, (x) => alturaEn(linea, x) + 70),
+    ]
+    return (
+      torso(linea, color, false) +
+      paneles.map((d) => `<path d="${d}" ${fino(NEGRO, 8, panel)}/>`).join('') +
+      borde(linea) +
+      MANGAS +
+      // Costuras planas, con la puntada en gris.
+      `<path d="M250 930c30 20 70 30 110 30M710 930c-30 20-70 30-110 30" stroke="${tono(color, 0.35)}" stroke-width="5" stroke-dasharray="10 8" fill="none"/>` +
+      // El cuello alto, de una pieza.
+      ribete(ESCOTE_REDONDO, tono(color, 0.12), 30) +
+      // El cierre, al medio.
+      `<path d="M480 898v102" stroke="${NEGRO}" stroke-width="16" stroke-linecap="round"/>` +
+      `<path d="M480 898v102" stroke="#9aa0a6" stroke-width="5" stroke-dasharray="6 6"/>`
+    )
+  })
+
+/** El cuello de una camisa: dos puntas que caen sobre el pecho (sobre un escote en V). */
+const cuelloCamisa = (color: string) =>
+  `<path d="M372 818c8 36 30 64 60 84l20-48c-30-10-56-22-80-36Z" fill="${color}" ${TRAZO}/>` +
+  `<path d="M590 818c-8 36-30 64-60 84l-20-48c30-10 56-22 80-36Z" fill="${color}" ${TRAZO}/>`
+
+/** La tapa de una camisa con sus botones. */
+const tapaCamisa = (boton = NEGRO) =>
+  `<path d="M481 900v100" ${fino()}/>` +
+  [930, 972].map((y) => `<circle cx="497" cy="${y}" r="7" fill="${boton}" stroke="${NEGRO}" stroke-width="4"/>`).join('')
+
+/** Camisa floreada de manga corta, abierta en el cuello. */
+const camisaFloreada = (fondo: string, flores: readonly string[]) =>
+  conSombra(ESCOTE_V, () => {
+    const linea = LINEA_V
+    const flor = (x: number, y: number, c: string) =>
+      [0, 72, 144, 216, 288]
+        .map((g) => `<circle cx="${r(x + 16 * Math.cos((g * Math.PI) / 180))}" cy="${r(y + 16 * Math.sin((g * Math.PI) / 180))}" r="13" fill="${c}"/>`)
+        .join('') + `<circle cx="${x}" cy="${y}" r="8" fill="#f2c230"/>`
+    // Las flores, salteadas, y solo donde entran enteras debajo de los hombros.
+    const lugares: Punto[] = [
+      [220, 940],
+      [300, 900],
+      [350, 975],
+      [260, 1000],
+      [610, 975],
+      [660, 900],
+      [740, 940],
+      [700, 1000],
+      [420, 960],
+      [560, 930],
+    ]
+    const dibujadas = lugares
+      .filter(([x, y]) => y - 34 > alturaEn(linea, x) && Math.abs(x - 480) > 40)
+      .map(([x, y], i) => flor(x, y, flores[i % flores.length]!))
+      .join('')
+    // Hojas sueltas entre las flores.
+    const hojas = `<path d="M262 870c14-10 30-10 40 0-12 10-28 10-40 0ZM640 940c14-10 30-10 40 0-12 10-28 10-40 0ZM380 930c14-10 30-10 40 0-12 10-28 10-40 0ZM770 1000c14-10 30-10 40 0-12 10-28 10-40 0Z" fill="#2f7a4a"/>`
+    return torso(linea, fondo, false) + hojas + dibujadas + borde(linea) + MANGAS + tapaCamisa('#f5f5f0') + cuelloCamisa(fondo)
+  })
+
+/** Remera teñida (batik): anillos de colores que salen de abajo del pecho. */
+const remeraTenida = (colores: readonly string[]) =>
+  conSombra(ESCOTE_REDONDO, () => {
+    const linea = LINEA_REDONDA
+    const [cx, cy] = [480, 1060]
+    // Del anillo más grande al más chico: cada uno pinta encima del anterior.
+    const anillos = Array.from({ length: 9 }, (_, i) => 520 - i * 52)
+      .map((radio, i) => {
+        const d = zona(linea, Math.max(90, cx - radio), Math.min(870, cx + radio), (x) => cy - Math.sqrt(Math.max(0, radio * radio - (x - cx) * (x - cx))))
+        return d ? `<path d="${d}" fill="${colores[i % colores.length]}"/>` : ''
+      })
+      .join('')
+    return torso(linea, colores[colores.length - 1]!, false) + anillos + borde(linea) + MANGAS + ribete(ESCOTE_REDONDO, tono(colores[0]!, -0.15))
+  })
+
+/**
+ * Levita de murga: satén de color con solapas grandes, brillos (lentejuelas) y rombos, sobre una
+ * camisa blanca con moñita.
+ */
+const levita = (color: string, solapa: string) =>
+  conSombra(ESCOTE_V, () => {
+    const brillos = (
+      [
+        [250, 920],
+        [300, 960],
+        [220, 985],
+        [330, 905],
+        [660, 905],
+        [700, 960],
+        [740, 920],
+        [630, 985],
+      ] as const
+    )
+      .map(([x, y]) => `<path d="M${x} ${y - 12}l4 8 8 4-8 4-4 8-4-8-8-4 8-4Z" fill="#fff6c8" stroke="${NEGRO}" stroke-width="3"/>`)
+      .join('')
+    const rombos = [280, 690].map((x) => `<path d="M${x} 964l20 26-20 26-20-26Z" ${fino(NEGRO, 6, solapa)}/>`).join('')
+    return (
+      torso(LINEA_V, color) +
+      MANGAS +
+      // La camisa en la abertura y la moñita.
+      `<path d="M372 818c30 30 70 76 109 182 39-106 79-152 109-182Z" fill="#f5f5f0" ${TRAZO}/>` +
+      `<path d="M444 868l36 16 36-16v40l-36-16-36 16Z" ${fino(NEGRO, 6, '#22201d')}/>` +
+      // Las solapas, anchas y brillantes.
+      `<path d="M372 818c-40 30-70 70-80 120l70-10 40 72c10-60 10-110 30-150Z" fill="${solapa}" ${TRAZO}/>` +
+      `<path d="M590 818c40 30 70 70 80 120l-70-10-40 72c-10-60-10-110-30-150Z" fill="${solapa}" ${TRAZO}/>` +
+      rombos +
+      brillos
+    )
+  })
+
+/** Impermeable de pescador: con la capucha caída, la tapa del cierre con broches y bolsillos. */
+const impermeable = (color: string) =>
+  conSombra(ESCOTE_REDONDO, () => {
+    const oscuro = tono(color, -0.22)
+    return (
+      torso(LINEA_REDONDA, color) +
+      MANGAS +
+      // La capucha caída detrás del cuello.
+      `<path d="M300 836c-6-34 30-56 72-36 30 40 70 62 110 62s80-22 108-62c42-22 84 0 76 34-22 50-80 92-184 92s-160-40-182-90Z" fill="${oscuro}" ${TRAZO}/>` +
+      `<path d="M352 846c34 34 76 52 128 52s92-18 124-52" ${fino()}/>` +
+      // La tapa del cierre con sus broches.
+      `<path d="M466 924h30v76h-30Z" ${fino(NEGRO, 7, tono(color, 0.15))}/>` +
+      [948, 982].map((y) => `<circle cx="481" cy="${y}" r="8" ${fino(NEGRO, 5, '#c9cdd2')}/>`).join('') +
+      // Bolsillos con tapa.
+      `<path d="M250 960h100v40H250ZM612 960h100v40H612Z" ${fino(NEGRO, 7, oscuro)}/>`
+    )
+  })
+
+/** Saco de lana tejido, abierto sobre una blusa, con el punto en columnas y botones de madera. */
+const sacoDeLana = (color: string, blusa: string) =>
+  conSombra(ESCOTE_V, () => {
+    const linea = LINEA_V
+    // El punto: columnas de "v" chiquitas.
+    const punto: string[] = []
+    for (let x = 140; x <= 820; x += 36) {
+      if (Math.abs(x - 480) < 70) continue
+      for (let y = alturaEn(linea, x) + 26; y < 990; y += 26) punto.push(`M${r(x - 8)} ${r(y)}l8 10 8-10`)
+    }
+    const izq: Punto[] = [
+      [372, 820],
+      [404, 868],
+      [438, 920],
+      [462, 1000],
+    ]
+    const der = izq.map(([x, y]) => [962 - x, y] as Punto)
+    const bordes = `${camino(izq)}${camino(der)}`
+    return (
+      torso(linea, color, false) +
+      `<path d="${punto.join('')}" stroke="${tono(color, -0.2)}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
+      // La blusa en la abertura y la tira tejida de los bordes.
+      `<path d="${camino([...izq, ...[...der].reverse()])}Z" fill="${blusa}"/>` +
+      `<path d="${bordes}" stroke="${NEGRO}" stroke-width="34" fill="none" stroke-linecap="round"/>` +
+      `<path d="${bordes}" stroke="${tono(color, -0.12)}" stroke-width="20" fill="none" stroke-linecap="round"/>` +
+      borde(linea) +
+      MANGAS +
+      [930, 972].map((y) => `<circle cx="${r(962 - 438 - (y - 920) * 0.3 + 2)}" cy="${y}" r="10" ${fino(NEGRO, 6, '#8a5a36')}/>`).join('')
+    )
+  })
+
+/** Camisa con un buzo atado sobre los hombros (las mangas anudadas en el pecho). */
+const camisaConBuzo = (camisa: string, buzo_: string) =>
+  conSombra(ESCOTE_V, () => {
+    const oscuro = tono(buzo_, -0.2)
+    return (
+      torso(LINEA_V, camisa) +
+      MANGAS +
+      tapaCamisa('#f5f5f0') +
+      cuelloCamisa(camisa) +
+      // El buzo: cae por la espalda y asoma sobre los hombros.
+      `<path d="M150 900c40-50 110-80 200-88l10 40c-80 10-150 40-196 80ZM810 900c-40-50-110-80-200-88l-10 40c80 10 150 40 196 80Z" fill="${buzo_}" ${TRAZO}/>` +
+      // Las mangas, que bajan por delante y se anudan sobre el pecho.
+      `<path d="M330 836c40 40 90 70 150 80l-6 40c-70-10-130-46-170-96Z" fill="${buzo_}" ${TRAZO}/>` +
+      `<path d="M630 836c-40 40-90 70-150 80l6 40c70-10 130-46 170-96Z" fill="${buzo_}" ${TRAZO}/>` +
+      `<ellipse cx="480" cy="936" rx="30" ry="24" fill="${oscuro}" ${TRAZO}/>` +
+      `<path d="M466 958l-20 42h28l10-38ZM494 958l20 42h-28l-10-38Z" fill="${buzo_}" ${TRAZO}/>`
+    )
+  })
+
 /** Ropas, en el orden del catálogo (`CATALOGO_AVATAR.ropa`). */
 export const ROPAS: readonly ((piel: string) => string)[] = [
   remera('#f5f5f0'),
@@ -377,6 +576,14 @@ export const ROPAS: readonly ((piel: string) => string)[] = [
   // Criollos.
   poncho('#a8322b', '#2b1b18', '#e6c477'),
   chaleco('#5e4a36', '#f5f5f0'),
+  // Personajes.
+  neoprene('#1f2328', '#2bb3c0'),
+  camisaFloreada('#2f6fb0', ['#f5f5f0', '#e8505b', '#f2c230']),
+  remeraTenida(['#e8505b', '#f2c230', '#3fa66b', '#2bb3c0', '#7b4fb0']),
+  levita('#7b2a8e', '#f2c230'),
+  impermeable('#f2c230'),
+  sacoDeLana('#8a5a44', '#f1e6cf'),
+  camisaConBuzo('#a9cdee', '#1f3c88'),
 ]
 
 // ---------------------------------------------------------------------------------------
@@ -526,8 +733,90 @@ const sombreroDeGaucho: Sombrero = {
   ]),
 }
 
+/** Vincha hippie: una tira tejida sobre la frente, anudada atrás, con las puntas que caen. */
+const vincha: Sombrero = {
+  dibujo: () => {
+    const c = '#c8442f'
+    const banda = 'M226 262c160 26 340 16 498-28l8 34c-160 46-346 56-512 28Z'
+    // La guarda: rombos y rayitas a lo largo de la tira.
+    const guarda = [300, 380, 460, 540, 620, 690]
+      .map((x) => {
+        const y = 286 - (x - 226) * 0.06
+        return `M${x} ${r(y - 12)}l12 12-12 12-12-12Z`
+      })
+      .join('')
+    return (
+      `<g transform="translate(0 46)">` +
+      // Las puntas del nudo, que caen por detrás de la cabeza.
+      `<path d="M232 276c-30 30-46 74-40 120l26 4c-2-40 10-80 34-110ZM232 276c-10 40-6 84 12 120l24-8c-16-30-20-70-12-104Z" fill="${tono(c, -0.15)}" ${TRAZO}/>` +
+      `<path d="${banda}" fill="${c}" ${TRAZO}/>` +
+      `<path d="${guarda}" fill="#f2c230" stroke="${NEGRO}" stroke-width="4"/>` +
+      `<circle cx="232" cy="276" r="20" fill="${c}" ${TRAZO}/>` +
+      `</g>`
+    )
+  },
+  // No tapa el pelo: todo se sigue viendo.
+  recorte: 'M-100 -100H1100V1100H-100Z',
+}
+
+/** Galera de murga: alta, negra y con una cinta de colores con brillos, apenas ladeada. */
+const galera: Sombrero = {
+  dibujo: () => {
+    const c = '#22201d'
+    const brillo = tono(c, 0.3)
+    return (
+      `<g transform="translate(0 58) rotate(-5 480 260)">` +
+      // El ala, angosta y curvada hacia arriba a los costados.
+      `<path d="M190 268c-20-30 60-50 280-56 220-6 330 10 340 40 8 30-110 52-320 56-200 4-286-12-300-40Z" fill="${c}" ${TRAZO}/>` +
+      `<path d="M240 276c120 18 300 20 470-6" stroke="${brillo}" stroke-width="7" fill="none" stroke-linecap="round"/>` +
+      // La copa, alta y un poco más ancha arriba.
+      `<path d="M318 252c-10-80-14-150-24-212 110-22 260-22 356 0-10 62-14 132-24 212-100 18-210 18-308 0Z" fill="${c}" ${TRAZO}/>` +
+      `<ellipse cx="472" cy="40" rx="178" ry="18" ${fino(NEGRO, 10, tono(c, 0.15))}/>` +
+      `<path d="M340 70c-2 50 2 110 8 160" stroke="${brillo}" stroke-width="8" fill="none" stroke-linecap="round"/>` +
+      // La cinta de colores con sus brillos.
+      `<path d="M312 196c110 20 226 20 334 0l-4 50c-106 20-218 20-324 0Z" fill="#e8505b" ${TRAZO}/>` +
+      `<path d="M316 218c108 18 220 18 326 0" stroke="#f2c230" stroke-width="10" fill="none"/>` +
+      [380, 470, 560].map((x) => `<path d="M${x} 206l4 8 8 4-8 4-4 8-4-8-8-4 8-4Z" fill="#fff6c8"/>`).join('') +
+      `</g>`
+    )
+  },
+  recorte: debajoDe([
+    [100, 360],
+    [300, 352],
+    [480, 344],
+    [660, 324],
+    [840, 306],
+  ]),
+}
+
+/** Gorro de pescador (piluso): copa redonda y el ala caída alrededor. */
+const gorroDePescador: Sombrero = {
+  dibujo: () => {
+    const c = '#7a8450'
+    const oscuro = tono(c, -0.25)
+    return (
+      `<g transform="translate(0 30)">` +
+      // El ala, caída hacia abajo.
+      `<path d="M168 300c40-50 160-74 320-76 160-2 270 20 300 66 20 30 0 50-30 44-90-20-200-28-290-26-100 2-200 16-276 36-30 8-44-20-24-44Z" fill="${c}" ${TRAZO}/>` +
+      `<path d="M206 312c90-24 190-36 290-38 100-2 196 8 276 30" stroke="${oscuro}" stroke-width="6" stroke-dasharray="12 9" fill="none"/>` +
+      // La copa, redondeada.
+      `<path d="M262 256c-6-80 70-140 210-146 140-4 228 50 238 136-140 30-300 34-448 10Z" fill="${c}" ${TRAZO}/>` +
+      `<path d="M300 220c120 18 260 18 380-4" stroke="${oscuro}" stroke-width="6" stroke-dasharray="12 9" fill="none"/>` +
+      `<path d="M476 112c-16 40-20 90-14 140" ${fino(oscuro, 6)}/>` +
+      `</g>`
+    )
+  },
+  recorte: debajoDe([
+    [100, 354],
+    [260, 332],
+    [480, 322],
+    [700, 306],
+    [860, 324],
+  ]),
+}
+
 /** Sombreros, sin el "Sin sombrero" (el 1 del catálogo es el primero de esta lista). */
-export const SOMBREROS: readonly Sombrero[] = [boina, gorroDeLana, gorra, sombreroDePaja, sombreroDeGaucho]
+export const SOMBREROS: readonly Sombrero[] = [boina, gorroDeLana, gorra, sombreroDePaja, sombreroDeGaucho, vincha, galera, gorroDePescador]
 
 // ---------------------------------------------------------------------------------------
 // Accesorios
@@ -785,6 +1074,65 @@ function dibujoGuitarra(): string {
   )
 }
 
+/** Tabla de surf parada al lado, inclinada hacia afuera, con el alma al medio y una franja. */
+function dibujoTabla(): string {
+  const tabla = '#f5f1e6'
+  const franja = '#2bb3c0'
+  const contorno = 'M690 380c50 60 72 200 72 380s-22 320-72 390c-50-70-72-210-72-390s22-320 72-380Z'
+  return (
+    `<g transform="rotate(18 690 900)">` +
+    `<path d="${contorno}" fill="${tabla}" ${TRAZO}/>` +
+    // La franja de color y el alma de madera.
+    `<path d="M624 600c40 14 92 14 132 0l4 40c-42 16-98 16-140 0Z" fill="${franja}"/>` +
+    `<path d="M622 660c42 16 94 16 136 0" stroke="#e8505b" stroke-width="10" fill="none"/>` +
+    `<path d="M690 392v750" stroke="#c98a4b" stroke-width="6"/>` +
+    `<path d="${contorno}" fill="none" ${TRAZO}/>` +
+    `</g>`
+  )
+}
+
+/** Tambor de candombe (un chico): de duelas de madera, pintado a franjas, con el parche arriba. */
+function dibujoTambor(): string {
+  const madera = '#b5652e'
+  const parche = '#efe2c4'
+  const franjas = ['#c8323a', '#f5f5f0', '#2f4f9e']
+  return (
+    `<g transform="rotate(16 690 900) translate(0 -120)">` +
+    // El cuerpo, un barril que se angosta abajo.
+    `<path d="M600 800c-10 100-6 200 20 320h140c26-120 30-220 20-320Z" fill="${madera}" ${TRAZO}/>` +
+    franjas.map((c, i) => `<path d="M${602 - i} ${862 + i * 26}h176l-1 22H${603 - i}Z" fill="${c}"/>`).join('') +
+    // Las duelas y los tensores.
+    `<path d="M640 812c-6 100-4 200 8 300M690 812v300M740 812c6 100 4 200-8 300" stroke="${tono(madera, -0.3)}" stroke-width="6" fill="none"/>` +
+    `<path d="M612 790l6 60M652 796l2 60M728 796l-2 60M768 790l-6 60" stroke="#c9cdd2" stroke-width="10" stroke-linecap="round"/>` +
+    `<path d="M600 800c-10 100-6 200 20 320h140c26-120 30-220 20-320Z" fill="none" ${TRAZO}/>` +
+    // El parche y el aro.
+    `<ellipse cx="690" cy="796" rx="94" ry="24" fill="${parche}" ${TRAZO}/>` +
+    `<path d="M598 806c30 18 154 18 184 0" stroke="${NEGRO}" stroke-width="16" fill="none" stroke-linecap="round"/>` +
+    `</g>`
+  )
+}
+
+/** Caña de pescar: sale de la mano hacia arriba y afuera, con el reel y la tanza con la boya. */
+function dibujoCania(): string {
+  const metal = '#c9cdd2'
+  return (
+    // La tanza que cae de la punta, con la boya.
+    `<path d="M934 392c4 120 6 220 2 300" stroke="${NEGRO}" stroke-width="3" fill="none"/>` +
+    `<circle cx="936" cy="712" r="20" ${fino(NEGRO, 6, '#f5f5f0')}/>` +
+    `<path d="M916 712a20 20 0 0 0 40 0Z" fill="#c8323a" stroke="${NEGRO}" stroke-width="6"/>` +
+    // La caña, de la empuñadura de corcho a la punta.
+    varilla('M676 1040L934 392', '#2a2624', 8) +
+    `<path d="M660 1080L700 980" stroke="${NEGRO}" stroke-width="38" stroke-linecap="round"/>` +
+    `<path d="M660 1080L700 980" stroke="#c9a06a" stroke-width="24" stroke-linecap="round"/>` +
+    // Los pasahilos.
+    `<path d="M792 750l14 6M854 594l14 6" stroke="${metal}" stroke-width="6" stroke-linecap="round"/>` +
+    // El reel, al costado.
+    `<circle cx="752" cy="930" r="34" ${fino(NEGRO, 8, metal)}/>` +
+    `<circle cx="752" cy="930" r="12" fill="${tono(metal, -0.35)}"/>` +
+    `<path d="M752 896l-28 -14" stroke="${NEGRO}" stroke-width="10" stroke-linecap="round"/>`
+  )
+}
+
 /** Accesorios, sin el "Nada" (el 1 del catálogo es el primero de esta lista). */
 export const ACCESORIOS: readonly ((piel: string) => string)[] = [
   mate,
@@ -804,6 +1152,10 @@ export const ACCESORIOS: readonly ((piel: string) => string)[] = [
   (piel) => enLaMano(piel, dibujoGrappamiel()),
   (piel) => enLaMano(piel, dibujoFacon()),
   (piel) => enLaMano(piel, dibujoGuitarra()),
+  // Personajes.
+  (piel) => enLaMano(piel, dibujoTabla()),
+  (piel) => enLaMano(piel, dibujoTambor()),
+  (piel) => enLaMano(piel, dibujoCania()),
 ]
 
 // ---------------------------------------------------------------------------------------
@@ -855,6 +1207,26 @@ function panuelo(color: string): string {
   )
 }
 
+/** Collar de cuentas de colores, que cae sobre el pecho, con un dije redondo abajo. */
+function collar(colores: readonly string[]): string {
+  // Las cuentas siguen una curva que baja del cuello al pecho.
+  const punto = (t: number): Punto => {
+    const u = 1 - t
+    return [u * u * 368 + 2 * u * t * 480 + t * t * 592, u * u * 796 + 2 * u * t * 940 + t * t * 796]
+  }
+  const cuentas = Array.from({ length: 15 }, (_, i) => {
+    const [x, y] = punto((i + 0.5) / 15)
+    return `<circle cx="${r(x)}" cy="${r(y)}" r="12" ${fino(NEGRO, 6, colores[i % colores.length])}/>`
+  }).join('')
+  return (
+    `<path d="M368 796Q480 940 592 796" stroke="${NEGRO}" stroke-width="5" fill="none"/>` +
+    cuentas +
+    // El dije, con el símbolo de la paz.
+    `<circle cx="480" cy="902" r="22" ${fino(NEGRO, 7, '#d4d7da')}/>` +
+    `<path d="M480 884v36M480 902l-13 13M480 902l13 13" stroke="${NEGRO}" stroke-width="5" stroke-linecap="round"/>`
+  )
+}
+
 /** Bufandas, sin el "Sin bufanda" (el 1 del catálogo es la primera de esta lista). */
 export const BUFANDAS: readonly string[] = [
   bufanda(['#7fb8e6', '#f5f5f0']),
@@ -868,6 +1240,7 @@ export const BUFANDAS: readonly string[] = [
   panuelo('#c8323a'),
   panuelo('#7fb8e6'),
   panuelo('#f5f5f0'),
+  collar(['#e8505b', '#f2c230', '#3fa66b', '#2bb3c0', '#7b4fb0']),
 ]
 
 // ---------------------------------------------------------------------------------------
@@ -975,3 +1348,35 @@ function escarbadientes([x, y]: Punto): string {
  * lista). Va en el sistema de la cabeza, justo después de la boca, agarrado de la comisura.
  */
 export const EN_BOCA: readonly ((comisura: Punto) => string)[] = [pipa, pajita, escarbadientes]
+// ---------------------------------------------------------------------------------------
+// Bigotes
+// ---------------------------------------------------------------------------------------
+
+/**
+ * Un bigote dibujado para una boca de 140 de ancho, centrado arriba de la boca y estirado a su
+ * ancho (en el sistema de la cabeza).
+ */
+function sobreLaBoca(boca: number, d: string, color: string): string {
+  const [x, y, w] = CAJAS_BOCA[boca] ?? CAJAS_BOCA[0]!
+  const escala = Math.max(110, Math.min(170, w)) / 140
+  return (
+    `<g transform="translate(${r(x + w / 2)} ${y - 2}) scale(${escala.toFixed(2)} 1)">` +
+    `<path d="${d}" fill="${color}" stroke="${NEGRO}" stroke-width="10" stroke-linejoin="round"/>` +
+    `</g>`
+  )
+}
+
+/** Bigote tupido, de una punta a la otra de la boca. */
+const bigote = (boca: number, color: string) =>
+  sobreLaBoca(boca, 'M0 -24C-20 -34 -50 -32 -66 -14C-72 -6 -72 2 -68 6C-50 -4 -24 -6 0 -4C24 -6 50 -4 68 6C72 2 72 -6 66 -14C50 -32 20 -34 0 -24Z', color)
+
+/** Bigote gaucho, de manubrio: ancho, con las puntas que caen a los costados de la boca. */
+const bigoteGaucho = (boca: number, color: string) =>
+  sobreLaBoca(
+    boca,
+    'M0 -26C-26 -36 -60 -34 -84 -14C-96 -2 -100 16 -96 36C-90 22 -82 10 -70 4C-46 -4 -22 -6 0 -4C22 -6 46 -4 70 4C82 10 90 22 96 36C100 16 96 -2 84 -14C60 -34 26 -36 0 -26Z',
+    color,
+  )
+
+/** Los bigotes, después de las barbas de Lorelei (el 3 del catálogo es el primero de esta lista). */
+export const BIGOTES: readonly ((boca: number, color: string) => string)[] = [bigote, bigoteGaucho]

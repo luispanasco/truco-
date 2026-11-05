@@ -28,6 +28,8 @@ import {
   MOTIVO_SIN_SENIAS,
   envidoDeSenia,
   avatarAlAzar,
+  PERSONAJES,
+  personajesParaBots,
   codificarAvatar,
   normalizarSenias,
   normalizarTirarReyes,
@@ -77,6 +79,8 @@ export interface OpcionesLocal {
   /** Lo que tarda en verse el reparto: antes no te llegan las señas (`ESPERA_REPARTO_MS`; 0 en tests). */
   esperaRepartoMs?: number
   semilla?: number
+  /** Los bots son los personajes del modo historia (por ahora, solo para el admin). */
+  personajes?: boolean
 }
 
 const NOMBRES_BOTS = ['Bot Pepe', 'Bot Chela', 'Bot Tito', 'Bot Mirta', 'Bot Ruben']
@@ -202,7 +206,10 @@ export class ConexionLocal implements Conexion {
   private iniciar() {
     const n = cantidadJugadores(this.config.formato)
     this.terminada = false
-    if (this.nombres.length !== n) this.nombres = Array.from({ length: n }, (_, a) => (a === 0 ? this.op.apodo : NOMBRES_BOTS[(a - 1) % NOMBRES_BOTS.length]!))
+    if (this.nombres.length !== n) {
+      const personajes = this.op.personajes ? personajesParaBots(String(this.semilla), n - 1) : []
+      this.nombres = Array.from({ length: n }, (_, a) => (a === 0 ? this.op.apodo : (personajes[a - 1]?.nombre ?? NOMBRES_BOTS[(a - 1) % NOMBRES_BOTS.length]!)))
+    }
     // En la primera partida se pueden tirar reyes: el primer rey reparte y, con equipos, los
     // bots se reacomodan (vos seguís en tu lugar).
     const modo = normalizarTirarReyes(this.op.tirarReyes)
@@ -299,7 +306,9 @@ export class ConexionLocal implements Conexion {
 
   /** Cada bot luce siempre el mismo avatar (puede tener piezas de la tienda); la persona, el de su perfil. */
   private avatar(asiento: number) {
-    return asiento === 0 ? this.op.avatar : codificarAvatar(avatarAlAzar(this.nombre(asiento), false))
+    if (asiento === 0) return this.op.avatar
+    const personaje = PERSONAJES.find((p) => p.nombre === this.nombre(asiento))
+    return codificarAvatar(personaje?.avatar ?? avatarAlAzar(this.nombre(asiento), false))
   }
 
   private nombre(asiento: number) {

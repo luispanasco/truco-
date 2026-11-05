@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest'
 import { mismaCarta, siguienteAleatorio, type Carta, type Formato, type VistaPartida } from '@truco/engine'
-import { ESPERA_REPARTO_MS, MOTIVO_ENVIDO_CON_FLOR, MOTIVO_SENIA_TARDE, MOTIVO_SIN_SENIAS, yaJugoEnLaMano, type MensajesCliente } from '@truco/shared'
+import { codificarAvatar, ESPERA_REPARTO_MS, PERSONAJES, MOTIVO_ENVIDO_CON_FLOR, MOTIVO_SENIA_TARDE, MOTIVO_SIN_SENIAS, yaJugoEnLaMano, type MensajesCliente } from '@truco/shared'
 import { ENVIDO_PARA_SENIAR } from '@truco/bots'
 import { ConexionLocal, type OpcionesLocal } from '../src/conexion/local'
 import type { MensajeServidor } from '../src/conexion/tipos'
@@ -47,6 +47,23 @@ function cartasDentro(x: unknown, out: Carta[] = []): Carta[] {
 }
 
 describe('conexión local', () => {
+  it('con personajes, los bots son los personajes del modo historia, con su avatar', async () => {
+    const sala = await new Promise<Extract<MensajeServidor, { tipo: 'sala' }>['datos']>((resolve) => {
+      const c = new ConexionLocal({ apodo: 'Luis', avatar: null, formato: '3v3', nivelBots: 'facil', demoraBots: [0, 0], semilla: 5, personajes: true })
+      c.escuchar((m) => {
+        if (m.tipo !== 'sala') return
+        c.salir()
+        resolve(m.datos)
+      })
+    })
+    const bots = sala.lugares.slice(1)
+    expect(new Set(bots.map((l) => l.apodo)).size).toBe(5)
+    for (const l of bots) {
+      const personaje = PERSONAJES.find((p) => p.nombre === l.apodo)!
+      expect(l.avatar).toBe(codificarAvatar(personaje.avatar))
+    }
+  })
+
   for (const formato of ['1v1', '2v2', '3v3'] as Formato[]) {
     it(`juega una partida ${formato} entera contra bots`, async () => {
       const { vista, mensajes } = await jugarPartida(formato, 11)

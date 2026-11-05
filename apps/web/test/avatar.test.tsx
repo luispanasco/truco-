@@ -12,6 +12,7 @@ import {
 } from '@truco/shared'
 import { LORELEI } from '../src/avatares/lorelei'
 import { PIEZAS_LORELEI } from '../src/avatares/lorelei/piezas'
+import { BIGOTES } from '../src/avatares/lorelei/propias'
 
 describe('formato del avatar', () => {
   it('se codifica y se lee igual, y entra en el largo que acepta el servidor', () => {
@@ -37,9 +38,13 @@ describe('formato del avatar', () => {
     expect(codificarAvatar(leerAvatar(viejo)!)).toBe(`${viejo}.0`)
   })
 
-  it('las piezas criollas están al final de cada capa, con su precio', () => {
-    const precios = (capa: keyof typeof CATALOGO_AVATAR, n: number) => CATALOGO_AVATAR[capa].slice(-n).map((p) => [p.nombre, p.precio])
-    expect(precios('accesorio', 6)).toEqual([
+  it('las piezas criollas van después de las de antes, con su precio', () => {
+    /** `n` piezas desde la primera nombrada. */
+    const precios = (capa: keyof typeof CATALOGO_AVATAR, primera: string, n: number) => {
+      const i = CATALOGO_AVATAR[capa].findIndex((p) => p.nombre === primera)
+      return CATALOGO_AVATAR[capa].slice(i, i + n).map((p) => [p.nombre, p.precio])
+    }
+    expect(precios('accesorio', 'Choripán', 6)).toEqual([
       ['Choripán', 350],
       ['Tira de asado en el tenedor', 350],
       ['Pinza de parrilla', 350],
@@ -47,13 +52,13 @@ describe('formato del avatar', () => {
       ['Facón de asador con vaina', 350],
       ['Guitarra criolla', 800],
     ])
-    expect(precios('bufanda', 3)).toEqual([
+    expect(precios('bufanda', 'Pañuelo rojo', 3)).toEqual([
       ['Pañuelo rojo', 150],
       ['Pañuelo celeste', 150],
       ['Pañuelo blanco', 150],
     ])
-    expect(precios('sombrero', 1)).toEqual([['Sombrero de gaucho', 350]])
-    expect(precios('ropa', 2)).toEqual([
+    expect(precios('sombrero', 'Sombrero de gaucho', 1)).toEqual([['Sombrero de gaucho', 350]])
+    expect(precios('ropa', 'Poncho', 2)).toEqual([
       ['Poncho', 800],
       ['Chaleco de campo', 350],
     ])
@@ -68,6 +73,25 @@ describe('formato del avatar', () => {
     expect(CATALOGO_AVATAR.bufanda[7]!.nombre).toBe('Roja y azul')
     expect(CATALOGO_AVATAR.sombrero[4]!.nombre).toBe('Sombrero de paja')
     expect(CATALOGO_AVATAR.ropa[19]!.nombre).toBe('Celeste de época')
+    expect(CATALOGO_AVATAR.ropa[21]!.nombre).toBe('Chaleco de campo')
+    expect(CATALOGO_AVATAR.accesorio[15]!.nombre).toBe('Guitarra criolla')
+    expect(CATALOGO_AVATAR.barba[2]!.nombre).toBe('Barba')
+  })
+
+  it('las piezas de los personajes van al final de cada capa, todas pagas', () => {
+    const ultimas = (capa: keyof typeof CATALOGO_AVATAR, n: number) => CATALOGO_AVATAR[capa].slice(-n)
+    const nombres = {
+      ropa: ['Traje de neoprene', 'Camisa floreada', 'Remera teñida', 'Levita de murga', 'Impermeable amarillo', 'Saco de lana tejido', 'Camisa con buzo al hombro'],
+      sombrero: ['Vincha hippie', 'Galera de murga', 'Gorro de pescador'],
+      accesorio: ['Tabla de surf', 'Tambor de candombe', 'Caña de pescar'],
+      bufanda: ['Collar de cuentas'],
+      barba: ['Bigote', 'Bigote gaucho'],
+    } as const
+    for (const [capa, lista] of Object.entries(nombres) as [keyof typeof nombres, readonly string[]][]) {
+      const piezas = ultimas(capa, lista.length)
+      expect(piezas.map((p) => p.nombre)).toEqual(lista)
+      for (const p of piezas) expect(p.precio, p.nombre).toBeGreaterThan(0)
+    }
   })
 
   it('rechaza códigos rotos, piezas que no existen y emojis viejos', () => {
@@ -121,7 +145,8 @@ describe('estilo Lorelei', () => {
     expect(CATALOGO_AVATAR.cejas).toHaveLength(PIEZAS_LORELEI.cejas.length)
     expect(CATALOGO_AVATAR.nariz).toHaveLength(PIEZAS_LORELEI.nariz.length)
     expect(CATALOGO_AVATAR.boca).toHaveLength(PIEZAS_LORELEI.boca.length)
-    expect(CATALOGO_AVATAR.barba).toHaveLength(PIEZAS_LORELEI.barba.length + 1)
+    // Después de las barbas de Lorelei vienen los bigotes, que son dibujos nuestros.
+    expect(CATALOGO_AVATAR.barba).toHaveLength(PIEZAS_LORELEI.barba.length + 1 + BIGOTES.length)
     expect(CATALOGO_AVATAR.lentes).toHaveLength(PIEZAS_LORELEI.lentes.length + 1)
     expect(CATALOGO_AVATAR.aros).toHaveLength(PIEZAS_LORELEI.aros.length + 1)
     expect(CATALOGO_AVATAR.pecas).toHaveLength(PIEZAS_LORELEI.pecas.length + 1)

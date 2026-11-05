@@ -1,9 +1,10 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { ColyseusTestServer } from '@colyseus/testing'
 import {
   AVATAR_BASE,
   CATALOGO_AVATAR,
   CATALOGO_TIENDA,
+  PERSONAJES,
   PRECIO_RAREZA,
   cambioDeVitrina,
   codificarAvatar,
@@ -151,3 +152,41 @@ describe('en la sala', () => {
     expect((r.data as { beta: boolean }).beta).toBe(true)
   })
 })
+
+describe('admin', () => {
+  afterEach(() => {
+    delete process.env.ADMINS
+  })
+
+  it('el email de ADMINS entra como admin (y usa todo, como un beta); el resto no', async () => {
+    process.env.ADMINS = ' otra@ejemplo.com, Jefa@Ejemplo.com '
+    const jefa = (await verificadorDePrueba('prueba:jefa@ejemplo.com'))!
+    expect(await entrar(base, jefa, { apodo: 'Jefa' })).toMatchObject({ admin: true, beta: true })
+    const comun = (await verificadorDePrueba('prueba:comun@ejemplo.com'))!
+    expect(await entrar(base, comun, { apodo: 'Común' })).toMatchObject({ admin: false, beta: false })
+    delete process.env.ADMINS
+    expect(await entrar(base, jefa, {})).toMatchObject({ admin: false })
+  })
+
+  it('en la sala que arma el admin, los bots son los personajes del modo historia', async () => {
+    process.env.ADMINS = 'jefa2@ejemplo.com'
+    const a = await Jugador.crear(colyseus, { token: 'prueba:jefa2@ejemplo.com', config: { formato: '2v2' } })
+    await a.esperar(() => a.sala?.yo != null)
+    a.enviar('iniciar', {})
+    await a.esperar(() => a.sala?.lugares.slice(1).every((l) => l.tipo === 'bot') === true, 5_000, 'los bots')
+    for (const l of a.sala!.lugares.slice(1)) {
+      const personaje = PERSONAJES.find((p) => p.nombre === l.apodo)
+      expect(personaje, l.apodo).toBeDefined()
+      expect(l.avatar).toBe(codificarAvatar(personaje!.avatar))
+    }
+
+    // Sin admin, los bots de siempre.
+    delete process.env.ADMINS
+    const b = await Jugador.crear(colyseus, { token: 'prueba:jefa3@ejemplo.com', config: { formato: '1v1' } })
+    await b.esperar(() => b.sala?.yo != null)
+    b.enviar('iniciar', {})
+    await b.esperar(() => b.sala?.lugares[1]?.tipo === 'bot', 5_000, 'el bot')
+    expect(b.sala!.lugares[1]!.apodo).toBe('Bot 1')
+  })
+})
+

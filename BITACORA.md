@@ -1442,3 +1442,20 @@ Pedido del usuario: (1) al ojear con flor, la ficha de abajo la mostraba antes d
 - **Textos:** al final de la mano, "Salen con el tanto: el truco no se juega"; en el cartel del final, "Partida ganada con la flor" / "con el envido" (o "Salieron con la flor"), y el cartel espera un poco, como con la contraflor al resto, para que se vean los cantos.
 - **Tests:** engine 179 (la flor que da el partido: sin flor rival, si no alcanza, con flor rival hasta que no se puede echar la contra, sin flor obligatoria, en modo sucio con verificación; el envido que da el partido con un truco pendiente y el que no alcanza). Web 333 (la mesa sin botones mientras ojeás; los tests que usaban los botones abren la mano primero). E2E: `ojeo.spec.ts` revisa que no haya tanto ni cantos hasta ojear; `senias.spec.ts` abre la mano antes de hacer señas. El test del servidor "los bots marcan su envido" sigue fallando de a ratos por tiempo (corrido solo, pasó 3 de 3).
 - **Hay que volver a publicar el servidor en Fly** para el cambio del motor (el ojeo es solo de la web).
+
+## Personajes del modo historia y piezas nuevas — 2026-11-05
+
+Pedido del usuario: avatares típicos de Uruguay (un gaucho, un surfista, una hippie…) para el modo historia, y más cosméticos. Decidido: los personajes se ven en una galería de la pantalla Avatar y son los bots de las partidas, las dos cosas solo para el admin (la cuenta del usuario, puesta en `ADMINS`) mientras el modo historia no existe.
+
+- **Piezas nuevas** (al final de cada capa, todas pagas, dibujos propios en `lorelei/propias.ts`):
+  - Ropa: traje de neoprene, camisa floreada, remera teñida (batik), levita de murga, impermeable amarillo, saco de lana tejido y camisa con buzo al hombro. Para los paneles y los anillos del batik hay una `zona` que se recorta columna por columna con la línea de hombros (sin clipPath).
+  - Sombreros: vincha hippie (no tapa el pelo), galera de murga y gorro de pescador.
+  - Accesorios: tabla de surf, tambor de candombe y caña de pescar.
+  - Bufanda: collar de cuentas con el dije de la paz.
+  - Barba: bigote y bigote gaucho. Van después de las barbas de Lorelei; se dibujan arriba de la boca (usando `CAJAS_BOCA`), estirados a su ancho y del color del pelo, en su capa `capa-bigote`, después de lo que va en la boca.
+- **Personajes** (`personajes.ts` en `@truco/shared`): Ramón el Gaucho (Tacuarembó), Nico el Surfista (La Paloma), Luna la Hippie (Cabo Polonio), Tito el Murguista (Carnaval), Beto el Candombero (Barrio Sur), Julio el Pescador (Punta del Diablo), Doña Rosa (el almacén del pueblo), Santi el Pituco (Carrasco), Cacho el Hincha (el Centenario) y Don Pocho (el boliche de la esquina). Cada uno tiene nombre corto (el de la mesa), título, lugar, descripción y avatar; las piezas se buscan por nombre en el catálogo. `personajesParaBots(texto, n)` elige `n` distintos, siempre los mismos para la misma sala o partida.
+- **Admin:** el servidor lee `ADMINS` (emails separados por comas; en Fly con `fly secrets set`). La cuenta viaja con `admin` y, además, `beta`, así puede usar las piezas pagas. En la sala que arma un admin y contra la compu (si la cuenta es admin), los bots son personajes.
+- **Galería** (`GaleriaPersonajes`, en la pantalla Avatar, solo para el admin): cada personaje con su lugar y su descripción, "Probarte" (te pone su avatar) y "Volver al tuyo".
+- Se revisó con capturas: cada pieza nueva, los 10 personajes, la galería y una mesa 2v2 con personajes de bots. En la mesa, el nombre con el título no entraba ("Cacho el ..."): va solo el nombre.
+- **Tests:** web 339 (cada pieza arma un SVG válido, los bigotes con cada boca, los personajes, los bots distintos y estables, la galería del admin y los bots de la partida local), server 118 (el admin por `ADMINS` y los bots de su sala).
+- **Hay que volver a publicar el servidor en Fly y poner `ADMINS`** (ver INSTRUCTIVO-CUENTAS.md).

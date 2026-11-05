@@ -1,5 +1,6 @@
 import { PESCAR_SENIAS_DISPONIBLE } from '@truco/shared'
 import { ConexionLocal } from '../conexion/local'
+import { useCuenta } from '../cuenta/cuenta'
 import type { Perfil } from '../perfil'
 
 /** La partida contra la compu con lo elegido en el perfil (formato, nivel, reglas y señas). */
@@ -20,6 +21,8 @@ export function conexionContraLaCompu(perfil: Perfil): ConexionLocal {
       corte: perfil.corte,
     },
     tirarReyes: perfil.tirarReyes,
+    // El admin juega contra los personajes del modo historia.
+    personajes: useCuenta.getState().cuenta?.admin === true,
     senias: {
       habilitadas: perfil.seniasHabilitadas,
       pescar: PESCAR_SENIAS_DISPONIBLE && perfil.pescarSenias ? 'gesto' : 'nunca',

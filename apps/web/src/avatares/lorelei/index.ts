@@ -1,7 +1,7 @@
 import { COLORES_PELO, PIELES, type Avatar } from '@truco/shared'
 import type { EstiloAvatar } from '../estilo'
 import { PIEZAS_LORELEI } from './piezas'
-import { ACCESORIOS, BUFANDAS, EN_BOCA, ROPAS, SOMBREROS, comisura } from './propias'
+import { ACCESORIOS, BIGOTES, BUFANDAS, EN_BOCA, ROPAS, SOMBREROS, comisura } from './propias'
 
 /** Color de los trazos de la cara (ojos, cejas, nariz, boca, lentes). */
 const TINTA = '#1d1a16'
@@ -47,6 +47,15 @@ function enBoca(a: Avatar): string {
 }
 
 /**
+ * Los bigotes (las barbas que vienen después de las de Lorelei), arriba de la boca: van después de
+ * lo que va en la boca, así una pipa queda debajo del bigote.
+ */
+function bigote(a: Avatar): string {
+  const dibujo = BIGOTES[a.barba - 1 - PIEZAS_LORELEI.barba.length]
+  return dibujo ? `<g class="capa capa-bigote">${dibujo(a.boca, COLORES_PELO[a.colorPelo] ?? COLORES_PELO[0])}</g>` : ''
+}
+
+/**
  * Reemplaza las marcas `{{capa}}` por su pieza (que a su vez puede traer otras) y los colores.
  * `despuesDeCabeza` va justo después de la cabeza: entre el pelo de atrás y el de adelante.
  */
@@ -54,7 +63,7 @@ function componer(plantilla: string, a: Avatar, despuesDeCabeza = ''): string {
   return plantilla
     .replace(/\{\{([a-z]+)\}\}/g, (_, capa: CapaLorelei) => {
       const pieza = piezaDe(capa, a)
-      const extra = capa === 'cabeza' ? despuesDeCabeza : capa === 'boca' ? enBoca(a) : ''
+      const extra = capa === 'cabeza' ? despuesDeCabeza : capa === 'boca' ? enBoca(a) + bigote(a) : ''
       const recorte = capa === 'cabeza' ? ` clip-path="url(#lorelei-recorte-cuello-${CUELLOS[a.cabeza] ? a.cabeza : 0})"` : ''
       return pieza === null ? extra : `<g class="capa capa-${capa}"${recorte}>${componer(pieza, a, despuesDeCabeza)}</g>${extra}`
     })
