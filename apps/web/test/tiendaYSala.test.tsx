@@ -107,7 +107,7 @@ describe('desbloquear la tienda (prueba)', () => {
     expect(leerPerfil().mesa).toBe('boliche')
     expect(document.documentElement.dataset.mesa).toBe('boliche')
     expect(within(mesas()).getByRole('radio', { name: /Bordó: 800 monedas/ }).getAttribute('aria-disabled')).toBe('true')
-  })
+  }, 15_000) // Arma las muestras de las 26 mesas: con la suite completa en paralelo tarda más de 5 s.
 
   it('al apagarlo, las piezas pagas del avatar vuelven a las gratis', () => {
     guardar({ tiendaDesbloqueada: true, avatar: avatarPago })
