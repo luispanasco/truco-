@@ -1731,3 +1731,7 @@ Pedido: subir todo a producción, con el modo historia disponible solo en Rocha.
   - Piedra Pintada: se sacó la frase de las "pinturas de miles de años" (es una formación de arenisca, sin pinturas).
   - Pendiente del paquete: contrastar la fidelidad de algunas formas (sobre todo Piedra Pintada). Estos departamentos todavía no están publicados.
 - **Tests:** server 127, web 367, los 14 de punta a punta (el del menú desliza por las dos páginas de Jugar).
+- **Publicado en producción (2026-11-06):**
+  - Servidor en Fly (`fly deploy --app truco-uy --ha=false`), con `ADMINS` = los dos mails de admin. Aplica las migraciones 11 y 12. `/api/estado` responde bien.
+  - Web: `develop` pasó a `main` (antes se juntaron los dos commits de `wrangler.jsonc` que estaban solo en main; queda la versión de develop). Cloudflare publica solo.
+  - Se había colado `apps/web/public/barajas.zip` en un commit de develop: se sacó del repo antes de pasar a main (el archivo sigue en el disco, sin trackear).
