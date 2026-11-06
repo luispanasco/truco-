@@ -1671,3 +1671,30 @@ Pedido: la interfaz principal se veía plana y con colores feos, sobre todo seg�
 - **Menú:** fondo, vidrios y cantos con la paleta; ya no salen de `--tapete` ni de `--madera`.
 - La mesa (paño y madera) queda solo para la partida.
 - Siguen: Jugar con portada ilustrada; Grupos como clubes con muro (invitaciones, resultados y repeticiones); Lobby, Tienda y Avatar con los mismos componentes.
+
+## Rediseño, parte 2: los grupos como clubes, con muro, resultados y repeticiones — 2026-11-06
+
+Pedido: cambiar la UI de los grupos y que se puedan mandar las partidas. Se eligieron las tres cosas: invitar al grupo, publicar los resultados y compartir la repetición.
+
+- **La pantalla del grupo es un club:**
+  - Portada con el escudo grande y brillo dorado, el nombre, la descripción y chips (cuántos son, cuántos están conectados, si es abierto, tu rol).
+  - Tres pestañas:
+    - **Muro:** jugar con el grupo, la tabla y el muro.
+    - **Miembros:** las solicitudes, con su número en la pestaña, y los miembros.
+    - **Ajustes:** el código, la configuración y salir.
+  - Quien no es del grupo ve la portada, con "Entrar al grupo", y los miembros.
+- **El muro** (`MuroGrupo`, se actualiza cada 20 s):
+  - **Invitaciones:** "Mandar a tu grupo" en la sala de espera (antes "Llamar") deja la sala en el muro, además de avisar a los conectados. Vale 30 min (`VIGENCIA_INVITACION_MS`). Una nueva de la misma sala reemplaza a la anterior, y "Unirme" lleva a `/s/<código>`. Respeta "arman partidas: líder y capitanes".
+  - **Resultados:** al terminar una partida online en la que jugaron dos o más miembros de un grupo con su cuenta, el resultado va solo al muro de ese grupo (`anotarEnGrupos`): equipos, tanteo, formato y su repetición.
+  - **Tabla del grupo:** los cinco que más ganan, con las partidas del muro.
+- **Repeticiones** (`/repeticion/:id`):
+  - El servidor guarda la semilla, quién repartió, la configuración, los jugadores y las acciones (`RepeticionPartida`). La web reconstruye la partida con el motor (`pasosDeRepeticion`, en shared).
+  - Se ven las cartas de todos boca arriba: la muestra, las vueltas de la mano, el tanteo y las últimas jugadas en palabras (`describirEvento`).
+  - Controles: mano anterior y siguiente, jugada anterior y siguiente, y reproducir solo (1,1 s por jugada).
+  - La ven solo los de un grupo donde se publicó.
+- **Servidor:** migración 12 (`repeticiones` y `grupo_muro`), `cuentas/muro.ts` y las rutas `/grupos/muro`, `/grupos/invitar` y `/grupos/repeticion`.
+- **Tests:**
+  - Server 127. muro.test.ts: una partida entre bots va al muro y su repetición termina igual; quien no es del grupo no la ve; sin dos del mismo grupo no se anota; la invitación reemplaza a la anterior; "líder y capitanes".
+  - Web 365: las pestañas y el muro.
+  - E2E: el de grupos, con la sala en el muro.
+- **Hay que publicar el servidor** (migración 12).

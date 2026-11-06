@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
-import type { DetalleGrupo, ResumenGrupo } from '@truco/shared'
+import type { DetalleGrupo, MuroGrupo, ResumenGrupo } from '@truco/shared'
 import { PanelGrupos } from '../src/menu/PanelGrupos'
 import { Grupo } from '../src/pantallas/Grupo'
 import { useCuenta } from '../src/cuenta/cuenta'
@@ -11,6 +11,7 @@ import { AvisoInvitacion, InvitarGrupos } from '../src/componentes/Amistad'
 
 let pedidos: { url: string; cuerpo: Record<string, unknown> | null }[] = []
 let detalle: DetalleGrupo
+let muro: MuroGrupo
 
 const resumen = (extra: Partial<ResumenGrupo>): ResumenGrupo => ({
   id: 'g1',
@@ -43,6 +44,7 @@ function servidor({ quedan = 8 } = {}) {
       if (url.endsWith('/grupos/entrar')) return Response.json({ adentro: false })
       if (url.endsWith('/grupos/crear')) return Response.json({ id: 'g9' })
       if (url.endsWith('/grupos/convocar')) return Response.json({ invitados: 2 })
+      if (url.endsWith('/grupos/muro')) return Response.json(muro)
       if (url.endsWith('/grupos/codigo')) return Response.json({ motivo: 'No hay ningún grupo con ese código' }, { status: 409 })
       return Response.json({ ok: true })
     }),
@@ -69,6 +71,7 @@ const cuerpo = (fin: string) => pedidos.find((p) => p.url.endsWith(fin))?.cuerpo
 
 beforeEach(() => {
   pedidos = []
+  muro = { entradas: [], ranking: [] }
   useCuenta.setState({ estado: 'adentro', token: 'prueba:ana@ejemplo.com', cuenta: { id: 'a', email: 'ana@ejemplo.com', apodo: 'Ana', avatar: null, preferencias: {}, nueva: false } })
   detalle = {
     ...resumen({ rol: 'lider' }),
@@ -145,14 +148,22 @@ describe('grupos en el menú', () => {
   })
 })
 
+/** Abre una pestaña del grupo (Muro, Miembros o Ajustes). */
+async function pestania(nombre: RegExp) {
+  fireEvent.click(await screen.findByRole('tab', { name: nombre }))
+}
+
 describe('pantalla de un grupo', () => {
   it('el líder ve el código, las solicitudes, la configuración y las opciones de cada uno', async () => {
     servidor()
     montar('/grupos/g1')
+    await pestania(/^Ajustes/)
     expect(await screen.findByText('ABC2345')).toBeTruthy()
+    expect(screen.getByText('Configuración')).toBeTruthy()
+    // Las solicitudes, en Miembros (con cuántas hay en la pestaña).
+    await pestania(/^Miembros \(1\)/)
     fireEvent.click(screen.getByRole('button', { name: 'Aceptar' }))
     await waitFor(() => expect(cuerpo('/grupos/responder')).toEqual({ id: 'g1', cuenta: 'd', aceptar: true }))
-    expect(screen.getByText('Configuración')).toBeTruthy()
     // Con vos mismo no hay opciones.
     expect(screen.queryByRole('button', { name: 'Opciones de Ana' })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Opciones de Caro' }))
@@ -170,8 +181,10 @@ describe('pantalla de un grupo', () => {
     detalle = { ...detalle, rol: 'capitan' }
     useCuenta.setState({ cuenta: { id: 'b', email: 'beto@ejemplo.com', apodo: 'Beto', avatar: null, preferencias: {}, nueva: false } })
     montar('/grupos/g1')
+    await pestania(/^Ajustes/)
     await screen.findByText('ABC2345')
     expect(screen.queryByText('Configuración')).toBeNull()
+    await pestania(/^Miembros/)
     expect(screen.queryByRole('button', { name: 'Opciones de Ana' })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Opciones de Caro' }))
     expect(screen.queryByRole('button', { name: 'Hacer capitán' })).toBeNull()
@@ -186,8 +199,10 @@ describe('pantalla de un grupo', () => {
     useCuenta.setState({ cuenta: { id: 'c', email: 'caro@ejemplo.com', apodo: 'Caro', avatar: null, preferencias: {}, nueva: false } })
     montar('/grupos/g1')
     await screen.findByText(/Sos miembro/)
-    expect(screen.queryByText('Código de invitación')).toBeNull()
+    await pestania(/^Miembros/)
     expect(screen.queryByRole('button', { name: /^Opciones de/ })).toBeNull()
+    await pestania(/^Ajustes/)
+    expect(screen.queryByText('Código de invitación')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Salir del grupo' }))
     fireEvent.click(screen.getByRole('button', { name: 'Sí, salir del grupo' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Tus grupos' })).toBeTruthy())
@@ -198,10 +213,54 @@ describe('pantalla de un grupo', () => {
     servidor()
     montar('/grupos/g1')
     expect(await screen.findByText('Hay 1 conectado ahora.')).toBeTruthy()
-    expect(screen.getByText('En una sala, esperando')).toBeTruthy()
-    expect(screen.getByText('Desconectado')).toBeTruthy()
+    expect(screen.getByText('1 conectado')).toBeTruthy()
     fireEvent.click(within(screen.getByRole('region', { name: 'Jugar con el grupo' })).getByRole('button', { name: 'Unirme' }))
     expect(screen.getByTestId('ruta').textContent).toBe('/s/ABCDE')
+    cleanup()
+    montar('/grupos/g1')
+    await pestania(/^Miembros/)
+    expect(screen.getByText('En una sala, esperando')).toBeTruthy()
+    expect(screen.getByText('Desconectado')).toBeTruthy()
+  })
+
+  it('el muro: las salas que mandaron (para sumarse), los resultados con su repetición y la tabla', async () => {
+    servidor()
+    const ahora = new Date().toISOString()
+    muro = {
+      entradas: [
+        { id: 2, tipo: 'invitacion', creado: ahora, autor: { id: 'b', apodo: 'Beto', avatar: null }, datos: { codigo: 'FGHJK', formato: '2v2', puntos: 30 } },
+        {
+          id: 1,
+          tipo: 'resultado',
+          creado: ahora,
+          datos: {
+            formato: '2v2',
+            puntosPartida: 30,
+            puntos: [22, 30],
+            ganador: 1,
+            equipos: [
+              [
+                { apodo: 'Ana', cuentaId: 'a' },
+                { apodo: 'Caro', cuentaId: 'c' },
+              ],
+              [
+                { apodo: 'Beto', cuentaId: 'b' },
+                { apodo: 'Bot', cuentaId: null },
+              ],
+            ],
+            repeticion: 'r1',
+          },
+        },
+      ],
+      ranking: [{ cuentaId: 'b', apodo: 'Beto', avatar: null, jugadas: 1, ganadas: 1 }],
+    }
+    montar('/grupos/g1')
+    expect(await screen.findByText(/armó un 2 vs 2 a 30/)).toBeTruthy()
+    expect(screen.getByText(/Beto y Bot/)).toBeTruthy()
+    expect(screen.getByText('30 a 22')).toBeTruthy()
+    expect(within(screen.getByRole('region', { name: 'Tabla del grupo' })).getByText('Beto')).toBeTruthy()
+    fireEvent.click(within(screen.getByRole('region', { name: 'Muro' })).getByRole('button', { name: 'Unirme' }))
+    expect(screen.getByTestId('ruta').textContent).toBe('/s/FGHJK')
   })
 
   it('armar partida lleva a crear la sala; con "líder y capitanes", un miembro no la arma', async () => {
@@ -217,8 +276,8 @@ describe('pantalla de un grupo', () => {
   })
 })
 
-describe('llamar al grupo desde la sala', () => {
-  it('desde "Armar partida" se llama solo, una vez; los grupos que no te dejan llamar no aparecen', async () => {
+describe('mandar la sala al grupo', () => {
+  it('desde "Armar partida" se manda sola, una vez (al muro y a los conectados); los grupos que no te dejan no aparecen', async () => {
     servidor()
     useGrupos.setState({
       lista: {
@@ -229,12 +288,13 @@ describe('llamar al grupo desde la sala', () => {
     })
     render(
       <MemoryRouter initialEntries={[{ pathname: '/sala', state: { convocar: { id: 'g1', nombre: '[BOL] Los del Boliche' } } }]}>
-        <InvitarGrupos />
+        <InvitarGrupos sala={{ codigo: 'ABCDE', formato: '2v2', puntos: 30 }} />
       </MemoryRouter>,
     )
-    expect(await screen.findByText('Les llegó el aviso a 2 del grupo.')).toBeTruthy()
+    expect(await screen.findByText('Quedó en el muro del grupo. Les llegó el aviso a 2.')).toBeTruthy()
     expect(pedidos.filter((p) => p.url.endsWith('/grupos/convocar')).map((p) => p.cuerpo)).toEqual([{ id: 'g1' }])
-    expect(screen.getByRole('button', { name: 'Llamar a Los del Boliche' })).toHaveProperty('disabled', true)
+    expect(pedidos.filter((p) => p.url.endsWith('/grupos/invitar')).map((p) => p.cuerpo)).toEqual([{ id: 'g1', codigo: 'ABCDE', formato: '2v2', puntos: 30 }])
+    expect(screen.getByRole('button', { name: 'Mandar a Los del Boliche' })).toHaveProperty('disabled', true)
     expect(screen.queryByText(/Los Otros/)).toBeNull()
   })
 

@@ -29,6 +29,7 @@ import { Ranking } from './pantallas/Ranking'
 import { Tienda } from './pantallas/Tienda'
 import { Amigos } from './pantallas/Amigos'
 import { Grupo } from './pantallas/Grupo'
+import { Repeticion } from './pantallas/Repeticion'
 import { DepartamentoHistoria, Historia, PreviaNivel } from './pantallas/Historia'
 import { AvisoInvitacion } from './componentes/Amistad'
 import './estilos-online.css'
@@ -65,6 +66,7 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/tienda" element={<Tienda />} />
           <Route path="/amigos" element={<Amigos />} />
           <Route path="/grupos/:id" element={<Grupo />} />
+          <Route path="/repeticion/:id" element={<Repeticion />} />
           {/* Modo historia (por ahora, solo el admin). */}
           <Route path="/historia" element={<Historia />} />
           <Route path="/historia/:departamento" element={<DepartamentoHistoria />} />

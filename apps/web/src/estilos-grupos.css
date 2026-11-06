@@ -107,30 +107,6 @@ button.grupo-fila:focus-visible {
 }
 
 /* La pantalla de un grupo. */
-.grupo-cabecera {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 14px;
-}
-.grupo-cabecera > .boton {
-  grid-column: 1 / -1;
-}
-.grupo-cabecera-texto {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-.grupo-cabecera-texto h2 {
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-.grupo-cabecera-texto p {
-  margin: 0;
-}
-.grupo-cabecera-texto small {
-  opacity: 0.8;
-}
 .grupo-rol {
   font-size: 0.75rem;
   font-weight: 800;
@@ -182,4 +158,384 @@ button.grupo-fila:focus-visible {
 }
 .boton-texto-peligro {
   color: var(--peligro);
+}
+
+/* ── El grupo como club: portada, pestañas, muro y tabla ──────────────── */
+
+/* La portada: el escudo grande, el nombre y cómo está el grupo, con un brillo dorado detrás. */
+.grupo-portada {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 22px 16px 18px;
+  border-radius: 22px;
+  text-align: center;
+  background:
+    radial-gradient(70% 60% at 50% 0%, rgb(242 193 78 / 0.22), transparent 70%),
+    linear-gradient(180deg, var(--noche-clara), var(--noche-media));
+  border: 1px solid var(--noche-filo);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 12px 30px rgb(0 0 0 / 0.45);
+  overflow: hidden;
+}
+.grupo-portada .escudo-grupo {
+  width: 104px;
+  height: 104px;
+  box-shadow:
+    0 0 0 4px rgb(242 193 78 / 0.25),
+    0 10px 24px rgb(0 0 0 / 0.5);
+}
+.grupo-portada-texto {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+.grupo-portada-texto h2 {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 7vw, 2.1rem);
+  line-height: 1.05;
+  text-shadow: 0 3px 10px rgb(0 0 0 / 0.5);
+}
+.grupo-portada-texto p {
+  margin: 4px 0 0;
+  max-width: 34ch;
+  opacity: 0.85;
+}
+.grupo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.grupo-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.08);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.grupo-chip.en-linea::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--en-linea);
+  vertical-align: 1px;
+}
+.grupo-chip.dorado {
+  background: var(--dorado-suave);
+  color: var(--acento);
+}
+.grupo-entrar {
+  width: auto;
+  min-width: 200px;
+}
+
+/* Las pestañas del grupo: una píldora con la elegida en dorado. */
+.grupo-pestanias {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.3);
+  border: 1px solid var(--noche-filo);
+}
+.grupo-pestania {
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto-claro);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+.grupo-pestania.elegida {
+  background: var(--acento);
+  color: var(--tinta);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.35);
+}
+
+/* El muro: una línea de tiempo de tarjetas. */
+.grupo-muro {
+  display: grid;
+  gap: 10px;
+}
+.grupo-muro-titulo {
+  margin: 6px 4px 0;
+  font-size: 1.15rem;
+}
+.muro {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.muro-entrada {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.05), transparent),
+    var(--noche-media);
+  border: 1px solid var(--noche-filo);
+}
+.muro-invitacion {
+  border-color: color-mix(in srgb, var(--en-linea) 55%, transparent);
+  background:
+    linear-gradient(90deg, rgb(95 211 141 / 0.12), transparent 60%),
+    var(--noche-media);
+}
+/* El avatar del que mandó la sala (y en la tabla): en un círculo, también si es solo la inicial. */
+.muro-avatar,
+.tabla-avatar {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.1);
+  font-weight: 800;
+}
+.muro-avatar {
+  width: 44px;
+  height: 44px;
+}
+.tabla-avatar {
+  width: 34px;
+  height: 34px;
+}
+.muro-avatar .avatar {
+  width: 44px;
+  height: 44px;
+}
+.muro-trofeo {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--dorado-suave);
+  font-size: 1.4rem;
+}
+.muro-texto {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.muro-texto small {
+  opacity: 0.7;
+}
+.muro-tanteo {
+  font-family: var(--fuente-titulo);
+  font-size: 1.2rem;
+  color: var(--acento);
+}
+.muro-boton {
+  width: auto;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+.muro-vacio {
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px dashed var(--noche-filo);
+}
+
+/* La tabla del grupo: los cinco que más ganan. */
+.tabla-grupo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.tabla-grupo li {
+  display: grid;
+  grid-template-columns: 26px 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+.tabla-puesto {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.1);
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+.tabla-puesto.puesto-1 {
+  background: var(--acento);
+  color: var(--tinta);
+}
+.tabla-puesto.puesto-2 {
+  background: #c9cdd2;
+  color: var(--tinta);
+}
+.tabla-puesto.puesto-3 {
+  background: #c98a4b;
+  color: var(--tinta);
+}
+.tabla-avatar .avatar {
+  width: 34px;
+  height: 34px;
+}
+.tabla-nombre {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tabla-numeros {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+.tabla-numeros strong {
+  color: var(--acento);
+  font-size: 1rem;
+}
+
+/* ── La repetición de una partida ─────────────────────────────────── */
+
+.repeticion-fecha {
+  text-align: center;
+}
+.repeticion-marcador {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.repeticion-equipo {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 10px;
+  border-radius: 16px;
+  background: var(--noche-media);
+  border: 1px solid var(--noche-filo);
+  text-align: center;
+}
+.repeticion-equipo span {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.repeticion-equipo strong {
+  font-family: var(--fuente-titulo);
+  font-size: 1.8rem;
+  font-weight: 400;
+}
+.repeticion-equipo.gano {
+  border-color: var(--acento);
+  box-shadow: 0 0 0 2px rgb(242 193 78 / 0.3);
+}
+/* La mesa: sobre un paño verde, como en la partida. */
+.repeticion-mesa {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 20px;
+  background: radial-gradient(ellipse at center, #1f6b3a, #154d29);
+  border: 6px solid #8a5a36;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 0.45);
+}
+.repeticion-muestra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: center;
+  font-weight: 700;
+}
+.repeticion-jugadores {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.repeticion-jugador {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.25);
+}
+.repeticion-jugador.equipo-0 {
+  box-shadow: inset 3px 0 0 var(--equipo-nuestro);
+}
+.repeticion-jugador.equipo-1 {
+  box-shadow: inset 3px 0 0 var(--equipo-rival);
+}
+.repeticion-nombre {
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+.repeticion-cartas {
+  display: flex;
+  gap: 3px;
+  min-height: 40px;
+}
+.repeticion-vueltas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.repeticion-vueltas > li {
+  display: grid;
+  gap: 4px;
+}
+.repeticion-jugadas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.repeticion-jugada {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  font-size: 0.7rem;
+}
+.repeticion-registro {
+  list-style: none;
+  margin: 0;
+  padding: 10px 12px;
+  display: grid;
+  gap: 2px;
+  min-height: 92px;
+  border-radius: 14px;
+  background: rgb(0 0 0 / 0.3);
+  font-size: 0.85rem;
+}
+.repeticion-registro li:not(:last-child) {
+  opacity: 0.65;
+}
+.repeticion-registro li:last-child {
+  font-weight: 800;
+}
+.repeticion-controles {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.repeticion-controles .boton {
+  padding: 10px 0;
+  font-size: 1.1rem;
+}
+.repeticion-progreso {
+  text-align: center;
 }

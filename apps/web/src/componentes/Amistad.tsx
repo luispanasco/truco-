@@ -5,7 +5,7 @@ import { TEXTO_ESTADO } from '../pantallas/Amigos'
 import { Avatar } from './Avatar'
 import { useCuenta } from '../cuenta/cuenta'
 import { cargarAmigos, descartarInvitacion, invitarAmigo, useAmigos, type Amigo } from '../cuenta/amigos'
-import { cargarGrupos, convocarGrupo, useGrupos } from '../cuenta/grupos'
+import { cargarGrupos, convocarGrupo, invitarAlGrupo, useGrupos } from '../cuenta/grupos'
 import { useJuego } from '../estado'
 
 /**
@@ -135,21 +135,24 @@ export function InvitarAmigos() {
 }
 
 /**
- * En la sala de espera: tus grupos, para llamar a todos a jugar (los que la configuración de cada
- * grupo te deja). Si se creó la sala desde "Armar partida" en un grupo, a ese se lo llama solo, una vez.
+ * En la sala de espera: tus grupos, para mandarles la sala (los que la configuración de cada grupo te
+ * deja): queda en el muro del grupo y a los conectados les llega el aviso. Si se creó la sala desde
+ * "Armar partida" en un grupo, a ese se le manda sola, una vez.
  */
-export function InvitarGrupos() {
+export function InvitarGrupos({ sala }: { sala: { codigo: string; formato: string; puntos: number } }) {
   const adentro = useCuenta((s) => s.estado === 'adentro')
   const lista = useGrupos((s) => s.lista)
   const [llamados, setLlamados] = useState<Set<string>>(new Set())
   const [aviso, setAviso] = useState<string | null>(null)
 
+  /** La sala va al muro del grupo (la ven todos un rato) y a los conectados les llega el aviso. */
   const llamar = async (id: string) => {
-    const r = await convocarGrupo(id)
+    const [muro, r] = await Promise.all([invitarAlGrupo(id, sala), convocarGrupo(id)])
     if (!r.ok) return setAviso(r.motivo)
     setLlamados((s) => new Set(s).add(id))
     const n = r.datos.invitados
-    setAviso(n === 1 ? 'Le llegó el aviso a 1 del grupo.' : `Les llegó el aviso a ${n} del grupo.`)
+    const avisados = n === 0 ? 'Ahora no hay nadie conectado' : n === 1 ? 'Le llegó el aviso a 1' : `Les llegó el aviso a ${n}`
+    setAviso(muro.ok ? `Quedó en el muro del grupo. ${avisados}.` : `${avisados}.`)
   }
 
   useEffect(() => {
@@ -168,15 +171,16 @@ export function InvitarGrupos() {
   if (!adentro || grupos.length === 0) return null
   return (
     <section className="tarjeta">
-      <h2>Llamar a tu grupo</h2>
+      <h2>Mandar a tu grupo</h2>
+      <p className="nota-izq">La sala queda en el muro del grupo y a los que están conectados les llega el aviso.</p>
       <ul className="amigos">
         {grupos.map((g) => (
           <li key={g.id} className="amigo amigo-chico">
             <span className="amigo-nombre">
               [{g.sigla}] {g.nombre}
             </span>
-            <button type="button" className="boton" disabled={llamados.has(g.id)} aria-label={`Llamar a ${g.nombre}`} onClick={() => void llamar(g.id)}>
-              {llamados.has(g.id) ? 'Llamado' : 'Llamar'}
+            <button type="button" className="boton" disabled={llamados.has(g.id)} aria-label={`Mandar a ${g.nombre}`} onClick={() => void llamar(g.id)}>
+              {llamados.has(g.id) ? 'Mandada' : 'Mandar'}
             </button>
           </li>
         ))}

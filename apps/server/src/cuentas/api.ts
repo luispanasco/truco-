@@ -29,6 +29,7 @@ import {
   responderSolicitudGrupo,
   salirDeGrupo,
 } from './grupos'
+import { invitarAlGrupo, muroDeGrupo, repeticion } from './muro'
 
 export interface Cuentas {
   base: Base
@@ -216,6 +217,9 @@ export function rutasCuentas(c: Cuentas | null): Router {
     }),
   )
   rutaGrupo('crear', (b, c, u) => crearGrupo(c.base, u.id, b))
+  rutaGrupo('muro', (b, c, u) => muroDeGrupo(c.base, u.id, b.id))
+  rutaGrupo('invitar', (b, c, u) => invitarAlGrupo(c.base, u.id, b.id, b))
+  rutaGrupo('repeticion', (b, c, u) => repeticion(c.base, u.id, b.repeticion))
   rutaGrupo('detalle', (b, c, u) => detalleGrupo(c.base, presencia, u.id, b.id))
   rutaGrupo('convocar', (b, c, u) => convocarGrupo(c.base, presencia, u.id, b.id))
   rutaGrupo('entrar', (b, c, u) => entrarAGrupo(c.base, u.id, b.id))

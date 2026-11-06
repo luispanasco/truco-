@@ -13,7 +13,8 @@ async function entrarConCuenta(page: Page, nombre: string) {
 
 /**
  * Los grupos de punta a punta: Ana crea uno cerrado con foto (la app la achica antes de subirla),
- * Beto no lo ve en la lista pero entra con el código, Ana lo hace capitán y lo llama a jugar.
+ * Beto no lo ve en la lista pero entra con el código, Ana lo hace capitán y le manda una sala:
+ * le llega el aviso y la sala queda en el muro del grupo.
  */
 test('crear un grupo con foto y sumar a alguien con el código', async ({ browser }) => {
   const ana = await persona(browser, 'Ana')
@@ -36,9 +37,10 @@ test('crear un grupo con foto y sumar a alguien con el código', async ({ browse
   // La pantalla del grupo: la foto subida, Ana de líder y el código.
   await expect(ana).toHaveURL(/\/grupos\/[0-9a-f-]{36}$/)
   await expect(ana.getByText(/Sos líder/)).toBeVisible()
-  const foto = ana.locator('.grupo-cabecera .escudo-grupo img')
+  const foto = ana.locator('.grupo-portada .escudo-grupo img')
   await expect(foto).toHaveAttribute('src', /\/grupos\/[0-9a-f-]+\/foto\?v=1$/)
   await expect.poll(() => foto.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(256)
+  await ana.getByRole('tab', { name: 'Ajustes' }).click()
   const codigo = (await ana.locator('.codigo-amigo strong').innerText()).trim()
   expect(codigo).toMatch(/^[A-Z0-9]{7}$/)
 
@@ -56,31 +58,37 @@ test('crear un grupo con foto y sumar a alguien con el código', async ({ browse
   await panelBeto.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(beto).toHaveURL(/\/grupos\//)
   await expect(beto.getByText(/Sos miembro/)).toBeVisible()
+  await beto.getByRole('tab', { name: 'Ajustes' }).click()
   await expect(beto.getByText('Código de invitación')).toBeHidden()
 
   // Ana lo ve (al recargar) y lo hace capitán.
   await ana.reload()
+  await ana.getByRole('tab', { name: /^Miembros/ }).click()
   await ana.getByRole('button', { name: 'Opciones de Beto' }).click()
   await ana.getByRole('button', { name: 'Hacer capitán' }).click()
   await expect(ana.locator('.miembro-grupo', { hasText: 'Beto' }).getByText('Capitán')).toBeVisible()
   await beto.reload()
   await expect(beto.getByText(/Sos capitán/)).toBeVisible()
+  await beto.getByRole('tab', { name: 'Ajustes' }).click()
   await expect(beto.getByText('Código de invitación')).toBeVisible()
 
   // Ana arma una partida: se crea su sala y a Beto le llega el aviso del grupo.
+  await ana.getByRole('tab', { name: 'Muro' }).click()
   await ana.getByRole('button', { name: 'Armar partida' }).click()
   await expect(ana).toHaveURL(/\/crear$/)
   await expect(ana.getByText(/les llega el aviso a todos los de \[PIB\]/)).toBeVisible()
   await ana.getByRole('button', { name: 'Crear sala' }).click()
   await expect(ana).toHaveURL(/\/sala$/)
-  await expect(ana.getByText('Le llegó el aviso a 1 del grupo.')).toBeVisible()
-  await expect(ana.getByRole('button', { name: /^Llamar a Los Pibes/ })).toBeDisabled()
+  await expect(ana.getByText('Quedó en el muro del grupo. Le llegó el aviso a 1.')).toBeVisible()
+  await expect(ana.getByRole('button', { name: /^Mandar a Los Pibes/ })).toBeDisabled()
 
   // Al recargar, Beto late y le llega el aviso; además, en el grupo ve la sala de Ana.
   await beto.reload()
   const aviso = beto.getByRole('alertdialog', { name: 'Invitación a una sala' })
   await expect(aviso).toContainText(/Ana llama a \[PIB\] Los Pibes \d+ a jugar en su sala/)
   await expect(beto.getByText('Sala de Ana')).toBeVisible()
+  // La sala quedó en el muro del grupo.
+  await expect(beto.getByRole('region', { name: 'Muro' }).getByText(/armó un 1 vs 1/)).toBeVisible()
   await aviso.getByRole('button', { name: 'Entrar' }).click()
   await expect(beto).toHaveURL(/\/sala$/)
   await expect(beto.getByText('Esperando que el anfitrión empiece')).toBeVisible()

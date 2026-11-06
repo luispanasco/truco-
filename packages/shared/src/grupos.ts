@@ -127,3 +127,58 @@ export function tipoDeFoto(b: Uint8Array): 'image/webp' | 'image/jpeg' | 'image/
   if (b.length > 8 && b[0] === 0x89 && ascii(1, 3) === 'PNG') return 'image/png'
   return null
 }
+
+// ── El muro del grupo ──────────────────────────────────────────────
+
+/** Cuántas entradas trae el muro (las últimas). */
+export const LARGO_MURO = 40
+/** Una invitación a una sala vale este rato (después la sala ya arrancó o se cerró). */
+export const VIGENCIA_INVITACION_MS = 30 * 60_000
+
+/** Un jugador de una partida del muro: su apodo y, si entró con cuenta, quién es. */
+export interface JugadorMuro {
+  apodo: string
+  cuentaId: string | null
+}
+
+/**
+ * Lo que hay en el muro de un grupo:
+ * - una invitación: alguien armó una sala y la mandó al grupo, para que se sumen con su código;
+ * - un resultado: una partida entre miembros que terminó, con los equipos, los puntos y, si se
+ *   guardó, su repetición.
+ */
+export type EntradaMuro =
+  | {
+      id: number
+      tipo: 'invitacion'
+      creado: string
+      autor: { id: string; apodo: string; avatar: string | null }
+      datos: { codigo: string; formato: '1v1' | '2v2' | '3v3'; puntos: number }
+    }
+  | {
+      id: number
+      tipo: 'resultado'
+      creado: string
+      datos: {
+        formato: '1v1' | '2v2' | '3v3'
+        puntosPartida: number
+        puntos: [number, number]
+        ganador: 0 | 1
+        equipos: [JugadorMuro[], JugadorMuro[]]
+        repeticion: string | null
+      }
+    }
+
+/** Cómo le va a cada miembro en las partidas del grupo (las que están en el muro). */
+export interface FilaRankingGrupo {
+  cuentaId: string
+  apodo: string
+  avatar: string | null
+  jugadas: number
+  ganadas: number
+}
+
+export interface MuroGrupo {
+  entradas: EntradaMuro[]
+  ranking: FilaRankingGrupo[]
+}

@@ -336,7 +336,7 @@ export function Sala() {
       <AvisoConexion />
       {sala.codigo && <Invitar codigo={sala.codigo} />}
       {sala.codigo && <InvitarAmigos />}
-      {sala.codigo && <InvitarGrupos />}
+      {sala.codigo && <InvitarGrupos sala={{ codigo: sala.codigo, formato: sala.formato, puntos: sala.config.puntosPartida }} />}
       {sala.historia && <NivelDeLaSala sala={sala} />}
       <Lugares sala={sala} />
       {/* En un nivel del modo historia, la mesa y las reglas las pone el nivel. */}

@@ -82,6 +82,7 @@ import { Archivo, type RegistroPartida } from './registro'
 import type { Cuentas } from './cuentas/api'
 import type { Usuario } from './cuentas/auth'
 import { pagarPartida } from './cuentas/monedas'
+import { anotarEnGrupos } from './cuentas/muro'
 import { actualizarElo } from './cuentas/elo'
 import { entrar } from './cuentas/cuentas'
 import { inventario } from './cuentas/tienda'
@@ -843,6 +844,8 @@ export class SalaTruco extends Room {
       void this.pagarMonedas(this.registro, this.estado.ganador!)
       void this.contarElo(this.registro, this.estado.ganador!)
       void this.anotarHistoria(this.estado.ganador!)
+      // Si jugaron miembros de un mismo grupo, el resultado (con la repetición) va a su muro.
+      if (this.cuentas) void anotarEnGrupos(this.cuentas.base, this.registro).catch((e) => console.error('No se pudo anotar en los grupos:', e))
     }
     this.broadcast('turno', { asientos: [], venceEn: null })
     this.enviarSala()

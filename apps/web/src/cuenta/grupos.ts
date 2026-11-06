@@ -1,5 +1,14 @@
 import { create } from 'zustand'
-import { LADO_FOTO_GRUPO, MAX_BYTES_FOTO_GRUPO, type ConfigGrupo, type DetalleGrupo, type ResumenGrupo, type RolGrupo } from '@truco/shared'
+import {
+  LADO_FOTO_GRUPO,
+  MAX_BYTES_FOTO_GRUPO,
+  type ConfigGrupo,
+  type DetalleGrupo,
+  type MuroGrupo,
+  type RepeticionPartida,
+  type ResumenGrupo,
+  type RolGrupo,
+} from '@truco/shared'
 import { direccionApi, useCuenta } from './cuenta'
 
 interface ListaGrupos {
@@ -32,6 +41,10 @@ export async function cargarGrupos(): Promise<void> {
 }
 
 export const detalleGrupo = (id: string) => pedir<DetalleGrupo>('POST', '/grupos/detalle', { id })
+/** El muro del grupo: las salas que mandaron, los resultados de las partidas entre miembros y el ranking. */
+export const muroGrupo = (id: string) => pedir<MuroGrupo>('POST', '/grupos/muro', { id })
+/** La repetición de una partida del muro. */
+export const repeticionDeGrupo = (repeticion: string) => pedir<RepeticionPartida>('POST', '/grupos/repeticion', { repeticion })
 
 /** La dirección de la foto (con su versión, así la caché no muestra una vieja). */
 export const urlFotoGrupo = (id: string, version: number) => `${direccionApi()}/grupos/${id}/foto?v=${version}`
@@ -58,6 +71,8 @@ export const pasarLiderazgo = (id: string, cuenta: string) => hacer('/grupos/lid
 export const expulsar = (id: string, cuenta: string) => hacer('/grupos/expulsar', { id, cuenta })
 export const configurarGrupo = (id: string, config: ConfigGrupo) => hacer('/grupos/configurar', { id, ...config })
 /** Llamar a todo el grupo a la sala privada en la que esperás. */
+/** Mandar al muro del grupo la sala en la que esperás, para que se sumen con su código. */
+export const invitarAlGrupo = (id: string, sala: { codigo: string; formato: string; puntos: number }) => hacer('/grupos/invitar', { id, ...sala })
 export const convocarGrupo = (id: string) => hacer<{ invitados: number }>('/grupos/convocar', { id })
 export const renovarCodigo = (id: string) => hacer<{ codigo: string }>('/grupos/renovar-codigo', { id })
 export const borrarGrupo = (id: string) => hacer('/grupos/borrar', { id })

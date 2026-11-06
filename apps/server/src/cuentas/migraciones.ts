@@ -173,4 +173,24 @@ export const MIGRACIONES: string[] = [
   alter table movimientos add constraint movimientos_tipo_check
     check (tipo in ('partida', 'victoria', 'bonusDiario', 'compra', 'ajuste', 'historia'));
   `,
+  // 12. El muro de cada grupo (invitaciones a salas y resultados de partidas entre miembros) y las
+  //     repeticiones de esas partidas (para volver a verlas).
+  `
+  create table repeticiones (
+    id uuid primary key,
+    datos jsonb not null,
+    creado timestamptz not null default now()
+  );
+  create table grupo_muro (
+    id bigint generated always as identity primary key,
+    grupo_id uuid not null references grupos (id) on delete cascade,
+    tipo text not null check (tipo in ('invitacion', 'resultado')),
+    autor uuid references cuentas (id),
+    datos jsonb not null,
+    creado timestamptz not null default now()
+  );
+  create index grupo_muro_grupo on grupo_muro (grupo_id, id desc);
+  alter table repeticiones enable row level security;
+  alter table grupo_muro enable row level security;
+  `,
 ]
