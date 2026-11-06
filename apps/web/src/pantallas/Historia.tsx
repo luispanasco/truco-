@@ -94,6 +94,7 @@ export function Historia() {
               <button
                 type="button"
                 className={`historia-departamento${historia ? '' : ' cerrado'}`}
+                data-fondo={d.id}
                 disabled={!historia}
                 onClick={() => navegar(`/historia/${d.id}`)}
               >

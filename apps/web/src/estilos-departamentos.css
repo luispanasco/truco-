@@ -1,0 +1,443 @@
+/*
+ * Los 19 departamentos del modo historia: la mesa de cada uno (el paño repetido, con una viñeta
+ * de su color de borde, y la madera) y su fondo (horizontal o vertical, según la pantalla).
+ *
+ * Generado por scripts/departamentos.py a partir del paquete de cada lugar: no editar a mano.
+ */
+
+[data-mesa='artigas']:is(:root, .muestra-mesa) {
+  --tapete: #513c61;
+  --tapete-oscuro: #32253c;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #32253c 85%, transparent)),
+    url('/departamentos/artigas-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='artigas'],
+:root[data-lugar='artigas'] body {
+  --fondo-lugar: url('/departamentos/artigas-horizontal.webp');
+  --fondo-mini: url('/departamentos/artigas-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='artigas'],
+  :root[data-lugar='artigas'] body {
+    --fondo-lugar: url('/departamentos/artigas-vertical.webp');
+  }
+}
+
+[data-mesa='canelones']:is(:root, .muestra-mesa) {
+  --tapete: #51445b;
+  --tapete-oscuro: #322a38;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #322a38 85%, transparent)),
+    url('/departamentos/canelones-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='canelones'],
+:root[data-lugar='canelones'] body {
+  --fondo-lugar: url('/departamentos/canelones-horizontal.webp');
+  --fondo-mini: url('/departamentos/canelones-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='canelones'],
+  :root[data-lugar='canelones'] body {
+    --fondo-lugar: url('/departamentos/canelones-vertical.webp');
+  }
+}
+
+[data-mesa='cerro-largo']:is(:root, .muestra-mesa) {
+  --tapete: #405a43;
+  --tapete-oscuro: #28382a;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #28382a 85%, transparent)),
+    url('/departamentos/cerro-largo-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='cerro-largo'],
+:root[data-lugar='cerro-largo'] body {
+  --fondo-lugar: url('/departamentos/cerro-largo-horizontal.webp');
+  --fondo-mini: url('/departamentos/cerro-largo-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='cerro-largo'],
+  :root[data-lugar='cerro-largo'] body {
+    --fondo-lugar: url('/departamentos/cerro-largo-vertical.webp');
+  }
+}
+
+[data-mesa='colonia']:is(:root, .muestra-mesa) {
+  --tapete: #604c3e;
+  --tapete-oscuro: #3c2f26;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #3c2f26 85%, transparent)),
+    url('/departamentos/colonia-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='colonia'],
+:root[data-lugar='colonia'] body {
+  --fondo-lugar: url('/departamentos/colonia-horizontal.webp');
+  --fondo-mini: url('/departamentos/colonia-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='colonia'],
+  :root[data-lugar='colonia'] body {
+    --fondo-lugar: url('/departamentos/colonia-vertical.webp');
+  }
+}
+
+[data-mesa='durazno']:is(:root, .muestra-mesa) {
+  --tapete: #4d5450;
+  --tapete-oscuro: #303432;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #303432 85%, transparent)),
+    url('/departamentos/durazno-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='durazno'],
+:root[data-lugar='durazno'] body {
+  --fondo-lugar: url('/departamentos/durazno-horizontal.webp');
+  --fondo-mini: url('/departamentos/durazno-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='durazno'],
+  :root[data-lugar='durazno'] body {
+    --fondo-lugar: url('/departamentos/durazno-vertical.webp');
+  }
+}
+
+[data-mesa='flores']:is(:root, .muestra-mesa) {
+  --tapete: #62513c;
+  --tapete-oscuro: #3d3225;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #3d3225 85%, transparent)),
+    url('/departamentos/flores-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='flores'],
+:root[data-lugar='flores'] body {
+  --fondo-lugar: url('/departamentos/flores-horizontal.webp');
+  --fondo-mini: url('/departamentos/flores-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='flores'],
+  :root[data-lugar='flores'] body {
+    --fondo-lugar: url('/departamentos/flores-vertical.webp');
+  }
+}
+
+[data-mesa='florida']:is(:root, .muestra-mesa) {
+  --tapete: #3b5962;
+  --tapete-oscuro: #25373d;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #25373d 85%, transparent)),
+    url('/departamentos/florida-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='florida'],
+:root[data-lugar='florida'] body {
+  --fondo-lugar: url('/departamentos/florida-horizontal.webp');
+  --fondo-mini: url('/departamentos/florida-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='florida'],
+  :root[data-lugar='florida'] body {
+    --fondo-lugar: url('/departamentos/florida-vertical.webp');
+  }
+}
+
+[data-mesa='lavalleja']:is(:root, .muestra-mesa) {
+  --tapete: #4c5846;
+  --tapete-oscuro: #2f372b;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #2f372b 85%, transparent)),
+    url('/departamentos/lavalleja-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='lavalleja'],
+:root[data-lugar='lavalleja'] body {
+  --fondo-lugar: url('/departamentos/lavalleja-horizontal.webp');
+  --fondo-mini: url('/departamentos/lavalleja-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='lavalleja'],
+  :root[data-lugar='lavalleja'] body {
+    --fondo-lugar: url('/departamentos/lavalleja-vertical.webp');
+  }
+}
+
+[data-mesa='maldonado']:is(:root, .muestra-mesa) {
+  --tapete: #3d5263;
+  --tapete-oscuro: #26333d;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #26333d 85%, transparent)),
+    url('/departamentos/maldonado-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='maldonado'],
+:root[data-lugar='maldonado'] body {
+  --fondo-lugar: url('/departamentos/maldonado-horizontal.webp');
+  --fondo-mini: url('/departamentos/maldonado-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='maldonado'],
+  :root[data-lugar='maldonado'] body {
+    --fondo-lugar: url('/departamentos/maldonado-vertical.webp');
+  }
+}
+
+[data-mesa='montevideo']:is(:root, .muestra-mesa) {
+  --tapete: #4c3f48;
+  --tapete-oscuro: #2f272d;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #2f272d 85%, transparent)),
+    url('/departamentos/montevideo-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='montevideo'],
+:root[data-lugar='montevideo'] body {
+  --fondo-lugar: url('/departamentos/montevideo-horizontal.webp');
+  --fondo-mini: url('/departamentos/montevideo-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='montevideo'],
+  :root[data-lugar='montevideo'] body {
+    --fondo-lugar: url('/departamentos/montevideo-vertical.webp');
+  }
+}
+
+[data-mesa='paysandu']:is(:root, .muestra-mesa) {
+  --tapete: #4e553c;
+  --tapete-oscuro: #303525;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #303525 85%, transparent)),
+    url('/departamentos/paysandu-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='paysandu'],
+:root[data-lugar='paysandu'] body {
+  --fondo-lugar: url('/departamentos/paysandu-horizontal.webp');
+  --fondo-mini: url('/departamentos/paysandu-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='paysandu'],
+  :root[data-lugar='paysandu'] body {
+    --fondo-lugar: url('/departamentos/paysandu-vertical.webp');
+  }
+}
+
+[data-mesa='rio-negro']:is(:root, .muestra-mesa) {
+  --tapete: #4d5149;
+  --tapete-oscuro: #30322d;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #30322d 85%, transparent)),
+    url('/departamentos/rio-negro-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='rio-negro'],
+:root[data-lugar='rio-negro'] body {
+  --fondo-lugar: url('/departamentos/rio-negro-horizontal.webp');
+  --fondo-mini: url('/departamentos/rio-negro-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rio-negro'],
+  :root[data-lugar='rio-negro'] body {
+    --fondo-lugar: url('/departamentos/rio-negro-vertical.webp');
+  }
+}
+
+[data-mesa='rivera']:is(:root, .muestra-mesa) {
+  --tapete: #37574b;
+  --tapete-oscuro: #22362f;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #22362f 85%, transparent)),
+    url('/departamentos/rivera-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='rivera'],
+:root[data-lugar='rivera'] body {
+  --fondo-lugar: url('/departamentos/rivera-horizontal.webp');
+  --fondo-mini: url('/departamentos/rivera-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rivera'],
+  :root[data-lugar='rivera'] body {
+    --fondo-lugar: url('/departamentos/rivera-vertical.webp');
+  }
+}
+
+[data-mesa='rocha']:is(:root, .muestra-mesa) {
+  --tapete: #365764;
+  --tapete-oscuro: #21363e;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #21363e 85%, transparent)),
+    url('/departamentos/rocha-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='rocha'],
+:root[data-lugar='rocha'] body {
+  --fondo-lugar: url('/departamentos/rocha-horizontal.webp');
+  --fondo-mini: url('/departamentos/rocha-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'],
+  :root[data-lugar='rocha'] body {
+    --fondo-lugar: url('/departamentos/rocha-vertical.webp');
+  }
+}
+
+[data-mesa='salto']:is(:root, .muestra-mesa) {
+  --tapete: #654b33;
+  --tapete-oscuro: #3f2f20;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #3f2f20 85%, transparent)),
+    url('/departamentos/salto-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='salto'],
+:root[data-lugar='salto'] body {
+  --fondo-lugar: url('/departamentos/salto-horizontal.webp');
+  --fondo-mini: url('/departamentos/salto-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='salto'],
+  :root[data-lugar='salto'] body {
+    --fondo-lugar: url('/departamentos/salto-vertical.webp');
+  }
+}
+
+[data-mesa='san-jose']:is(:root, .muestra-mesa) {
+  --tapete: #4d584c;
+  --tapete-oscuro: #30372f;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #30372f 85%, transparent)),
+    url('/departamentos/san-jose-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='san-jose'],
+:root[data-lugar='san-jose'] body {
+  --fondo-lugar: url('/departamentos/san-jose-horizontal.webp');
+  --fondo-mini: url('/departamentos/san-jose-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='san-jose'],
+  :root[data-lugar='san-jose'] body {
+    --fondo-lugar: url('/departamentos/san-jose-vertical.webp');
+  }
+}
+
+[data-mesa='soriano']:is(:root, .muestra-mesa) {
+  --tapete: #515d41;
+  --tapete-oscuro: #323a28;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #323a28 85%, transparent)),
+    url('/departamentos/soriano-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='soriano'],
+:root[data-lugar='soriano'] body {
+  --fondo-lugar: url('/departamentos/soriano-horizontal.webp');
+  --fondo-mini: url('/departamentos/soriano-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='soriano'],
+  :root[data-lugar='soriano'] body {
+    --fondo-lugar: url('/departamentos/soriano-vertical.webp');
+  }
+}
+
+[data-mesa='tacuarembo']:is(:root, .muestra-mesa) {
+  --tapete: #574d3d;
+  --tapete-oscuro: #363026;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #363026 85%, transparent)),
+    url('/departamentos/tacuarembo-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='tacuarembo'],
+:root[data-lugar='tacuarembo'] body {
+  --fondo-lugar: url('/departamentos/tacuarembo-horizontal.webp');
+  --fondo-mini: url('/departamentos/tacuarembo-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='tacuarembo'],
+  :root[data-lugar='tacuarembo'] body {
+    --fondo-lugar: url('/departamentos/tacuarembo-vertical.webp');
+  }
+}
+
+[data-mesa='treinta-y-tres']:is(:root, .muestra-mesa) {
+  --tapete: #3b574e;
+  --tapete-oscuro: #253630;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #253630 85%, transparent)),
+    url('/departamentos/treinta-y-tres-pano.webp') center / 512px repeat;
+  --madera: #35251c;
+  --madera-clara: #805a3d;
+  --fondo-claro: #805a3d;
+}
+
+[data-fondo='treinta-y-tres'],
+:root[data-lugar='treinta-y-tres'] body {
+  --fondo-lugar: url('/departamentos/treinta-y-tres-horizontal.webp');
+  --fondo-mini: url('/departamentos/treinta-y-tres-mini.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='treinta-y-tres'],
+  :root[data-lugar='treinta-y-tres'] body {
+    --fondo-lugar: url('/departamentos/treinta-y-tres-vertical.webp');
+  }
+}

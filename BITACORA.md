@@ -1525,3 +1525,11 @@ Llegó el paquete con los mazos, paños y fondos de los 19 departamentos (`Urugu
 - **Cortes:** venían con los huecos de 20 px. Se agrandaron a 51 px con el mismo script que las propias (`barajas-propias-cortes.py`, que ahora acepta las carpetas como argumento). El marco y el número están en el mismo lugar que en las otras propias: usan `ZONAS_PROPIAS_IMAGEN` para el ojeo. `ZONAS_OJEO` le da esas zonas a toda baraja que no sea la propia ni una antigua.
 - **Recompensas:** cada baraja propia se gana en el último nivel de su departamento: Oriental en Tacuarembó, Colonial en Colonia, Grabado en Montevideo, Costa en Rocha y cada una de las nuevas en el suyo. Con candado para quien no la ganó (el admin y los beta las usan igual).
 - La web deriva el nombre corto, el crédito y la carpeta de las nuevas a partir del id (`baraja.ts`). Como las demás barajas, no entran en la precarga del service worker: se bajan al elegirlas.
+
+## Mesas y fondos de los 19 departamentos — 2026-11-06
+
+- **`scripts/departamentos.py <paquete>`** importa el paquete: copia a `public/departamentos/` el paño (`<id>-pano.webp`), los dos fondos (`<id>-horizontal.webp`, `<id>-vertical.webp`) y hace una versión chica para el mapa (`<id>-mini.webp`, 480 px). También genera `src/estilos-departamentos.css` con los colores de `colores.txt`. Si llega un paquete nuevo, se vuelve a correr y pisa todo. En total son 20 MB.
+- **Mesas:** 19 en el catálogo (`mesas.ts`, id = el del departamento), cada una el premio del último nivel de su departamento. El paño va repetido sin estirar (512 px por baldosa, nítido en pantallas densas) en `--tapete-textura`, con una viñeta del color del borde encima. La madera usa los colores del paquete. La barra del navegador toma el color del borde del paño. La mesa provisoria de Rocha se reemplazó por la suya.
+- **Fondos:** `--fondo-lugar` es la ilustración horizontal o la vertical según la orientación de la pantalla. La usan el departamento, la previa y la partida (oscurecida). Ya no quedan degradés provisorios.
+- **Mapa:** cada tarjeta muestra el fondo chico de su departamento (en gris los que todavía no se juegan).
+- Revisado con capturas: el mapa, la previa de Rocha y la mesa de Rocha, Salto, Artigas y Montevideo, en celular y en pantalla ancha.

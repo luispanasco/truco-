@@ -1,5 +1,6 @@
 import { mesaGratis, normalizarMesa, type IdMesa } from '@truco/shared'
 import './estilos-mesas.css'
+import './estilos-departamentos.css'
 
 /**
  * El color de la barra del navegador y de la app instalada con cada mesa: el paño oscuro,
@@ -13,7 +14,25 @@ export const BARRA_MESA: Record<IdMesa, string> = {
   celeste: '#2f5a70',
   parrillero: '#4f3d26',
   cantina: '#6e1a1e',
-  rocha: '#173f55',
+  artigas: '#32253c',
+  canelones: '#322a38',
+  'cerro-largo': '#28382a',
+  colonia: '#3c2f26',
+  durazno: '#303432',
+  flores: '#3d3225',
+  florida: '#25373d',
+  lavalleja: '#2f372b',
+  maldonado: '#26333d',
+  montevideo: '#2f272d',
+  paysandu: '#303525',
+  'rio-negro': '#30322d',
+  rivera: '#22362f',
+  rocha: '#21363e',
+  salto: '#3f2f20',
+  'san-jose': '#30372f',
+  soriano: '#323a28',
+  tacuarembo: '#363026',
+  'treinta-y-tres': '#253630',
 }
 
 /**

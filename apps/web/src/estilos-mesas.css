@@ -67,17 +67,7 @@
   --fondo-claro: #957049;
 }
 
-/*
- * Las del modo historia, una por departamento. Colores provisorios hasta que lleguen el paño y la
- * madera de cada lugar (ver el formato en el BITACORA).
- */
-[data-mesa='rocha']:is(:root, .muestra-mesa) {
-  --tapete: #2f6f8f;
-  --tapete-oscuro: #1b4559;
-  --madera: #4e3826;
-  --madera-clara: #9c7a52;
-  --fondo-claro: #7a5c3d;
-}
+/* Las del modo historia, una por departamento, están en estilos-departamentos.css. */
 
 /* El dorso es rojo: sobre un paño rojo, un contorno claro despega las cartas boca abajo. */
 :is([data-mesa='bordo'], [data-mesa='cantina']) .carta-dorso {

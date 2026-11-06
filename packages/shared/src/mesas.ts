@@ -30,7 +30,25 @@ export const MESAS = conRarezas(
   { id: 'parrillero', nombre: 'Parrillero', detalle: 'Arpillera y madera rústica', precio: 500 },
   { id: 'cantina', nombre: 'Cantina', detalle: 'Mantel a cuadros y madera clara', precio: 600 },
   // Las del modo historia: una por departamento, se gana en su último nivel.
-  { id: 'rocha', nombre: 'Rocha', detalle: 'Paño azul de mar y madera de barco', precio: 0, recompensa: 'Rocha' },
+  { id: 'artigas', nombre: 'Artigas', detalle: 'Violeta de amatista', precio: 0, recompensa: 'Artigas' },
+  { id: 'canelones', nombre: 'Canelones', detalle: 'Uva de Tannat', precio: 0, recompensa: 'Canelones' },
+  { id: 'cerro-largo', nombre: 'Cerro Largo', detalle: 'Verde de campo fronterizo', precio: 0, recompensa: 'Cerro Largo' },
+  { id: 'colonia', nombre: 'Colonia', detalle: 'Piedra del Barrio Histórico', precio: 0, recompensa: 'Colonia' },
+  { id: 'durazno', nombre: 'Durazno', detalle: 'Gris del río Yí', precio: 0, recompensa: 'Durazno' },
+  { id: 'flores', nombre: 'Flores', detalle: 'Ocre de las Grutas del Palacio', precio: 0, recompensa: 'Flores' },
+  { id: 'florida', nombre: 'Florida', detalle: 'Azul de Piedra Alta', precio: 0, recompensa: 'Florida' },
+  { id: 'lavalleja', nombre: 'Lavalleja', detalle: 'Verde serrano', precio: 0, recompensa: 'Lavalleja' },
+  { id: 'maldonado', nombre: 'Maldonado', detalle: 'Azul del faro de José Ignacio', precio: 0, recompensa: 'Maldonado' },
+  { id: 'montevideo', nombre: 'Montevideo', detalle: 'Ciruela de noche de tango', precio: 0, recompensa: 'Montevideo' },
+  { id: 'paysandu', nombre: 'Paysandú', detalle: 'Oliva del río Uruguay', precio: 0, recompensa: 'Paysandú' },
+  { id: 'rio-negro', nombre: 'Río Negro', detalle: 'Gris del Anglo', precio: 0, recompensa: 'Río Negro' },
+  { id: 'rivera', nombre: 'Rivera', detalle: 'Verde del Lunarejo', precio: 0, recompensa: 'Rivera' },
+  { id: 'rocha', nombre: 'Rocha', detalle: 'Azul petróleo de la costa', precio: 0, recompensa: 'Rocha' },
+  { id: 'salto', nombre: 'Salto', detalle: 'Cobre de las termas', precio: 0, recompensa: 'Salto' },
+  { id: 'san-jose', nombre: 'San José', detalle: 'Verde de tambo maragato', precio: 0, recompensa: 'San José' },
+  { id: 'soriano', nombre: 'Soriano', detalle: 'Verde de chacra', precio: 0, recompensa: 'Soriano' },
+  { id: 'tacuarembo', nombre: 'Tacuarembó', detalle: 'Cuero gaucho', precio: 0, recompensa: 'Tacuarembó' },
+  { id: 'treinta-y-tres', nombre: 'Treinta y Tres', detalle: 'Verde del Olimar', precio: 0, recompensa: 'Treinta y Tres' },
   ] as const satisfies readonly Mesa[]
 )
 

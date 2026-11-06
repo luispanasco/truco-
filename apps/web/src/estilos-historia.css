@@ -1,16 +1,10 @@
 /*
  * Modo historia: el mapa, cada departamento, la previa de cada nivel y la mesa ambientada.
  *
- * El fondo de cada lugar es un degradé provisorio hasta que lleguen las fotos o ilustraciones
- * (fondo-horizontal y fondo-vertical de cada departamento): `data-fondo` en las pantallas y
+ * El fondo de cada lugar (`--fondo-lugar`, horizontal o vertical) y su versión chica para el mapa
+ * (`--fondo-mini`) están en estilos-departamentos.css: `data-fondo` en las pantallas y
  * `data-lugar` en <html> durante la partida.
  */
-
-[data-fondo='rocha'],
-:root[data-lugar='rocha'] body {
-  /* Cielo, mar y arena de la costa de Rocha. */
-  --fondo-lugar: linear-gradient(180deg, #9cc7dc 0%, #6aa6c4 34%, #2f6f8f 52%, #1d4a61 70%, #c9b088 100%);
-}
 
 /* Durante la partida, el lugar de fondo, oscurecido para que la mesa resalte. */
 :root[data-lugar] body {
@@ -81,18 +75,22 @@
   padding: 12px 8px;
   border: 2px solid var(--acento);
   border-radius: 16px;
-  background: rgb(0 0 0 / 0.3);
+  background:
+    linear-gradient(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.65)),
+    var(--fondo-mini, none) center / cover,
+    rgb(0 0 0 / 0.3);
   color: var(--texto-claro);
   text-align: center;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 0.7);
 }
 .historia-departamento small {
   opacity: 0.8;
 }
 .historia-departamento.cerrado {
   border-color: rgb(255 255 255 / 0.12);
-  background: rgb(0 0 0 / 0.16);
   cursor: default;
-  opacity: 0.7;
+  filter: grayscale(0.6);
+  opacity: 0.75;
 }
 .historia-departamento-avatar {
   width: 56px;

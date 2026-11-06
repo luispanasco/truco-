@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import { MESA_DEFAULT, MESAS, mesaGratis, normalizarMesa } from '@truco/shared'
+import { DEPARTAMENTOS, MESA_DEFAULT, MESAS, mesaGratis, normalizarMesa } from '@truco/shared'
 import { SelectorMesa } from '../src/componentes/SelectorMesa'
 import { Inicio } from '../src/pantallas/Inicio'
 import { leerPerfil } from '../src/perfil'
@@ -19,10 +19,10 @@ describe('catálogo de mesas', () => {
   it('ids únicos, boliche primera y gratis, y las de la tienda con precio', () => {
     const ids = MESAS.map((m) => m.id)
     expect(new Set(ids).size).toBe(ids.length)
-    expect(ids).toEqual(['boliche', 'azul', 'bordo', 'pizarra', 'celeste', 'parrillero', 'cantina', 'rocha'])
+    expect(ids).toEqual(['boliche', 'azul', 'bordo', 'pizarra', 'celeste', 'parrillero', 'cantina', ...DEPARTAMENTOS.map((d) => d.id)])
     expect(MESAS[0].id).toBe(MESA_DEFAULT)
     expect(MESAS.filter((m) => mesaGratis(m.id)).map((m) => m.id)).toEqual(['boliche', 'azul'])
-    // La de Rocha no se compra: se gana en el modo historia.
+    // Las de los departamentos no se compran: se ganan en el modo historia.
     expect(mesaGratis('rocha')).toBe(false)
     expect(normalizarMesa('rocha')).toBe('boliche')
     expect(normalizarMesa('rocha', () => true)).toBe('rocha')
