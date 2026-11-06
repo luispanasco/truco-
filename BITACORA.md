@@ -1713,3 +1713,21 @@ Pedido: cambiar la UI de los grupos y que se puedan mandar las partidas. Se elig
   - En Personalizá, tu avatar es grande, al medio, con brillo dorado.
   - Los personajes, en una grilla de dos columnas de tarjetitas, con la descripción en tres renglones como mucho.
 - **Tests:** web 366 (la portada: dónde seguir, el avance y los botones) y los 14 de punta a punta.
+
+## Modo historia abierto (solo Rocha) y la segunda tanda de fondos — 2026-11-06
+
+Pedido: subir todo a producción, con el modo historia disponible solo en Rocha. Llegó además el paquete `Truco-tanda-cerrada-14-niveles.zip`.
+
+- **El modo historia, para cualquiera con cuenta:**
+  - `DEPARTAMENTOS_PUBLICADOS = ['rocha']` (shared): los que puede jugar cualquiera. Los demás, solo el admin, que sigue con todo abierto.
+  - `DEPARTAMENTO_INICIAL` pasa a Rocha mientras Montevideo no esté publicado (cuando esté todo, vuelve a Montevideo). La regla de los vecinos sigue, pero un vecino sin publicar no se abre.
+  - En el mapa, los que no están publicados dicen "próximamente". La portada de Jugar (las dos páginas deslizables) la ven todos. Sin cuenta, la pantalla del modo historia pide entrar (`SinCuenta`, con `TarjetaCuenta`).
+  - Servidor: `/api/historia` ya no es solo de los admins; `ganarNivel` rechaza un departamento sin publicar ("todavía no está abierto: muy pronto"); la sala de un nivel en cooperativo la abre cualquiera con cuenta si el departamento está publicado.
+  - Siguen solo para el admin: la galería de personajes en Personalizá y los personajes como bots en "Contra la compu".
+- **Segunda tanda de fondos y datos (14 niveles):** Artigas 1–5, Canelones 1–3, Cerro Largo 1–5 y Colonia 1.
+  - 28 fondos en `public/departamentos/<dep>/`, con `datos.md` y `CREDITOS.md`; `estilos-niveles.css` rehecho con `scripts/fondos-niveles.py` (19 niveles con fondo propio).
+  - Los dos datos de cada nivel, en la voz del personaje, con su fuente (`datos` en las etapas de historias.ts).
+  - Nombres como en las ilustraciones: "Los viñedos de Las Violetas" (sin bodega puntual) y "El Águila, en Villa Argentina".
+  - Piedra Pintada: se sacó la frase de las "pinturas de miles de años" (es una formación de arenisca, sin pinturas).
+  - Pendiente del paquete: contrastar la fidelidad de algunas formas (sobre todo Piedra Pintada). Estos departamentos todavía no están publicados.
+- **Tests:** server 127, web 367, los 14 de punta a punta (el del menú desliza por las dos páginas de Jugar).

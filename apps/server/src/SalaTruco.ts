@@ -61,6 +61,7 @@ import {
   ESPERA_ORDEN_MS,
   TIEMPOS_SALA_DEFAULT,
   yaJugoEnLaMano,
+  departamentoPublicado,
   type CanalChat,
   type ConfigSenias,
   type ConfigTiempos,
@@ -344,8 +345,10 @@ export class SalaTruco extends Room {
       if (anterior && anterior !== client) anterior.leave()
     } else {
       if (this.fase !== 'esperando') throw new Error('La partida ya empezó')
-      // El modo historia, mientras se arma, lo abre solo el admin (los amigos que invita entran igual).
-      if (this.historia && this.anfitrion === null && auth?.admin !== true) throw new Error('El modo historia todavía no está abierto')
+      // Un nivel del modo historia lo abre alguien con cuenta, y si el departamento no está publicado,
+      // solo el admin (los amigos que invita entran igual).
+      if (this.historia && this.anfitrion === null && (!auth || (!auth.admin && !departamentoPublicado(this.historia.departamento))))
+        throw new Error('El modo historia todavía no está abierto')
       // En el modo historia las personas van todas del mismo lado: los rivales son el elenco del nivel.
       lugar = this.lugares.find((l) => l.tipo === 'libre' && (!this.historia || l.asiento % 2 === 0))
       if (!lugar) throw new Error('La sala está llena')

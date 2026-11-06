@@ -7,6 +7,7 @@ import {
   buscarItem,
   CATALOGO_TIENDA,
   DEPARTAMENTOS,
+  DEPARTAMENTOS_PUBLICADOS,
   SENIAS_DEFAULT,
   type InfoSala,
   departamentoAbierto,
@@ -170,18 +171,18 @@ describe('los datos del modo historia', () => {
     expect(buscarItem(premios[0]!.id)?.recompensa).toBe('Artigas')
   })
 
-  it('se arranca en Montevideo y completar un departamento abre sus vecinos (el admin, todo abierto)', () => {
+  it('se arranca en Rocha, el único publicado; el admin tiene todo abierto', () => {
     const completo = (id: keyof typeof HISTORIAS) => HISTORIAS[id]!.niveles.map((_, i) => i + 1)
-    expect(DEPARTAMENTOS.filter((d) => departamentoAbierto({}, d.id)).map((d) => d.id)).toEqual(['montevideo'])
-    expect(departamentoSiguiente({})).toBe('montevideo')
-    // Con un nivel de Montevideo todavía no se abre nada más.
-    expect(departamentoAbierto({ montevideo: [1] }, 'canelones')).toBe(false)
-    const conMontevideo = { montevideo: completo('montevideo') }
-    expect(DEPARTAMENTOS.filter((d) => departamentoAbierto(conMontevideo, d.id)).map((d) => d.id)).toEqual(['canelones', 'montevideo', 'san-jose'])
-    expect(departamentoSiguiente(conMontevideo)).toBe('canelones')
-    // Lo que empezaste va primero.
-    expect(departamentoSiguiente({ ...conMontevideo, 'san-jose': [1] })).toBe('san-jose')
+    expect(DEPARTAMENTOS_PUBLICADOS).toEqual(['rocha'])
+    expect(DEPARTAMENTOS.filter((d) => departamentoAbierto({}, d.id)).map((d) => d.id)).toEqual(['rocha'])
+    expect(departamentoSiguiente({})).toBe('rocha')
+    // Completar Rocha no abre a sus vecinos mientras no estén publicados.
+    const conRocha = { rocha: completo('rocha') }
+    expect(DEPARTAMENTOS.filter((d) => departamentoAbierto(conRocha, d.id)).map((d) => d.id)).toEqual(['rocha'])
+    expect(departamentoSiguiente(conRocha)).toBeNull()
+    // El admin: todo abierto, y lo que empezó va primero.
     expect(departamentoAbierto({}, 'artigas', true)).toBe(true)
+    expect(departamentoSiguiente({ ...conRocha, 'san-jose': [1] }, true)).toBe('san-jose')
     // Los vecinos van de ida y vuelta, y todos se pueden alcanzar desde Montevideo.
     for (const d of DEPARTAMENTOS) for (const v of VECINOS[d.id]) expect(VECINOS[v], `${d.id}-${v}`).toContain(d.id)
     const alcanzados = new Set<string>(['montevideo'])
@@ -202,8 +203,15 @@ describe('los datos del modo historia', () => {
       expect(datos.map((t) => (t.quien !== null && t.dato ? t.texto : ''))).toEqual(nivel.datos!.map((d) => d.texto))
       expect(dialogo.filter((t) => t.quien !== null && t.dato)).toHaveLength(nivel.datos!.length)
     }
+    // Los de la segunda tanda también tienen los suyos, con su fuente.
+    for (const id of ['artigas', 'canelones', 'cerro-largo'] as const)
+      for (const nivel of HISTORIAS[id]!.niveles) {
+        expect(nivel.datos, nivel.lugar).toHaveLength(2)
+        for (const d of nivel.datos!) expect(d.fuente, d.texto).toMatch(/^https:\/\//)
+      }
+    expect(HISTORIAS.colonia!.niveles[0]!.datos).toHaveLength(2)
     // Sin datos, la charla es la de siempre.
-    const sinDatos = HISTORIAS.artigas!.niveles[0]!
+    const sinDatos = HISTORIAS.colonia!.niveles[1]!
     expect(dialogoDelNivel(sinDatos, 1).some((t) => t.quien !== null && t.dato)).toBe(false)
   })
 
@@ -235,11 +243,23 @@ describe('los datos del modo historia', () => {
 })
 
 describe('pantallas', () => {
-  it('sin ser admin, está en preparación', () => {
+  it('sin ser admin: Rocha abierto y los demás, próximamente', async () => {
     servidorFalso()
     comoAdmin(false)
     app('/historia')
-    expect(screen.getByText(/Se está armando/)).toBeTruthy()
+    expect((await screen.findByRole('button', { name: /Rocha · 0 de 5 niveles/ })).getAttribute('aria-disabled')).toBeNull()
+    expect(screen.getByRole('button', { name: /Montevideo · próximamente/ }).getAttribute('aria-disabled')).toBe('true')
+    cleanup()
+    // Por la dirección, un departamento sin publicar está en preparación.
+    app('/historia/artigas')
+    expect(await screen.findByText(/Se está armando/)).toBeTruthy()
+  })
+
+  it('sin cuenta, pide entrar', () => {
+    servidorFalso()
+    useCuenta.setState({ estado: 'afuera', cuenta: null, token: null })
+    app('/historia')
+    expect(screen.getByText(/entrá a tu cuenta/)).toBeTruthy()
   })
 
   it('el mapa de Uruguay: cada departamento con su progreso; al tocar uno, su presentación y después su mapa', async () => {

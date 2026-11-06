@@ -4,7 +4,8 @@
  * niveles según su tamaño, cada uno más difícil. Cada nivel tiene su formato (1v1, 2v2 o 3v3), su
  * dificultad, sus recompensas fijas y lo que dice el rival antes de empezar.
  *
- * Mientras se arma, lo ve solo el admin. Rocha está acá (fue el primero); los demás, en historias.ts.
+ * Se publica de a poco: cualquiera juega los de `DEPARTAMENTOS_PUBLICADOS` y el admin, todos. Rocha
+ * está acá (fue el primero); los demás, en historias.ts.
  */
 
 import type { Formato } from '@truco/engine'
@@ -216,15 +217,27 @@ export function nivelAbierto(progreso: ProgresoHistoria, departamento: IdDeparta
   return n === 1 || (progreso[departamento] ?? []).includes(n - 1)
 }
 
-/** Donde se arranca el modo historia. */
-export const DEPARTAMENTO_INICIAL: IdDepartamento = 'montevideo'
+/**
+ * Los departamentos que ya puede jugar cualquiera (los que tienen sus fondos y sus datos); los
+ * demás, mientras se arman, solo el admin. Se agregan a medida que quedan prontos.
+ */
+export const DEPARTAMENTOS_PUBLICADOS: readonly IdDepartamento[] = ['rocha']
+
+/** Donde se arranca el modo historia (cuando esté todo publicado, va a ser Montevideo). */
+export const DEPARTAMENTO_INICIAL: IdDepartamento = 'rocha'
+
+export function departamentoPublicado(departamento: IdDepartamento): boolean {
+  return DEPARTAMENTOS_PUBLICADOS.includes(departamento)
+}
 
 /**
- * Un departamento se abre cuando completás uno de sus vecinos (Montevideo, desde el principio).
- * Con `todoAbierto` (el admin), están todos abiertos.
+ * Un departamento se abre cuando completás uno de sus vecinos (el inicial, desde el principio), si
+ * ya está publicado. Con `todoAbierto` (el admin), están todos abiertos.
  */
 export function departamentoAbierto(progreso: ProgresoHistoria, departamento: IdDepartamento, todoAbierto = false): boolean {
-  return todoAbierto || departamento === DEPARTAMENTO_INICIAL || VECINOS[departamento].some((v) => departamentoCompleto(progreso, v))
+  if (todoAbierto) return true
+  if (!departamentoPublicado(departamento)) return false
+  return departamento === DEPARTAMENTO_INICIAL || VECINOS[departamento].some((v) => departamentoCompleto(progreso, v))
 }
 
 /**
@@ -304,8 +317,8 @@ export function departamentosCompletos(progreso: ProgresoHistoria): number {
 }
 
 /**
- * Dónde seguir: el departamento abierto que empezaste y no terminaste; si no hay, Montevideo (donde
- * se arranca); si no, el primero abierto sin terminar. Null si completaste todo.
+ * Dónde seguir: el departamento abierto que empezaste y no terminaste; si no hay, el inicial (donde
+ * se arranca); si no, el primero abierto sin terminar. Null si completaste todo lo abierto.
  */
 export function departamentoSiguiente(progreso: ProgresoHistoria, todoAbierto = false): IdDepartamento | null {
   const pendientes = DEPARTAMENTOS.filter((d) => departamentoAbierto(progreso, d.id, todoAbierto) && !departamentoCompleto(progreso, d.id))

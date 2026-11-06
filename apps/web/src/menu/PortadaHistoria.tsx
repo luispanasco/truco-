@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
   buscarDepartamento,
   codificarAvatar,
+  DEPARTAMENTO_INICIAL,
   DEPARTAMENTOS,
   departamentoSiguiente,
   departamentosCompletos,
@@ -11,6 +12,7 @@ import {
   type IdDepartamento,
 } from '@truco/shared'
 import { Avatar } from '../componentes/Avatar'
+import { useCuenta } from '../cuenta/cuenta'
 import { cargarHistoria, useHistoria } from '../cuenta/historia'
 
 /** Cada cuánto pasa al departamento siguiente el carrusel de fondos. */
@@ -26,10 +28,14 @@ const fondo = (id: string) => `/departamentos/${id}-vertical.webp`
  */
 export function PortadaHistoria({ activa, alSeguir, alVerMapa }: { activa: boolean; alSeguir: (id: IdDepartamento) => void; alVerMapa: () => void }) {
   const sinMovimiento = useReducedMotion() ?? false
+  const adentro = useCuenta((s) => s.estado === 'adentro')
+  const admin = useCuenta((s) => s.estado === 'adentro' && s.cuenta?.admin === true)
   const progreso = useHistoria((s) => s.progreso)
-  useEffect(() => void cargarHistoria().catch(() => {}), [])
-  const siguiente = progreso ? departamentoSiguiente(progreso, true) : 'montevideo'
-  const dep = buscarDepartamento(siguiente ?? 'montevideo')!
+  useEffect(() => {
+    if (adentro) void cargarHistoria().catch(() => {})
+  }, [adentro])
+  const siguiente = progreso ? departamentoSiguiente(progreso, admin) : DEPARTAMENTO_INICIAL
+  const dep = buscarDepartamento(siguiente ?? DEPARTAMENTO_INICIAL)!
   const jefe = PERSONAJES.find((p) => p.id === HISTORIAS[dep.id]?.jefe)
   const completos = progreso ? departamentosCompletos(progreso) : 0
   const empezaste = progreso !== null && Object.keys(progreso).length > 0
@@ -71,7 +77,9 @@ export function PortadaHistoria({ activa, alSeguir, alVerMapa }: { activa: boole
         <h2>Modo historia</h2>
         <p>
           {siguiente === null
-            ? '¡Recorriste todo Uruguay!'
+            ? completos === DEPARTAMENTOS.length
+              ? '¡Recorriste todo Uruguay!'
+              : 'Completaste todo lo que está abierto: muy pronto se suman más departamentos.'
             : `${empezaste ? 'Seguí' : 'Arrancá'} en ${dep.nombre}: ${jefe?.nombre ?? 'tu rival'} te espera.`}
         </p>
         <div className="portada-historia-avance">

@@ -4,6 +4,7 @@ import {
   DEPARTAMENTOS,
   departamentoAbierto,
   departamentoCompleto,
+  departamentoPublicado,
   departamentoSiguiente,
   HISTORIAS,
   type IdDepartamento,
@@ -71,7 +72,7 @@ export function MapaUruguay({
               role="button"
               tabIndex={abierto ? 0 : -1}
               aria-disabled={!abierto || undefined}
-              aria-label={`${d.nombre} · ${abierto ? `${ganados} de ${niveles} niveles` : 'cerrado: completá un departamento vecino'}`}
+              aria-label={`${d.nombre} · ${abierto ? `${ganados} de ${niveles} niveles` : departamentoPublicado(d.id) ? 'cerrado: completá un departamento vecino' : 'próximamente'}`}
               onClick={() => abierto && elegir(d.id)}
               onKeyDown={(e) => {
                 if (abierto && (e.key === 'Enter' || e.key === ' ')) {

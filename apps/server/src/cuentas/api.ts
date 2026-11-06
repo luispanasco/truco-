@@ -110,10 +110,9 @@ export function rutasCuentas(c: Cuentas | null): Router {
     }),
   )
 
-  // Modo historia: mientras se arma, solo para los admins.
+  // Modo historia: cualquiera con cuenta (qué departamentos se juegan lo controla ganarNivel).
   const conHistoria =
     (fn: (req: Request, res: Response, c: Cuentas, u: Usuario) => Promise<void>) => async (req: Request, res: Response, c: Cuentas, u: Usuario) => {
-      if (!esAdmin(u.email)) return void res.status(403).json({ motivo: 'El modo historia todavía no está abierto' })
       try {
         await fn(req, res, c, u)
       } catch (e) {

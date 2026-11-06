@@ -67,7 +67,7 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/amigos" element={<Amigos />} />
           <Route path="/grupos/:id" element={<Grupo />} />
           <Route path="/repeticion/:id" element={<Repeticion />} />
-          {/* Modo historia (por ahora, solo el admin). */}
+          {/* Modo historia (cualquiera con cuenta: los departamentos publicados; el admin, todos). */}
           <Route path="/historia" element={<Historia />} />
           <Route path="/historia/:departamento" element={<DepartamentoHistoria />} />
           <Route path="/historia/:departamento/:nivel" element={<PreviaNivel />} />

@@ -91,7 +91,7 @@ describe('menú principal', () => {
     expect(panel('tienda').hasAttribute('inert')).toBe(true)
     expect(panel('lobby').hasAttribute('inert')).toBe(true)
     // Cinco pestañas: avatar a la izquierda de todo y grupos a la derecha de todo.
-    expect(screen.getAllByRole('tab').map((t) => t.getAttribute('aria-label'))).toEqual(['Avatar', 'Tienda', 'Jugar', 'Lobby', 'Grupos'])
+    expect(within(screen.getByRole('tablist', { name: 'Pantallas del menú' })).getAllByRole('tab').map((t) => t.getAttribute('aria-label'))).toEqual(['Avatar', 'Tienda', 'Jugar', 'Lobby', 'Grupos'])
 
     fireEvent.click(pestania('Tienda'))
     expect(pestania('Tienda').getAttribute('aria-selected')).toBe('true')

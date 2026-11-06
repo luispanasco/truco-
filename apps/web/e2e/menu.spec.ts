@@ -1,8 +1,8 @@
 import { arrastrarConDedo, caja, expect, persona, test } from './ayudantes'
 
 /**
- * El menú principal en un celular de verdad: se desliza con el dedo entre la tienda, jugar y
- * el lobby, la barra de abajo salta de una a otra, el engranaje abre los ajustes y, con el
+ * El menú principal en un celular de verdad: se desliza con el dedo entre la tienda, jugar (con
+ * sus dos páginas: partidas y modo historia) y el lobby, la barra de abajo salta de una a otra, el engranaje abre los ajustes y, con el
  * login de prueba, el banner muestra las monedas y el Elo.
  */
 test('el menú se desliza con el dedo y el banner muestra la cuenta', async ({ browser }) => {
@@ -20,11 +20,20 @@ test('el menú se desliza con el dedo y el banner muestra la cuenta', async ({ b
   const izquierda = { x: carril.x + carril.width * 0.15, y: medio }
   const derecha = { x: carril.x + carril.width * 0.85, y: medio }
   const deslizar = (desde: typeof izquierda, hasta: typeof izquierda) => arrastrarConDedo(page, desde, hasta, 12, 16)
+  // Jugar tiene dos páginas: primero pasa al modo historia y, en el borde, sigue al lobby.
+  await deslizar(derecha, izquierda)
+  await expect(pestania('Modo historia')).toHaveAttribute('aria-selected', 'true')
+  // Que termine de acomodarse antes del gesto siguiente.
+  await expect.poll(() => page.locator('.jugar-vistas').evaluate((e) => Math.abs(e.scrollLeft - e.clientWidth) < 2)).toBe(true)
+  await expect(pestania('Jugar')).toHaveAttribute('aria-selected', 'true')
   await deslizar(derecha, izquierda)
   await expect(pestania('Lobby')).toHaveAttribute('aria-selected', 'true')
   await expect(page.locator('#panel-lobby').getByText('Contra la compu')).toBeInViewport()
   await deslizar(izquierda, derecha)
   await expect(pestania('Jugar')).toHaveAttribute('aria-selected', 'true')
+  await deslizar(izquierda, derecha)
+  await expect(pestania('Partidas')).toHaveAttribute('aria-selected', 'true')
+  await expect.poll(() => page.locator('.jugar-vistas').evaluate((e) => e.scrollLeft < 2)).toBe(true)
   await deslizar(izquierda, derecha)
   await expect(pestania('Tienda')).toHaveAttribute('aria-selected', 'true')
   await expect(page.locator('#panel-tienda').getByRole('heading', { name: 'Tienda' })).toBeInViewport()

@@ -51,6 +51,8 @@ interface Etapa {
   companieros?: readonly string[]
   recompensas: readonly string[]
   frases: readonly [string, string, string]
+  /** Lo que el rival cuenta del lugar (ver `NivelHistoria.datos`). */
+  datos?: readonly { texto: string; fuente: string }[]
 }
 
 function historia(departamento: IdDepartamento, jefe: string, presentacion: string, etapas: readonly Etapa[]): HistoriaDepartamento {
@@ -68,6 +70,7 @@ function historia(departamento: IdDepartamento, jefe: string, presentacion: stri
       companieros: e.companieros ?? [],
       recompensas: e.recompensas,
       frases: e.frases,
+      ...(e.datos ? { datos: e.datos } : {}),
     })),
   }
 }
@@ -82,6 +85,10 @@ const ARTIGAS = historia(
       donde: [-30.62, -56.3],
       resumen: 'Zona de canteras donde se sacan amatistas y ágatas.',
       recompensas: [idMonedas(100)],
+      datos: [
+        { texto: 'En El Catalán se sacan geodas de ágata y de amatista. Por eso ando con la cabeza gacha: mirando el piso.', fuente: 'https://www.gub.uy/presidencia/comunicacion/noticias/ministra-kechichian-visito-taller-procesamiento-amatistas-artigas-conforma' },
+        { texto: 'Y viene gente a recorrer los túneles y los talleres donde se trabajan las piedras.', fuente: 'https://www.gub.uy/presidencia/comunicacion/noticias/ministra-kechichian-visito-taller-procesamiento-amatistas-artigas-conforma' },
+      ],
       frases: ['¡Cuidado dónde pisás, que acá cada piedra vale oro!', 'Yo encuentro una amatista con los ojos cerrados.', 'A ver si encontrás algo en tus cartas, que yo ya vi las mías.'],
     },
     {
@@ -91,14 +98,22 @@ const ARTIGAS = historia(
       con: ['candombero'],
       companieros: ['hincha'],
       recompensas: [ropa('Camisa de carnaval')],
+      datos: [
+        { texto: 'Nuestro carnaval tiene mucho del samba de Brasil: la frontera se nota hasta en el tambor.', fuente: 'https://es.wikipedia.org/wiki/Turismo_en_Uruguay' },
+        { texto: 'El desfile de las escuelas de samba es de lo más nuestro que hay en la ciudad.', fuente: 'https://www.artigas.gub.uy/division-turismo/' },
+      ],
       frases: ['¡Llegaste justo para el carnaval!', 'Beto vino a tocar con la escola. Y a jugar, de paso.', 'Acá se canta truco con plumas y lentejuelas.'],
     },
     {
       lugar: 'Piedra Pintada',
       donde: [-30.44, -56.56],
-      resumen: 'Gran roca en las afueras de la ciudad de Artigas, símbolo del departamento.',
+      resumen: 'Formación de arenisca de unos 19 metros en las afueras de la ciudad de Artigas, símbolo del departamento.',
       recompensas: [idMonedas(150)],
-      frases: ['Estas pinturas tienen miles de años. Mis mañas, menos, pero andan igual.', 'Ahora a treinta, y sin ayuda.', 'Las piedras me dicen que tenés poco envido.'],
+      datos: [
+        { texto: 'Mirá para arriba: es una formación de arenisca de unos 19 metros de alto.', fuente: 'https://es.wikipedia.org/wiki/Piedra_Pintada_%28Uruguay%29' },
+        { texto: 'Y el parque de al lado, el Congreso de Abril, se inauguró en 1982.', fuente: 'https://es.wikipedia.org/wiki/Piedra_Pintada_%28Uruguay%29' },
+      ],
+      frases: ['Esta piedra está acá hace millones de años. Mis mañas, menos, pero andan igual.', 'Ahora a treinta, y sin ayuda.', 'Las piedras me dicen que tenés poco envido.'],
     },
     {
       lugar: 'El puente de la Concordia',
@@ -107,6 +122,10 @@ const ARTIGAS = historia(
       con: ['candombero', 'gaucho'],
       companieros: ['hincha', 'dona'],
       recompensas: [enLaMano('Geoda de amatista')],
+      datos: [
+        { texto: 'Este puente cruza el Cuareim y nos une con Quaraí, del lado brasileño.', fuente: 'https://es.wikipedia.org/wiki/Puente_Internacional_de_la_Concordia' },
+        { texto: 'Lo inauguraron el 3 de abril de 1968.', fuente: 'https://es.wikipedia.org/wiki/Puente_Internacional_de_la_Concordia' },
+      ],
       frases: ['Del otro lado está Brasil, pero la mesa es nuestra.', 'Me traje a Beto y a Ramón: tres contra tres, como en la frontera.', 'El que pierde cruza el puente a pie.'],
     },
     {
@@ -114,6 +133,10 @@ const ARTIGAS = historia(
       donde: [-30.56, -56.68],
       resumen: 'Las minas de amatista del norte del departamento, bajo tierra.',
       recompensas: final('artigas', 'artigas'),
+      datos: [
+        { texto: 'Las amatistas de acá se forman en huecos adentro del basalto.', fuente: 'https://es.wikipedia.org/wiki/Departamento_de_Artigas' },
+        { texto: 'Por lo violeta y lo grandes que son las geodas, se conocen en todo el mundo.', fuente: 'https://www.gub.uy/presidencia/comunicacion/noticias/ministra-kechichian-visito-taller-procesamiento-amatistas-artigas-conforma' },
+      ],
       frases: ['Acá adentro guardo la piedra más linda del departamento.', 'Si me ganás, te llevás el mazo de Artigas.', 'Pero te aviso: en la oscuridad, yo veo mejor.'],
     },
   ],
@@ -125,10 +148,14 @@ const CANELONES = historia(
   'Viñedos, vendimia y Tannat. Don Aurelio te recibe en su bodega de Las Violetas, entre barricas y racimos.',
   [
     {
-      lugar: 'Las bodegas de Las Violetas',
+      lugar: 'Los viñedos de Las Violetas',
       donde: [-34.62, -56.25],
       resumen: 'Zona de viñedos y bodegas familiares del sur de Canelones.',
       recompensas: [ropa('Chaleco bordó')],
+      datos: [
+        { texto: 'Algunas chacras de Las Violetas todavía siguen el trazado del reparto de tierras de 1782.', fuente: 'https://www.imcanelones.gub.uy/disfrutamos/lugares/las-violetas' },
+        { texto: 'Y el circuito del vino de Canelones junta viñedos, bodegas y buena comida. Todo cerca.', fuente: 'https://es.wikipedia.org/wiki/Ruta_del_vino_de_Canelones' },
+      ],
       frases: ['Pasá, pasá, que el Tannat no se toma solo.', 'Mi abuelo plantó estas vides. Y me enseñó a jugar.', 'Una partidita corta, para abrir el apetito.'],
     },
     {
@@ -138,13 +165,21 @@ const CANELONES = historia(
       con: ['dona'],
       companieros: ['veterano'],
       recompensas: [enLaMano('Copa de Tannat')],
+      datos: [
+        { texto: 'El desfile de la Fiesta Nacional de la Vendimia se hace acá, en Las Piedras.', fuente: 'https://es.wikipedia.org/wiki/Fiesta_de_la_Vendimia_%28Uruguay%29' },
+        { texto: 'Se festeja la cosecha de la uva y la tradición del vino uruguayo.', fuente: 'https://es.wikipedia.org/wiki/Fiesta_de_la_Vendimia_%28Uruguay%29' },
+      ],
       frases: ['¡Es la Fiesta de la Vendimia!', 'Doña Rosa vino a pisar uvas y se quedó a jugar.', 'Ojo, que entre los dos sabemos más mañas que años.'],
     },
     {
-      lugar: 'Atlántida, frente al Águila',
-      donde: [-34.77, -55.76],
-      resumen: 'Balneario de la Costa de Oro, con El Águila, una casona con forma de cabeza de águila sobre la playa.',
+      lugar: 'El Águila, en Villa Argentina',
+      donde: [-34.766, -55.737],
+      resumen: 'Construcción con forma de cabeza de águila sobre la playa de Villa Argentina, junto a Atlántida.',
       recompensas: final('canelones', 'canelones'),
+      datos: [
+        { texto: 'El Águila está en Villa Argentina, pegadito a Atlántida.', fuente: 'https://es.wikipedia.org/wiki/El_%C3%81guila_%28Villa_Argentina%29' },
+        { texto: 'La cabeza del águila la hizo a mano Juan Torres, arriba de una construcción chiquita.', fuente: 'https://turismo.imcanelones.gub.uy/visita-canelones/que-hacer/atractivos/aguila' },
+      ],
       frases: ['Vine a la costa a descansar, pero el truco no descansa.', 'El que gana se lleva el mazo de Canelones.', 'Brindemos antes: después, uno de los dos va a estar triste.'],
     },
   ],
@@ -160,6 +195,10 @@ const CERRO_LARGO = historia(
       donde: [-32.6, -53.39],
       resumen: 'Ciudad de frontera frente a Yaguarón, en Brasil.',
       recompensas: [idMonedas(100)],
+      datos: [
+        { texto: 'Río Branco está sobre la orilla derecha del río Yaguarón.', fuente: 'https://es.wikipedia.org/wiki/R%C3%ADo_Branco' },
+        { texto: 'Y muy cerca de donde el Yaguarón desemboca en la laguna Merín.', fuente: 'https://es.wikipedia.org/wiki/R%C3%ADo_Branco' },
+      ],
       frases: ['¡Bom dia! Digo… ¡buen día!', 'Acá hablamos los dos idiomas, y el truco también.', 'Sentate, que el mate ya está cebado.'],
     },
     {
@@ -169,6 +208,10 @@ const CERRO_LARGO = historia(
       con: ['freeshop'],
       companieros: ['hincha'],
       recompensas: [ropa('Poncho verde')],
+      datos: [
+        { texto: 'El puente Barón de Mauá une Río Branco con Yaguarão, en Brasil.', fuente: 'https://es.wikipedia.org/wiki/Puente_Internacional_Bar%C3%B3n_de_Mau%C3%A1' },
+        { texto: 'Lo inauguraron en 1930.', fuente: 'https://es.wikipedia.org/wiki/Puente_Internacional_Bar%C3%B3n_de_Mau%C3%A1' },
+      ],
       frases: ['Este puente tiene más de cien años, y nunca vio un truco como este.', 'Jéssica vino de Rivera, a cruzar cartas.', 'Si perdés, pagás en reales.'],
     },
     {
@@ -176,6 +219,10 @@ const CERRO_LARGO = historia(
       donde: [-32.37, -54.18],
       resumen: 'Campos de arroz cerca de Melo, la capital del departamento.',
       recompensas: [idMonedas(150)],
+      datos: [
+        { texto: 'El arroz es de los cultivos más importantes de Cerro Largo.', fuente: 'https://es.wikipedia.org/wiki/Departamento_de_Cerro_Largo' },
+        { texto: 'La Cuchilla Grande parte el departamento: de un lado va el agua al río Negro y del otro, a la laguna Merín.', fuente: 'https://www.embajadadeuruguay.org/pages/departamentos/cerro-largo/geografia.php' },
+      ],
       frases: ['El arroz necesita agua y paciencia. El truco, también.', 'Ahora a treinta, mano a mano.', 'No te me empantanes en la primera.'],
     },
     {
@@ -185,6 +232,10 @@ const CERRO_LARGO = historia(
       con: ['freeshop', 'gaucho'],
       companieros: ['veterano', 'dona'],
       recompensas: [enLaMano('Bolsa de arroz')],
+      datos: [
+        { texto: 'Paso Centurión queda en el noreste de Cerro Largo, pegado a la frontera con Brasil.', fuente: 'https://www.gub.uy/ministerio-ambiente/politicas-y-gestion/paisaje-protegido-paso-centurion-sierra-rios-cerro-largo' },
+        { texto: 'Es un área protegida: pastizales naturales y una cantidad enorme de plantas distintas.', fuente: 'https://www.gub.uy/ministerio-ambiente/politicas-y-gestion/paisaje-protegido-paso-centurion-sierra-rios-cerro-largo' },
+      ],
       frases: ['Acá el monte es tan cerrado que no entra ni la señal.', 'Tres contra tres, con Jéssica y Ramón.', 'Las señas, que se vean bien: acá no hay luz.'],
     },
     {
@@ -192,6 +243,10 @@ const CERRO_LARGO = historia(
       donde: [-32.8, -53.5],
       resumen: 'Gran laguna compartida con Brasil, con playas de agua dulce.',
       recompensas: final('cerro-largo', 'cerro-largo'),
+      datos: [
+        { texto: 'El balneario Lago Merín es de Cerro Largo.', fuente: 'https://es.wikipedia.org/wiki/Lago_Mer%C3%ADn' },
+        { texto: 'Las playas de la laguna son de arena y bajitas: caminás un montón y el agua no te pasa de la rodilla.', fuente: 'https://es.wikipedia.org/wiki/Laguna_Mer%C3%ADn' },
+      ],
       frases: ['Esta laguna la compartimos con Brasil. El mazo, no.', 'Si me ganás, el de Cerro Largo es tuyo.', 'Pero acá el viento sopla a mi favor.'],
     },
   ],
@@ -207,6 +262,10 @@ const COLONIA = historia(
       donde: [-34.3, -57.23],
       resumen: 'Colonia fundada por inmigrantes suizos en 1862, famosa por sus quesos.',
       recompensas: [idMonedas(100)],
+      datos: [
+        { texto: 'Nueva Helvecia nació con los inmigrantes de Europa central, en el siglo XIX.', fuente: 'https://es.wikipedia.org/wiki/Nueva_Helvecia' },
+        { texto: 'La Colonia Suiza se fundó en 1862, con familias suizas y de otros países de Europa.', fuente: 'https://es.wikipedia.org/wiki/Inmigraci%C3%B3n_suiza_en_Uruguay' },
+      ],
       frases: ['Benvenuto! Bueno, también se dice "willkommen".', 'Este queso tiene seis meses. Mi paciencia, más.', 'Juguemos tranquilo: lo bueno se hace despacio.'],
     },
     {

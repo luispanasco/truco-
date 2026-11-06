@@ -5,6 +5,7 @@ import {
   buscarDepartamento,
   codificarAvatar,
   DEPARTAMENTOS,
+  DEPARTAMENTO_INICIAL,
   departamentoAbierto,
   departamentosCompletos,
   dialogoDelNivel,
@@ -15,6 +16,7 @@ import {
   type IdDepartamento,
 } from '@truco/shared'
 import { Avatar } from '../componentes/Avatar'
+import { TarjetaCuenta } from '../componentes/TarjetaCuenta'
 import { FORMATOS, NIVELES } from '../componentes/FormularioSala'
 import { iniciarCuenta, useCuenta } from '../cuenta/cuenta'
 import { cargarHistoria, useHistoria } from '../cuenta/historia'
@@ -34,24 +36,41 @@ const NOMBRE_NIVEL = Object.fromEntries(NIVELES)
 const personaje = (id: string) => PERSONAJES.find((p) => p.id === id)!
 
 /**
- * Mientras se arma, el modo historia es solo para el admin: trae su progreso del servidor. Si se
- * entra directo por la dirección, arranca la cuenta (y mientras tanto, `cargando`).
+ * El modo historia se juega con cuenta (el progreso y los premios se guardan ahí): trae tu progreso
+ * del servidor. Si se entra directo por la dirección, arranca la cuenta (y mientras tanto,
+ * `cargando`). El admin tiene todos los departamentos abiertos; los demás, los publicados.
  */
-function useHistoriaDelAdmin(): { admin: boolean; cargando: boolean; progreso: ReturnType<typeof useHistoria.getState>['progreso'] } {
+function useHistoriaDeLaCuenta(): { adentro: boolean; admin: boolean; cargando: boolean; progreso: ReturnType<typeof useHistoria.getState>['progreso'] } {
   const estado = useCuenta((s) => s.estado)
+  const adentro = estado === 'adentro'
   const admin = useCuenta((s) => s.estado === 'adentro' && s.cuenta?.admin === true)
   const progreso = useHistoria((s) => s.progreso)
   useEffect(() => void iniciarCuenta(), [])
   useEffect(() => {
-    if (admin) void cargarHistoria().catch(() => {})
-  }, [admin])
-  return { admin, cargando: estado === 'cargando' || estado === 'entrando', progreso }
+    if (adentro) void cargarHistoria().catch(() => {})
+  }, [adentro])
+  return { adentro, admin, cargando: estado === 'cargando' || estado === 'entrando', progreso }
 }
 
 function Cargando() {
   return (
     <main className="historia historia-cerrada">
       <p role="status">Cargando…</p>
+    </main>
+  )
+}
+
+/** Sin cuenta: para jugar, entrás acá mismo (y al entrar, sigue donde ibas). */
+function SinCuenta() {
+  const navegar = useNavigate()
+  return (
+    <main className="historia historia-cerrada">
+      <h1>Modo historia</h1>
+      <p>Para recorrer Uruguay jugando al truco, entrá a tu cuenta: ahí se guarda tu avance y lo que vas ganando.</p>
+      <TarjetaCuenta sinEnlaces />
+      <button type="button" className="boton boton-secundario" onClick={() => navegar('/')}>
+        Volver
+      </button>
     </main>
   )
 }
@@ -81,15 +100,18 @@ function Volver({ a, texto = 'Volver' }: { a: string; texto?: string }) {
 /** El mapa de Uruguay: se elige el departamento (los cerrados, con candado; el admin los tiene todos abiertos). */
 export function Historia() {
   const navegar = useNavigate()
-  const { admin, cargando, progreso } = useHistoriaDelAdmin()
-  if (!admin) return cargando ? <Cargando /> : <EnPreparacion />
+  const { adentro, admin, cargando, progreso } = useHistoriaDeLaCuenta()
+  if (!adentro) return cargando ? <Cargando /> : <SinCuenta />
   const completos = progreso ? departamentosCompletos(progreso) : 0
   return (
     <main className="historia historia-mapa">
       <Volver a="/" texto="Inicio" />
       <header className="historia-cabecera">
         <h1>Modo historia</h1>
-        <p>Recorré Uruguay jugando al truco. Arrancás en Montevideo, y cada departamento que completás abre los que tiene al lado.</p>
+        <p>
+          Recorré Uruguay jugando al truco. Arrancás en {buscarDepartamento(DEPARTAMENTO_INICIAL)!.nombre}; los demás departamentos se van
+          abriendo de a poco.
+        </p>
         <p className="historia-avance">
           {completos} de {DEPARTAMENTOS.length} departamentos
         </p>
@@ -112,12 +134,12 @@ export function DepartamentoHistoria() {
   const navegar = useNavigate()
   const { departamento } = useParams()
   const ubicacion = useLocation()
-  const { admin, cargando, progreso } = useHistoriaDelAdmin()
+  const { adentro, admin, cargando, progreso } = useHistoriaDeLaCuenta()
   const [presentando, setPresentando] = useState(() => (ubicacion.state as { desdeMapa?: boolean } | null)?.desdeMapa === true)
   const [elegido, setElegido] = useState<number | null>(null)
   const dep = buscarDepartamento(departamento)
   const historia = dep && HISTORIAS[dep.id]
-  if (!admin) return cargando ? <Cargando /> : <EnPreparacion />
+  if (!adentro) return cargando ? <Cargando /> : <SinCuenta />
   if (!dep || !historia) return <EnPreparacion />
   if (progreso && !departamentoAbierto(progreso, dep.id, admin)) return <EnPreparacion />
   if (presentando) return <PresentacionDepartamento nombre={dep.nombre} historia={historia} alTerminar={() => setPresentando(false)} />
@@ -218,7 +240,7 @@ const alMedio = <T,>(lista: readonly T[]): T[] => (lista.length < 2 ? [...lista]
 export function PreviaNivel() {
   const navegar = useNavigate()
   const { departamento, nivel: textoNivel } = useParams()
-  const { admin, cargando, progreso } = useHistoriaDelAdmin()
+  const { adentro, admin, cargando, progreso } = useHistoriaDeLaCuenta()
   const sinMovimiento = useReducedMotion() ?? false
   const [paso, setPaso] = useState(0)
   const [respuesta, setRespuesta] = useState<string | null>(null)
@@ -227,10 +249,10 @@ export function PreviaNivel() {
   const historia = dep && HISTORIAS[dep.id]
   const n = Number(textoNivel)
   const nivel = historia?.niveles[n - 1]
-  if (!admin && cargando) return <Cargando />
-  if (!admin || !dep || !historia || !nivel) return <EnPreparacion />
-  // Sin el anterior ganado no se juega (si el progreso todavía no llegó, se espera).
-  if (progreso && !nivelAbierto(progreso, dep.id, n)) return <EnPreparacion />
+  if (!adentro) return cargando ? <Cargando /> : <SinCuenta />
+  if (!dep || !historia || !nivel) return <EnPreparacion />
+  // Sin el departamento abierto o el anterior ganado no se juega (si el progreso todavía no llegó, se espera).
+  if (progreso && (!departamentoAbierto(progreso, dep.id, admin) || !nivelAbierto(progreso, dep.id, n))) return <EnPreparacion />
 
   const perfil = leerPerfil()
   const dialogo = dialogoDelNivel(nivel, n)

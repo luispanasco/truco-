@@ -6,6 +6,160 @@
  * Generado por scripts/fondos-niveles.py: no editar a mano.
  */
 
+[data-fondo='artigas'][data-nivel='1'],
+:root[data-lugar='artigas'][data-nivel='1'] body {
+  --fondo-lugar: url('/departamentos/artigas/nivel-1-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='artigas'][data-nivel='1'],
+  :root[data-lugar='artigas'][data-nivel='1'] body {
+    --fondo-lugar: url('/departamentos/artigas/nivel-1-vertical.webp');
+  }
+}
+
+[data-fondo='artigas'][data-nivel='2'],
+:root[data-lugar='artigas'][data-nivel='2'] body {
+  --fondo-lugar: url('/departamentos/artigas/nivel-2-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='artigas'][data-nivel='2'],
+  :root[data-lugar='artigas'][data-nivel='2'] body {
+    --fondo-lugar: url('/departamentos/artigas/nivel-2-vertical.webp');
+  }
+}
+
+[data-fondo='artigas'][data-nivel='3'],
+:root[data-lugar='artigas'][data-nivel='3'] body {
+  --fondo-lugar: url('/departamentos/artigas/nivel-3-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='artigas'][data-nivel='3'],
+  :root[data-lugar='artigas'][data-nivel='3'] body {
+    --fondo-lugar: url('/departamentos/artigas/nivel-3-vertical.webp');
+  }
+}
+
+[data-fondo='artigas'][data-nivel='4'],
+:root[data-lugar='artigas'][data-nivel='4'] body {
+  --fondo-lugar: url('/departamentos/artigas/nivel-4-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='artigas'][data-nivel='4'],
+  :root[data-lugar='artigas'][data-nivel='4'] body {
+    --fondo-lugar: url('/departamentos/artigas/nivel-4-vertical.webp');
+  }
+}
+
+[data-fondo='artigas'][data-nivel='5'],
+:root[data-lugar='artigas'][data-nivel='5'] body {
+  --fondo-lugar: url('/departamentos/artigas/nivel-5-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='artigas'][data-nivel='5'],
+  :root[data-lugar='artigas'][data-nivel='5'] body {
+    --fondo-lugar: url('/departamentos/artigas/nivel-5-vertical.webp');
+  }
+}
+
+[data-fondo='canelones'][data-nivel='1'],
+:root[data-lugar='canelones'][data-nivel='1'] body {
+  --fondo-lugar: url('/departamentos/canelones/nivel-1-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='canelones'][data-nivel='1'],
+  :root[data-lugar='canelones'][data-nivel='1'] body {
+    --fondo-lugar: url('/departamentos/canelones/nivel-1-vertical.webp');
+  }
+}
+
+[data-fondo='canelones'][data-nivel='2'],
+:root[data-lugar='canelones'][data-nivel='2'] body {
+  --fondo-lugar: url('/departamentos/canelones/nivel-2-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='canelones'][data-nivel='2'],
+  :root[data-lugar='canelones'][data-nivel='2'] body {
+    --fondo-lugar: url('/departamentos/canelones/nivel-2-vertical.webp');
+  }
+}
+
+[data-fondo='canelones'][data-nivel='3'],
+:root[data-lugar='canelones'][data-nivel='3'] body {
+  --fondo-lugar: url('/departamentos/canelones/nivel-3-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='canelones'][data-nivel='3'],
+  :root[data-lugar='canelones'][data-nivel='3'] body {
+    --fondo-lugar: url('/departamentos/canelones/nivel-3-vertical.webp');
+  }
+}
+
+[data-fondo='cerro-largo'][data-nivel='1'],
+:root[data-lugar='cerro-largo'][data-nivel='1'] body {
+  --fondo-lugar: url('/departamentos/cerro-largo/nivel-1-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='cerro-largo'][data-nivel='1'],
+  :root[data-lugar='cerro-largo'][data-nivel='1'] body {
+    --fondo-lugar: url('/departamentos/cerro-largo/nivel-1-vertical.webp');
+  }
+}
+
+[data-fondo='cerro-largo'][data-nivel='2'],
+:root[data-lugar='cerro-largo'][data-nivel='2'] body {
+  --fondo-lugar: url('/departamentos/cerro-largo/nivel-2-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='cerro-largo'][data-nivel='2'],
+  :root[data-lugar='cerro-largo'][data-nivel='2'] body {
+    --fondo-lugar: url('/departamentos/cerro-largo/nivel-2-vertical.webp');
+  }
+}
+
+[data-fondo='cerro-largo'][data-nivel='3'],
+:root[data-lugar='cerro-largo'][data-nivel='3'] body {
+  --fondo-lugar: url('/departamentos/cerro-largo/nivel-3-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='cerro-largo'][data-nivel='3'],
+  :root[data-lugar='cerro-largo'][data-nivel='3'] body {
+    --fondo-lugar: url('/departamentos/cerro-largo/nivel-3-vertical.webp');
+  }
+}
+
+[data-fondo='cerro-largo'][data-nivel='4'],
+:root[data-lugar='cerro-largo'][data-nivel='4'] body {
+  --fondo-lugar: url('/departamentos/cerro-largo/nivel-4-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='cerro-largo'][data-nivel='4'],
+  :root[data-lugar='cerro-largo'][data-nivel='4'] body {
+    --fondo-lugar: url('/departamentos/cerro-largo/nivel-4-vertical.webp');
+  }
+}
+
+[data-fondo='cerro-largo'][data-nivel='5'],
+:root[data-lugar='cerro-largo'][data-nivel='5'] body {
+  --fondo-lugar: url('/departamentos/cerro-largo/nivel-5-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='cerro-largo'][data-nivel='5'],
+  :root[data-lugar='cerro-largo'][data-nivel='5'] body {
+    --fondo-lugar: url('/departamentos/cerro-largo/nivel-5-vertical.webp');
+  }
+}
+
+[data-fondo='colonia'][data-nivel='1'],
+:root[data-lugar='colonia'][data-nivel='1'] body {
+  --fondo-lugar: url('/departamentos/colonia/nivel-1-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='colonia'][data-nivel='1'],
+  :root[data-lugar='colonia'][data-nivel='1'] body {
+    --fondo-lugar: url('/departamentos/colonia/nivel-1-vertical.webp');
+  }
+}
+
 [data-fondo='rocha'][data-nivel='1'],
 :root[data-lugar='rocha'][data-nivel='1'] body {
   --fondo-lugar: url('/departamentos/rocha/nivel-1-horizontal.webp');

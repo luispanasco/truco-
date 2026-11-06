@@ -1,4 +1,4 @@
-import { departamentoAbierto, monedasDeRecompensa, nivelAbierto, nivelDeHistoria, type IdDepartamento, type ProgresoHistoria } from '@truco/shared'
+import { departamentoAbierto, departamentoPublicado, monedasDeRecompensa, nivelAbierto, nivelDeHistoria, type IdDepartamento, type ProgresoHistoria } from '@truco/shared'
 import type { Base } from './base'
 import { saldo } from './monedas'
 import { inventario } from './tienda'
@@ -20,7 +20,8 @@ export async function progresoHistoria(base: Base, cuentaId: string): Promise<Pr
 /**
  * Ganaste un nivel: queda anotado y, la primera vez, sus recompensas van al inventario (como si las
  * hubieras comprado, a precio 0); las monedas (`monedas:<n>`), al saldo. El departamento tiene que
- * estar abierto (un vecino completo, o Montevideo), salvo con `todoAbierto` (el admin). Hay que tener abierto el nivel (el anterior ganado). Las partidas
+ * estar publicado y abierto (un vecino completo, o el inicial), salvo con `todoAbierto` (el admin). Hay
+ * que tener abierto el nivel (el anterior ganado). Las partidas
  * contra bots corren en el navegador, así que el servidor confía en que ganaste: las recompensas
  * son cosméticas.
  */
@@ -38,6 +39,7 @@ export async function ganarNivel(
   return base.transaccion(async (b) => {
     await b.consultar('select id from cuentas where id = $1 for update', [cuentaId])
     const progreso = await progresoHistoria(b, cuentaId)
+    if (!todoAbierto && !departamentoPublicado(dep)) throw new HistoriaRechazo('Ese departamento todavía no está abierto: muy pronto')
     if (!departamentoAbierto(progreso, dep, todoAbierto)) throw new HistoriaRechazo('Ese departamento todavía está cerrado: completá uno de sus vecinos')
     if (!nivelAbierto(progreso, dep, numero)) throw new HistoriaRechazo('Primero ganá el nivel anterior')
     const primera = await b.consultar<{ nivel: number }>(

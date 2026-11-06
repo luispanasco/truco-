@@ -149,7 +149,6 @@ export function PanelJugar({
     cambiar({ modoJugar: MODOS_JUGAR[(i + paso + MODOS_JUGAR.length) % MODOS_JUGAR.length]! })
   }
   const modo = perfil.modoJugar
-  const admin = useCuenta((s) => s.estado === 'adentro' && s.cuenta?.admin === true)
   const sinRed = modo === 'buscar' && !enLinea
   const detalle = (texto: string) => (enLinea ? texto : 'Sin conexión')
 
@@ -269,16 +268,12 @@ export function PanelJugar({
   return (
     <>
       <PartidaEnCurso perfil={perfil} enLinea={enLinea} />
-      {/* El modo historia, mientras se arma, solo para el admin: una página aparte, deslizando. */}
-      {admin ? (
-        <VistasJugar
-          partidas={partidas}
-          alSeguir={(id) => conApodo(() => navegar(`/historia/${id}`, { state: { desdeMapa: true } }))}
-          alVerMapa={() => conApodo(() => navegar('/historia'))}
-        />
-      ) : (
-        partidas
-      )}
+      {/* El modo historia: una página aparte, deslizando. */}
+      <VistasJugar
+        partidas={partidas}
+        alSeguir={(id) => conApodo(() => navegar(`/historia/${id}`, { state: { desdeMapa: true } }))}
+        alVerMapa={() => conApodo(() => navegar('/historia'))}
+      />
     </>
   )
 }

@@ -56,13 +56,13 @@ describe('modo historia', () => {
     expect(tiene).toEqual(expect.arrayContaining([idBaraja('costa'), idMesa('rocha'), ...rocha.niveles.flatMap((x) => x.recompensas)]))
   })
 
-  it('se arranca en Montevideo: un departamento se abre al completar uno de sus vecinos', async () => {
+  it('se arranca en Rocha; los departamentos sin publicar, solo el admin', async () => {
     const { id } = await cuenta()
-    await expect(ganarNivel(base, id, 'canelones', 1)).rejects.toThrow('Ese departamento todavía está cerrado')
-    for (let nivel = 1; nivel <= HISTORIAS.montevideo!.niveles.length; nivel++) await ganarNivel(base, id, 'montevideo', nivel)
-    expect((await ganarNivel(base, id, 'canelones', 1)).progreso).toEqual({ canelones: [1], montevideo: [1, 2, 3] })
-    // Rocha no limita con Montevideo: sigue cerrado.
-    await expect(ganarNivel(base, id, 'rocha', 1)).rejects.toThrow('Ese departamento todavía está cerrado')
+    await expect(ganarNivel(base, id, 'montevideo', 1)).rejects.toThrow('Ese departamento todavía no está abierto')
+    for (let nivel = 1; nivel <= HISTORIAS.rocha!.niveles.length; nivel++) await ganarNivel(base, id, 'rocha', nivel)
+    // Completar Rocha no abre a sus vecinos mientras no estén publicados.
+    await expect(ganarNivel(base, id, 'maldonado', 1)).rejects.toThrow('Ese departamento todavía no está abierto')
+    expect((await ganarNivel(base, id, 'maldonado', 1, true)).progreso).toEqual({ maldonado: [1], rocha: [1, 2, 3, 4, 5] })
   })
 
   it('los niveles que dan monedas las suman al saldo, una sola vez', async () => {
@@ -78,7 +78,7 @@ describe('modo historia', () => {
     expect(await inventario(base, id)).not.toContain(idMonedas(100))
   })
 
-  it('la API es solo para los admins', async () => {
+  it('la API es para cualquiera con cuenta; los departamentos sin publicar, solo para los admins', async () => {
     const yo = await cuenta()
     const pedir = async (ruta: string, body?: unknown): Promise<{ status: number; data: unknown }> => {
       const http = body ? colyseus.http.post : colyseus.http.get
@@ -90,24 +90,26 @@ describe('modo historia', () => {
         return { status: r.statusCode, data: r.data }
       }
     }
-    expect((await pedir('/historia')).status).toBe(403)
-
-    process.env.ADMINS = yo.email
     expect((await pedir('/historia')).data).toEqual({ progreso: {} })
     const r = await pedir('/historia/ganar', { departamento: 'rocha', nivel: 1 })
     expect((r.data as { progreso: unknown }).progreso).toEqual({ rocha: [1] })
-    const rechazo = await pedir('/historia/ganar', { departamento: 'rocha', nivel: 3 })
-    expect(rechazo.status).toBe(409)
+    expect((await pedir('/historia/ganar', { departamento: 'rocha', nivel: 3 })).status).toBe(409)
+    expect((await pedir('/historia/ganar', { departamento: 'artigas', nivel: 1 })).status).toBe(409)
+
+    process.env.ADMINS = yo.email
+    const admin = await pedir('/historia/ganar', { departamento: 'artigas', nivel: 1 })
+    expect((admin.data as { progreso: unknown }).progreso).toEqual({ artigas: [1], rocha: [1] })
   })
 })
 
 describe('modo historia en cooperativo', () => {
-  it('la sala del nivel: la abre el admin, las personas van del mismo lado y los demás son el elenco', async () => {
+  it('la sala del nivel: la abre cualquiera con cuenta, las personas van del mismo lado y los demás son el elenco', async () => {
     const admin = await cuenta()
     const amigo = await cuenta()
     process.env.ADMINS = admin.email
-    // Sin ser admin no se abre.
-    await expect(Jugador.crear(colyseus, { token: amigo.token, historia: { departamento: 'rocha', nivel: 2 } })).rejects.toThrow()
+    // Sin ser admin, un departamento sin publicar no se abre; y sin cuenta, ninguno.
+    await expect(Jugador.crear(colyseus, { token: amigo.token, historia: { departamento: 'canelones', nivel: 2 } })).rejects.toThrow()
+    await expect(Jugador.crear(colyseus, { historia: { departamento: 'rocha', nivel: 2 } })).rejects.toThrow()
     // Un nivel mano a mano no es para jugar de a dos.
     await expect(Jugador.crear(colyseus, { token: admin.token, historia: { departamento: 'rocha', nivel: 1 } })).rejects.toThrow()
 
