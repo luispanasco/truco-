@@ -272,23 +272,22 @@ const RESPUESTAS: readonly (readonly [string, string])[] = [
 /**
  * La charla antes de un nivel: el rival principal dice sus frases; en los de equipo, sus
  * compañeros saludan después de la primera y uno de los tuyos te da ánimo; antes de la última,
- * contestás vos. Si el nivel tiene datos del lugar, el rival cuenta uno antes de que contestes y
- * el otro antes de cerrar.
+ * contestás vos. Si el nivel tiene datos del lugar, el rival los cuenta todos juntos después de
+ * saludar, antes de que arranque la charla.
  */
 export function dialogoDelNivel(nivel: NivelHistoria, n: number): TurnoPrevia[] {
   const saludo = (id: string) => ({ quien: id, texto: PERSONAJES.find((p) => p.id === id)!.saludo })
   const [primera, ...resto] = nivel.frases
   const ultima = resto.pop()
   const jefe = nivel.rivales[0]!
-  const [dato1, ...otros] = (nivel.datos ?? []).map((d) => ({ quien: jefe, texto: d.texto, dato: true as const }))
+  const datos = (nivel.datos ?? []).map((d) => ({ quien: jefe, texto: d.texto, dato: true as const }))
   return [
     { quien: jefe, texto: primera! },
+    ...datos,
     ...nivel.rivales.slice(1).map(saludo),
-    ...(dato1 ? [dato1] : []),
     ...resto.map((texto) => ({ quien: jefe, texto })),
     { quien: null, opciones: RESPUESTAS[(n - 1) % RESPUESTAS.length]! },
     ...nivel.companieros.slice(0, 1).map(saludo),
-    ...otros,
     ...(ultima ? [{ quien: jefe, texto: ultima }] : []),
   ]
 }

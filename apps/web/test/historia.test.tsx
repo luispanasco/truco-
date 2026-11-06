@@ -195,8 +195,11 @@ describe('los datos del modo historia', () => {
     for (const nivel of ROCHA.niveles) {
       expect(nivel.datos, nivel.lugar).toHaveLength(2)
       for (const d of nivel.datos!) expect(d.fuente, d.texto).toMatch(/^https:\/\//)
-      const datos = dialogoDelNivel(nivel, 1).filter((t) => t.quien !== null && t.dato)
-      expect(datos.map((t) => (t.quien === null ? '' : t.texto))).toEqual(nivel.datos!.map((d) => d.texto))
+      // Juntos, después del saludo del rival: no se mezclan con la charla.
+      const dialogo = dialogoDelNivel(nivel, 1)
+      const datos = dialogo.slice(1, 1 + nivel.datos!.length)
+      expect(datos.map((t) => (t.quien !== null && t.dato ? t.texto : ''))).toEqual(nivel.datos!.map((d) => d.texto))
+      expect(dialogo.filter((t) => t.quien !== null && t.dato)).toHaveLength(nivel.datos!.length)
     }
     // Sin datos, la charla es la de siempre.
     const sinDatos = HISTORIAS.artigas!.niveles[0]!
@@ -290,13 +293,16 @@ describe('pantallas', () => {
     await screen.findByText(nivel.frases[0]!)
     expect(habla()).toEqual([nombre('pescador')])
     fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    // Julio cuenta lo del lugar, los dos datos seguidos.
+    for (const dato of nivel.datos!) {
+      await screen.findByText(dato.texto)
+      expect(screen.getByText(/¿Sabías que…\?/)).toBeTruthy()
+      fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    }
     // Después saluda Nico, el compañero de Julio.
     await screen.findByText(PERSONAJES.find((p) => p.id === 'surfista')!.saludo)
     expect(habla()).toEqual([nombre('surfista')])
-    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
-    // Julio cuenta algo del lugar.
-    await screen.findByText(nivel.datos![0]!.texto)
-    expect(screen.getByText(/¿Sabías que…\?/)).toBeTruthy()
+    expect(screen.queryByText(/¿Sabías que…\?/)).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
     await screen.findByText(nivel.frases[1]!)
     fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
@@ -309,8 +315,6 @@ describe('pantallas', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
     // Te da ánimo tu compañero, y Julio cierra.
     await screen.findByText(PERSONAJES.find((p) => p.id === 'hincha')!.saludo)
-    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
-    await screen.findByText(nivel.datos![1]!.texto)
     fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
     await screen.findByText(nivel.frases.at(-1)!)
     fireEvent.click(screen.getByRole('button', { name: '¡A jugar!' }))

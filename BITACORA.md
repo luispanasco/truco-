@@ -1610,7 +1610,7 @@ Llegó la primera entrega de los fondos y datos por nivel (`Rocha-5-niveles-fond
   - En la previa (`data-nivel`).
   - En la partida (`data-nivel` en `<html>`, junto a `data-lugar`).
   - En el mapa del departamento, donde el fondo cambia al elegir cada nivel.
-- **Datos de los lugares:** `NivelHistoria.datos` (texto y fuente). Los dos datos de cada nivel de Rocha, verificados en turismorocha.gub.uy, quedaron en la voz de Julio. En la charla (`dialogoDelNivel`) cuenta uno antes de que contestes y el otro antes de cerrar, con el globo marcado como "¿Sabías que…?".
+- **Datos de los lugares:** `NivelHistoria.datos` (texto y fuente). Los dos datos de cada nivel de Rocha, verificados en turismorocha.gub.uy, quedaron en la voz de Julio. En la charla (`dialogoDelNivel`) los cuenta los dos seguidos, después de saludar y antes de que arranque la charla (intercalados cortaban el ida y vuelta), con el globo marcado como "¿Sabías que…?".
 - Los fondos son ilustraciones generadas con referencias de fotos reales; las fotos no se usan (ver CREDITOS.md de Rocha).
 - Faltan 75 niveles (los otros 18 departamentos).
 - **Tests:** web 359 (los datos con fuente y en la charla, el fondo del nivel en la sala). E2E del cooperativo.
