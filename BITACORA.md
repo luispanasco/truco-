@@ -1645,3 +1645,18 @@ Pedido después de probar el 3 vs 3: "se ve todo crowded". Revisado con capturas
 - **Registro:** en 3 vs 3 queda solo la última jugada, más angosta y en dos líneas si hace falta (no se corta). Los cantos ya salen en el globo de cada uno, y las tres líneas al medio se apilaban lejos de quien hablaba.
 - **Tu barra:** en las mesas de equipo, en pantallas angostas, la seña queda solo con el ícono (como con el reloj). "Te toca", seña, Pie y Mazo entran en una línea y el envido no se corta.
 - **Tests:** web 364 y los 14 de punta a punta.
+
+### Pendiente en el servidor (al 2026-11-06)
+
+Los cambios de la mesa (3 vs 3, previa, mapa, botón, fondos y datos) son solo de la web: con subir a develop alcanza. El servidor de Fly todavía no tiene lo del modo historia de estos días. Hay que publicarlo:
+
+```
+fly secrets set ADMINS=luisalbertopanasco@gmail.com,juanpedropanasco@gmail.com --app truco-uy
+fly deploy --app truco-uy --ha=false
+```
+
+Lo que trae:
+- Migración 11 (monedas como premio).
+- El orden de los departamentos desde Montevideo (el admin, todo abierto).
+- Las frases de la mesa en el cooperativo.
+- Juan Pedro como admin.
