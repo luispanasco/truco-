@@ -1614,3 +1614,21 @@ Llegó la primera entrega de los fondos y datos por nivel (`Rocha-5-niveles-fond
 - Los fondos son ilustraciones generadas con referencias de fotos reales; las fotos no se usan (ver CREDITOS.md de Rocha).
 - Faltan 75 niveles (los otros 18 departamentos).
 - **Tests:** web 359 (los datos con fuente y en la charla, el fondo del nivel en la sala). E2E del cooperativo.
+
+## Modo historia: lo que dicen en la mesa durante la partida — 2026-11-06
+
+- **`CharlaDeMesa`** (shared/cargadas.ts): al terminar cada mano, según el tanteo, alguien dice algo. Aparece como chat, en el globo de su lugar.
+- **Situaciones:**
+  - te viene ganando (el rival cancherea);
+  - lo venís matando (se queja);
+  - pasan la mitad (una vez);
+  - parejo cerca del final (una vez);
+  - una mano de 3 puntos o más, para un lado o el otro.
+- **Para que no sea monótono:**
+  - Hay una pausa de 2 manos como mínimo entre frase y frase.
+  - Las ventajas se comentan la mitad de las veces y las manos grandes, el 80 %.
+  - Las frases salen de bolsas mezcladas, sin repetirse en la partida hasta agotarlas.
+- **Frases:** unas 60 generales y 4 propias por cada uno de los 19 rivales principales (Julio: "El mar siempre gana, gurí"; Santi: "Obvio que voy ganando").
+- **Quién habla:** casi siempre el rival principal. A veces un compañero suyo y, en los niveles de equipo, uno de los tuyos, que festeja si van bien o te da ánimo si no. Las personas no hablan solas.
+- **Dónde:** contra la compu lo saca la conexión local; en el cooperativo, el servidor (`charlar`, `difundirChat`), así todos ven lo mismo.
+- **Tests:** web 364 (cargadas.test.ts: cuándo habla, la pausa, sin repetir, la mitad y el parejo una sola vez, quién habla en equipos), server 123.

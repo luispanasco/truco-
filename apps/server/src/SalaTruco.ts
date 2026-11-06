@@ -27,6 +27,7 @@ import { crearBot, NIVELES_BOT, SENIAS, type Bot, type Nivel, type Senia, type S
 import {
   avatarAlAzar,
   personajesParaBots,
+  CharlaDeMesa,
   elencoDelNivel,
   mesaDeDepartamento,
   nivelDeHistoria,
@@ -138,6 +139,8 @@ export const TIEMPOS_DEFAULT: Tiempos = {
 
 /** Nivel del bot que juega por un humano desconectado o que se quedó sin tiempo. */
 const NIVEL_REEMPLAZO: Nivel = 'medio'
+/** Cuánto después de terminar la mano habla alguien en la mesa (modo historia). */
+const DEMORA_CHARLA_MS = 900
 const NIVELES: Nivel[] = NIVELES_BOT
 
 interface Lugar {
@@ -266,6 +269,8 @@ export class SalaTruco extends Room {
   /** Por invitado: asientos que silenció. */
   private silenciados = new Map<string, Set<number>>()
   private historialChat: MensajeChat[] = []
+  /** En el modo historia, lo que dicen en la mesa los personajes (el rival cancherea, los compañeros alientan). */
+  private charla: CharlaDeMesa | null = null
   /** Chat de voz (ver voz.ts): lo pide el anfitrión; la cola pública nunca lo tiene. */
   private vozPedida = true
   private voz = new VozDeSala({
@@ -461,14 +466,7 @@ export class SalaTruco extends Room {
       if (!limpio) return
       const c: CanalChat = canal === 'equipo' ? 'equipo' : 'general'
       if (c === 'equipo' && !this.chatEquipo()) throw new Rechazo('En esta sala no hay chat de equipo')
-      const mensaje: MensajeChat = { de: asiento, apodo: this.lugares[asiento]!.apodo, texto: limpio, canal: c, hora: Date.now() }
-      this.historialChat = [...this.historialChat.slice(-99), mensaje]
-      for (const l of this.lugares) {
-        if (l.tipo !== 'humano' || !l.conectado) continue
-        if (c === 'equipo' && l.asiento % 2 !== asiento % 2) continue
-        if (l.asiento !== asiento && this.silenciados.get(l.invitadoId!)?.has(asiento)) continue
-        this.enviarA(l.asiento, 'chat', mensaje)
-      }
+      this.difundirChat({ de: asiento, apodo: this.lugares[asiento]!.apodo, texto: limpio, canal: c, hora: Date.now() })
     })
 
     manejar('senia', (client, asiento, { senia }) => {
@@ -719,6 +717,15 @@ export class SalaTruco extends Room {
       reparte,
     })
     this.vencidos.clear()
+    // En el modo historia, la charla de la mesa: los bots son el elenco (las personas no hablan solas).
+    const nivel = this.historia && nivelDeHistoria(this.historia.departamento, this.historia.nivel)
+    const elenco = nivel ? elencoDelNivel(nivel) : null
+    this.charla = elenco
+      ? new CharlaDeMesa(
+          this.lugares.map((l) => (l.tipo === 'bot' && l.asiento > 0 ? (elenco[l.asiento - 1]?.id ?? null) : null)),
+          this.config.puntosPartida,
+        )
+      : null
     this.fase = 'jugando'
     if (this.publica) void this.setPrivate(true)
     this.inicioMs = Date.now()
@@ -786,6 +793,29 @@ export class SalaTruco extends Room {
   }
 
   /** Aplica una jugada; devuelve el motivo si es inválida. */
+  /** Un mensaje del chat a los que están conectados (los de su equipo, si es de equipo; no a quien lo silenció). */
+  private difundirChat(mensaje: MensajeChat) {
+    this.historialChat = [...this.historialChat.slice(-99), mensaje]
+    for (const l of this.lugares) {
+      if (l.tipo !== 'humano' || !l.conectado) continue
+      if (mensaje.canal === 'equipo' && l.asiento % 2 !== mensaje.de % 2) continue
+      if (l.asiento !== mensaje.de && this.silenciados.get(l.invitadoId!)?.has(mensaje.de)) continue
+      this.enviarA(l.asiento, 'chat', mensaje)
+    }
+  }
+
+  /** Al terminar una mano, en el modo historia, a veces un personaje dice algo (un rato después, como en la mesa). */
+  private charlar() {
+    const frase = this.charla?.alTerminarMano(this.estado!.puntos)
+    if (!frase) return
+    setTimeout(() => {
+      if (this.fase !== 'jugando') return
+      const lugar = this.lugares[frase.asiento]
+      if (lugar?.tipo !== 'bot') return
+      this.difundirChat({ de: frase.asiento, apodo: lugar.apodo, texto: frase.texto, canal: 'general', hora: Date.now() })
+    }, DEMORA_CHARLA_MS)
+  }
+
   private aplicar(asiento: number, accion: Accion, porBot: boolean): string | null {
     const r = apply(this.estado!, { ...accion, jugador: idJugador(asiento) } as Accion)
     if (!r.ok) return r.motivo
@@ -795,7 +825,10 @@ export class SalaTruco extends Room {
     this.revisarNuevaMano()
     this.difundir(r.eventos)
     if (r.estado.ganador !== null) this.terminar()
-    else this.programar(r.eventos)
+    else {
+      this.programar(r.eventos)
+      if (r.eventos.some((ev) => ev.tipo === 'enfrentamientoTerminado')) this.charlar()
+    }
     return null
   }
 

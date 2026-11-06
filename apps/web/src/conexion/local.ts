@@ -28,6 +28,7 @@ import {
   MOTIVO_SIN_SENIAS,
   envidoDeSenia,
   avatarAlAzar,
+  CharlaDeMesa,
   elencoDelNivel,
   nivelDeHistoria,
   PERSONAJES,
@@ -93,6 +94,8 @@ const DEMORA_BOTS: [number, number] = [1000, 1800]
 const ESPERA_ORDEN_TUYA_MS = 25_000
 /** La pausa entre manos coincide con la de la interfaz (PAUSA_ENTRE_MANOS), más un margen. */
 const PAUSAS = { vuelta: 3000, mano: 1200 }
+/** Cuánto después de terminar la mano habla alguien en la mesa (modo historia). */
+const DEMORA_CHARLA_MS = 900
 const id = (asiento: number) => `j${asiento}`
 
 /**
@@ -119,6 +122,8 @@ export class ConexionLocal implements Conexion {
   private version = 0
   private semilla: number
   private terminada = false
+  /** En el modo historia, lo que dicen en la mesa (el rival te cancherea, tus compañeros te alientan). */
+  private charla: CharlaDeMesa | null = null
   private configSenias: ConfigSenias
 
   readonly historia?: NivelJugado
@@ -213,8 +218,10 @@ export class ConexionLocal implements Conexion {
   private iniciar() {
     const n = cantidadJugadores(this.config.formato)
     this.terminada = false
+    const nivel = this.op.historia && nivelDeHistoria(this.op.historia.departamento, this.op.historia.nivel)
+    // Cada partida (y cada revancha), la charla de nuevo: las frases vuelven a la bolsa.
+    this.charla = nivel ? new CharlaDeMesa([null, ...elencoDelNivel(nivel).map((p) => p.id)], this.config.puntosPartida, this.op.azar) : null
     if (this.nombres.length !== n) {
-      const nivel = this.op.historia && nivelDeHistoria(this.op.historia.departamento, this.op.historia.nivel)
       const personajes = nivel ? elencoDelNivel(nivel) : this.op.personajes ? personajesParaBots(String(this.semilla), n - 1) : []
       this.nombres = Array.from({ length: n }, (_, a) => (a === 0 ? this.op.apodo : (personajes[a - 1]?.nombre ?? NOMBRES_BOTS[(a - 1) % NOMBRES_BOTS.length]!)))
     }
@@ -371,7 +378,16 @@ export class ConexionLocal implements Conexion {
     this.revisarNuevaMano()
     this.difundir(r.eventos)
     this.programar(r.eventos)
+    if (r.eventos.some((ev) => ev.tipo === 'enfrentamientoTerminado')) this.charlar()
     return null
+  }
+
+  /** Al terminar una mano, en el modo historia, a veces alguien dice algo (un rato después, como en la mesa). */
+  private charlar() {
+    const frase = this.charla?.alTerminarMano(this.estado.puntos)
+    if (!frase) return
+    const mensaje = { de: frase.asiento, apodo: this.nombre(frase.asiento), texto: frase.texto, canal: 'general' as const, hora: Date.now() }
+    setTimeout(() => this.emitir('chat', mensaje), this.op.demoraBots ? 0 : DEMORA_CHARLA_MS)
   }
 
   /** Si el juego espera a un bot, lo hace jugar después de una demora. */
