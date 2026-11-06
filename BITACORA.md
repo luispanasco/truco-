@@ -1660,3 +1660,14 @@ Lo que trae:
 - El orden de los departamentos desde Montevideo (el admin, todo abierto).
 - Las frases de la mesa en el cooperativo.
 - Juan Pedro como admin.
+
+## Rediseño del menú, parte 1: paleta "noche y dorado" — 2026-11-06
+
+Pedido: la interfaz principal se veía plana y con colores feos, sobre todo según la mesa elegida (tarjetas verdes sobre madera marrón). Se eligió la paleta "noche y dorado".
+
+- **Variables nuevas** en estilos.css: `--noche`, `--noche-media`, `--noche-clara`, `--noche-filo` (el filo dorado de las tarjetas), `--dorado-suave` y `--grano` (un ruido fino, como de paño, en SVG).
+- **Fondo de la app:** noche con grano y un brillo arriba. En la partida (`body:has(.pantalla-mesa)`) alrededor de la mesa sigue la madera de la mesa elegida.
+- **Tarjetas:** vidrio de noche con un filo dorado y sombra, en vez del paño de la mesa.
+- **Menú:** fondo, vidrios y cantos con la paleta; ya no salen de `--tapete` ni de `--madera`.
+- La mesa (paño y madera) queda solo para la partida.
+- Siguen: Jugar con portada ilustrada; Grupos como clubes con muro (invitaciones, resultados y repeticiones); Lobby, Tienda y Avatar con los mismos componentes.

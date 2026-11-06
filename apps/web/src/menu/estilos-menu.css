@@ -1,23 +1,22 @@
 /*
- * El menú principal: banner arriba, tres pantallas que se deslizan y la barra de abajo.
- * Todo sale de la mesa elegida (estilos-mesas.css): el fondo es su paño, los resaltados y el
- * botón principal van con el acento dorado, los secundarios son de papel y los íconos, del
- * paño. La bandera de Uruguay queda como bandera, sin pintar el resto.
+ * El menú principal: banner arriba, las pantallas que se deslizan y la barra de abajo. Con la
+ * paleta de la app (noche y dorado, en estilos.css), no la de la mesa: los resaltados y el botón
+ * principal van con el dorado, los secundarios son de papel y las tarjetas, vidrio de noche. La
+ * bandera de Uruguay queda como bandera, sin pintar el resto.
  */
 .menu {
-  /* El paño de fondo, más oscuro en los bordes para que el texto claro se lea en cualquier mesa. */
-  --menu-fondo: color-mix(in srgb, var(--tapete) 78%, black);
-  --menu-fondo-borde: color-mix(in srgb, var(--tapete-oscuro) 55%, black);
+  --menu-fondo: var(--noche-media);
+  --menu-fondo-borde: var(--noche);
   /* Botón principal (el acento) y secundarios (el papel), con su canto para el relieve. */
   --menu-oro: var(--acento);
   --menu-oro-canto: color-mix(in srgb, var(--acento) 55%, #3b2208);
   --menu-oro-tinta: color-mix(in srgb, var(--acento) 18%, #2b1804);
   --menu-papel: var(--papel);
-  --menu-papel-canto: color-mix(in srgb, var(--papel) 62%, var(--madera));
-  --menu-panio-tinta: color-mix(in srgb, var(--tapete-oscuro) 80%, black);
-  /* Las tarjetas sobre el paño: vidrio oscuro con un filo claro. */
-  --menu-vidrio: rgb(0 0 0 / 0.24);
-  --menu-filo: rgb(255 255 255 / 0.09);
+  --menu-papel-canto: color-mix(in srgb, var(--papel) 62%, var(--noche-clara));
+  --menu-panio-tinta: var(--noche);
+  /* Las tarjetas: vidrio de noche con un filo dorado. */
+  --menu-vidrio: color-mix(in srgb, var(--noche-clara) 55%, transparent);
+  --menu-filo: var(--noche-filo);
   --menu-suave: color-mix(in srgb, var(--texto-claro) 68%, transparent);
 
   height: 100dvh;
@@ -25,7 +24,8 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
   background:
-    radial-gradient(120% 70% at 50% 28%, rgb(255 255 255 / 0.07), transparent 60%),
+    var(--grano),
+    radial-gradient(90% 50% at 50% 0%, var(--dorado-suave), transparent 70%),
     radial-gradient(140% 100% at 50% 40%, var(--menu-fondo), var(--menu-fondo-borde));
 }
 
