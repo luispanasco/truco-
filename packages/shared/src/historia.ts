@@ -73,6 +73,8 @@ export interface NivelHistoria {
   recompensas: readonly string[]
   /** Lo que dice el rival antes de empezar, una frase por globo. */
   frases: readonly string[]
+  /** Lo que el rival cuenta del lugar: datos verificados, en su voz, con la fuente de cada uno. */
+  datos?: readonly { texto: string; fuente: string }[]
 }
 
 export interface HistoriaDepartamento {
@@ -100,6 +102,10 @@ const ROCHA: HistoriaDepartamento = {
       rivales: ['pescador'],
       companieros: [],
       recompensas: [pieza('sombrero', 'Gorro de pescador')],
+      datos: [
+        { texto: 'Mirá las barcas sobre la arena: en la Playa de los Pescadores descansan cuando vuelven del mar.', fuente: 'https://turismorocha.gub.uy/atractivos/playas/playa-de-los-pescadores' },
+        { texto: 'Y para sacarlas del agua no hay máquina: las arrastramos entre todos hasta la playa. A pulmón, gurí.', fuente: 'https://turismorocha.gub.uy/atractivos/playas/playa-de-los-pescadores' },
+      ],
       frases: [
         '¡Epa! ¿Vos sos el gurí que vino de la capital?',
         'Acá el truco se juega con olor a pescado y viento del este.',
@@ -116,6 +122,10 @@ const ROCHA: HistoriaDepartamento = {
       rivales: ['pescador', 'surfista'],
       companieros: ['hincha'],
       recompensas: [pieza('ropa', 'Impermeable amarillo')],
+      datos: [
+        { texto: 'El faro de Cabo Santa María se prendió el 1 de septiembre de 1874, y ese día se cuenta como la fundación de La Paloma.', fuente: 'https://turismorocha.gub.uy/atractivos/faros/faro-cabo-santa-maria' },
+        { texto: 'Los materiales para hacerlo los trajeron en barco desde Montevideo. ¡Imaginate el viaje!', fuente: 'https://turismorocha.gub.uy/atractivos/faros/faro-cabo-santa-maria' },
+      ],
       frases: [
         'Te traje a Nico, que vino surfeando desde La Paloma.',
         'Dice que lee las cartas como lee las olas. Yo no le creo nada.',
@@ -132,6 +142,10 @@ const ROCHA: HistoriaDepartamento = {
       rivales: ['pescador'],
       companieros: [],
       recompensas: [pieza('accesorio', 'Caña de pescar')],
+      datos: [
+        { texto: 'La Pedrera está arriba de un acantilado de piedra, mirando de frente al Atlántico.', fuente: 'https://turismorocha.gub.uy/destinos/la-pedrera' },
+        { texto: 'Abajo está el Desplayado, una bahía chiquita entre las rocas. Y la playa del Barco es la de los surfistas, como Nico.', fuente: 'https://turismorocha.gub.uy/destinos/la-pedrera' },
+      ],
       frases: [
         'Ayer saqué una corvina de cuarenta kilos. Bueno… de cuatro.',
         'Ahora va en serio: a treinta, mano a mano.',
@@ -148,6 +162,10 @@ const ROCHA: HistoriaDepartamento = {
       rivales: ['pescador', 'surfista', 'hippie'],
       companieros: ['hincha', 'dona'],
       recompensas: [pieza('accesorio', 'Tabla de surf')],
+      datos: [
+        { texto: '¿Sabés cuántos escalones tiene la escalera del faro? Ciento treinta y dos.', fuente: 'https://turismorocha.gub.uy/atractivos/faros/faro-de-cabo-polonio' },
+        { texto: 'Desde arriba se ve todo: el pueblo, las islas y las dunas alrededor del cabo.', fuente: 'https://turismorocha.gub.uy/atractivos/faros/faro-de-cabo-polonio' },
+      ],
       frases: [
         'Se vino Luna desde Cabo Polonio, a la luz del faro.',
         'Tres contra tres, como en la barra del boliche.',
@@ -164,6 +182,10 @@ const ROCHA: HistoriaDepartamento = {
       rivales: ['pescador'],
       companieros: [],
       recompensas: [idBaraja('costa'), idMesa('rocha')],
+      datos: [
+        { texto: 'Esta fortaleza la empezaron los portugueses en 1762, y al año siguiente la siguieron los españoles.', fuente: 'https://turismorocha.gub.uy/atractivos/historicos/fortaleza-de-santa-teresa' },
+        { texto: 'Tiene forma de pentágono, con cinco baluartes y 642 metros de muralla alrededor.', fuente: 'https://turismorocha.gub.uy/atractivos/historicos/fortaleza-de-santa-teresa' },
+      ],
       frases: [
         'Llegaste lejos, gurí. Pero el mar siempre gana.',
         'Esta es la última: el que pierde paga las brótolas.',
@@ -232,8 +254,11 @@ export function nombreRecompensa(id: string): string {
   return buscarItem(id)?.nombre ?? id
 }
 
-/** Un turno de la previa: habla un personaje (por su id) o vos (`quien: null`), que elegís qué decir. */
-export type TurnoPrevia = { quien: string; texto: string } | { quien: null; opciones: readonly [string, string] }
+/**
+ * Un turno de la previa: habla un personaje (por su id; `dato` si cuenta algo del lugar) o vos
+ * (`quien: null`), que elegís qué decir.
+ */
+export type TurnoPrevia = { quien: string; texto: string; dato?: true } | { quien: null; opciones: readonly [string, string] }
 
 /** Lo que podés contestar en la previa (uno por nivel, en orden). */
 const RESPUESTAS: readonly (readonly [string, string])[] = [
@@ -247,19 +272,23 @@ const RESPUESTAS: readonly (readonly [string, string])[] = [
 /**
  * La charla antes de un nivel: el rival principal dice sus frases; en los de equipo, sus
  * compañeros saludan después de la primera y uno de los tuyos te da ánimo; antes de la última,
- * contestás vos.
+ * contestás vos. Si el nivel tiene datos del lugar, el rival cuenta uno antes de que contestes y
+ * el otro antes de cerrar.
  */
 export function dialogoDelNivel(nivel: NivelHistoria, n: number): TurnoPrevia[] {
   const saludo = (id: string) => ({ quien: id, texto: PERSONAJES.find((p) => p.id === id)!.saludo })
   const [primera, ...resto] = nivel.frases
   const ultima = resto.pop()
   const jefe = nivel.rivales[0]!
+  const [dato1, ...otros] = (nivel.datos ?? []).map((d) => ({ quien: jefe, texto: d.texto, dato: true as const }))
   return [
     { quien: jefe, texto: primera! },
     ...nivel.rivales.slice(1).map(saludo),
+    ...(dato1 ? [dato1] : []),
     ...resto.map((texto) => ({ quien: jefe, texto })),
     { quien: null, opciones: RESPUESTAS[(n - 1) % RESPUESTAS.length]! },
     ...nivel.companieros.slice(0, 1).map(saludo),
+    ...otros,
     ...(ultima ? [{ quien: jefe, texto: ultima }] : []),
   ]
 }

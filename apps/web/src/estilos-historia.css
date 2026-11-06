@@ -521,6 +521,15 @@
   border-bottom: 0;
   border-top-color: var(--papel);
 }
+/* Cuando el rival cuenta algo del lugar. */
+.historia-globo.dato {
+  box-shadow:
+    0 0 0 3px var(--acento),
+    var(--sombra);
+}
+.historia-globo-dato {
+  color: #2f6f8f;
+}
 .previa-opciones {
   display: grid;
   gap: 8px;

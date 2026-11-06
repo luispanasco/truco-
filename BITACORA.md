@@ -1597,3 +1597,20 @@ Se juegan todos los departamentos, cada uno con su rival, sus niveles y sus prem
   - Web 358: el orden desde Montevideo, los vecinos de ida y vuelta, los lugares dentro de Uruguay, el mapa con la presentación y el mapa del departamento.
   - Server 123: el departamento cerrado no se anota, salvo el admin.
   - E2E del cooperativo, con la charla nueva.
+
+## Modo historia: fondos y datos de cada nivel (Rocha) — 2026-11-06
+
+Llegó la primera entrega de los fondos y datos por nivel (`Rocha-5-niveles-fondos-y-datos.zip`): los 5 niveles de Rocha.
+
+- **Fondos por nivel** (`scripts/fondos-niveles.py <paquete>`):
+  - Copia los fondos de cada nivel a `public/departamentos/<departamento>/nivel-<n>-horizontal.webp` y `-vertical.webp` (con su CREDITOS.md y datos.md) y genera `src/estilos-niveles.css` con todos los que hay.
+  - Sin argumento, solo rehace el CSS.
+  - Un nivel sin fondo propio sigue con el del departamento.
+- **Dónde van:**
+  - En la previa (`data-nivel`).
+  - En la partida (`data-nivel` en `<html>`, junto a `data-lugar`).
+  - En el mapa del departamento, donde el fondo cambia al elegir cada nivel.
+- **Datos de los lugares:** `NivelHistoria.datos` (texto y fuente). Los dos datos de cada nivel de Rocha, verificados en turismorocha.gub.uy, quedaron en la voz de Julio. En la charla (`dialogoDelNivel`) cuenta uno antes de que contestes y el otro antes de cerrar, con el globo marcado como "¿Sabías que…?".
+- Los fondos son ilustraciones generadas con referencias de fotos reales; las fotos no se usan (ver CREDITOS.md de Rocha).
+- Faltan 75 niveles (los otros 18 departamentos).
+- **Tests:** web 359 (los datos con fuente y en la charla, el fondo del nivel en la sala). E2E del cooperativo.

@@ -1,0 +1,62 @@
+/*
+ * El fondo de cada nivel del modo historia (el lugar donde se juega): pisa el del departamento en
+ * la previa y en el mapa del departamento (`data-fondo` y `data-nivel`) y en la partida
+ * (`data-lugar` y `data-nivel` en <html>). Los niveles que no están acá usan el del departamento.
+ *
+ * Generado por scripts/fondos-niveles.py: no editar a mano.
+ */
+
+[data-fondo='rocha'][data-nivel='1'],
+:root[data-lugar='rocha'][data-nivel='1'] body {
+  --fondo-lugar: url('/departamentos/rocha/nivel-1-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-nivel='1'],
+  :root[data-lugar='rocha'][data-nivel='1'] body {
+    --fondo-lugar: url('/departamentos/rocha/nivel-1-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-nivel='2'],
+:root[data-lugar='rocha'][data-nivel='2'] body {
+  --fondo-lugar: url('/departamentos/rocha/nivel-2-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-nivel='2'],
+  :root[data-lugar='rocha'][data-nivel='2'] body {
+    --fondo-lugar: url('/departamentos/rocha/nivel-2-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-nivel='3'],
+:root[data-lugar='rocha'][data-nivel='3'] body {
+  --fondo-lugar: url('/departamentos/rocha/nivel-3-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-nivel='3'],
+  :root[data-lugar='rocha'][data-nivel='3'] body {
+    --fondo-lugar: url('/departamentos/rocha/nivel-3-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-nivel='4'],
+:root[data-lugar='rocha'][data-nivel='4'] body {
+  --fondo-lugar: url('/departamentos/rocha/nivel-4-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-nivel='4'],
+  :root[data-lugar='rocha'][data-nivel='4'] body {
+    --fondo-lugar: url('/departamentos/rocha/nivel-4-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-nivel='5'],
+:root[data-lugar='rocha'][data-nivel='5'] body {
+  --fondo-lugar: url('/departamentos/rocha/nivel-5-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-nivel='5'],
+  :root[data-lugar='rocha'][data-nivel='5'] body {
+    --fondo-lugar: url('/departamentos/rocha/nivel-5-vertical.webp');
+  }
+}

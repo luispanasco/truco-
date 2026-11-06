@@ -27,6 +27,7 @@ import { MapaUruguay } from '../historia/MapaUruguay'
 import { MapaDepartamento } from '../historia/MapaDepartamento'
 import { PresentacionDepartamento } from '../historia/PresentacionDepartamento'
 import '../estilos-historia.css'
+import '../estilos-niveles.css'
 
 const NOMBRE_FORMATO = Object.fromEntries(FORMATOS.map(([f, , corto]) => [f, corto]))
 const NOMBRE_NIVEL = Object.fromEntries(NIVELES)
@@ -130,7 +131,7 @@ export function DepartamentoHistoria() {
   const ganado = ganados.includes(n)
   const abierto = abiertos.includes(n)
   return (
-    <main className="historia historia-lugar" data-fondo={dep.id}>
+    <main className="historia historia-lugar" data-fondo={dep.id} data-nivel={n}>
       <Volver a="/historia" texto="Mapa" />
       <header className="historia-rival">
         <span className="historia-rival-avatar" aria-hidden="true">
@@ -238,6 +239,7 @@ export function PreviaNivel() {
   // Tu turno: hasta que elegís, el globo pregunta; después dice lo que elegiste.
   const eligiendo = turno.quien === null && respuesta === null
   const quienHabla = turno.quien
+  const esDato = turno.quien !== null && turno.dato === true
   const texto = turno.quien === null ? (respuesta ?? '¿Qué le decís?') : turno.texto
   const nombreDe = (id: string | null) => (id === null ? perfil.apodo || 'Vos' : personaje(id).nombre)
   const seguir = () => setPaso((p) => p + 1)
@@ -264,7 +266,7 @@ export function PreviaNivel() {
   }
   const vos = <Figura key="vos" codigo={perfil.avatar} apodo={perfil.apodo} nombre={nombreDe(null)} habla={quienHabla === null} quieto={sinMovimiento} />
   return (
-    <main className="historia-previa" data-fondo={dep.id}>
+    <main className="historia-previa" data-fondo={dep.id} data-nivel={n}>
       <button type="button" className="historia-saltar" onClick={jugar}>
         Saltar <span aria-hidden="true">›</span>
       </button>
@@ -284,14 +286,17 @@ export function PreviaNivel() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={`${paso}-${respuesta ?? ''}`}
-            className={`historia-globo ${quienHabla === null ? 'desde-abajo' : 'desde-arriba'}`}
+            className={`historia-globo ${quienHabla === null ? 'desde-abajo' : 'desde-arriba'}${esDato ? ' dato' : ''}`}
             role="status"
             initial={sinMovimiento ? false : { opacity: 0, y: quienHabla === null ? 10 : -10, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={sinMovimiento ? undefined : { opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <span className="historia-globo-quien">{nombreDe(quienHabla)}</span>
+            <span className="historia-globo-quien">
+              {nombreDe(quienHabla)}
+              {esDato && <span className="historia-globo-dato"> · ¿Sabías que…?</span>}
+            </span>
             <p>{texto}</p>
           </motion.div>
         </AnimatePresence>

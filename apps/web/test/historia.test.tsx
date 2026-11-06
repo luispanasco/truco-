@@ -191,6 +191,18 @@ describe('los datos del modo historia', () => {
     expect(alcanzados.size).toBe(19)
   })
 
+  it('los datos de los lugares: con su fuente, en la voz del rival y marcados en la charla', () => {
+    for (const nivel of ROCHA.niveles) {
+      expect(nivel.datos, nivel.lugar).toHaveLength(2)
+      for (const d of nivel.datos!) expect(d.fuente, d.texto).toMatch(/^https:\/\//)
+      const datos = dialogoDelNivel(nivel, 1).filter((t) => t.quien !== null && t.dato)
+      expect(datos.map((t) => (t.quien === null ? '' : t.texto))).toEqual(nivel.datos!.map((d) => d.texto))
+    }
+    // Sin datos, la charla es la de siempre.
+    const sinDatos = HISTORIAS.artigas!.niveles[0]!
+    expect(dialogoDelNivel(sinDatos, 1).some((t) => t.quien !== null && t.dato)).toBe(false)
+  })
+
   it('cada lugar queda dentro de Uruguay y tiene su resumen', () => {
     for (const h of Object.values(HISTORIAS))
       for (const n of h!.niveles) {
@@ -282,6 +294,10 @@ describe('pantallas', () => {
     await screen.findByText(PERSONAJES.find((p) => p.id === 'surfista')!.saludo)
     expect(habla()).toEqual([nombre('surfista')])
     fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    // Julio cuenta algo del lugar.
+    await screen.findByText(nivel.datos![0]!.texto)
+    expect(screen.getByText(/¿Sabías que…\?/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
     await screen.findByText(nivel.frases[1]!)
     fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
     // Te toca: elegís qué decir, y lo decís vos.
@@ -293,6 +309,8 @@ describe('pantallas', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
     // Te da ánimo tu compañero, y Julio cierra.
     await screen.findByText(PERSONAJES.find((p) => p.id === 'hincha')!.saludo)
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    await screen.findByText(nivel.datos![1]!.texto)
     fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
     await screen.findByText(nivel.frases.at(-1)!)
     fireEvent.click(screen.getByRole('button', { name: '¡A jugar!' }))
@@ -436,7 +454,9 @@ describe('cooperativo', () => {
     expect(screen.getByLabelText('Lugar 2: Julio, rival del nivel')).toBeTruthy()
     // El nivel manda: no hay mesa ni reglas para cambiar.
     expect(screen.queryByRole('button', { name: /Cambiar/ })).toBeNull()
+    // De fondo, el lugar del nivel.
     expect(document.documentElement.dataset.lugar).toBe('rocha')
+    expect(document.documentElement.dataset.nivel).toBe('4')
   })
 
   it('en cooperativo, lo que te tocó lo dice el servidor (y no se pide a la API)', async () => {

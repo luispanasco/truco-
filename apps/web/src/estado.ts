@@ -336,7 +336,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         // Online, la mesa y la baraja son las del anfitrión; contra la compu, las tuyas (como siempre),
         // salvo en el modo historia, que se juega en la mesa del lugar.
         if (get().conexion?.tipo === 'online' || get().conexion?.historia) {
-          aplicarTemaDeSala(m.datos, (get().conexion?.historia ?? m.datos.historia)?.departamento)
+          aplicarTemaDeSala(m.datos, get().conexion?.historia ?? m.datos.historia ?? undefined)
         }
         set({
           sala: m.datos,
