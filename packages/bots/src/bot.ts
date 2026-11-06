@@ -147,6 +147,13 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[], sugerencia?: 
     if (canto !== 'flor') return { tipo: 'cantarFlor', jugador, canto }
   }
 
+  // Flor contra flor (sin contraflor todavía): subir o dejarla así. Achicarse no conviene nunca:
+  // comparando, el rival cobra lo mismo o menos.
+  if (pend === 'flor' && ctx.e.flor.contra.length === 0) {
+    const canto = est.cantarFlor(ctx, { contraflor: !!flor('contraflor'), alResto: !!flor('contraflorAlResto') })
+    return canto === 'flor' ? responder('quiero') : { tipo: 'cantarFlor', jugador, canto }
+  }
+
   if (pend === 'flor') {
     const r = est.responderContraflor(ctx, !!flor('contraflorAlResto'))
     // Al querer la contraflor al resto, a veces "canta la mesa", que tiene más gracia.

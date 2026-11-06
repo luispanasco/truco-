@@ -37,6 +37,8 @@ describe('canta la mesa', () => {
       estado,
       { tipo: 'cantarFlor', jugador: 'a', canto: 'flor' },
       { tipo: 'cantarFlor', jugador: 'b', canto: 'flor' },
+      // Flor contra flor: a la deja así y b sube.
+      { tipo: 'responder', jugador: 'a', respuesta: 'quiero' },
       { tipo: 'cantarFlor', jugador: 'b', canto: 'contraflorAlResto' },
       { tipo: 'responder', jugador: 'a', respuesta: 'quiero', cantaLaMesa: true },
       { tipo: 'mostrarFlor', jugador: 'a', carta: c(5, 'espada') },

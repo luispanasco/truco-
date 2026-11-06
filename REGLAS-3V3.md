@@ -55,6 +55,7 @@ Las reglas generales (piezas, jerarquía, cuenta del envido y de la flor) están
   - Si tenés flor sin cantar, no podés gritar: primero la flor, o "flor y truco" en un solo canto.
   - Si un compañero tiene flor sin cantar, nadie del equipo grita hasta que la cante.
   - Si te gritan y alguien de tu equipo tiene flor sin cantar, la canta antes de que el pie conteste.
+  - Si hay flor contra flor, primero se decide la flor (ver 7) y después el pie contesta el truco.
 
 ## 6. Envido
 
@@ -77,7 +78,11 @@ Las reglas generales (piezas, jerarquía, cuenta del envido y de la flor) están
 - **Cuándo:** es obligatoria y se canta en la primera vuelta, antes de jugar. Si no se canta, no se puede jugar.
 - **Cuando uno canta flor, la cantan todos los que la tienen**, en orden desde el mano, antes de seguir.
 - **Valor:** 3 por cada flor. Varias flores del mismo equipo suman 3 cada una.
-- **Flor contra flor sin contraflor:** gana la flor más grande, y su equipo cobra 3 por cada flor suya mayor que la mejor del rival. El otro equipo no cobra nada.
+- **Flor contra flor: se decide antes de seguir.** Cantadas todas las flores, si hay de los dos equipos, el juego se frena (también un truco gritado espera) y deciden los que tienen flor:
+  - Primero el equipo de la primera flor. Elige: contraflor, contraflor al resto, "con flor quiero" (la deja así) o "con flor me achico".
+  - Si la deja así, decide el otro equipo, con las mismas opciones.
+  - "Con flor me achico": el rival cobra 3 por cada flor suya y el que se achica no cobra nada.
+  - Si los dos la dejan así, ya no se puede echar la contra: las flores se comparan al final. Gana la flor más grande, y su equipo cobra 3 por cada flor suya mayor que la mejor del rival. El otro equipo no cobra nada.
 - **Contraflor y contraflor al resto:**
   - Solo las canta y las contesta alguien que tiene flor ("con flor quiero" / "con flor me achico"). Los demás esperan.
   - Si no la quieren, el que la cantó cobra 3 por cada flor de su equipo más 1.
@@ -204,6 +209,18 @@ Cada una dice qué hacer y qué tiene que pasar. Salvo que diga otra cosa: contr
 ### Ojeo
 
 57. **Bloqueo.** Mientras ojeás no aparecen el tanto, los cantos ni el mazo; "Ver todas" los muestra.
+
+### Flor contra flor (agregadas después)
+
+58. **Frena todo.** Cantadas las flores de los dos equipos, no se puede jugar carta, gritar ni contestar un truco hasta que se decida la flor.
+59. **En orden.** Decide primero el equipo de la primera flor (sus jugadores con flor) y, si la deja así, el otro. El otro equipo no puede echar la contra mientras decide el primero.
+60. **Me achico.** "Con flor me achico" le da al rival 3 por cada flor suya; el que se achica no cobra su flor.
+61. **Cerrada.** Si los dos equipos la dejan así, nadie puede echar la contra después.
+
+### Mesa del modo historia
+
+62. **Mazo y paño del lugar.** En cada nivel se juega con la baraja y la mesa del departamento (las que se ganan en el último nivel), aunque hayas elegido otras.
+63. **Muestra a la vista.** La muestra está siempre arriba a la izquierda, junto al tanteo, además de en el mazo.
 
 ---
 

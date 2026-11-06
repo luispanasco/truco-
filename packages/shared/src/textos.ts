@@ -1,4 +1,4 @@
-import { nombreCarta, type Accion, type Evento, type QueManda, type VistaPartida } from '@truco/engine'
+import { florPorDecidir, nombreCarta, type Accion, type Evento, type QueManda, type VistaPartida } from '@truco/engine'
 
 export const TEXTO_CANTO: Record<string, string> = {
   truco: 'Truco',
@@ -45,10 +45,11 @@ export function describirAccion(vista: VistaPartida, a: Accion): string {
     case 'cantarFlor':
       return a.yTruco ? 'Flor y truco' : TEXTO_CANTO[a.canto]!
     case 'responder': {
-      // A la contraflor se contesta "con flor quiero" o "con flor me achico".
+      // A la contraflor (o a la flor del rival, en flor contra flor) se contesta "con flor quiero" o
+      // "con flor me achico".
       const e = vista.mano.enfrentamientos[vista.mano.actual]!
       if (a.cantaLaMesa) return 'Quiero, ¡canta la mesa!'
-      if (e.flor.estado === 'pendiente') return a.respuesta === 'quiero' ? 'Con flor quiero' : 'Con flor me achico'
+      if (e.flor.estado === 'pendiente' || florPorDecidir(e) !== null) return a.respuesta === 'quiero' ? 'Con flor quiero' : 'Con flor me achico'
       return a.respuesta === 'quiero' ? 'Quiero' : 'No quiero'
     }
     case 'declararTanto':

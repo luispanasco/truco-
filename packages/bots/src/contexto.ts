@@ -1,6 +1,7 @@
 import {
   crearBaraja,
   equipoDe,
+  florPorDecidir,
   fuerza,
   mismaCarta,
   siguienteAleatorio,
@@ -103,7 +104,7 @@ export function memo<T>(ctx: Contexto, clave: string, f: () => T): T {
 export type PendienteVista = 'flor' | 'envido' | 'declaracion' | 'truco'
 
 export function pendiente(e: VistaEnfrentamiento): PendienteVista | null {
-  if (e.flor.estado === 'pendiente') return 'flor'
+  if (e.flor.estado === 'pendiente' || florPorDecidir(e) !== null) return 'flor'
   if (e.envido.estado === 'pendiente') return 'envido'
   if (e.envido.estado === 'declarando') return 'declaracion'
   if (e.truco.pendiente) return 'truco'

@@ -170,8 +170,29 @@ export function siguienteDeclarante(e: Enfrentamiento): number | null {
 /** Qué está esperando respuesta en el enfrentamiento, de lo más reciente a lo más viejo. */
 export type Pendiente = 'flor' | 'envido' | 'declaracion' | 'truco'
 
+/** Lo justo de un enfrentamiento (del estado o de la vista) para saber si hay una flor por decidir. */
+interface FlorEnJuego {
+  flor: { estado: Enfrentamiento['flor']['estado']; contra: readonly unknown[]; cantadas: readonly { asiento: number; equipo: Equipo }[]; pasaron?: Equipo[] }
+  retirados: readonly number[]
+}
+
+/**
+ * Flor contra flor: cantadas las flores de los dos equipos, antes de seguir (y antes de contestar
+ * un truco) se decide si se sube con contraflor, si uno se achica o si se deja así y se comparan al
+ * final. Decide primero el equipo de la primera flor; si la deja así, el otro. Devuelve el equipo
+ * que tiene que decidir, o null si no hay nada que decidir.
+ */
+export function florPorDecidir(e: FlorEnJuego): Equipo | null {
+  const f = e.flor
+  if (f.estado !== 'libre' || f.contra.length > 0 || f.cantadas.length === 0) return null
+  const conFlor = (eq: Equipo) => f.cantadas.some((x) => x.equipo === eq && !e.retirados.includes(x.asiento))
+  if (!conFlor(0) || !conFlor(1)) return null
+  const primero = f.cantadas[0]!.equipo
+  return ([primero, otroEquipo(primero)] as const).find((eq) => !(f.pasaron ?? []).includes(eq)) ?? null
+}
+
 export function pendienteActual(e: Enfrentamiento): Pendiente | null {
-  if (e.flor.estado === 'pendiente') return 'flor'
+  if (e.flor.estado === 'pendiente' || florPorDecidir(e) !== null) return 'flor'
   if (e.envido.estado === 'pendiente') return 'envido'
   if (e.envido.estado === 'declarando') return 'declaracion'
   if (e.truco.pendiente) return 'truco'
@@ -182,6 +203,8 @@ export function pendienteActual(e: Enfrentamiento): Pendiente | null {
 export function equipoQueCanto(e: Enfrentamiento, p: Exclude<Pendiente, 'declaracion'>): Equipo {
   if (p === 'truco') return (e.truco.pendiente as NonNullable<typeof e.truco.pendiente>).equipo
   if (p === 'envido') return ultimo(e.envido.cantos).equipo
+  // Flor contra flor sin contraflor: "espera" el equipo que no decide.
+  if (e.flor.contra.length === 0) return otroEquipo(florPorDecidir(e)!)
   return ultimo(e.flor.contra).equipo
 }
 

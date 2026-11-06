@@ -5,6 +5,7 @@ import { cortarYRepartir, nuevoEnfrentamiento, participantesDuelo, repartir } fr
 import {
   equipoDe,
   equipoQueCanto,
+  florPorDecidir,
   liderDe,
   esBotMandado,
   mejorDeclaracion,
@@ -98,7 +99,7 @@ export function florSinCantarDelEquipo(estado: EstadoPartida, e: Enfrentamiento,
 }
 
 const MENSAJE_PENDIENTE: Record<Pendiente, string> = {
-  flor: 'Hay una contraflor sin responder',
+  flor: 'Primero se resuelve la flor',
   envido: 'Hay un envido sin responder',
   declaracion: 'Se están declarando los tantos',
   truco: 'Hay un truco sin responder',
@@ -256,6 +257,15 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       }
       if (f.estado === 'pendiente') return MENSAJE_PENDIENTE.flor
       if (f.estado === 'noQuerida') return 'La flor ya se resolvió'
+      // Flor contra flor: decide un equipo por vez, con los que tienen flor (aunque ya hayan jugado).
+      const decide = florPorDecidir(e)
+      if (decide !== null && accion.canto !== 'flor') {
+        if (accion.yTruco) return '"Flor y truco" va con tu flor'
+        if (decide !== eq) return 'Decide el otro equipo'
+        if (!cantoFlor) return 'Decide el que tiene flor'
+        return null
+      }
+      if (accion.canto !== 'flor' && (f.pasaron ?? []).length > 0) return 'La flor ya se decidió'
       if (!enPrimera || yaJugoPrimera) return 'La flor se canta en la primera vuelta, antes de jugar'
       if (accion.canto === 'flor' && cantoFlor) return 'Ya cantaste flor'
       if (!cantoFlor) {
@@ -294,7 +304,7 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       // A la contraflor contesta solo el que tiene flor; los demás esperan.
       if (pend === 'flor' && !cantoFlor) return 'Contesta el que tiene flor'
       if (accion.cantaLaMesa) {
-        if (pend !== 'flor' || accion.respuesta !== 'quiero' || ultimo(e.flor.contra).canto !== 'contraflorAlResto') {
+        if (pend !== 'flor' || accion.respuesta !== 'quiero' || e.flor.contra.at(-1)?.canto !== 'contraflorAlResto') {
           return '"Canta la mesa" es al querer la contraflor al resto'
         }
       }
@@ -502,6 +512,8 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
           e.envido.estado = 'noQuerido'
           e.envido.ganador = ultimo(e.envido.cantos).equipo
         }
+      } else if (e.flor.contra.length === 0) {
+        decidirFlor(e, eq, quiere)
       } else {
         rechazarOQuererFlor(estado, e, quiere, accion.cantaLaMesa === true, eventos)
       }
@@ -677,6 +689,22 @@ function sePodiaTocar(e: Enfrentamiento): boolean {
   if (e.vueltas.length !== 1 || e.flor.cantadas.length > 0) return false
   if (e.truco.valor !== 1) return false
   return e.truco.pendiente === null || e.truco.pendiente.nivel === 2
+}
+
+/**
+ * Flor contra flor, sin contraflor: "con flor quiero" la deja así (se comparan al final de la mano,
+ * y si era el primer equipo, decide el otro); "con flor me achico" le da al rival 3 por cada flor
+ * suya, y el que se achica no cobra nada.
+ */
+function decidirFlor(e: Enfrentamiento, eq: Equipo, quiere: boolean) {
+  const f = e.flor
+  if (quiere) {
+    f.pasaron = [...(f.pasaron ?? []), eq]
+    return
+  }
+  const rival = otroEquipo(eq)
+  f.estado = 'noQuerida'
+  f.noQuerida = { equipo: rival, puntos: 3 * f.cantadas.filter((x) => x.equipo === rival).length }
 }
 
 function rechazarOQuererFlor(estado: EstadoPartida, e: Enfrentamiento, quiere: boolean, cantaLaMesa: boolean, eventos: Evento[]) {

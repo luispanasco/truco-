@@ -44,7 +44,8 @@ export function cartasDeLaMano(page: Page): Locator {
 }
 
 /** Respuestas que el jugador automático da siempre que aparecen (el resto de los cantos los ignora). */
-const RESPUESTAS = /^(Quiero|Decir mi tanto: \d+|Son buenas|Flor|No pedir ver)$/
+// "Con flor quiero": en flor contra flor, la deja así (y a la contraflor, la quiere).
+const RESPUESTAS = /^(Quiero|Decir mi tanto: \d+|Son buenas|Flor|Con flor quiero|No pedir ver)$/
 
 /**
  * Si le toca, hace algo razonable: abre la mano, contesta que quiere o juega una carta.

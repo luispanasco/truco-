@@ -105,6 +105,11 @@ export interface EstadoFlor {
   cantadas: FlorCantada[]
   /** Cadena de contraflor / contraflor al resto. */
   contra: CantoHecho<'contraflor' | 'contraflorAlResto'>[]
+  /**
+   * Flor contra flor: los equipos que ya decidieron dejarla así ("con flor quiero"), sin subir.
+   * Decide primero el equipo de la primera flor y después el otro (ver `florPorDecidir`).
+   */
+  pasaron?: Equipo[]
   noQuerida: { equipo: Equipo; puntos: number } | null
   /** Querida la contraflor, se compara en el momento (como el envido): el equipo que la ganó. */
   ganador: Equipo | null

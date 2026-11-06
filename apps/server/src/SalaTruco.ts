@@ -30,6 +30,7 @@ import {
   CharlaDeMesa,
   elencoDelNivel,
   mesaDeDepartamento,
+  barajaDeDepartamento,
   nivelDeHistoria,
   type NivelHistoriaJugado,
   BARAJA_DEFAULT,
@@ -1147,9 +1148,9 @@ export class SalaTruco extends Room {
       cartasJugadas: this.cartasJugadas,
       tirarReyes: this.tirarReyes,
       voz: this.conVoz(),
-      // En el modo historia, la mesa es la del lugar.
+      // En el modo historia, la mesa y la baraja son las del lugar (las que se ganan al final).
       mesa: (this.historia && mesaDeDepartamento(this.historia.departamento)) || (this.delAnfitrion()?.mesa ?? MESA_DEFAULT),
-      baraja: this.delAnfitrion()?.baraja ?? BARAJA_DEFAULT,
+      baraja: (this.historia && barajaDeDepartamento(this.historia.departamento)) || (this.delAnfitrion()?.baraja ?? BARAJA_DEFAULT),
       chatEquipo: this.chatEquipo(),
       lugares: this.lugares.map((l) => ({
         asiento: l.asiento,

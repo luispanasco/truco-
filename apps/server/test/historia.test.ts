@@ -117,7 +117,7 @@ describe('modo historia en cooperativo', () => {
     await a.esperar(() => a.sala?.yo === 0)
     const sala = a.sala!
     // El nivel manda: 3v3, muy difícil, a 30, en la mesa de Rocha (aunque se pida otra cosa).
-    expect([sala.formato, sala.nivelBots, sala.config.puntosPartida, sala.mesa]).toEqual(['3v3', 'muyDificil', 30, 'rocha'])
+    expect([sala.formato, sala.nivelBots, sala.config.puntosPartida, sala.mesa, sala.baraja]).toEqual(['3v3', 'muyDificil', 30, 'rocha', 'costa'])
     expect(sala.historia).toEqual({ departamento: 'rocha', nivel: 4 })
 
     const b = await Jugador.unirse(colyseus, sala.codigo!, undefined, 'Amigo', { token: amigo.token })

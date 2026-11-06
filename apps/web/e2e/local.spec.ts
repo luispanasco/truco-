@@ -22,6 +22,8 @@ test('una partida entera contra la compu, de la mesa al cartel final', async ({ 
   await expect(page).toHaveURL(/\/mesa$/)
   await expect(page.getByLabel('Mazo y muestra')).toBeVisible()
   await expect(page.getByText('Bot Pepe').first()).toBeVisible()
+  // La muestra, también fija arriba a la izquierda, junto al tanteo.
+  await expect(page.locator('.marcador').getByLabel(/^Muestra: /)).toBeVisible()
 
   const fin = finDePartida(page)
   const jugadas = await jugarHasta([page], () => fin.isVisible(), { falta: true, tiempoMs: 150_000 })

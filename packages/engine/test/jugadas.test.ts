@@ -99,7 +99,14 @@ describe('flor y truco', () => {
     const p = partidaCon(['7e 6e 5e', '1b 2b 4b'], '3c')
     const estado = aplicar(p, { tipo: 'cantarFlor', jugador: 'a', canto: 'flor', yTruco: true })
     rechaza(estado, ['quiero', 'b'], 'Tenés flor')
-    jugar(estado, ['flor', 'b'], ['quiero', 'b'])
+    // Flor contra flor va antes que el truco: primero decide a, después b, y recién ahí b contesta el truco.
+    const conLasDos = jugar(estado, ['flor', 'b']).estado
+    expect(esperandoA(conLasDos)).toEqual([0])
+    rechaza(conLasDos, ['quiero', 'b'], 'Esperá')
+    const r = jugar(conLasDos, ['quiero', 'a'], ['quiero', 'b'])
+    expect(enfrentamientoActual(r.estado).flor.pasaron).toEqual([0, 1])
+    expect(esperandoA(r.estado)).toEqual([1])
+    expect(enfrentamientoActual(jugar(r.estado, ['quiero', 'b']).estado).truco.valor).toBe(2)
   })
 
   it('solo con flor y en tu turno', () => {

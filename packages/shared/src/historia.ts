@@ -12,7 +12,7 @@ import type { Formato } from '@truco/engine'
 import type { Nivel } from '@truco/bots'
 import { buscarItem, idBaraja, idMesa, idPieza } from './tienda'
 import { PERSONAJES, piezaPorNombre, type Personaje } from './personajes'
-import { BARAJAS } from './barajas'
+import { BARAJAS, type IdBaraja } from './barajas'
 import { MESAS, type IdMesa } from './mesas'
 import type { CapaAvatar } from './avatar'
 import { HISTORIAS_DEPARTAMENTOS, monedasDeRecompensa } from './historias'
@@ -256,6 +256,15 @@ export function elencoDelNivel(nivel: NivelHistoria): Personaje[] {
 /** La mesa del departamento (su paño, que también es la recompensa del último nivel), si ya existe. */
 export function mesaDeDepartamento(departamento: IdDepartamento): IdMesa | undefined {
   return MESAS.find((m) => m.id === departamento)?.id
+}
+
+/**
+ * La baraja del departamento: la que se gana en su último nivel. Todos sus niveles se juegan con
+ * ella (como en la mesa del lugar): la vas conociendo y al final te la llevás.
+ */
+export function barajaDeDepartamento(departamento: IdDepartamento): IdBaraja | undefined {
+  const premio = HISTORIAS[departamento]?.niveles.at(-1)?.recompensas.find((r) => r.startsWith('baraja:'))
+  return BARAJAS.find((b) => `baraja:${b.id}` === premio)?.id
 }
 
 /** Cómo se llama una recompensa: la pieza del avatar, "Baraja …", "Mesa …" o "150 monedas". */

@@ -8,6 +8,7 @@ import {
   CATALOGO_TIENDA,
   DEPARTAMENTOS,
   DEPARTAMENTOS_PUBLICADOS,
+  barajaDeDepartamento,
   SENIAS_DEFAULT,
   type InfoSala,
   departamentoAbierto,
@@ -370,7 +371,7 @@ describe('la portada en Jugar', () => {
 })
 
 describe('la partida de un nivel', () => {
-  it('sienta al elenco del nivel en su lugar, en la mesa de Rocha, a los puntos del nivel', async () => {
+  it('sienta al elenco del nivel en su lugar, en la mesa y con la baraja de Rocha, a los puntos del nivel', async () => {
     const sala = await new Promise<Extract<MensajeServidor, { tipo: 'sala' }>['datos']>((resolve) => {
       const c = conexionHistoria(leerPerfil(), { departamento: 'rocha', nivel: 4 })
       c.escuchar((m) => {
@@ -382,6 +383,9 @@ describe('la partida de un nivel', () => {
     const elenco = elencoDelNivel(ROCHA.niveles[3]!)
     expect(sala.lugares.slice(1).map((l) => l.apodo)).toEqual(elenco.map((p) => p.nombre))
     expect(sala.mesa).toBe('rocha')
+    // La baraja del departamento (la que se gana al final), aunque elegiste otra.
+    expect(sala.baraja).toBe('costa')
+    expect(barajaDeDepartamento('artigas')).toBe('artigas')
     expect(sala.formato).toBe('3v3')
     expect(sala.config.puntosPartida).toBe(30)
     expect(sala.nivelBots).toBe('muyDificil')

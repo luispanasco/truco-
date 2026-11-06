@@ -7,9 +7,9 @@ import './estilos-niveles.css'
 
 /**
  * En una sala online, la mesa y la baraja son las del anfitrión: todos ven lo mismo. El servidor
- * ya las validó, así que se aplican aunque sean de la tienda. En el modo historia, la mesa es la
- * del lugar (que todavía no ganaste) y de fondo va el lugar: el del nivel si tiene, si no el del
- * departamento.
+ * ya las validó, así que se aplican aunque sean de la tienda. En el modo historia, la mesa y la
+ * baraja son las del lugar (que todavía no ganaste) y de fondo va el lugar: el del nivel si tiene,
+ * si no el del departamento.
  */
 export function aplicarTemaDeSala(sala: Pick<InfoSala, 'mesa' | 'baraja'>, lugar?: { departamento: string; nivel: number }) {
   aplicarMesa(sala.mesa, TODO_PERMITIDO)

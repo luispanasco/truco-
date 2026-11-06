@@ -1735,3 +1735,18 @@ Pedido: subir todo a producción, con el modo historia disponible solo en Rocha.
   - Servidor en Fly (`fly deploy --app truco-uy --ha=false`), con `ADMINS` = los dos mails de admin. Aplica las migraciones 11 y 12. `/api/estado` responde bien.
   - Web: `develop` pasó a `main` (antes se juntaron los dos commits de `wrangler.jsonc` que estaban solo en main; queda la versión de develop). Cloudflare publica solo.
   - Se había colado `apps/web/public/barajas.zip` en un commit de develop: se sacó del repo antes de pasar a main (el archivo sigue en el disco, sin trackear).
+
+## Flor contra flor, la muestra fija y el mazo del lugar — 2026-11-06
+
+Reportes del usuario jugando 3v3: (1) dos compañeros cantaron flor (uno con "flor y truco") y un rival también, y el juego pidió contestar el truco antes de decidir la flor; (2) con flor del rival y de un compañero no se decidió nada, y el compañero recién echó la contra en su turno de jugar. Además, dos pedidos de interfaz: la muestra siempre a la vista arriba a la izquierda, y jugar cada nivel con el mazo del departamento.
+
+- **Flor contra flor se decide antes de seguir** (motor, `florPorDecidir` en reglas.ts; reglas elegidas por el usuario):
+  - Cantadas todas las flores, si hay de los dos equipos, el juego se frena: no se juega carta, no se grita y un truco gritado espera (`pendienteActual` da 'flor').
+  - Decide primero el equipo de la primera flor, con sus jugadores que tienen flor: contraflor, contraflor al resto, "con flor quiero" (la deja así) o "con flor me achico". Si la deja así, decide el otro (`EstadoFlor.pasaron`).
+  - "Con flor me achico": el rival cobra 3 por cada flor suya y el que se achica no cobra nada.
+  - Los dos la dejan así: ya no se puede echar la contra ("La flor ya se decidió") y se comparan al final, como antes.
+  - Bots: en la decisión suben con su estrategia de contraflor o la dejan así (achicarse nunca les conviene).
+  - Textos: "Con flor quiero" / "Con flor me achico" también en la decisión. REGLAS-3V3.md: sección 7 y situaciones 58 a 63.
+- **La muestra fija:** una carta chica con "Muestra", a la izquierda del tanteo, durante toda la mano (además de la del mazo).
+- **El mazo del lugar:** cada nivel se juega con la baraja del departamento (`barajaDeDepartamento`: la que se gana en su último nivel), como ya pasaba con la mesa. Local y online.
+- **Tests:** motor 182 (la decisión, achicarse, cerrada y el caso de 3v3), bots 25, server 127, web 367 y los 14 de punta a punta (el jugador automático de las pruebas contesta "Con flor quiero").

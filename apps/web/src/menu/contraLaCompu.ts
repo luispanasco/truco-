@@ -1,4 +1,4 @@
-import { mesaDeDepartamento, nivelDeHistoria, PESCAR_SENIAS_DISPONIBLE } from '@truco/shared'
+import { barajaDeDepartamento, mesaDeDepartamento, nivelDeHistoria, PESCAR_SENIAS_DISPONIBLE } from '@truco/shared'
 import { ConexionLocal, type OpcionesLocal } from '../conexion/local'
 import type { NivelJugado } from '../conexion/tipos'
 import { useCuenta } from '../cuenta/cuenta'
@@ -39,7 +39,8 @@ function conexionContraLaCompuOpciones(perfil: Perfil): OpcionesLocal {
 
 /**
  * Un nivel del modo historia: el formato, la dificultad y los puntos son los del nivel; los bots,
- * su elenco; la mesa, la del lugar. Lo demás (ayudas, señas, baraja) es lo tuyo. Sin tirar reyes,
+ * su elenco; la mesa y la baraja, las del lugar (las que se ganan al final). Lo demás (ayudas,
+ * señas) es lo tuyo. Sin tirar reyes,
  * así cada personaje queda en su lugar.
  */
 export function conexionHistoria(perfil: Perfil, jugado: NivelJugado): ConexionLocal {
@@ -53,6 +54,7 @@ export function conexionHistoria(perfil: Perfil, jugado: NivelJugado): ConexionL
     config: { ...base.config, picaPica: false, puntosPartida: nivel.puntos },
     tirarReyes: 'no',
     mesa: mesaDeDepartamento(jugado.departamento) ?? base.mesa,
+    baraja: barajaDeDepartamento(jugado.departamento) ?? base.baraja,
     personajes: false,
     historia: jugado,
   })

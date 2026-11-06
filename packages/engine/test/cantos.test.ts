@@ -314,6 +314,9 @@ describe('flor', () => {
       conFlor('1b 2b 3b'),
       ['flor', 'a'],
       ['flor', 'b'],
+      // Flor contra flor: los dos la dejan así ("con flor quiero").
+      ['quiero', 'a'],
+      ['quiero', 'b'],
       ['jugar', 'a', '7e'],
       ['jugar', 'b', '1b'],
       ['jugar', 'b', '2b'],
@@ -324,9 +327,43 @@ describe('flor', () => {
   })
 
   it('flores iguales: gana el mano', () => {
-    const { estado } = jugar(conFlor('7b 6b 5b'), ['flor', 'a'], ['flor', 'b'], ['jugar', 'a', '7e'], ['jugar', 'b', '7b'], ['jugar', 'a', '6e'], ['jugar', 'b', '6b'])
+    const { estado } = jugar(conFlor('7b 6b 5b'), ['flor', 'a'], ['flor', 'b'], ['quiero', 'a'], ['quiero', 'b'], ['jugar', 'a', '7e'], ['jugar', 'b', '7b'], ['jugar', 'a', '6e'], ['jugar', 'b', '6b'])
     expect(estado.mano.numero).toBe(2)
     expect(estado.puntos).toEqual([4, 0])
+  })
+
+  describe('flor contra flor: se decide antes de seguir', () => {
+    it('"con flor me achico": el rival cobra 3 por cada flor suya y el que se achica, nada', () => {
+      const { estado } = jugar(conFlor('7b 6b 4b'), ['flor', 'a'], ['flor', 'b'], ['noQuiero', 'a'], ['mazo', 'b'])
+      // b cobra su flor (aunque a tenía más) y a, el truco.
+      expect(estado.puntos).toEqual([1, 3])
+    })
+
+    it('si los dos la dejan así, ya no se puede echar la contra', () => {
+      const { estado } = jugar(conFlor('7b 6b 4b'), ['flor', 'a'], ['flor', 'b'], ['quiero', 'a'], ['quiero', 'b'])
+      rechaza(estado, ['contraflor', 'b'], 'La flor ya se decidió')
+      rechaza(estado, ['contraflor', 'a'], 'La flor ya se decidió')
+    })
+
+    it('3v3: frena todo hasta que se decide, primero el equipo de la primera flor y después el otro', () => {
+      // a y c (equipo 0) y d (equipo 1) tienen flor: a 38, c 37, d 37.
+      const p = partidaCon(['7e 6e 5e', '1e 2o 3b', '7b 6b 4b', '7o 6o 4o', '1b 2e 12o', '1o 3e 12b'], '3c', { picaPica: false })
+      let { estado } = jugar(p, ['flor', 'a'], ['flor', 'c'], ['flor', 'd'])
+      expect(esperandoA(estado)).toEqual([0, 2])
+      rechaza(estado, ['jugar', 'a', '7e'], 'Primero se resuelve la flor')
+      rechaza(estado, ['truco', 'a'], 'Primero se resuelve la flor')
+      rechaza(estado, ['contraflor', 'd'], 'Decide el otro equipo')
+      rechaza(estado, ['quiero', 'e'], 'Contesta el que tiene flor')
+      // c la deja así: ahora decide el otro equipo, que sube.
+      ;({ estado } = jugar(estado, ['quiero', 'c']))
+      expect(esperandoA(estado)).toEqual([3])
+      ;({ estado } = jugar(estado, ['contraflor', 'd']))
+      expect(esperandoA(estado)).toEqual([0, 2])
+      ;({ estado } = jugar(estado, ['quiero', 'a']))
+      expect(enfrentamientoActual(estado).flor.ganador).toBe(0)
+      // Resuelta la flor, sigue el juego: le toca al mano.
+      expect(esperandoA(estado)).toEqual([0])
+    })
   })
 
   it('la flor va primero que el truco: el que tiene flor la canta antes de contestar', () => {
@@ -343,7 +380,8 @@ describe('flor', () => {
   })
 
   describe('contraflor', () => {
-    const antesDeContra = () => jugar(conFlor('7b 6b 4b'), ['flor', 'a'], ['flor', 'b'], ['jugar', 'a', '7e']).estado
+    // a la deja así; decide b.
+    const antesDeContra = () => jugar(conFlor('7b 6b 4b'), ['flor', 'a'], ['flor', 'b'], ['quiero', 'a']).estado
 
     it('querida: el de mayor flor gana el valor de la contraflor', () => {
       const { estado } = jugar(antesDeContra(), ['contraflor', 'b'], ['quiero', 'a'], ['mazo', 'b'])
@@ -377,7 +415,8 @@ describe('flor', () => {
     })
 
     it('"canta la mesa": cada uno tira sus cartas de a una, en orden, y la suma se ve; la ya jugada cuenta', () => {
-      const p = antesDeContra()
+      // Sin flor obligatoria, b canta la suya después de que a jugó.
+      const p = jugar(conFlor('7b 6b 4b', { florObligatoria: false }), ['flor', 'a'], ['jugar', 'a', '7e'], ['flor', 'b'], ['quiero', 'a']).estado
       p.puntos = [10, 20]
       // a ya jugó el 7 de espadas en la primera: está a la vista.
       let { estado } = jugar(p, ['contraflorAlResto', 'b'])
@@ -406,10 +445,10 @@ describe('flor', () => {
     it('a la contraflor contesta solo el que tiene flor', () => {
       // 2v2: a y b tienen flor; c (compañero de a) no.
       const q = partidaCon(['7e 6e 5e', '7b 6b 4b', '1o 2e 3b', '1b 5o 3e'], '12c')
-      const { estado } = jugar(q, ['flor', 'a'], ['flor', 'b'], ['contraflor', 'b'])
+      const { estado } = jugar(q, ['flor', 'a'], ['flor', 'b'], ['quiero', 'a'], ['contraflor', 'b'])
       expect(esperandoA(estado)).toEqual([0])
       rechaza(estado, ['quiero', 'c'], 'Contesta el que tiene flor')
-      rechaza(jugar(q, ['flor', 'a'], ['flor', 'b'], ['contraflor', 'b']).estado, ['contraflorAlResto', 'c'], 'Contesta el que tiene flor')
+      rechaza(estado, ['contraflorAlResto', 'c'], 'Contesta el que tiene flor')
     })
 
     it('no se puede cantar contraflor sin flor del rival, ni subir más allá del resto', () => {
@@ -444,6 +483,12 @@ describe('flor', () => {
     ;({ estado } = jugar(estado, ['flor', 'b']))
     expect(esperandoA(estado)).toEqual([3])
     ;({ estado } = jugar(estado, ['flor', 'd']))
+    // Flor contra flor: decide primero el de la primera flor; después, los del otro equipo con flor.
+    expect(esperandoA(estado)).toEqual([0])
+    rechaza(estado, ['jugar', 'a', '7e'], 'Primero se resuelve la flor')
+    ;({ estado } = jugar(estado, ['quiero', 'a']))
+    expect(esperandoA(estado)).toEqual([1, 3])
+    ;({ estado } = jugar(estado, ['quiero', 'd']))
     expect(esperandoA(estado)).toEqual([0])
     // Gana la flor de a (38): su equipo cobra 3 por su única flor; las dos del rival no cobran.
     ;({ estado } = jugar(estado, ['jugar', 'a', '7e'], ['truco', 'b'], ['noQuiero', 'c']))
@@ -453,17 +498,17 @@ describe('flor', () => {
   it('en 2v2 con flor en los dos equipos, el ganador suma 3 por cada flor suya mayor que la mejor del rival', () => {
     // a: 37 (equipo 0); b: 38 y d: 34 (equipo 1). Gana b, pero la de d no le gana a la de a: cobra 3.
     const p = partidaCon(['7e 6e 4e', '7b 6b 5b', '1e 4o 12b', '7o 6o 1o'], '3c')
-    const { estado } = jugar(p, ['flor', 'a'], ['flor', 'b'], ['flor', 'd'], ['truco', 'a'], ['noQuiero', 'd'])
+    const { estado } = jugar(p, ['flor', 'a'], ['flor', 'b'], ['flor', 'd'], ['quiero', 'a'], ['quiero', 'b'], ['truco', 'a'], ['noQuiero', 'd'])
     expect(estado.puntos).toEqual([1, 3])
     // a: 38 y c: 37 (equipo 0); d: 33 (equipo 1). Las dos le ganan a la de d: el equipo 0 cobra 6.
     const p2 = partidaCon(['7e 6e 5e', '1b 2e 3o', '7o 6o 4o', '7b 6b 2b'], '3c')
-    const r2 = jugar(p2, ['flor', 'd'], ['flor', 'a'], ['flor', 'c'], ['truco', 'a'], ['noQuiero', 'd'])
+    const r2 = jugar(p2, ['flor', 'd'], ['flor', 'a'], ['flor', 'c'], ['quiero', 'd'], ['quiero', 'a'], ['truco', 'a'], ['noQuiero', 'd'])
     expect(r2.estado.puntos).toEqual([3 + 3 + 1, 0])
   })
 
   it('si el rival se va al mazo, pierde la comparación y el otro cobra todas sus flores', () => {
     const p = partidaCon(['7e 6e 4e', '7b 6b 5b', '1e 4o 12b', '7o 6o 1o'], '3c')
-    const { estado } = jugar(p, ['flor', 'a'], ['flor', 'b'], ['flor', 'd'], ['jugar', 'a', '7e'], ['mazo', 'c'])
+    const { estado } = jugar(p, ['flor', 'a'], ['flor', 'b'], ['flor', 'd'], ['quiero', 'a'], ['quiero', 'b'], ['jugar', 'a', '7e'], ['mazo', 'c'])
     expect(estado.puntos).toEqual([0, 3 + 3 + 1])
   })
 
@@ -521,9 +566,10 @@ describe('flor', () => {
       // b tiene flor de 27: pierde con la de 38.
       const p = conFlor('1o 2o 4o')
       p.puntos = [27, 0]
-      const { estado } = jugar(p, ['flor', 'a'], ['flor', 'b'], ['jugar', 'a', '7e'])
+      const { estado } = jugar(p, ['flor', 'a'], ['flor', 'b'], ['quiero', 'a'])
       expect(estado.ganador).toBeNull()
-      const fin = jugar(estado, ['jugar', 'b', '1o'])
+      // Cuando b también la deja así, ya nadie puede echar la contra.
+      const fin = jugar(estado, ['quiero', 'b'])
       expect(fin.estado.ganador).toBe(0)
       expect(porTanto(fin.eventos)).toBe(true)
     })

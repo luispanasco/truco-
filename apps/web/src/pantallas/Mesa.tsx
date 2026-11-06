@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { mismaCarta, type Accion, type Carta as TCarta } from '@truco/engine'
+import { mismaCarta, nombreCarta, type Accion, type Carta as TCarta } from '@truco/engine'
 import { envidoParaSenia, seniaDeCarta, seniasDeMano, type Senia } from '@truco/bots'
 import { ESPERA_PEDIR_SENIAS_MS, MOTIVO_SENIA_TARDE, MOTIVO_SENIA_TEMPRANO, yaJugoEnLaMano } from '@truco/shared'
 import { BotonSonido } from '../componentes/AjustesSonido'
@@ -12,6 +12,7 @@ import { BotonPasar, BotonPie, PanelPie } from '../componentes/Pie'
 import { TiradaDeReyes, TiradaEnMesa } from '../componentes/Reyes'
 import { Asiento, Avatar, avatarDeLugar, MarcaMano } from '../componentes/Asiento'
 import { CartasEnMesa } from '../componentes/CartasEnMesa'
+import { Carta } from '../componentes/Carta'
 import { CantaLaMesa } from '../componentes/CantaLaMesa'
 import { BotonChat, PanelChat, useNoLeidos } from '../componentes/Chat'
 import { AnilloVoz, ControlesVoz } from '../componentes/ControlesVoz'
@@ -300,6 +301,11 @@ export function Mesa() {
   return (
     <div className={`pantalla-mesa n-${n}${vistaMesa === 'sentados' ? ' mesa-bustos' : ''}${perspectiva ? ' mesa-perspectiva' : ''}`}>
       <header className="marcador">
+        {/* La muestra, siempre a la vista arriba a la izquierda (en el mazo a veces se pierde). */}
+        <div className="marcador-muestra" aria-label={muestra && !repartiendo ? `Muestra: ${nombreCarta(muestra)}` : 'Muestra'}>
+          <small aria-hidden="true">Muestra</small>
+          {muestra && !repartiendo ? <Carta carta={muestra} tam="chica" /> : <span className="marcador-muestra-hueco" aria-hidden="true" />}
+        </div>
         <div className="marcador-filas">
           <div className="marcador-fila nosotros">
             <span className="marcador-nombre">{nombreNuestro}</span>
