@@ -7,14 +7,17 @@ import { guardarPerfil, leerPerfil } from './perfil'
  * Barajas para elegir (es solo cosmético): la propia, dibujada en SVG por código, tres antiguas
  * de dominio público en imágenes WebP de 400 × 600 (la clásica de Heraclio Fournier de 1878, "El
  * Cid" de 1888 y la de Grimaud de 1860; ver los scripts que las generan, scripts/baraja-fournier.py
- * y scripts/baraja-gallica.py) y cuatro diseños propios, también en WebP de 400 × 600: Oriental,
- * Costa Uruguaya, Colonial y Grabado Nocturno. Los créditos, en el CREDITOS.md de cada carpeta. El catálogo
+ * y scripts/baraja-gallica.py) y los diseños propios, también en WebP de 400 × 600: Oriental,
+ * Costa Uruguaya, Colonial, Grabado Nocturno y una por departamento. Los créditos, en el CREDITOS.md de cada carpeta. El catálogo
  * (ids y precios) está en @truco/shared: en una sala, la baraja la pone el anfitrión.
  */
 export type Baraja = IdBaraja
 
-/** Lo que agrega la web al catálogo: el nombre corto ("Baraja clásica") y el crédito. */
-const EXTRA: Record<Baraja, { corto: string; credito?: string }> = {
+/**
+ * Lo que agrega la web al catálogo: el nombre corto ("Baraja clásica") y el crédito. Las de los
+ * departamentos no están: se llaman como el departamento y son diseño propio.
+ */
+const EXTRA: Partial<Record<Baraja, { corto: string; credito?: string }>> = {
   propia: { corto: 'propia' },
   fournier1878: { corto: 'clásica', credito: 'Fournier 1878 · dominio público' },
   cid1888: { corto: 'El Cid', credito: 'Simeón Durá, Valencia 1888 · dominio público' },
@@ -25,8 +28,8 @@ const EXTRA: Record<Baraja, { corto: string; credito?: string }> = {
   grabado: { corto: 'Grabado', credito: 'Diseño propio' },
 }
 
-/** Carpeta (en public/barajas) de cada baraja en imágenes. */
-const CARPETAS: Record<Exclude<Baraja, 'propia'>, string> = {
+/** Carpeta (en public/barajas) de cada baraja en imágenes; las de los departamentos, su id. */
+const CARPETAS: Partial<Record<Exclude<Baraja, 'propia'>, string>> = {
   fournier1878: 'fournier-1878',
   cid1888: 'cid-1888',
   grimaud1860: 'grimaud-1860',
@@ -37,7 +40,7 @@ const CARPETAS: Record<Exclude<Baraja, 'propia'>, string> = {
 }
 
 export const BARAJAS: { id: Baraja; nombre: string; precio: number; recompensa?: string; corto: string; credito?: string }[] = CATALOGO_BARAJAS.map(
-  (b) => ({ ...b, ...EXTRA[b.id] }),
+  (b) => ({ ...b, ...(EXTRA[b.id] ?? { corto: b.nombre, credito: 'Diseño propio' }) }),
 )
 
 const PALOS: Palo[] = ['espada', 'basto', 'oro', 'copa']
@@ -45,7 +48,7 @@ const NUMEROS = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12] as const
 
 function carpeta(b: Exclude<Baraja, 'propia'>): string {
   const base = import.meta.env?.BASE_URL ?? '/'
-  return `${base.endsWith('/') ? base : base + '/'}barajas/${CARPETAS[b]}/`
+  return `${base.endsWith('/') ? base : base + '/'}barajas/${CARPETAS[b] ?? b}/`
 }
 
 /** Imagen de una carta de una baraja en imágenes (o el dorso, sin carta). */

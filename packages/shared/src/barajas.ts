@@ -20,11 +20,26 @@ export const BARAJAS = [
   { id: 'fournier1878', nombre: 'Clásica 1878', precio: 0 },
   { id: 'cid1888', nombre: 'El Cid 1888', precio: 0 },
   { id: 'grimaud1860', nombre: 'Grimaud 1860', precio: 0 },
-  // Diseños propios: se ganan en el modo historia (la de la costa, en Rocha).
-  { id: 'oriental', nombre: 'Oriental', precio: 0, recompensa: 'el modo historia' },
+  // Diseños propios: cada una se gana en el último nivel de su departamento del modo historia.
+  { id: 'oriental', nombre: 'Oriental', precio: 0, recompensa: 'Tacuarembó' },
   { id: 'costa', nombre: 'Costa Uruguaya', precio: 0, recompensa: 'Rocha' },
-  { id: 'colonial', nombre: 'Colonial', precio: 0, recompensa: 'el modo historia' },
-  { id: 'grabado', nombre: 'Grabado Nocturno', precio: 0, recompensa: 'el modo historia' },
+  { id: 'colonial', nombre: 'Colonial', precio: 0, recompensa: 'Colonia' },
+  { id: 'grabado', nombre: 'Grabado Nocturno', precio: 0, recompensa: 'Montevideo' },
+  { id: 'artigas', nombre: 'Artigas', precio: 0, recompensa: 'Artigas' },
+  { id: 'canelones', nombre: 'Canelones', precio: 0, recompensa: 'Canelones' },
+  { id: 'cerro-largo', nombre: 'Cerro Largo', precio: 0, recompensa: 'Cerro Largo' },
+  { id: 'durazno', nombre: 'Durazno', precio: 0, recompensa: 'Durazno' },
+  { id: 'flores', nombre: 'Flores', precio: 0, recompensa: 'Flores' },
+  { id: 'florida', nombre: 'Florida', precio: 0, recompensa: 'Florida' },
+  { id: 'lavalleja', nombre: 'Lavalleja', precio: 0, recompensa: 'Lavalleja' },
+  { id: 'maldonado', nombre: 'Maldonado', precio: 0, recompensa: 'Maldonado' },
+  { id: 'paysandu', nombre: 'Paysandú', precio: 0, recompensa: 'Paysandú' },
+  { id: 'rio-negro', nombre: 'Río Negro', precio: 0, recompensa: 'Río Negro' },
+  { id: 'rivera', nombre: 'Rivera', precio: 0, recompensa: 'Rivera' },
+  { id: 'salto', nombre: 'Salto', precio: 0, recompensa: 'Salto' },
+  { id: 'san-jose', nombre: 'San José', precio: 0, recompensa: 'San José' },
+  { id: 'soriano', nombre: 'Soriano', precio: 0, recompensa: 'Soriano' },
+  { id: 'treinta-y-tres', nombre: 'Treinta y Tres', precio: 0, recompensa: 'Treinta y Tres' },
 ] as const satisfies readonly Baraja[]
 
 export type IdBaraja = (typeof BARAJAS)[number]['id']

@@ -1,11 +1,14 @@
 """
-Barajas propias en imagen (Oriental, Costa Uruguaya, Colonial y Grabado Nocturno): agranda los
+Barajas propias en imagen (Oriental, Costa Uruguaya, Colonial, Grabado Nocturno y las de los
+departamentos): agranda los
 huecos de la línea de los cortes, arriba y abajo de cada carta, para que se parezcan a los de las
 barajas antiguas (en El Cid y en Grimaud el hueco es el 14–15 % del largo de la línea: unos 50 px
 de 330). Venían de 20 px.
 
 Uso (desde apps/web, con Python 3 y Pillow):
-    python scripts/barajas-propias-cortes.py [ancho]
+    python scripts/barajas-propias-cortes.py [ancho] [carpeta…]
+
+Sin carpetas, las hace todas.
 
 Cada hueco se rehace centrado donde estaba, del ancho pedido (por defecto 50 px), así que correrlo
 dos veces da lo mismo. Lo que se borra de la línea se rellena con el papel de unas filas más
@@ -17,7 +20,28 @@ from pathlib import Path
 
 from PIL import Image
 
-CARPETAS = ['oriental', 'costa-uruguaya', 'colonial', 'grabado-nocturno']
+CARPETAS = [
+    'oriental',
+    'costa-uruguaya',
+    'colonial',
+    'grabado-nocturno',
+    # Las de los departamentos (las otras cuatro son de Rocha, Colonia, Montevideo y Tacuarembó).
+    'artigas',
+    'canelones',
+    'cerro-largo',
+    'durazno',
+    'flores',
+    'florida',
+    'lavalleja',
+    'maldonado',
+    'paysandu',
+    'rio-negro',
+    'rivera',
+    'salto',
+    'san-jose',
+    'soriano',
+    'treinta-y-tres',
+]
 BARAJAS = Path(__file__).resolve().parent.parent / 'public' / 'barajas'
 OSCURO = 110
 
@@ -62,7 +86,7 @@ def agrandar(archivo, ancho_hueco):
 
 def main():
     ancho_hueco = int(sys.argv[1]) if len(sys.argv) > 1 else 50
-    for carpeta in CARPETAS:
+    for carpeta in sys.argv[2:] or CARPETAS:
         cartas = sorted(p for p in (BARAJAS / carpeta).glob('*.webp') if p.name != 'dorso.webp')
         for archivo in cartas:
             agrandar(archivo, ancho_hueco)

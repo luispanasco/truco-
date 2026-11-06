@@ -74,6 +74,8 @@ describe('Carta según la baraja', () => {
       ['costa', 'costa-uruguaya'],
       ['colonial', 'colonial'],
       ['grabado', 'grabado-nocturno'],
+      ['artigas', 'artigas'],
+      ['treinta-y-tres', 'treinta-y-tres'],
     ] as const
     for (const [baraja, carpeta] of barajas) {
       act(() => mostrarBaraja(baraja))
@@ -172,7 +174,7 @@ describe('zonas del ojeo por baraja', () => {
   })
 
   it('los diseños propios comparten zonas: el tope en la franja vacía, entre la línea y el número', () => {
-    for (const b of ['oriental', 'costa', 'colonial', 'grabado'] as const) expect(ZONAS_OJEO[b]).toBe(ZONAS_PROPIAS_IMAGEN)
+    for (const b of ['oriental', 'costa', 'colonial', 'grabado', 'artigas', 'san-jose'] as const) expect(ZONAS_OJEO[b]).toBe(ZONAS_PROPIAS_IMAGEN)
     const z = ZONAS_PROPIAS_IMAGEN
     expect(z.cortes.hasta).toBe(z.separacion.desde)
     expect(z.separacion.hasta).toBe(z.indice.desde)

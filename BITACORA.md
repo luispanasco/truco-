@@ -1516,3 +1516,12 @@ Los niveles de equipos (2v2 y 3v3) se pueden jugar con un amigo.
 - **Arreglo de la etapa 1:** entrar directo por la dirección (o recargar) en una pantalla del modo historia no arrancaba la cuenta y quedaba en "Se está armando". Ahora la arranca y muestra "Cargando…" mientras tanto.
 - **Tests:** server 121 (la sala del nivel: solo la abre un admin, no en mano a mano, el nivel manda, las personas del mismo lado, el elenco en su lugar y el nivel anotado a quien lo tenía abierto), web 353 (el botón según el formato, la sala de espera del nivel y el premio que manda el servidor). E2E `historia.spec.ts`: el admin gana el nivel 1, arma la sala del nivel 2 y un amigo entra con el código; juegan juntos contra Julio y Nico en la mesa de Rocha. El servidor de los e2e tiene su propio admin (`admin-e2e@ejemplo.com`, en playwright.config.ts).
 - **Hay que publicar el servidor en Fly.**
+
+## Barajas de los 19 departamentos — 2026-11-06
+
+Llegó el paquete con los mazos, paños y fondos de los 19 departamentos (`Uruguay-19-departamentos-mazos-y-mesas.zip`). Primero, los mazos.
+
+- **15 barajas nuevas**, una por departamento, en `public/barajas/<departamento>/`: 40 cartas y el dorso en WebP de 400 × 600, con su CREDITOS.md. Las de Rocha, Colonia, Montevideo y Tacuarembó del paquete son las mismas que ya teníamos (Costa Uruguaya, Colonial, Grabado Nocturno y Oriental): esas no se repiten.
+- **Cortes:** venían con los huecos de 20 px. Se agrandaron a 51 px con el mismo script que las propias (`barajas-propias-cortes.py`, que ahora acepta las carpetas como argumento). El marco y el número están en el mismo lugar que en las otras propias: usan `ZONAS_PROPIAS_IMAGEN` para el ojeo. `ZONAS_OJEO` le da esas zonas a toda baraja que no sea la propia ni una antigua.
+- **Recompensas:** cada baraja propia se gana en el último nivel de su departamento: Oriental en Tacuarembó, Colonial en Colonia, Grabado en Montevideo, Costa en Rocha y cada una de las nuevas en el suyo. Con candado para quien no la ganó (el admin y los beta las usan igual).
+- La web deriva el nombre corto, el crédito y la carpeta de las nuevas a partir del id (`baraja.ts`). Como las demás barajas, no entran en la precarga del service worker: se bajan al elegirlas.

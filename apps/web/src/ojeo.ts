@@ -11,6 +11,7 @@
  * franja vacía entre los cortes y el número; en la clásica de Fournier el número está pegado a
  * la línea de los cortes. Todas las funciones reciben las zonas al final (por defecto, la propia).
  */
+import { BARAJAS } from '@truco/shared'
 import type { Baraja } from './baraja'
 
 /** Zonas verticales de la carta, en fracción de su altura medida desde el borde superior. */
@@ -78,7 +79,8 @@ export const ZONAS_GRIMAUD: ZonasOjeo = {
 }
 
 /**
- * Los diseños propios (Oriental, Costa Uruguaya, Colonial y Grabado Nocturno) comparten el marco,
+ * Los diseños propios (Oriental, Costa Uruguaya, Colonial, Grabado Nocturno y las de los
+ * departamentos) comparten el marco,
  * medido en las 40 imágenes de cada una: la línea de los cortes va de 0,038 a 0,040 de la altura
  * y el número de 0,103 a 0,163, igual en todas las cartas. Entre las dos queda una franja vacía
  * ancha, como en la propia: el tope cae en el medio.
@@ -90,16 +92,17 @@ export const ZONAS_PROPIAS_IMAGEN: ZonasOjeo = {
   tope: 0.0725,
 }
 
-export const ZONAS_OJEO: Record<Baraja, ZonasOjeo> = {
+const ZONAS_ANTIGUAS: Partial<Record<Baraja, ZonasOjeo>> = {
   propia: ZONAS_PROPIA,
   fournier1878: ZONAS_FOURNIER,
   cid1888: ZONAS_CID,
   grimaud1860: ZONAS_GRIMAUD,
-  oriental: ZONAS_PROPIAS_IMAGEN,
-  costa: ZONAS_PROPIAS_IMAGEN,
-  colonial: ZONAS_PROPIAS_IMAGEN,
-  grabado: ZONAS_PROPIAS_IMAGEN,
 }
+
+/** Las zonas de cada baraja: todas las que no son la propia ni las antiguas son diseños propios. */
+export const ZONAS_OJEO = Object.fromEntries(
+  BARAJAS.map((b) => [b.id, ZONAS_ANTIGUAS[b.id] ?? ZONAS_PROPIAS_IMAGEN]),
+) as Record<Baraja, ZonasOjeo>
 
 /**
  * Alcance (px de dedo, para cada lado) del tope: adentro la carta casi no se mueve y hay que
