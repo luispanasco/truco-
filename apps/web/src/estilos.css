@@ -819,6 +819,21 @@ input {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/*
+ * En 3 contra 3 hay mucho en la mesa: solo la última jugada (los cantos están en el globo de cada
+ * uno), y más angosta, para no pisar el mazo en las esquinas de abajo.
+ */
+.n-6 .registro {
+  width: 40%;
+}
+.n-6 .registro div:not(:last-child) {
+  display: none;
+}
+/* Angosta, la jugada baja a otra línea en vez de cortarse. */
+.n-6 .registro div:last-child {
+  white-space: normal;
+  border-radius: 12px;
+}
 .registro div:last-child {
   justify-self: center;
   max-width: 100%;
@@ -1384,7 +1399,7 @@ input {
 /*
  * Lo del pie: sugerencias en voz alta y mandar a tocar o a gritar. Se abre con el botón "Pie" y
  * flota arriba de tu lugar, sobre el borde del paño: no ocupa una fila, así nunca empuja ni tapa
- * los cantos ni la mano. Si no entra, la fila se desliza.
+ * los cantos ni la mano. Un bloque por compañero, con sus filas: todo se acomoda al ancho.
  */
 .panel-pie {
   position: absolute;
@@ -1393,26 +1408,23 @@ input {
   bottom: calc(100% + 8px);
   z-index: 21;
   width: fit-content;
-  max-width: calc(100% - 16px);
+  max-width: min(calc(100% - 16px), 560px);
   margin: 0 auto;
   display: flex;
-  gap: 6px;
-  padding: 6px;
-  border-radius: 999px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 18px;
   background: var(--panel-fuerte);
   border: 1px solid var(--panel-borde);
   box-shadow: 0 6px 18px rgb(0 0 0 / 0.45);
-  overflow-x: auto;
-  scrollbar-width: none;
   animation: globo-entra 0.2s ease-out;
-}
-.panel-pie::-webkit-scrollbar {
-  display: none;
 }
 .boton-pie {
   flex: none;
-  min-height: 34px;
-  padding: 0 12px;
+  min-height: 32px;
+  padding: 0 10px;
   border: 1px solid rgb(255 255 255 / 0.3);
   border-radius: 999px;
   background: rgb(0 0 0 / 0.18);
@@ -1430,30 +1442,52 @@ input {
 .boton-pie.manda-gritar {
   border-color: var(--accion-truco);
 }
-/* Un bloque por compañero: su nombre, sus cartas (si es tu bot) y lo que le decís. */
-.pie-companiero {
-  flex: none;
+/* Los nombres de los compañeros (con dos): se elige a quién; el que espera tu orden, resaltado. */
+.pie-pestanias {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-right: 4px;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
 }
-.pie-companiero + .pie-companiero {
-  border-left: 1px solid rgb(255 255 255 / 0.2);
-  padding-left: 8px;
+.pie-pestania {
+  min-height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.08);
+  color: var(--texto-claro);
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
 }
-.pie-companiero.espera .pie-nombre {
+.pie-pestania.elegida {
+  background: var(--texto-claro);
+  color: var(--tinta);
+}
+.pie-pestania.espera:not(.elegida) {
   color: var(--acento);
 }
+.pie-espera {
+  font-weight: 600;
+}
+/* Los botones del compañero elegido: dos filas, qué carta y qué se dice. */
+.pie-companiero {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+}
 .pie-nombre {
-  flex: none;
+  width: 100%;
+  text-align: center;
   font-size: 0.75rem;
   font-weight: 800;
-  white-space: nowrap;
+  color: var(--acento);
 }
 .pie-cartas,
 .pie-botones {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 4px;
 }
 .pie-carta {
@@ -1746,6 +1780,11 @@ input {
   opacity: 0.4;
 }
 
+/* En 3 contra 3, el mazo más chico: convive con los asientos de los costados. */
+.n-6 .mazo {
+  scale: 0.8;
+}
+
 /* Mazo: la muestra boca arriba y cruzada, con el mazo encima dejándola ver. */
 .mazo {
   position: absolute;
@@ -1985,11 +2024,12 @@ input {
     padding: 1px 7px 1px 5px;
     gap: 4px;
   }
-  /* Los de los costados de abajo, un poco más arriba: en las esquinas de abajo va el mazo. */
+  /* Los de los costados de abajo, más arriba: en las esquinas de abajo va el mazo, y no se pisan. */
   .n-6 .asiento.pos-1,
   .n-6 .asiento.pos-5 {
-    bottom: 20%;
+    bottom: 24%;
   }
+
 }
 
 /* Escritorio: la mesa centrada como un tablero con marco, sin estirarse. */

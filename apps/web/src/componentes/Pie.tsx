@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { type Accion, type QueManda, type VistaPartida } from '@truco/engine'
 import { TEXTO_ORDEN } from '@truco/shared'
 
@@ -14,7 +15,9 @@ interface Props {
 }
 
 /** El orden de los botones de cada compañero (los de "vamos a" van aparte). */
-const ORDEN_BOTONES: QueManda[] = ['dejala', 'matala', 'jugaAlgo', 'veni', 'tocar', 'gritar', 'callado']
+/** Los botones de cada compañero en dos filas: qué carta juega, y lo que se dice en voz alta. */
+const FILA_CARTA: QueManda[] = ['dejala', 'matala', 'jugaAlgo', 'callado']
+const FILA_VOZ: QueManda[] = ['veni', 'tocar', 'gritar']
 
 /** Si sos el pie del duelo en curso: a quiénes les podés decir algo y qué. */
 export function opcionesDelPie(vista: VistaPartida) {
@@ -61,42 +64,61 @@ export function BotonPie({
  * "matala" (la más alta), "jugá algo" (la del medio), "vení", "vamos a X", "tocá" o "gritá". Sus
  * cartas no las ves. Tus bots no juegan hasta que les digas (salvo la flor); a una persona solo se
  * lo insinuás: decide ella. Flota sobre el borde del paño y se cierra al elegir.
+ *
+ * Para no tapar la mesa, muestra los botones de un compañero por vez, en dos filas (qué carta y
+ * qué se dice). Con dos compañeros, arriba van sus nombres para cambiar de uno al otro; arranca
+ * en el que espera tu orden.
  */
 export function PanelPie({ vista, apodo, alElegir, alCerrar, esperando = null }: Props) {
   const op = opcionesDelPie(vista)
+  const [elegido, setElegido] = useState<number | null>(null)
   if (!op || op.companieros.length === 0) return null
   const elegir = (a: Accion) => () => {
     alElegir(a)
     alCerrar?.()
   }
-  // El que espera tu orden, primero. El nombre va solo si tenés más de un compañero.
-  const companieros = [...op.companieros].sort((x, y) => Number(y === esperando) - Number(x === esperando))
-  const conNombre = companieros.length > 1
+  const companieros = op.companieros
+  const c = elegido !== null && companieros.includes(elegido) ? elegido : esperando !== null && companieros.includes(esperando) ? esperando : companieros[0]!
+  const suyas = op.mandar.filter((m) => m.a === c)
+  const de = (fila: QueManda[]) => fila.flatMap((que) => suyas.filter((m) => m.que === que))
+  const vamos = suyas.filter((m) => m.que === 'vamosA')
+  const boton = (m: Mandar) => (
+    <button key={m.que} type="button" className={`boton-pie manda-${m.que}`} onClick={elegir(m)}>
+      {TEXTO_ORDEN[m.que]('')}
+    </button>
+  )
   return (
     <div className="panel-pie" role="group" aria-label="Lo que les decís como pie">
-      {companieros.map((c) => {
-        const suyas = op.mandar.filter((m) => m.a === c)
-        const botones = ORDEN_BOTONES.flatMap((que) => suyas.filter((m) => m.que === que))
-        const vamos = suyas.filter((m) => m.que === 'vamosA')
-        const etiqueta = conNombre ? (c === esperando ? `${apodo(c)}: ¿qué juega?` : apodo(c)) : c === esperando ? '¿Qué juega?' : null
-        return (
-          <div key={c} className={`pie-companiero${c === esperando ? ' espera' : ''}`} role="group" aria-label={`A ${apodo(c)}`}>
-            {etiqueta && <span className="pie-nombre">{etiqueta}</span>}
-            <span className="pie-botones">
-              {botones.map((m) => (
-                <button key={m.que} type="button" className={`boton-pie manda-${m.que}`} onClick={elegir(m)}>
-                  {TEXTO_ORDEN[m.que]('')}
-                </button>
-              ))}
-              {vamos.map((m) => (
-                <button key={`vamos-${m.vamosA}`} type="button" className="boton-pie manda-vamosA" onClick={elegir(m)}>
-                  {TEXTO_ORDEN.vamosA(apodo(m.vamosA!))}
-                </button>
-              ))}
-            </span>
-          </div>
-        )
-      })}
+      {companieros.length > 1 ? (
+        <div className="pie-pestanias" role="tablist" aria-label="A quién le decís">
+          {companieros.map((x) => (
+            <button
+              key={x}
+              type="button"
+              role="tab"
+              aria-selected={x === c}
+              className={`pie-pestania${x === c ? ' elegida' : ''}${x === esperando ? ' espera' : ''}`}
+              onClick={() => setElegido(x)}
+            >
+              {apodo(x)}
+              {x === esperando && <span className="pie-espera"> · ¿qué juega?</span>}
+            </button>
+          ))}
+        </div>
+      ) : (
+        c === esperando && <span className="pie-nombre espera">¿Qué juega?</span>
+      )}
+      <div className={`pie-companiero${c === esperando ? ' espera' : ''}`} role="group" aria-label={`A ${apodo(c)}`}>
+        <span className="pie-botones">{de(FILA_CARTA).map(boton)}</span>
+        <span className="pie-botones">
+          {de(FILA_VOZ).map(boton)}
+          {vamos.map((m) => (
+            <button key={`vamos-${m.vamosA}`} type="button" className="boton-pie manda-vamosA" onClick={elegir(m)}>
+              {TEXTO_ORDEN.vamosA(apodo(m.vamosA!))}
+            </button>
+          ))}
+        </span>
+      </div>
     </div>
   )
 }

@@ -1632,3 +1632,16 @@ Llegó la primera entrega de los fondos y datos por nivel (`Rocha-5-niveles-fond
 - **Quién habla:** casi siempre el rival principal. A veces un compañero suyo y, en los niveles de equipo, uno de los tuyos, que festeja si van bien o te da ánimo si no. Las personas no hablan solas.
 - **Dónde:** contra la compu lo saca la conexión local; en el cooperativo, el servidor (`charlar`, `difundirChat`), así todos ven lo mismo.
 - **Tests:** web 364 (cargadas.test.ts: cuándo habla, la pausa, sin repetir, la mitad y el parejo una sola vez, quién habla en equipos), server 123.
+
+## Mesa de 3 vs 3 menos amontonada — 2026-11-06
+
+Pedido después de probar el 3 vs 3: "se ve todo crowded". Revisado con capturas en iPhone (390 × 844), Android (360 × 740) y PC (1280 × 760).
+
+- **Panel del pie:** antes era una tira que en PC se salía de la pantalla ("¡Vamos a…" cortado) y, con dos compañeros, tapaba media mesa en el celular. Ahora:
+  - Muestra los botones de un compañero por vez, en dos filas: qué carta (Dejala, Matala, Jugá algo) y qué se dice (Vení, Tocá, Gritá, Vamos a X).
+  - Con dos compañeros, arriba van sus nombres como pestañas, para cambiar de uno al otro. Arranca en el que espera tu orden, marcado con "¿qué juega?".
+  - Nunca se sale del ancho.
+- **Mazo:** en 3 vs 3 es un 20 % más chico. En el celular, los asientos de los costados de abajo suben un poco (24 % en vez de 20 %): el mazo de las esquinas ya no pisa sus cartas.
+- **Registro:** en 3 vs 3 queda solo la última jugada, más angosta y en dos líneas si hace falta (no se corta). Los cantos ya salen en el globo de cada uno, y las tres líneas al medio se apilaban lejos de quien hablaba.
+- **Tu barra:** en las mesas de equipo, en pantallas angostas, la seña queda solo con el ícono (como con el reloj). "Te toca", seña, Pie y Mazo entran en una línea y el envido no se corta.
+- **Tests:** web 364 y los 14 de punta a punta.

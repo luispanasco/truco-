@@ -452,14 +452,17 @@ button.asiento-nombre:focus-visible {
 
 /* ── Tamaños ──────────────────────────────────────────────────── */
 
-/* Con el reloj andando, "Te quedan N s" es más largo que "Te toca": la seña queda solo con el ícono. */
+/*
+ * Con el reloj andando ("Te quedan N s" es más largo que "Te toca") o en las mesas de equipo (está
+ * también el botón del pie), la seña queda solo con el ícono: así todo entra en una línea.
+ */
 @media (max-width: 420px) {
-  .mi-lugar.con-reloj .boton-senias {
+  :is(.mi-lugar.con-reloj, :is(.n-4, .n-6) .mi-lugar) .boton-senias {
     width: 34px;
     padding: 0;
     justify-content: center;
   }
-  .mi-lugar.con-reloj .boton-senias-texto {
+  :is(.mi-lugar.con-reloj, :is(.n-4, .n-6) .mi-lugar) .boton-senias-texto {
     display: none;
   }
 }
