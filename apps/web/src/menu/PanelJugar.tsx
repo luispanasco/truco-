@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import type { Nivel } from '@truco/bots'
 import type { Formato } from '@truco/engine'
+import type { IdDepartamento } from '@truco/shared'
 import { AmigosConectados } from '../componentes/Amistad'
 import { Carta } from '../componentes/Carta'
 import { datosUnirse, destinoAlEntrar, MensajeError } from '../componentes/Online'
@@ -12,7 +13,7 @@ import { useJuego } from '../estado'
 import { leerPerfil, MODOS_JUGAR, type Perfil } from '../perfil'
 import { conexionContraLaCompu } from './contraLaCompu'
 import { IconoBuscar, IconoCompu, IconoCrear, IconoLlave } from './Iconos'
-import { BotonHistoria } from './BotonHistoria'
+import { PortadaHistoria } from './PortadaHistoria'
 import { useCuenta } from '../cuenta/cuenta'
 
 /** Los 24 rayos del sol del logo, largos y cortos alternados (los mismos de public/icono.svg). */
@@ -159,10 +160,8 @@ export function PanelJugar({
       navegar('/mesa')
     })
 
-  return (
+  const partidas = (
     <>
-      <PartidaEnCurso perfil={perfil} enLinea={enLinea} />
-
       <header className="jugar-logo">
         {/* El logo (el mismo de public/icono.svg): tres piezas de oro con un sol detrás y la cinta. */}
         <div className="abanico" aria-hidden="true">
@@ -241,9 +240,6 @@ export function PanelJugar({
         </button>
       </div>
 
-      {/* El modo historia, mientras se arma, solo para el admin. */}
-      {admin && <BotonHistoria alTocar={() => conApodo(() => navegar('/historia'))} />}
-
       <div className="jugar-secundarios">
         <BotonChico
           icono={<IconoCrear />}
@@ -267,6 +263,65 @@ export function PanelJugar({
       )}
 
       <AmigosConectados deshabilitado={!enLinea} conApodo={conApodo} />
+    </>
+  )
+
+  return (
+    <>
+      <PartidaEnCurso perfil={perfil} enLinea={enLinea} />
+      {/* El modo historia, mientras se arma, solo para el admin: una página aparte, deslizando. */}
+      {admin ? (
+        <VistasJugar
+          partidas={partidas}
+          alSeguir={(id) => conApodo(() => navegar(`/historia/${id}`, { state: { desdeMapa: true } }))}
+          alVerMapa={() => conApodo(() => navegar('/historia'))}
+        />
+      ) : (
+        partidas
+      )}
+    </>
+  )
+}
+
+/**
+ * Jugar en dos páginas que se deslizan (o se eligen arriba): las partidas de siempre y el modo
+ * historia. Es un carril con "snap", como el del menú: al llegar al borde, el deslizamiento sigue
+ * en el del menú.
+ */
+function VistasJugar({ partidas, alSeguir, alVerMapa }: { partidas: ReactNode; alSeguir: (id: IdDepartamento) => void; alVerMapa: () => void }) {
+  const carril = useRef<HTMLDivElement>(null)
+  const [vista, setVista] = useState<'partidas' | 'historia'>('partidas')
+  const ir = (v: 'partidas' | 'historia') => {
+    const c = carril.current
+    if (c) c.scrollTo({ left: v === 'historia' ? c.clientWidth : 0, behavior: 'smooth' })
+    setVista(v)
+  }
+  const alDeslizar = () => {
+    const c = carril.current
+    if (c && c.clientWidth > 0) setVista(c.scrollLeft > c.clientWidth / 2 ? 'historia' : 'partidas')
+  }
+  return (
+    <>
+      <div className="jugar-vistas-selector" role="tablist" aria-label="Qué jugar">
+        {(
+          [
+            ['partidas', 'Partidas'],
+            ['historia', 'Modo historia'],
+          ] as const
+        ).map(([v, texto]) => (
+          <button key={v} type="button" role="tab" aria-selected={vista === v} className={vista === v ? 'elegida' : ''} onClick={() => ir(v)}>
+            {texto}
+          </button>
+        ))}
+      </div>
+      <div className="jugar-vistas" ref={carril} onScroll={alDeslizar}>
+        <div className="jugar-vista" role="tabpanel" aria-label="Partidas" inert={vista !== 'partidas'}>
+          {partidas}
+        </div>
+        <div className="jugar-vista" role="tabpanel" aria-label="Modo historia" inert={vista !== 'historia'}>
+          <PortadaHistoria activa={vista === 'historia'} alSeguir={alSeguir} alVerMapa={alVerMapa} />
+        </div>
+      </div>
     </>
   )
 }

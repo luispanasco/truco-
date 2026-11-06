@@ -1698,3 +1698,18 @@ Pedido: cambiar la UI de los grupos y que se puedan mandar las partidas. Se elig
   - Web 365: las pestañas y el muro.
   - E2E: el de grupos, con la sala en el muro.
 - **Hay que publicar el servidor** (migración 12).
+
+## Rediseño, partes 3 y 4: Jugar en dos páginas y el resto de las pantallas — 2026-11-06
+
+- **Jugar en dos páginas** (para el admin, mientras el modo historia es solo suyo):
+  - "Partidas" (lo de siempre) y "Modo historia". Se elige arriba, con un selector en píldora, o se desliza: es un carril con snap (`VistasJugar`) y, al llegar al borde, el deslizamiento sigue en el carril del menú. La página que no se ve queda `inert`.
+- **Portada del modo historia** (`PortadaHistoria`, reemplaza a `BotonHistoria`):
+  - De fondo pasan los paisajes de los departamentos en carrusel, cada 4,5 s, con fundido y un zoom lento. Arranca por el que sigue y después recorre todos.
+  - Arriba, el nombre del lugar que se ve. Adelante: tu avance, "Arrancar/Seguir en…" (lleva directo al departamento, con su presentación) y "Ver el mapa". El rival que te toca, a la derecha sobre el paisaje.
+  - El carrusel anda solo con la página a la vista, sin animación si se pidió menos movimiento, y pide de antemano el fondo siguiente.
+- **El resto de las pantallas:**
+  - Títulos con dos filetes dorados a los costados.
+  - Cada tarjeta del menú arranca con una marca dorada antes del título.
+  - En Personalizá, tu avatar es grande, al medio, con brillo dorado.
+  - Los personajes, en una grilla de dos columnas de tarjetitas, con la descripción en tres renglones como mucho.
+- **Tests:** web 366 (la portada: dónde seguir, el avance y los botones) y los 14 de punta a punta.

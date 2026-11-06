@@ -36,6 +36,7 @@ import { Sala } from '../src/pantallas/Sala'
 import { FinHistoria } from '../src/componentes/FinHistoria'
 import { DepartamentoHistoria, Historia, PreviaNivel } from '../src/pantallas/Historia'
 import { useJuego } from '../src/estado'
+import { PortadaHistoria } from '../src/menu/PortadaHistoria'
 
 const ROCHA = HISTORIAS.rocha!
 
@@ -328,6 +329,23 @@ describe('pantallas', () => {
     comoAdmin()
     app('/historia/rocha/3')
     await waitFor(() => expect(screen.getByText(/Se está armando/)).toBeTruthy())
+  })
+})
+
+describe('la portada en Jugar', () => {
+  it('dice dónde seguir, cuánto recorriste y lleva al departamento o al mapa', async () => {
+    servidorFalso({ montevideo: [1, 2, 3], canelones: [1] })
+    comoAdmin()
+    const seguir = vi.fn()
+    const mapa = vi.fn()
+    render(<PortadaHistoria activa={false} alSeguir={seguir} alVerMapa={mapa} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Seguir en Canelones' }))
+    expect(seguir).toHaveBeenCalledWith('canelones')
+    expect(screen.getByText('1 de 19 departamentos')).toBeTruthy()
+    // De fondo arranca por el que sigue.
+    expect(screen.getByText('Canelones', { selector: '.portada-historia-lugar' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Ver el mapa' }))
+    expect(mapa).toHaveBeenCalled()
   })
 })
 
