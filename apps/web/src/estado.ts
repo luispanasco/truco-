@@ -400,6 +400,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         break
       case 'historia':
         set({ premioHistoria: m.datos })
+        if (m.datos.saldo !== undefined) useCuenta.setState({ saldo: m.datos.saldo })
         break
       case 'monedas':
         set({ monedas: m.datos })

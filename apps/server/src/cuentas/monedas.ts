@@ -26,7 +26,7 @@ export function inicioDelDia(ahora: Date): Date {
   return new Date(local - (((local % 86_400_000) + 86_400_000) % 86_400_000) - HUSO_URUGUAY_MS)
 }
 
-export type TipoMovimiento = 'partida' | 'victoria' | 'bonusDiario' | 'compra' | 'ajuste'
+export type TipoMovimiento = 'partida' | 'victoria' | 'bonusDiario' | 'compra' | 'ajuste' | 'historia'
 
 export interface Movimiento {
   tipo: TipoMovimiento

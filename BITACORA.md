@@ -1533,3 +1533,25 @@ Llegó el paquete con los mazos, paños y fondos de los 19 departamentos (`Urugu
 - **Fondos:** `--fondo-lugar` es la ilustración horizontal o la vertical según la orientación de la pantalla. La usan el departamento, la previa y la partida (oscurecida). Ya no quedan degradés provisorios.
 - **Mapa:** cada tarjeta muestra el fondo chico de su departamento (en gris los que todavía no se juegan).
 - Revisado con capturas: el mapa, la previa de Rocha y la mesa de Rocha, Salto, Artigas y Montevideo, en celular y en pantalla ancha.
+
+## Modo historia, etapa 3: los 19 departamentos — 2026-11-06
+
+Se juegan todos los departamentos, cada uno con su rival, sus niveles y sus premios (sigue siendo solo para el admin).
+
+- **14 personajes nuevos** (`personajes.ts`), uno por departamento: Marisa la de las piedras (Artigas), Aurelio el Bodeguero (Canelones), Joaquim el Fronterizo (Cerro Largo), Giuseppe el Quesero (Colonia), Ernesto el Guía (Flores), Marta la Tambera (Florida), Pedro el Payador (Lavalleja), Facundo el Cervecero (Paysandú), Iván de San Javier (Río Negro), Jéssica la del free shop (Rivera), Mirta la de las termas (Salto), Cholo el Maragato (San José), Hugo el Chacarero (Soriano) y Aníbal el del Olimar (Treinta y Tres). Los otros cinco departamentos usan los que ya había: Julio (Rocha), Beto (Durazno), Santi (Maldonado), Tito (Montevideo) y Ramón (Tacuarembó).
+- **28 piezas nuevas**, dos por personaje nuevo: una prenda y lo que tiene en la mano.
+  - **Prendas:** Camisa de carnaval, Chaleco bordó, Poncho verde, Delantal de quesero, Campera de explorador, Camisa a cuadros, Poncho azul, Delantal cervecero, Camisa rusa, Amarela de cuello verde, Bata de las termas, Chaleco maragato, Camisa a cuadros verde y Chaleco negro. Tres generadores nuevos: `delantal`, `cuadros` y `camisaRusa`. Las demás son colores nuevos de los que había.
+  - **En la mano:** Geoda de amatista, Copa de Tannat, Bolsa de arroz, Horma de queso, Linterna, Tarro de leche, Alfajor, Chopp de cerveza, Girasol, Bolsa del free shop, Naranja, Rebenque, Espigas de trigo y Bombo legüero.
+  - Van al final de sus capas, con `recompensa` (el departamento): tienen rareza pero **no salen en la vitrina**. En el editor del avatar se ven con candado y "se gana en …, en el modo historia".
+- **Niveles** (`historias.ts`): 75 nuevos (80 con Rocha), 3, 4 o 5 por departamento según su tamaño. El formato, la dificultad y los puntos salen de `PLANTILLAS`:
+  - 3 niveles: 1v1 fácil a 15, 2v2 medio a 30, 1v1 difícil a 30.
+  - 4 niveles: 1v1 fácil a 15, 2v2 medio a 15, 3v3 difícil a 30, 1v1 muy difícil a 30.
+  - 5 niveles: como Rocha, terminando en máster.
+
+  Cada nivel tiene su lugar, el elenco (el rival del departamento con personajes de la zona; los compañeros son Cacho, Doña Rosa y Don Pocho) y tres frases.
+- **Premios:** los niveles del medio dan monedas (100 o 150) y las dos piezas del personaje. Donde el personaje ya existía, dan sus piezas de la tienda (camisa floreada y tambor; galera y levita; poncho y sombrero de gaucho…). El último nivel da la baraja y la mesa del departamento.
+- **Monedas como premio:** `monedas:<n>` (`idMonedas`, `monedasDeRecompensa`). Con la migración 11 se suma el tipo de movimiento `historia`. `ganarNivel` lo anota con la partida `historia:<dep>:<n>`, así el índice único no deja cobrarlo dos veces, y devuelve el saldo. La web lo actualiza, también en cooperativo (`historia.saldo`). En el final del nivel se ven con 🪙.
+- **Pantallas:** el mapa ya no tiene "Próximamente": los 19 muestran su rival y su progreso. Lo demás (departamento, previa, partida, cooperativo) funciona igual que en Rocha.
+- Revisado con capturas: los 14 personajes nuevos, el mapa completo, Artigas y su previa.
+- **Tests:** web 356 (los 19 departamentos: niveles por tamaño, dificultad que sube, elenco sin repetidos ni de los dos lados, tres frases, premios con nombre, la baraja y la mesa de cada uno al final, las piezas fuera de la vitrina y las monedas), server 122 (las monedas se cobran una sola vez y no van al inventario). Engine 179, sin cambios. E2E historia y ojeo.
+- **Hay que publicar el servidor en Fly** (migración 11).

@@ -29,8 +29,12 @@ export async function cargarHistoria(): Promise<void> {
  * nuevas (ids de la tienda), que ya quedan en tu inventario.
  */
 export async function ganarNivelHistoria(departamento: IdDepartamento, nivel: number): Promise<string[]> {
-  const r = await pedir<{ progreso: ProgresoHistoria; nuevas: string[]; inventario: string[] }>('POST', '/historia/ganar', { departamento, nivel })
+  const r = await pedir<{ progreso: ProgresoHistoria; nuevas: string[]; inventario: string[]; saldo: number }>('POST', '/historia/ganar', {
+    departamento,
+    nivel,
+  })
   useHistoria.setState({ progreso: r.progreso })
+  useCuenta.setState({ saldo: r.saldo })
   fijarInventario(r.inventario, esBeta())
   return r.nuevas
 }

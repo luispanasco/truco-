@@ -72,7 +72,9 @@ export function FinHistoria({
                 </p>
                 <ul>
                   {premio.nuevas.map((id) => (
-                    <li key={id}>🎁 {nombreRecompensa(id)}</li>
+                    <li key={id}>
+                      {id.startsWith('monedas:') ? '🪙' : '🎁'} {nombreRecompensa(id)}
+                    </li>
                   ))}
                 </ul>
               </>

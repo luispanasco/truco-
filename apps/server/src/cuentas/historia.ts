@@ -1,5 +1,6 @@
-import { nivelAbierto, nivelDeHistoria, type IdDepartamento, type ProgresoHistoria } from '@truco/shared'
+import { monedasDeRecompensa, nivelAbierto, nivelDeHistoria, type IdDepartamento, type ProgresoHistoria } from '@truco/shared'
 import type { Base } from './base'
+import { saldo } from './monedas'
 import { inventario } from './tienda'
 
 /** Un rechazo del modo historia, con el motivo para mostrar. */
@@ -18,7 +19,7 @@ export async function progresoHistoria(base: Base, cuentaId: string): Promise<Pr
 
 /**
  * Ganaste un nivel: queda anotado y, la primera vez, sus recompensas van al inventario (como si las
- * hubieras comprado, a precio 0). Hay que tener abierto el nivel (el anterior ganado). Las partidas
+ * hubieras comprado, a precio 0); las monedas (`monedas:<n>`), al saldo. Hay que tener abierto el nivel (el anterior ganado). Las partidas
  * contra bots corren en el navegador, así que el servidor confía en que ganaste: las recompensas
  * son cosméticas.
  */
@@ -27,7 +28,7 @@ export async function ganarNivel(
   cuentaId: string,
   departamento: unknown,
   n: unknown,
-): Promise<{ progreso: ProgresoHistoria; nuevas: string[]; inventario: string[] }> {
+): Promise<{ progreso: ProgresoHistoria; nuevas: string[]; inventario: string[]; saldo: number }> {
   const nivel = nivelDeHistoria(departamento, n)
   if (!nivel) throw new HistoriaRechazo('Ese nivel no existe')
   const dep = departamento as IdDepartamento
@@ -42,10 +43,19 @@ export async function ganarNivel(
     const nuevas: string[] = []
     if (primera.length > 0) {
       for (const item of nivel.recompensas) {
+        const monedas = monedasDeRecompensa(item)
+        if (monedas > 0) {
+          const r = await b.consultar(
+            `insert into movimientos (cuenta_id, monto, tipo, partida) values ($1, $2, 'historia', $3) on conflict do nothing returning id`,
+            [cuentaId, monedas, `historia:${dep}:${numero}`],
+          )
+          if (r.length > 0) nuevas.push(item)
+          continue
+        }
         const r = await b.consultar('insert into inventario (cuenta_id, item, precio) values ($1, $2, 0) on conflict do nothing returning item', [cuentaId, item])
         if (r.length > 0) nuevas.push(item)
       }
     }
-    return { progreso: await progresoHistoria(b, cuentaId), nuevas, inventario: await inventario(b, cuentaId) }
+    return { progreso: await progresoHistoria(b, cuentaId), nuevas, inventario: await inventario(b, cuentaId), saldo: await saldo(b, cuentaId) }
   })
 }

@@ -1194,7 +1194,7 @@ export class SalaTruco extends Room {
       if (l.tipo !== 'humano' || !l.cuentaId || l.sessionId === null) continue
       try {
         const r = await ganarNivel(this.cuentas.base, l.cuentaId, this.historia.departamento, this.historia.nivel)
-        this.enviarA(l.asiento, 'historia', { nuevas: r.nuevas, anotado: true })
+        this.enviarA(l.asiento, 'historia', { nuevas: r.nuevas, anotado: true, saldo: r.saldo })
       } catch (e) {
         if (!(e instanceof HistoriaRechazo)) console.error('No se pudo anotar el nivel:', e)
         this.enviarA(l.asiento, 'historia', { nuevas: [], anotado: false })

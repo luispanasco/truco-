@@ -2,7 +2,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { crearConfig } from '@truco/engine'
-import { barajaGratis, DEPARTAMENTOS, SENIAS_DEFAULT, type InfoSala, elencoDelNivel, HISTORIAS, idBaraja, nivelesPorTamanio, nombreRecompensa, permisosDe } from '@truco/shared'
+import {
+  barajaGratis,
+  buscarItem,
+  CATALOGO_TIENDA,
+  DEPARTAMENTOS,
+  SENIAS_DEFAULT,
+  type InfoSala,
+  elencoDelNivel,
+  HISTORIAS,
+  idBaraja,
+  idMesa,
+  idMonedas,
+  monedasDeRecompensa,
+  nivelesPorTamanio,
+  nombreRecompensa,
+  permisosDe,
+  vitrinaDelDia,
+} from '@truco/shared'
 import { useCuenta } from '../src/cuenta/cuenta'
 import { useHistoria } from '../src/cuenta/historia'
 import { fijarInventario } from '../src/cuenta/inventario'
@@ -91,6 +108,59 @@ describe('los datos del modo historia', () => {
     expect(nombreRecompensa(idBaraja('costa'))).toBe('Baraja Costa Uruguaya')
   })
 
+  it('los 19 departamentos se juegan: sus niveles por tamaño, su elenco, la dificultad que sube y sus premios', () => {
+    const DIFICULTAD = ['facil', 'medio', 'dificil', 'muyDificil', 'master']
+    const barajas = new Set<string>()
+    for (const d of DEPARTAMENTOS) {
+      const h = HISTORIAS[d.id]!
+      expect(h, d.id).toBeTruthy()
+      expect(h.niveles, d.id).toHaveLength(nivelesPorTamanio(d.km2))
+      const dificultades = h.niveles.map((n) => DIFICULTAD.indexOf(n.nivelBots))
+      expect(dificultades, d.id).toEqual([...dificultades].sort((a, b) => a - b))
+      expect(new Set(dificultades).size, d.id).toBe(dificultades.length)
+      h.niveles.forEach((nivel, i) => {
+        const donde = `${d.id} ${i + 1}`
+        const elenco = elencoDelNivel(nivel)
+        expect(elenco, donde).toHaveLength({ '1v1': 1, '2v2': 3, '3v3': 5 }[nivel.formato])
+        expect(elenco.every(Boolean), donde).toBe(true)
+        expect(elenco[0]!.id, donde).toBe(h.jefe)
+        // Nadie juega de los dos lados.
+        expect(nivel.rivales.filter((r) => nivel.companieros.includes(r)), donde).toEqual([])
+        expect(new Set(elenco.map((p) => p.id)).size, donde).toBe(elenco.length)
+        expect(nivel.frases, donde).toHaveLength(3)
+        expect(nivel.recompensas.length, donde).toBeGreaterThan(0)
+        for (const r of nivel.recompensas) expect(nombreRecompensa(r), `${donde}: ${r}`).not.toBe(r)
+      })
+      // El último nivel da la baraja y la mesa del departamento; las barajas no se repiten.
+      const ultimo = h.niveles[h.niveles.length - 1]!.recompensas
+      expect(ultimo, d.id).toContain(idMesa(d.id as never))
+      const baraja = ultimo.find((r) => r.startsWith('baraja:'))!
+      expect(baraja, d.id).toBeTruthy()
+      expect(barajas.has(baraja), baraja).toBe(false)
+      barajas.add(baraja)
+    }
+    expect(barajas.size).toBe(19)
+  })
+
+  it('las piezas de los departamentos se ganan ahí: no salen en la vitrina', () => {
+    const premios = CATALOGO_TIENDA.filter((i) => i.recompensa)
+    expect(premios).toHaveLength(28)
+    const ganables = new Set(Object.values(HISTORIAS).flatMap((h) => h!.niveles.flatMap((n) => n.recompensas)))
+    for (const p of premios) expect(ganables.has(p.id), p.nombre).toBe(true)
+    for (let d = 1; d <= 60; d++) {
+      const dia = `2026-12-${String((d % 28) + 1).padStart(2, '0')}`
+      for (const i of vitrinaDelDia(`${dia}-${d}`)) expect(i.recompensa, i.nombre).toBeUndefined()
+    }
+    expect(buscarItem(premios[0]!.id)?.recompensa).toBe('Artigas')
+  })
+
+  it('las monedas como premio', () => {
+    expect(monedasDeRecompensa(idMonedas(150))).toBe(150)
+    expect(monedasDeRecompensa(idBaraja('costa'))).toBe(0)
+    expect(monedasDeRecompensa('monedas:mil')).toBe(0)
+    expect(nombreRecompensa(idMonedas(100))).toBe('100 monedas')
+  })
+
   it('la baraja de la costa se gana: sin tenerla no se puede usar', () => {
     expect(barajaGratis('costa')).toBe(false)
     expect(barajaGratis('propia')).toBe(true)
@@ -107,13 +177,14 @@ describe('pantallas', () => {
     expect(screen.getByText(/Se está armando/)).toBeTruthy()
   })
 
-  it('el mapa: Rocha se juega y los demás dicen "Próximamente"', async () => {
+  it('el mapa: cada departamento con su rival y su progreso', async () => {
     servidorFalso({ rocha: [1, 2] })
     comoAdmin()
     app('/historia')
     const rocha = await screen.findByRole('button', { name: /Rocha.*2 de 5 niveles/ })
     expect((rocha as HTMLButtonElement).disabled).toBe(false)
-    expect((screen.getByRole('button', { name: /Montevideo.*Próximamente · 3 niveles/ }) as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByRole('button', { name: /Montevideo.*0 de 3 niveles/ }) as HTMLButtonElement).disabled).toBe(false)
+    expect(screen.queryByText(/Próximamente/)).toBeNull()
     fireEvent.click(rocha)
     expect(screen.getByRole('heading', { name: 'Rocha' })).toBeTruthy()
   })

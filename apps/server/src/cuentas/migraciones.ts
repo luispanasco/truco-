@@ -166,4 +166,11 @@ export const MIGRACIONES: string[] = [
   );
   alter table historia enable row level security;
   `,
+  // 11. Modo historia: algunos niveles dan monedas (un movimiento `historia`, con la partida
+  //     `historia:<departamento>:<nivel>`, así el índice único no deja cobrarlo dos veces).
+  `
+  alter table movimientos drop constraint movimientos_tipo_check;
+  alter table movimientos add constraint movimientos_tipo_check
+    check (tipo in ('partida', 'victoria', 'bonusDiario', 'compra', 'ajuste', 'historia'));
+  `,
 ]

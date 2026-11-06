@@ -21,6 +21,8 @@ export interface ItemTienda {
   capa?: CapaAvatar
   pieza?: number
   ref?: string
+  /** Se gana en el modo historia: no sale en la vitrina. */
+  recompensa?: string
 }
 
 export const idPieza = (capa: CapaAvatar, pieza: number) => `avatar:${capa}:${pieza}`
@@ -33,7 +35,9 @@ export const idTipografia = (id: IdTipografia) => `tipografia:${id}`
 export const CATALOGO_TIENDA: readonly ItemTienda[] = [
   ...CAPAS_AVATAR.flatMap((capa) =>
     CATALOGO_AVATAR[capa].flatMap((p, pieza) =>
-      p.rareza ? [{ id: idPieza(capa, pieza), tipo: 'avatar' as const, nombre: p.nombre, rareza: p.rareza, precio: p.precio, capa, pieza }] : [],
+      p.rareza
+        ? [{ id: idPieza(capa, pieza), tipo: 'avatar' as const, nombre: p.nombre, rareza: p.rareza, precio: p.precio, capa, pieza, ...(p.recompensa ? { recompensa: p.recompensa } : {}) }]
+        : [],
     ),
   ),
   ...MESAS.flatMap((m) => (m.rareza ? [{ id: idMesa(m.id), tipo: 'mesa' as const, nombre: `Mesa ${m.nombre}`, rareza: m.rareza, precio: m.precio, ref: m.id }] : [])),
@@ -59,12 +63,12 @@ export function cambioDeVitrina(ahora: Date): Date {
   return new Date(Date.parse(`${diaDeTienda(ahora)}T03:00:00Z`) + 86_400_000)
 }
 
-/** La vitrina de un día: siempre la misma para ese día, sin repetidos. */
+/** La vitrina de un día: siempre la misma para ese día, sin repetidos (ni lo que se gana en el modo historia). */
 export function vitrinaDelDia(dia: string, catalogo: readonly ItemTienda[] = CATALOGO_TIENDA): ItemTienda[] {
   const azar = mulberry(hashTexto(`vitrina:${dia}`))
   const elegidos: ItemTienda[] = []
   for (const rarezas of LUGARES_VITRINA) {
-    const posibles = catalogo.filter((i) => rarezas.includes(i.rareza) && !elegidos.includes(i))
+    const posibles = catalogo.filter((i) => rarezas.includes(i.rareza) && !i.recompensa && !elegidos.includes(i))
     if (posibles.length > 0) elegidos.push(posibles[Math.floor(azar() * posibles.length)]!)
   }
   return elegidos

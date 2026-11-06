@@ -9,6 +9,7 @@ import {
   leerAvatar,
   type Avatar as TAvatar,
   type CapaAvatar,
+  type PiezaAvatar,
   idPieza,
 } from '@truco/shared'
 import { useEsBeta, useInventario } from '../cuenta/inventario'
@@ -116,6 +117,15 @@ export function Precio({ monedas }: { monedas: number }) {
   )
 }
 
+/** Una pieza que se gana en el modo historia: el candado, sin precio. */
+function Premio() {
+  return (
+    <span className="pieza-precio" aria-hidden="true">
+      <Candado />
+    </span>
+  )
+}
+
 function Opciones({
   capa,
   avatar,
@@ -128,7 +138,7 @@ function Opciones({
   avatar: TAvatar
   apodo: string
   alElegir: (pieza: number) => void
-  alTocarPaga: (nombre: string, precio: number) => void
+  alTocarPaga: (pieza: PiezaAvatar) => void
   tiendaDesbloqueada: boolean
 }) {
   const colores = COLORES[capa]
@@ -144,7 +154,11 @@ function Opciones({
         const elegida = avatar[capa] === i
         const deTienda = pieza.precio > 0
         const paga = deTienda && !tiendaDesbloqueada && !tenes.has(idPieza(capa, i))
-        const etiqueta = paga ? `${pieza.nombre}: ${pieza.precio} monedas, en la tienda` : pieza.nombre
+        const etiqueta = !paga
+          ? pieza.nombre
+          : pieza.recompensa
+            ? `${pieza.nombre}: se gana en ${pieza.recompensa}, en el modo historia`
+            : `${pieza.nombre}: ${pieza.precio} monedas, en la tienda`
         return (
           <button
             key={i}
@@ -153,10 +167,10 @@ function Opciones({
             aria-checked={elegida}
             aria-disabled={paga || undefined}
             aria-label={etiqueta}
-            title={paga ? `${pieza.precio} monedas · Buscala en la tienda` : pieza.nombre}
+            title={etiqueta}
             className={`pieza${elegida ? ' elegida' : ''}${paga ? ' paga' : ''}`}
             // Las pagas no se eligen, pero se pueden tocar: avisan cuánto cuestan.
-            onClick={() => (paga ? alTocarPaga(pieza.nombre, pieza.precio) : alElegir(i))}
+            onClick={() => (paga ? alTocarPaga(pieza) : alElegir(i))}
           >
             {colores ? (
               <span className="pieza-color" style={{ background: colores[i] }} />
@@ -165,7 +179,7 @@ function Opciones({
                 <Avatar codigo={codificarAvatar({ ...avatar, [capa]: i })} apodo={apodo} />
               </span>
             )}
-            {paga && <Precio monedas={pieza.precio} />}
+            {paga && (pieza.recompensa ? <Premio /> : <Precio monedas={pieza.precio} />)}
             {deTienda && !paga && <CandadoAbierto />}
           </button>
         )
@@ -276,7 +290,9 @@ export function EditorAvatar({
                 avatar={avatar}
                 apodo={apodo}
                 alElegir={(i) => elegir(capa, i)}
-                alTocarPaga={(nombre, precio) => setAviso(`${nombre} cuesta ${precio} monedas. Buscala en la tienda.`)}
+                alTocarPaga={(p) =>
+                  setAviso(p.recompensa ? `${p.nombre} se gana en ${p.recompensa}, en el modo historia.` : `${p.nombre} cuesta ${p.precio} monedas. Buscala en la tienda.`)
+                }
                 tiendaDesbloqueada={tiendaDesbloqueada}
               />
             </section>

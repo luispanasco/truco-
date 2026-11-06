@@ -309,7 +309,7 @@ export interface MensajeChat {
 
 /** Un movimiento de monedas, como lo ve el jugador. */
 export interface MovimientoMonedas {
-  tipo: 'partida' | 'victoria' | 'bonusDiario' | 'compra' | 'ajuste'
+  tipo: 'partida' | 'victoria' | 'bonusDiario' | 'compra' | 'ajuste' | 'historia'
   monto: number
 }
 
@@ -317,8 +317,11 @@ export interface MensajesServidor {
   sala: InfoSala
   /** Fase 2, solo a quien entró con su cuenta: lo que cobró por la partida y su saldo. */
   monedas: { movimientos: MovimientoMonedas[]; saldo: number }
-  /** Modo historia en cooperativo: ganaron y se te anotó el nivel (con las recompensas nuevas), o no se pudo (`anotado: false`, sin el nivel anterior). */
-  historia: { nuevas: string[]; anotado: boolean }
+  /**
+   * Modo historia en cooperativo: ganaron y se te anotó el nivel (con las recompensas nuevas y, si
+   * dio monedas, el saldo nuevo), o no se pudo (`anotado: false`, sin el nivel anterior).
+   */
+  historia: { nuevas: string[]; anotado: boolean; saldo?: number }
   /** Fase 2, en partidas entre personas con cuenta: cómo se movió tu Elo en ese formato. */
   elo: { formato: Formato; antes: number; despues: number }
   /** Lo que ve este jugador: nunca incluye cartas ajenas sin jugar. */
@@ -376,3 +379,4 @@ export * from './voz'
 export * from './grupos'
 export * from './personajes'
 export * from './historia'
+export * from './historias'

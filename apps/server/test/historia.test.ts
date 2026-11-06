@@ -1,11 +1,12 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { ColyseusTestServer } from '@colyseus/testing'
-import { HISTORIAS, idBaraja, idMesa } from '@truco/shared'
+import { HISTORIAS, idBaraja, idMesa, idMonedas } from '@truco/shared'
 import { baseLocal, type Base } from '../src/cuentas/base'
 import { verificadorDePrueba } from '../src/cuentas/auth'
 import { entrar } from '../src/cuentas/cuentas'
 import { ganarNivel, progresoHistoria } from '../src/cuentas/historia'
 import { inventario } from '../src/cuentas/tienda'
+import { saldo } from '../src/cuentas/monedas'
 import { Jugador, levantar, salaEnServidor } from './helpers'
 import { elencoDelNivel } from '@truco/shared'
 
@@ -39,7 +40,7 @@ describe('modo historia', () => {
     const { id } = await cuenta()
     await expect(ganarNivel(base, id, 'rocha', 2)).rejects.toThrow('Primero ganá el nivel anterior')
     await expect(ganarNivel(base, id, 'rocha', 9)).rejects.toThrow('Ese nivel no existe')
-    await expect(ganarNivel(base, id, 'montevideo', 1)).rejects.toThrow('Ese nivel no existe')
+    await expect(ganarNivel(base, id, 'narnia', 1)).rejects.toThrow('Ese nivel no existe')
 
     const rocha = HISTORIAS.rocha!
     const r1 = await ganarNivel(base, id, 'rocha', 1)
@@ -52,6 +53,19 @@ describe('modo historia', () => {
     expect(await progresoHistoria(base, id)).toEqual({ rocha: [1, 2, 3, 4, 5] })
     const tiene = await inventario(base, id)
     expect(tiene).toEqual(expect.arrayContaining([idBaraja('costa'), idMesa('rocha'), ...rocha.niveles.flatMap((x) => x.recompensas)]))
+  })
+
+  it('los niveles que dan monedas las suman al saldo, una sola vez', async () => {
+    const { id } = await cuenta()
+    expect(HISTORIAS.artigas!.niveles[0]!.recompensas).toEqual([idMonedas(100)])
+    const antes = await saldo(base, id)
+    const r = await ganarNivel(base, id, 'artigas', 1)
+    expect(r.nuevas).toEqual([idMonedas(100)])
+    expect(r.saldo).toBe(antes + 100)
+    expect((await ganarNivel(base, id, 'artigas', 1)).nuevas).toEqual([])
+    expect(await saldo(base, id)).toBe(antes + 100)
+    // Las monedas no van al inventario.
+    expect(await inventario(base, id)).not.toContain(idMonedas(100))
   })
 
   it('la API es solo para los admins', async () => {
@@ -111,7 +125,7 @@ describe('modo historia en cooperativo', () => {
     for (let nivel = 1; nivel <= 3; nivel++) await ganarNivel(base, admin.id, 'rocha', nivel)
     await (salaEnServidor(colyseus, a.room.roomId) as unknown as { anotarHistoria(g: 0 | 1): Promise<void> }).anotarHistoria(0)
     await a.esperar(() => a.de('historia').length > 0)
-    expect(a.de('historia')[0]).toEqual({ nuevas: HISTORIAS.rocha!.niveles[3]!.recompensas, anotado: true })
+    expect(a.de('historia')[0]).toEqual({ nuevas: HISTORIAS.rocha!.niveles[3]!.recompensas, anotado: true, saldo: expect.any(Number) })
     await b.esperar(() => b.de('historia').length > 0)
     expect(b.de('historia')[0]).toEqual({ nuevas: [], anotado: false })
   })

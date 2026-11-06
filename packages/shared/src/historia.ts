@@ -4,7 +4,7 @@
  * niveles según su tamaño, cada uno más difícil. Cada nivel tiene su formato (1v1, 2v2 o 3v3), su
  * dificultad, sus recompensas fijas y lo que dice el rival antes de empezar.
  *
- * Mientras se arma, lo ve solo el admin. Por ahora se juega Rocha.
+ * Mientras se arma, lo ve solo el admin. Rocha está acá (fue el primero); los demás, en historias.ts.
  */
 
 import type { Formato } from '@truco/engine'
@@ -14,6 +14,7 @@ import { PERSONAJES, piezaPorNombre, type Personaje } from './personajes'
 import { BARAJAS } from './barajas'
 import { MESAS, type IdMesa } from './mesas'
 import type { CapaAvatar } from './avatar'
+import { HISTORIAS_DEPARTAMENTOS, monedasDeRecompensa } from './historias'
 
 export interface Departamento {
   id: string
@@ -63,7 +64,7 @@ export interface NivelHistoria {
   rivales: readonly string[]
   /** Tus compañeros (bots), en 2v2 y 3v3. */
   companieros: readonly string[]
-  /** Ids de la tienda (`avatar:…`, `mesa:…`, `baraja:…`) que se ganan la primera vez. */
+  /** Lo que se gana la primera vez: ids de la tienda (`avatar:…`, `mesa:…`, `baraja:…`) o `monedas:<n>`. */
   recompensas: readonly string[]
   /** Lo que dice el rival antes de empezar, una frase por globo. */
   frases: readonly string[]
@@ -158,7 +159,7 @@ const ROCHA: HistoriaDepartamento = {
 }
 
 /** Los departamentos que ya se pueden jugar. */
-export const HISTORIAS: Partial<Record<IdDepartamento, HistoriaDepartamento>> = { rocha: ROCHA }
+export const HISTORIAS: Partial<Record<IdDepartamento, HistoriaDepartamento>> = { rocha: ROCHA, ...HISTORIAS_DEPARTAMENTOS }
 
 export function buscarDepartamento(id: unknown): (typeof DEPARTAMENTOS)[number] | undefined {
   return DEPARTAMENTOS.find((d) => d.id === id)
@@ -196,9 +197,10 @@ export function mesaDeDepartamento(departamento: IdDepartamento): IdMesa | undef
   return MESAS.find((m) => m.id === departamento)?.id
 }
 
-/** Cómo se llama una recompensa: la pieza del avatar, "Baraja …" o "Mesa …". */
+/** Cómo se llama una recompensa: la pieza del avatar, "Baraja …", "Mesa …" o "150 monedas". */
 export function nombreRecompensa(id: string): string {
   const [tipo, ref] = id.split(':')
+  if (tipo === 'monedas') return `${monedasDeRecompensa(id)} monedas`
   if (tipo === 'baraja') return `Baraja ${BARAJAS.find((b) => b.id === ref)?.nombre ?? ref}`
   if (tipo === 'mesa') return `Mesa ${MESAS.find((m) => m.id === ref)?.nombre ?? ref}`
   return buscarItem(id)?.nombre ?? id

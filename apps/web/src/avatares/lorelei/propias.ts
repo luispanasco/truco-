@@ -550,6 +550,59 @@ const camisaConBuzo = (camisa: string, buzo_: string) =>
     )
   })
 
+/** Delantal de trabajo (el del quesero, el del cervecero): pechera con tiras al cuello sobre una remera. */
+const delantal = (remeraColor: string, color: string) =>
+  conSombra(ESCOTE_REDONDO, () => {
+    const oscuro = tono(color, -0.18)
+    return (
+      torso(LINEA_REDONDA, remeraColor) +
+      MANGAS +
+      ribete(ESCOTE_REDONDO, tono(remeraColor, -0.12)) +
+      // Las tiras que suben al cuello.
+      `<path d="M372 900c-4-30 0-60 14-84M588 900c4-30 0-60-14-84" stroke="${NEGRO}" stroke-width="26" fill="none" stroke-linecap="round"/>` +
+      `<path d="M372 900c-4-30 0-60 14-84M588 900c4-30 0-60-14-84" stroke="${oscuro}" stroke-width="12" fill="none" stroke-linecap="round"/>` +
+      // La pechera con su bolsillo y las costuras.
+      `<path d="M356 896h248l20 104H336Z" fill="${color}" ${TRAZO}/>` +
+      `<path d="M372 912h216" stroke="${oscuro}" stroke-width="5" stroke-dasharray="10 8" fill="none"/>` +
+      `<path d="M430 944h100v46H430Z" ${fino(NEGRO, 7, oscuro)}/>`
+    )
+  })
+
+/** Camisa a cuadros (escocesa), con cuello y tapa: franjas cruzadas a medio tono. */
+const cuadros = (fondo: string, linea_: string) =>
+  conSombra(ESCOTE_V, () => {
+    const linea = LINEA_V
+    const verticales: string[] = []
+    for (let x = 110; x < 860; x += 72) verticales.push(`<path d="${franja(linea, x, x + 26)}" fill="${linea_}" opacity="0.45"/>`)
+    const horizontales: string[] = []
+    for (let y = 850; y < 1000; y += 72) {
+      const d = zona(linea, 90, 870, () => y, () => y + 26)
+      if (d) horizontales.push(`<path d="${d}" fill="${linea_}" opacity="0.45"/>`)
+    }
+    const finas: string[] = []
+    for (let x = 146; x < 860; x += 72) finas.push(`<path d="${franja(linea, x, x + 6)}" fill="${tono(fondo, -0.45)}" opacity="0.6"/>`)
+    return torso(linea, fondo, false) + verticales.join('') + horizontales.join('') + finas.join('') + borde(linea) + MANGAS + tapaCamisa('#f5f5f0') + cuelloCamisa(fondo)
+  })
+
+/** Camisa rusa (kosovorotka): blanca, con el cuello y la abertura al costado bordados. */
+const camisaRusa = (color: string, bordado: string) =>
+  conSombra(ESCOTE_REDONDO, () => {
+    const guarda = (d: string) =>
+      `<path d="${d}" stroke="${NEGRO}" stroke-width="30" fill="none" stroke-linecap="round"/>` +
+      `<path d="${d}" stroke="${bordado}" stroke-width="18" fill="none" stroke-linecap="round"/>` +
+      `<path d="${d}" stroke="#f2c230" stroke-width="4" stroke-dasharray="4 10" fill="none"/>`
+    return (
+      torso(LINEA_REDONDA, color) +
+      MANGAS +
+      // El cuello bordado y la abertura del pecho, corrida a un costado, con sus botoncitos.
+      guarda(camino(curva(ESCOTE_REDONDO.map(([x, y]) => [x, y + 12] as Punto)))) +
+      guarda('M530 872V990') +
+      [910, 950].map((y) => `<circle cx="512" cy="${y}" r="7" ${fino(NEGRO, 4, '#f2c230')}/>`).join('') +
+      // Los puños bordados.
+      `<path d="M184 958c-6 14-8 28-8 42M776 958c6 14 8 28 8 42" stroke="${bordado}" stroke-width="16" fill="none" stroke-linecap="round"/>`
+    )
+  })
+
 /** Ropas, en el orden del catálogo (`CATALOGO_AVATAR.ropa`). */
 export const ROPAS: readonly ((piel: string) => string)[] = [
   remera('#f5f5f0'),
@@ -584,6 +637,21 @@ export const ROPAS: readonly ((piel: string) => string)[] = [
   impermeable('#f2c230'),
   sacoDeLana('#8a5a44', '#f1e6cf'),
   camisaConBuzo('#a9cdee', '#1f3c88'),
+  // Los de cada departamento (modo historia).
+  camisaFloreada('#5b2a86', ['#f2c230', '#e8505b', '#7fb8e6']),
+  chaleco('#6e1f3a', '#f5f5f0'),
+  poncho('#2e5e3a', '#1e2a1e', '#e6c477'),
+  delantal('#7fb8e6', '#f5f5f0'),
+  campera('#7a6a3a'),
+  cuadros('#c83a32', '#f5f5f0'),
+  poncho('#2f3f6e', '#1a1a2a', '#c9cdd2'),
+  delantal('#f5f5f0', '#6b4226'),
+  camisaRusa('#f5f5f0', '#c8323a'),
+  camiseta('#f2c230', '#2e8b4a'),
+  sacoDeLana('#f5f5f0', '#7fb8e6'),
+  chaleco('#2f4f9e', '#f5f5f0'),
+  cuadros('#3c6e3a', '#e6c477'),
+  chaleco('#2a2624', '#f1e6cf'),
 ]
 
 // ---------------------------------------------------------------------------------------
@@ -1133,6 +1201,253 @@ function dibujoCania(): string {
   )
 }
 
+// Los de los personajes de cada departamento.
+
+/** Geoda de amatista (Artigas): la piedra partida, gris por fuera y llena de cristales violetas. */
+function dibujoGeoda(): string {
+  const violeta = '#7b4fb0'
+  const cristales = (
+    [
+      [650, 800, 0],
+      [690, 780, 1],
+      [730, 800, 0],
+      [670, 840, 1],
+      [712, 838, 0],
+      [690, 870, 1],
+    ] as const
+  )
+    .map(([x, y, claro]) => `<path d="M${x} ${y - 22}l16 22-16 22-16-22Z" fill="${claro ? tono(violeta, 0.45) : tono(violeta, 0.2)}" stroke="${tono(violeta, -0.4)}" stroke-width="4"/>`)
+    .join('')
+  return (
+    `<path d="M584 830c-6-60 30-110 70-122 30-10 60-4 84 0 40 8 66 50 66 104 0 58-40 104-112 108-70 4-104-36-108-90Z" fill="#8d8a84" ${TRAZO}/>` +
+    `<path d="M612 828c0-50 32-90 80-92s78 40 78 88c0 50-34 82-80 82s-78-30-78-78Z" ${fino(NEGRO, 7, tono(violeta, -0.3))}/>` +
+    cristales +
+    `<path d="M600 790c10-20 24-34 40-42" stroke="#b9b6ae" stroke-width="8" fill="none" stroke-linecap="round"/>`
+  )
+}
+
+/** Copa de vino tinto (el Tannat de Canelones): el pie sale de la mano y la copa arriba. */
+function dibujoCopa(): string {
+  const vino = '#6a1230'
+  const vidrio = '#e3eef1'
+  return (
+    `<g transform="rotate(8 690 900)">` +
+    varilla('M690 980V780', vidrio, 10) +
+    `<path d="M616 620h148c6 60-6 120-74 160-68-40-80-100-74-160Z" fill="${vidrio}" ${TRAZO}/>` +
+    `<path d="M624 680h132c-6 40-24 70-66 92-42-22-60-52-66-92Z" fill="${vino}"/>` +
+    `<ellipse cx="690" cy="680" rx="66" ry="10" fill="${tono(vino, 0.3)}"/>` +
+    `<path d="M638 640c-2 40 6 70 22 92" stroke="#fff" stroke-width="9" fill="none" stroke-linecap="round" opacity="0.8"/>` +
+    `<ellipse cx="690" cy="620" rx="74" ry="12" ${fino(NEGRO, 8, '#f3f8f9')}/>` +
+    `</g>`
+  )
+}
+
+/** Bolsa de arroz (Cerro Largo): de arpillera, atada arriba, con la franja y la espiga. */
+function dibujoBolsaDeArroz(): string {
+  const tela = '#d9c9a0'
+  const granos = [836, 850, 864].map((y) => `<ellipse cx="680" cy="${y}" rx="7" ry="4" fill="#f2e6b8"/><ellipse cx="700" cy="${y + 6}" rx="7" ry="4" fill="#f2e6b8"/>`).join('')
+  return (
+    `<path d="M612 740c-24 80-30 180-14 270h184c16-90 10-190-14-270Z" fill="${tela}" ${TRAZO}/>` +
+    `<path d="M640 720c10-30 22-50 50-50s40 20 50 50c-30 20-70 20-100 0Z" fill="${tela}" ${TRAZO}/>` +
+    `<path d="M630 742c40 14 80 14 120 0" stroke="#7a4a26" stroke-width="16" fill="none" stroke-linecap="round"/>` +
+    // La franja con la espiga de arroz.
+    `<path d="M604 820h172l4 70H600Z" fill="#3f6e46" stroke="${NEGRO}" stroke-width="6"/>` +
+    `<path d="M690 880v-50" stroke="#f2e6b8" stroke-width="5"/>` +
+    granos +
+    `<path d="M630 940l10 6M720 960l8-6M660 980l6 6" stroke="${tono(tela, -0.3)}" stroke-width="6" stroke-linecap="round"/>`
+  )
+}
+
+/** Horma de queso de Colonia, con una cuña cortada y los agujeritos. */
+function dibujoQueso(): string {
+  const cascara = '#d99a2b'
+  const pasta = '#f4d77a'
+  const agujeros = (
+    [
+      [628, 850, 9],
+      [664, 872, 7],
+      [640, 892, 6],
+      [730, 790, 8],
+      [756, 812, 6],
+    ] as const
+  )
+    .map(([x, y, radio]) => `<circle cx="${x}" cy="${y}" r="${radio}" fill="${tono(pasta, -0.25)}"/>`)
+    .join('')
+  return (
+    // El costado de la horma y la tapa.
+    `<path d="M580 800v90c0 30 50 54 110 54s110-24 110-54v-90Z" fill="${cascara}" ${TRAZO}/>` +
+    `<path d="M580 800c0-30 50-54 110-54s110 24 110 54c0 30-50 54-110 54s-110-24-110-54Z" fill="${pasta}" ${TRAZO}/>` +
+    // El corte de la cuña que falta, a la vista.
+    `<path d="M690 800l-100 34v80l100-30Z" fill="${tono(pasta, -0.08)}" ${TRAZO}/>` +
+    `<path d="M690 800l-30 52" ${fino()}/>` +
+    agujeros
+  )
+}
+
+/** Linterna (para las Grutas del Palacio), prendida, con el haz de luz hacia arriba. */
+function dibujoLinterna(): string {
+  return (
+    `<g transform="rotate(20 690 900)">` +
+    `<path d="M650 700L560 380h260L730 700Z" fill="#fff6c8" opacity="0.55"/>` +
+    `<rect x="652" y="760" width="76" height="260" rx="14" fill="#2a2624" ${TRAZO}/>` +
+    `<path d="M640 700h100l-12 70h-76Z" fill="#c8323a" ${TRAZO}/>` +
+    `<ellipse cx="690" cy="700" rx="50" ry="12" ${fino(NEGRO, 7, '#fff6c8')}/>` +
+    `<rect x="676" y="800" width="28" height="40" rx="6" fill="#c9cdd2" stroke="${NEGRO}" stroke-width="6"/>` +
+    `</g>`
+  )
+}
+
+/** Tarro de leche de tambo (Florida), de lata, con las asas y la tapa. */
+function dibujoTarroDeLeche(): string {
+  const lata = '#c9cdd2'
+  const asas = 'M620 800c-30 0-40 30-24 50M760 800c30 0 40 30 24 50'
+  return (
+    `<path d="${asas}" stroke="${NEGRO}" stroke-width="22" fill="none" stroke-linecap="round"/>` +
+    `<path d="${asas}" stroke="${lata}" stroke-width="9" fill="none" stroke-linecap="round"/>` +
+    `<path d="M620 1010V800c0-30 30-50 46-60v-50h48v50c16 10 46 30 46 60v210Z" fill="${lata}" ${TRAZO}/>` +
+    `<path d="M650 690h80v-26c0-10-8-16-18-16h-44c-10 0-18 6-18 16Z" fill="${tono(lata, -0.2)}" ${TRAZO}/>` +
+    `<path d="M626 860h128M626 950h128" stroke="${tono(lata, -0.3)}" stroke-width="10"/>` +
+    `<path d="M648 830v170" stroke="#fff" stroke-width="12" stroke-linecap="round" opacity="0.7"/>`
+  )
+}
+
+/** Alfajor de Minas: dos tapas bañadas en chocolate con el dulce de leche, mordido. */
+function dibujoAlfajor(): string {
+  const chocolate = '#4a2c1c'
+  return (
+    `<path d="M600 820v40c0 30 40 52 90 52s90-22 90-52v-40Z" fill="${chocolate}" ${TRAZO}/>` +
+    `<path d="M602 846c10 24 46 40 88 40s78-16 88-40" stroke="#c98a4b" stroke-width="14" fill="none"/>` +
+    `<path d="M600 820c0-30 40-52 90-52s90 22 90 52-40 52-90 52-90-22-90-52Z" fill="${tono(chocolate, 0.12)}" ${TRAZO}/>` +
+    // El mordiscón, que deja ver la galleta y el dulce.
+    `<path d="M740 790c-14 10-16 30-4 42 12 14 30 12 42 0" fill="#e9c58a" ${TRAZO}/>` +
+    `<path d="M744 812c8 6 18 8 30 4" stroke="#c98a4b" stroke-width="8" fill="none" stroke-linecap="round"/>` +
+    `<path d="M630 806c20-16 50-22 80-20" stroke="${tono(chocolate, 0.5)}" stroke-width="8" fill="none" stroke-linecap="round"/>`
+  )
+}
+
+/** Chopp de cerveza (Paysandú): jarro de vidrio con la espuma y el asa. */
+function dibujoChopp(): string {
+  const cerveza = '#e3a32a'
+  const burbujas = (
+    [
+      [660, 900],
+      [700, 860],
+      [730, 940],
+      [680, 960],
+    ] as const
+  )
+    .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="${tono(cerveza, 0.5)}"/>`)
+    .join('')
+  return (
+    `<path d="M770 760c56 0 60 120 4 124" stroke="${NEGRO}" stroke-width="34" fill="none" stroke-linecap="round"/>` +
+    `<path d="M770 760c56 0 60 120 4 124" stroke="#e3eef1" stroke-width="18" fill="none" stroke-linecap="round"/>` +
+    `<path d="M610 720h170l-10 270c0 16-12 24-28 24H648c-16 0-28-8-28-24Z" fill="#e3eef1" ${TRAZO}/>` +
+    `<path d="M624 760h142l-8 224c0 10-8 16-18 16H650c-10 0-18-6-18-16Z" fill="${cerveza}"/>` +
+    burbujas +
+    `<path d="M600 730c0-30 20-44 40-40 8-22 34-30 52-16 18-16 46-10 56 10 26-4 42 16 38 46-40 14-150 14-186 0Z" fill="#fbf6ea" ${TRAZO}/>` +
+    `<path d="M640 780v190" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity="0.7"/>`
+  )
+}
+
+/** Girasol (San Javier y su fiesta): el tallo sale de la mano y la flor grande arriba. */
+function dibujoGirasol(): string {
+  const petalos = Array.from(
+    { length: 14 },
+    (_, i) => `<ellipse cx="760" cy="540" rx="22" ry="62" transform="rotate(${r((i * 360) / 14)} 760 620)" fill="#f2c230" stroke="${NEGRO}" stroke-width="6"/>`,
+  ).join('')
+  const semillas = [0, 1, 2, 3, 4, 5].map((i) => `<circle cx="${740 + (i % 3) * 20}" cy="${606 + Math.floor(i / 3) * 24}" r="5" fill="#2a1d14"/>`).join('')
+  return (
+    varilla('M690 1000C690 860 720 760 760 640', '#3f7a26', 14) +
+    `<path d="M710 820c40-40 90-40 110-20-30 30-80 40-110 20Z" ${fino(NEGRO, 6, '#3f7a26')}/>` +
+    petalos +
+    `<circle cx="760" cy="620" r="52" fill="#6b3e22" ${TRAZO}/>` +
+    semillas
+  )
+}
+
+/** Bolsa del free shop (Rivera): blanca con una franja, las manijas y un perfume que asoma. */
+function dibujoBolsaFreeShop(): string {
+  const manijas = 'M650 760c0-60 20-90 40-90s40 30 40 90'
+  return (
+    `<path d="${manijas}" stroke="${NEGRO}" stroke-width="22" fill="none" stroke-linecap="round"/>` +
+    `<path d="${manijas}" stroke="#f5f5f0" stroke-width="9" fill="none" stroke-linecap="round"/>` +
+    // El perfume que asoma.
+    `<rect x="700" y="700" width="50" height="80" rx="8" fill="#e8a0c0" ${TRAZO}/>` +
+    `<rect x="712" y="676" width="26" height="26" rx="4" fill="#d4d7da" ${TRAZO}/>` +
+    `<path d="M600 760h180l-10 250H610Z" fill="#f5f5f0" ${TRAZO}/>` +
+    `<path d="M602 800h176l-2 40H604Z" fill="#2f5fae"/>` +
+    `<path d="M630 900h120M640 930h100" stroke="#b5b4ad" stroke-width="8" stroke-linecap="round"/>`
+  )
+}
+
+/** Naranja de Salto, con su hoja. */
+function dibujoNaranja(): string {
+  const naranja = '#ec8a1c'
+  const poros = (
+    [
+      [720, 800],
+      [650, 850],
+      [700, 870],
+      [740, 840],
+      [670, 800],
+    ] as const
+  )
+    .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3" fill="${tono(naranja, -0.3)}"/>`)
+    .join('')
+  return (
+    `<circle cx="690" cy="820" r="92" fill="${naranja}" ${TRAZO}/>` +
+    `<path d="M640 770c10-14 26-22 42-24" stroke="${tono(naranja, 0.5)}" stroke-width="12" fill="none" stroke-linecap="round"/>` +
+    poros +
+    `<path d="M690 730l4-24" stroke="${NEGRO}" stroke-width="10" stroke-linecap="round"/>` +
+    `<path d="M694 712c20-30 60-36 80-24-14 30-50 40-80 24Z" fill="#3f7a26" ${TRAZO}/>`
+  )
+}
+
+/** Rebenque de cuero trenzado (San José), con la manija y la lonja ancha en la punta. */
+function dibujoRebenque(): string {
+  const cuero = '#6b3e22'
+  return (
+    varilla('M660 1040L850 590', cuero, 18) +
+    `<path d="M700 944l18 8M738 852l18 8M776 762l18 8" stroke="${tono(cuero, 0.4)}" stroke-width="6" stroke-linecap="round"/>` +
+    `<rect x="838" y="574" width="30" height="30" rx="4" transform="rotate(22 853 589)" fill="#d4d7da" stroke="${NEGRO}" stroke-width="7"/>` +
+    `<path d="M852 576c10-50 30-90 60-110 10 30 0 80-34 120Z" fill="${tono(cuero, 0.15)}" ${TRAZO}/>`
+  )
+}
+
+/** Espigas de trigo (Soriano): tres tallos con las espigas doradas. */
+function dibujoEspigas(): string {
+  const oro = '#d9a93a'
+  const espiga = (x: number, y: number, giro: number) =>
+    `<g transform="rotate(${giro} ${x} ${y + 330})">` +
+    varilla(`M${x} ${y + 330}V${y + 100}`, oro, 6) +
+    Array.from({ length: 6 }, (_, i) => {
+      const yy = y + 20 + i * 18
+      return (
+        `<ellipse cx="${x - 12}" cy="${yy}" rx="9" ry="16" transform="rotate(-25 ${x - 12} ${yy})" fill="${oro}" stroke="${NEGRO}" stroke-width="5"/>` +
+        `<ellipse cx="${x + 12}" cy="${yy}" rx="9" ry="16" transform="rotate(25 ${x + 12} ${yy})" fill="${oro}" stroke="${NEGRO}" stroke-width="5"/>`
+      )
+    }).join('') +
+    `<path d="M${x} ${y + 10}l-6-40M${x} ${y + 10}l6-40" stroke="${NEGRO}" stroke-width="3"/>` +
+    `</g>`
+  return espiga(660, 600, -16) + espiga(720, 600, 16) + espiga(690, 570, 0)
+}
+
+/** Bombo legüero (el folclore del Olimar): de madera, con los parches de cuero y el tiento cruzado. */
+function dibujoBombo(): string {
+  const madera = '#8a5a36'
+  const cuero = '#e9d7b0'
+  const tiento = Array.from({ length: 7 }, (_, i) => `M${584 + i * 32} 776L${600 + i * 32} 900M${616 + i * 32} 776L${600 + i * 32} 900`).join('')
+  return (
+    `<g transform="translate(0 -40)">` +
+    `<path d="M570 740v160c0 30 54 50 120 50s120-20 120-50V740Z" fill="${madera}" ${TRAZO}/>` +
+    `<path d="${tiento}" stroke="#f1e6cf" stroke-width="5"/>` +
+    `<path d="M572 904c4 28 56 46 118 46s114-18 118-46" stroke="${cuero}" stroke-width="16" fill="none"/>` +
+    `<ellipse cx="690" cy="740" rx="120" ry="40" fill="${cuero}" ${TRAZO}/>` +
+    `<path d="M574 752c20 22 70 34 116 34s96-12 116-34" stroke="${NEGRO}" stroke-width="10" fill="none"/>` +
+    `</g>`
+  )
+}
+
 /** Accesorios, sin el "Nada" (el 1 del catálogo es el primero de esta lista). */
 export const ACCESORIOS: readonly ((piel: string) => string)[] = [
   mate,
@@ -1156,6 +1471,21 @@ export const ACCESORIOS: readonly ((piel: string) => string)[] = [
   (piel) => enLaMano(piel, dibujoTabla()),
   (piel) => enLaMano(piel, dibujoTambor()),
   (piel) => enLaMano(piel, dibujoCania()),
+  // Los de cada departamento (modo historia).
+  (piel) => enLaMano(piel, dibujoGeoda()),
+  (piel) => enLaMano(piel, dibujoCopa()),
+  (piel) => enLaMano(piel, dibujoBolsaDeArroz()),
+  (piel) => enLaMano(piel, dibujoQueso()),
+  (piel) => enLaMano(piel, dibujoLinterna()),
+  (piel) => enLaMano(piel, dibujoTarroDeLeche()),
+  (piel) => enLaMano(piel, dibujoAlfajor()),
+  (piel) => enLaMano(piel, dibujoChopp()),
+  (piel) => enLaMano(piel, dibujoGirasol()),
+  (piel) => enLaMano(piel, dibujoBolsaFreeShop()),
+  (piel) => enLaMano(piel, dibujoNaranja()),
+  (piel) => enLaMano(piel, dibujoRebenque()),
+  (piel) => enLaMano(piel, dibujoEspigas()),
+  (piel) => enLaMano(piel, dibujoBombo()),
 ]
 
 // ---------------------------------------------------------------------------------------

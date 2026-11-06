@@ -49,11 +49,15 @@ export interface PiezaAvatar {
   precio: number
   /** Las pagas tienen rareza, que fija su precio en la tienda. */
   rareza?: Rareza
+  /** Dónde se gana en el modo historia: no sale en la vitrina, hay que ganarla (o ser beta). */
+  recompensa?: string
 }
 
 const gratis = (nombre: string): PiezaAvatar => ({ nombre, precio: 0 })
 /** `nivel` es el precio de la fase 1: de ahí sale la rareza (y el precio, el de la rareza). */
 const paga = (nombre: string, nivel: number): PiezaAvatar => conRareza({ nombre, precio: nivel })
+/** Una pieza que se gana en un departamento del modo historia (tiene rareza, pero no se vende). */
+const premio = (nombre: string, nivel: number, donde: string): PiezaAvatar => ({ ...paga(nombre, nivel), recompensa: donde })
 /**
  * Piezas con su nombre, en el orden del catálogo: las primeras `libres` gratis y el resto pagas
  * al nivel dado. Los nombres dicen lo que se ve en el dibujo (antes eran "Peinado 13", "Ojos 5"…).
@@ -278,6 +282,21 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     paga('Impermeable amarillo', 250),
     paga('Saco de lana tejido', 250),
     paga('Camisa con buzo al hombro', 300),
+    // Los de cada departamento (modo historia): se ganan ahí, no salen en la vitrina.
+    premio('Camisa de carnaval', 250, 'Artigas'),
+    premio('Chaleco bordó', 250, 'Canelones'),
+    premio('Poncho verde', 350, 'Cerro Largo'),
+    premio('Delantal de quesero', 200, 'Colonia'),
+    premio('Campera de explorador', 250, 'Flores'),
+    premio('Camisa a cuadros', 200, 'Florida'),
+    premio('Poncho azul', 350, 'Lavalleja'),
+    premio('Delantal cervecero', 200, 'Paysandú'),
+    premio('Camisa rusa', 300, 'Río Negro'),
+    premio('Amarela de cuello verde', 200, 'Rivera'),
+    premio('Bata de las termas', 250, 'Salto'),
+    premio('Chaleco maragato', 250, 'San José'),
+    premio('Camisa a cuadros verde', 200, 'Soriano'),
+    premio('Chaleco negro', 250, 'Treinta y Tres'),
   ],
   sombrero: [
     gratis('Sin sombrero'),
@@ -311,6 +330,21 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     paga('Tabla de surf', 400),
     paga('Tambor de candombe', 400),
     paga('Caña de pescar', 300),
+    // Los de cada departamento (modo historia).
+    premio('Geoda de amatista', 400, 'Artigas'),
+    premio('Copa de Tannat', 300, 'Canelones'),
+    premio('Bolsa de arroz', 250, 'Cerro Largo'),
+    premio('Horma de queso', 300, 'Colonia'),
+    premio('Linterna', 250, 'Flores'),
+    premio('Tarro de leche', 300, 'Florida'),
+    premio('Alfajor', 200, 'Lavalleja'),
+    premio('Chopp de cerveza', 300, 'Paysandú'),
+    premio('Girasol', 250, 'Río Negro'),
+    premio('Bolsa del free shop', 250, 'Rivera'),
+    premio('Naranja', 200, 'Salto'),
+    premio('Rebenque', 300, 'San José'),
+    premio('Espigas de trigo', 250, 'Soriano'),
+    premio('Bombo legüero', 400, 'Treinta y Tres'),
   ],
   // Con los colores de las camisetas (sin escudos ni nombres de clubes).
   bufanda: [
