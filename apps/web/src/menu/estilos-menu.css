@@ -567,8 +567,126 @@ button.selector-modo-detalle:hover {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
-.jugar-secundarios .boton-historia {
-  grid-column: 1 / -1;
+/* El modo historia: grande, con el fondo del departamento donde seguís y su rival asomando. */
+.boton-historia-grande {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px;
+  align-items: end;
+  min-height: 168px;
+  padding: 0;
+  border: 2px solid var(--acento);
+  border-radius: 22px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 0.72) 0%, rgb(0 0 0 / 0.35) 60%, rgb(0 0 0 / 0.1) 100%),
+    var(--fondo-ancho, var(--fondo-mini, none)) center / cover,
+    var(--madera);
+  color: var(--texto-claro);
+  text-align: left;
+  box-shadow:
+    0 0 0 4px rgb(242 193 78 / 0.18),
+    0 10px 24px rgb(0 0 0 / 0.4);
+  animation: historia-latido 2.8s ease-in-out infinite;
+}
+/* El brillo que cruza el botón cada tanto. */
+.boton-historia-grande::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.28) 50%, transparent 65%);
+  translate: -120% 0;
+  animation: historia-brillo 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+.boton-historia-grande:hover {
+  filter: brightness(1.08);
+}
+.boton-historia-grande:active {
+  scale: 0.98;
+}
+.boton-historia-grande:focus-visible {
+  outline: 3px solid var(--texto-claro);
+  outline-offset: 3px;
+}
+.boton-historia-texto {
+  display: grid;
+  gap: 4px;
+  padding: 16px 0 16px 18px;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 0.7);
+}
+.boton-historia-texto small {
+  color: var(--acento);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.boton-historia-texto strong {
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: clamp(1.9rem, 8vw, 2.4rem);
+  line-height: 1;
+}
+.boton-historia-texto > span {
+  font-weight: 700;
+}
+.boton-historia-avance {
+  display: grid;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+.boton-historia-barra {
+  height: 6px;
+  max-width: 180px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.25);
+  overflow: hidden;
+}
+.boton-historia-barra > span {
+  display: block;
+  height: 100%;
+  background: var(--acento);
+}
+.boton-historia-rival {
+  align-self: end;
+  width: 150px;
+  margin: 0 0 -6px -22px;
+  aspect-ratio: 1;
+}
+.boton-historia-rival .avatar-dibujo {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 6px 12px rgb(0 0 0 / 0.5));
+}
+@keyframes historia-brillo {
+  0%,
+  55% {
+    translate: -120% 0;
+  }
+  100% {
+    translate: 120% 0;
+  }
+}
+@keyframes historia-latido {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px rgb(242 193 78 / 0.18),
+      0 10px 24px rgb(0 0 0 / 0.4);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgb(242 193 78 / 0.3),
+      0 10px 24px rgb(0 0 0 / 0.4);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boton-historia-grande,
+  .boton-historia-grande::after {
+    animation: none;
+  }
 }
 .boton-chico {
   display: grid;

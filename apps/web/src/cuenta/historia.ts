@@ -20,7 +20,8 @@ async function pedir<T>(metodo: 'GET' | 'POST', ruta: string, cuerpo?: unknown):
 }
 
 export async function cargarHistoria(): Promise<void> {
-  const { progreso } = await pedir<{ progreso: ProgresoHistoria }>('GET', '/historia')
+  const { progreso } = await pedir<{ progreso?: ProgresoHistoria }>('GET', '/historia')
+  if (!progreso) throw new Error('No llegó el progreso del modo historia')
   useHistoria.setState({ progreso })
 }
 

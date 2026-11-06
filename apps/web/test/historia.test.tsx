@@ -9,7 +9,9 @@ import {
   DEPARTAMENTOS,
   SENIAS_DEFAULT,
   type InfoSala,
+  dialogoDelNivel,
   elencoDelNivel,
+  PERSONAJES,
   HISTORIAS,
   idBaraja,
   idMesa,
@@ -82,6 +84,16 @@ function app(ruta: string) {
 beforeEach(() => {
   useHistoria.setState({ progreso: null })
 })
+
+/** Recorre la charla de la previa hasta el final, eligiendo siempre la primera respuesta. */
+async function recorrerPrevia(n: number) {
+  const dialogo = dialogoDelNivel(ROCHA.niveles[n - 1]!, n)
+  for (let i = 0; i < dialogo.length - 1; i++) {
+    const turno = dialogo[i]!
+    if (turno.quien === null) fireEvent.click(await screen.findByRole('button', { name: turno.opciones[0] }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Seguir' }))
+  }
+}
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -205,10 +217,34 @@ describe('pantallas', () => {
     app('/historia/rocha/2')
     const nivel = ROCHA.niveles[1]!
     expect(await screen.findByRole('heading', { name: nivel.lugar })).toBeTruthy()
-    for (const frase of nivel.frases.slice(0, -1)) {
-      await screen.findByText(frase)
-      fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
-    }
+    // Están todos: los rivales arriba y tu equipo (vos y tu compañero) abajo.
+    const nombre = (id: string) => PERSONAJES.find((p) => p.id === id)!.nombre
+    const rivales = screen.getByLabelText('Rivales')
+    for (const id of nivel.rivales) expect(within(rivales).getByText(nombre(id))).toBeTruthy()
+    const tuyos = screen.getByLabelText('Tu equipo')
+    expect(within(tuyos).getByText(nombre(nivel.companieros[0]!))).toBeTruthy()
+    expect(within(tuyos).getByText(leerPerfil().apodo || 'Vos')).toBeTruthy()
+    // El que habla pasa al frente; los demás no.
+    const habla = () => [...document.querySelectorAll('.previa-figura.habla .previa-figura-nombre')].map((e) => e.textContent)
+    await screen.findByText(nivel.frases[0]!)
+    expect(habla()).toEqual([nombre('pescador')])
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    // Después saluda Nico, el compañero de Julio.
+    await screen.findByText(PERSONAJES.find((p) => p.id === 'surfista')!.saludo)
+    expect(habla()).toEqual([nombre('surfista')])
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    await screen.findByText(nivel.frases[1]!)
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    // Te toca: elegís qué decir, y lo decís vos.
+    const turno = dialogoDelNivel(nivel, 2).find((t) => t.quien === null)!
+    expect(screen.queryByRole('button', { name: 'Seguir' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: turno.quien === null ? turno.opciones[1] : '' }))
+    await screen.findByText(turno.quien === null ? turno.opciones[1] : '')
+    expect(habla()).toEqual([leerPerfil().apodo || 'Vos'])
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    // Te da ánimo tu compañero, y Julio cierra.
+    await screen.findByText(PERSONAJES.find((p) => p.id === 'hincha')!.saludo)
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
     await screen.findByText(nivel.frases.at(-1)!)
     fireEvent.click(screen.getByRole('button', { name: '¡A jugar!' }))
     expect(screen.getByTestId('ruta').textContent).toBe('/mesa')
@@ -295,13 +331,13 @@ describe('cooperativo', () => {
     comoAdmin()
     app('/historia/rocha/1')
     await screen.findByRole('heading', { name: ROCHA.niveles[0]!.lugar })
-    for (let i = 1; i < ROCHA.niveles[0]!.frases.length; i++) fireEvent.click(await screen.findByRole('button', { name: 'Seguir' }))
+    await recorrerPrevia(1)
     await screen.findByRole('button', { name: '¡A jugar!' })
     expect(screen.queryByRole('button', { name: 'Jugar con un amigo' })).toBeNull()
     cleanup()
     app('/historia/rocha/2')
     await screen.findByRole('heading', { name: ROCHA.niveles[1]!.lugar })
-    for (let i = 1; i < ROCHA.niveles[1]!.frases.length; i++) fireEvent.click(await screen.findByRole('button', { name: 'Seguir' }))
+    await recorrerPrevia(2)
     expect(await screen.findByRole('button', { name: 'Jugar con un amigo' })).toBeTruthy()
   })
 

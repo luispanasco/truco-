@@ -205,3 +205,57 @@ export function nombreRecompensa(id: string): string {
   if (tipo === 'mesa') return `Mesa ${MESAS.find((m) => m.id === ref)?.nombre ?? ref}`
   return buscarItem(id)?.nombre ?? id
 }
+
+/** Un turno de la previa: habla un personaje (por su id) o vos (`quien: null`), que elegís qué decir. */
+export type TurnoPrevia = { quien: string; texto: string } | { quien: null; opciones: readonly [string, string] }
+
+/** Lo que podés contestar en la previa (uno por nivel, en orden). */
+const RESPUESTAS: readonly (readonly [string, string])[] = [
+  ['¡Dale nomás, que vengo con hambre!', 'Mmm… ¿y si arrancamos despacito?'],
+  ['A mí no me asustás.', 'Uy, me tiembla la mano.'],
+  ['Barajá, que hoy te gano.', 'Que gane el mejor.'],
+  ['Ya vas a ver lo que es bueno.', 'Tengo fe, tengo fe…'],
+  ['¿Mucho hablar, no? Repartí.', 'Bueno, bueno, sin apurarse.'],
+]
+
+/**
+ * La charla antes de un nivel: el rival principal dice sus frases; en los de equipo, sus
+ * compañeros saludan después de la primera y uno de los tuyos te da ánimo; antes de la última,
+ * contestás vos.
+ */
+export function dialogoDelNivel(nivel: NivelHistoria, n: number): TurnoPrevia[] {
+  const saludo = (id: string) => ({ quien: id, texto: PERSONAJES.find((p) => p.id === id)!.saludo })
+  const [primera, ...resto] = nivel.frases
+  const ultima = resto.pop()
+  const jefe = nivel.rivales[0]!
+  return [
+    { quien: jefe, texto: primera! },
+    ...nivel.rivales.slice(1).map(saludo),
+    ...resto.map((texto) => ({ quien: jefe, texto })),
+    { quien: null, opciones: RESPUESTAS[(n - 1) % RESPUESTAS.length]! },
+    ...nivel.companieros.slice(0, 1).map(saludo),
+    ...(ultima ? [{ quien: jefe, texto: ultima }] : []),
+  ]
+}
+
+/** Si ganaste todos los niveles de un departamento. */
+export function departamentoCompleto(progreso: ProgresoHistoria, departamento: IdDepartamento): boolean {
+  const niveles = HISTORIAS[departamento]?.niveles.length ?? 0
+  return niveles > 0 && (progreso[departamento]?.length ?? 0) >= niveles
+}
+
+/** Cuántos departamentos completaste. */
+export function departamentosCompletos(progreso: ProgresoHistoria): number {
+  return DEPARTAMENTOS.filter((d) => departamentoCompleto(progreso, d.id)).length
+}
+
+/**
+ * Dónde seguir: el departamento que empezaste y no terminaste; si no hay, Montevideo (donde se
+ * arranca); si no, el primero sin terminar. Null si completaste todo.
+ */
+export function departamentoSiguiente(progreso: ProgresoHistoria): IdDepartamento | null {
+  const empezado = DEPARTAMENTOS.find((d) => (progreso[d.id]?.length ?? 0) > 0 && !departamentoCompleto(progreso, d.id))
+  if (empezado) return empezado.id
+  if (!departamentoCompleto(progreso, 'montevideo')) return 'montevideo'
+  return DEPARTAMENTOS.find((d) => !departamentoCompleto(progreso, d.id))?.id ?? null
+}

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
   buscarDepartamento,
   codificarAvatar,
   DEPARTAMENTOS,
+  dialogoDelNivel,
   HISTORIAS,
   nivelAbierto,
   nivelesPorTamanio,
@@ -179,15 +180,42 @@ export function DepartamentoHistoria() {
   )
 }
 
+/** Una figura de la previa: al frente e iluminada si está hablando; si no, atrás y en penumbra. */
+function Figura({ codigo, apodo, nombre, habla, quieto }: { codigo: string; apodo?: string; nombre: string; habla: boolean; quieto: boolean }) {
+  return (
+    <motion.div
+      className={`previa-figura${habla ? ' habla' : ''}`}
+      initial={false}
+      animate={{
+        scale: habla ? 1.12 : 0.8,
+        y: habla ? 0 : 10,
+        filter: habla ? 'brightness(1) saturate(1)' : 'brightness(0.45) saturate(0.6)',
+      }}
+      transition={quieto ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 26 }}
+    >
+      <span className="previa-figura-avatar" aria-hidden="true">
+        <Avatar codigo={codigo} apodo={apodo} encuadre="busto" />
+      </span>
+      <span className="previa-figura-nombre">{nombre}</span>
+    </motion.div>
+  )
+}
+
+/** El del medio va al medio: [a, b, c] → [b, a, c]. */
+const alMedio = <T,>(lista: readonly T[]): T[] => (lista.length < 2 ? [...lista] : [lista[1]!, lista[0]!, ...lista.slice(2)])
+
 /**
- * La previa de un nivel: el rival en el lugar, con lo que dice (un globo por vez), y a jugar. Se
- * puede saltar.
+ * La previa de un nivel: los rivales arriba y tu equipo abajo (vos al medio), en el lugar. Charlan
+ * de a uno: el que habla pasa al frente y los demás quedan atrás, en penumbra. En un momento
+ * contestás vos, eligiendo qué decir. Se puede saltar.
  */
 export function PreviaNivel() {
   const navegar = useNavigate()
   const { departamento, nivel: textoNivel } = useParams()
   const { admin, cargando, progreso } = useHistoriaDelAdmin()
-  const [frase, setFrase] = useState(0)
+  const sinMovimiento = useReducedMotion() ?? false
+  const [paso, setPaso] = useState(0)
+  const [respuesta, setRespuesta] = useState<string | null>(null)
   const [conAmigo, setConAmigo] = useState<{ creando: boolean; error: string | null }>({ creando: false, error: null })
   const dep = buscarDepartamento(departamento)
   const historia = dep && HISTORIAS[dep.id]
@@ -198,8 +226,17 @@ export function PreviaNivel() {
   // Sin el anterior ganado no se juega (si el progreso todavía no llegó, se espera).
   if (progreso && !nivelAbierto(progreso, dep.id, n)) return <EnPreparacion />
 
-  const rival = personaje(nivel.rivales[0]!)
-  const ultima = frase >= nivel.frases.length - 1
+  const perfil = leerPerfil()
+  const dialogo = dialogoDelNivel(nivel, n)
+  const turno = dialogo[paso]!
+  const ultimo = paso >= dialogo.length - 1
+  // Tu turno: hasta que elegís, el globo pregunta; después dice lo que elegiste.
+  const eligiendo = turno.quien === null && respuesta === null
+  const quienHabla = turno.quien
+  const texto = turno.quien === null ? (respuesta ?? '¿Qué le decís?') : turno.texto
+  const nombreDe = (id: string | null) => (id === null ? perfil.apodo || 'Vos' : personaje(id).nombre)
+  const seguir = () => setPaso((p) => p + 1)
+
   const jugado = { departamento: dep.id as IdDepartamento, nivel: n }
   const jugar = () => {
     useJuego.getState().conectar(conexionHistoria(leerPerfil(), jugado))
@@ -216,6 +253,11 @@ export function PreviaNivel() {
       setConAmigo({ creando: false, error: motivoError(e) })
     }
   }
+  const figuraDe = (id: string) => {
+    const p = personaje(id)
+    return <Figura key={id} codigo={codificarAvatar(p.avatar)} nombre={p.nombre} habla={quienHabla === id} quieto={sinMovimiento} />
+  }
+  const vos = <Figura key="vos" codigo={perfil.avatar} apodo={perfil.apodo} nombre={nombreDe(null)} habla={quienHabla === null} quieto={sinMovimiento} />
   return (
     <main className="historia-previa" data-fondo={dep.id}>
       <button type="button" className="historia-saltar" onClick={jugar}>
@@ -230,35 +272,38 @@ export function PreviaNivel() {
           {NOMBRE_FORMATO[nivel.formato]} · {NOMBRE_NIVEL[nivel.nivelBots]} · a {nivel.puntos} puntos
         </p>
       </header>
-      <div className="historia-previa-escena">
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={frase}
-            className="historia-globo"
+      <div className="previa-escena">
+        <div className="previa-fila" aria-label="Rivales">
+          {alMedio(nivel.rivales).map(figuraDe)}
+        </div>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={`${paso}-${respuesta ?? ''}`}
+            className={`historia-globo ${quienHabla === null ? 'desde-abajo' : 'desde-arriba'}`}
             role="status"
-            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            initial={sinMovimiento ? false : { opacity: 0, y: quienHabla === null ? 10 : -10, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25 }}
+            exit={sinMovimiento ? undefined : { opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            {nivel.frases[frase]}
-          </motion.p>
+            <span className="historia-globo-quien">{nombreDe(quienHabla)}</span>
+            <p>{texto}</p>
+          </motion.div>
         </AnimatePresence>
-        <motion.span
-          className="historia-previa-avatar"
-          aria-hidden="true"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-        >
-          <Avatar codigo={codificarAvatar(rival.avatar)} encuadre="busto" />
-        </motion.span>
-        <p className="historia-previa-nombre">
-          {rival.nombre} {rival.titulo}
-        </p>
+        <div className="previa-fila previa-tuyos" aria-label="Tu equipo">
+          {alMedio([null, ...nivel.companieros]).map((id) => (id === null ? vos : figuraDe(id)))}
+        </div>
       </div>
       <footer className="historia-previa-pie">
-        {ultima ? (
+        {eligiendo ? (
+          <div className="previa-opciones" role="group" aria-label="Qué le decís">
+            {turno.opciones.map((o) => (
+              <button key={o} type="button" className="boton boton-secundario" onClick={() => setRespuesta(o)}>
+                {o}
+              </button>
+            ))}
+          </div>
+        ) : ultimo ? (
           <>
             <button type="button" className="boton boton-grande" onClick={jugar}>
               ¡A jugar!
@@ -271,7 +316,7 @@ export function PreviaNivel() {
             {conAmigo.error && <p role="alert">⚠ {conAmigo.error}</p>}
           </>
         ) : (
-          <button type="button" className="boton boton-grande" onClick={() => setFrase((f) => f + 1)}>
+          <button type="button" className="boton boton-grande" onClick={seguir}>
             Seguir
           </button>
         )}

@@ -1555,3 +1555,22 @@ Se juegan todos los departamentos, cada uno con su rival, sus niveles y sus prem
 - Revisado con capturas: los 14 personajes nuevos, el mapa completo, Artigas y su previa.
 - **Tests:** web 356 (los 19 departamentos: niveles por tamaño, dificultad que sube, elenco sin repetidos ni de los dos lados, tres frases, premios con nombre, la baraja y la mesa de cada uno al final, las piezas fuera de la vitrina y las monedas), server 122 (las monedas se cobran una sola vez y no van al inventario). Engine 179, sin cambios. E2E historia y ojeo.
 - **Hay que publicar el servidor en Fly** (migración 11).
+
+## Modo historia: la previa con todos y el botón grande — 2026-11-06
+
+- **Previa:** están todos los del nivel: los rivales arriba (el principal al medio) y tu equipo abajo, con tu avatar al medio. Charlan de a uno (`dialogoDelNivel`):
+  1. El principal dice su primera frase.
+  2. En los niveles de equipo, sus compañeros saludan (cada personaje tiene su `saludo`).
+  3. El principal sigue con sus frases.
+  4. Contestás vos, eligiendo entre dos respuestas.
+  5. Uno de tus compañeros te da ánimo.
+  6. El principal cierra.
+
+  El que habla pasa al frente, más grande y con el nombre resaltado; los demás quedan atrás, más chicos y en penumbra. El globo apunta para arriba o para abajo según quién hable.
+- **Botón del modo historia** (`BotonHistoria`), en Jugar, debajo de "¡Jugar!" y a todo el ancho:
+  - Muestra el fondo del departamento donde seguís (al principio, Montevideo) con su rival asomando, "Modo historia" grande y cuántos departamentos completaste.
+  - Tiene un brillo que lo cruza y un latido suave (sin animación si se pidió menos movimiento).
+  - El departamento sale de `departamentoSiguiente`.
+- `--fondo-ancho` en estilos-departamentos.css: el fondo horizontal siempre (para el botón, que es ancho).
+- Admins: se sumó juanpedropanasco@gmail.com (en el `.env` local; en Fly hay que actualizar `ADMINS`).
+- Tests: la previa con todos, el que habla al frente, la respuesta y el ánimo del compañero.

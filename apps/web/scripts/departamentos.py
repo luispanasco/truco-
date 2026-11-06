@@ -46,7 +46,8 @@ DEPARTAMENTOS = [
 
 ENCABEZADO = """/*
  * Los 19 departamentos del modo historia: la mesa de cada uno (el paño repetido, con una viñeta
- * de su color de borde, y la madera) y su fondo (horizontal o vertical, según la pantalla).
+ * de su color de borde, y la madera) y su fondo: `--fondo-lugar` (horizontal o vertical, según la
+ * pantalla), `--fondo-ancho` (siempre el horizontal) y `--fondo-mini` (el chico, para el mapa).
  *
  * Generado por scripts/departamentos.py a partir del paquete de cada lugar: no editar a mano.
  */
@@ -80,6 +81,7 @@ def regla(id, c):
 [data-fondo='{id}'],
 :root[data-lugar='{id}'] body {{
   --fondo-lugar: url('/departamentos/{id}-horizontal.webp');
+  --fondo-ancho: url('/departamentos/{id}-horizontal.webp');
   --fondo-mini: url('/departamentos/{id}-mini.webp');
 }}
 @media (orientation: portrait) {{

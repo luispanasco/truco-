@@ -11,7 +11,8 @@ import { FORMATOS, NIVELES } from '../componentes/FormularioSala'
 import { useJuego } from '../estado'
 import { leerPerfil, MODOS_JUGAR, type Perfil } from '../perfil'
 import { conexionContraLaCompu } from './contraLaCompu'
-import { IconoBuscar, IconoCompu, IconoCrear, IconoLlave, IconoMapa } from './Iconos'
+import { IconoBuscar, IconoCompu, IconoCrear, IconoLlave } from './Iconos'
+import { BotonHistoria } from './BotonHistoria'
 import { useCuenta } from '../cuenta/cuenta'
 
 /** Los 24 rayos del sol del logo, largos y cortos alternados (los mismos de public/icono.svg). */
@@ -240,6 +241,9 @@ export function PanelJugar({
         </button>
       </div>
 
+      {/* El modo historia, mientras se arma, solo para el admin. */}
+      {admin && <BotonHistoria alTocar={() => conApodo(() => navegar('/historia'))} />}
+
       <div className="jugar-secundarios">
         <BotonChico
           icono={<IconoCrear />}
@@ -255,17 +259,6 @@ export function PanelJugar({
           deshabilitado={!enLinea}
           alTocar={() => conApodo(() => navegar('/unirme'))}
         />
-        {/* El modo historia, mientras se arma, solo para el admin. */}
-        {admin && (
-          <BotonChico
-            clase="boton-historia"
-            icono={<IconoMapa />}
-            titulo="Modo historia"
-            detalle="Recorré Uruguay, departamento por departamento"
-            deshabilitado={false}
-            alTocar={() => conApodo(() => navegar('/historia'))}
-          />
-        )}
       </div>
       {!enLinea && (
         <p className="sin-conexion" role="status">

@@ -17,6 +17,8 @@ export interface Personaje {
   /** De dónde es: el lugar del modo historia. */
   lugar: string
   descripcion: string
+  /** Lo que dice en la previa de un nivel cuando no es el rival principal (o cuando es tu compañero). */
+  saludo: string
   avatar: Avatar
 }
 
@@ -43,6 +45,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Gaucho',
     lugar: 'Tacuarembó',
     descripcion: 'Domador y payador. Juega callado y canta la flor con la pajita en la boca.',
+    saludo: '¿Un amargo antes de empezar?',
     avatar: armar(
       {
         piel: 'Piel trigueña',
@@ -65,6 +68,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Surfista',
     lugar: 'La Paloma',
     descripcion: 'Sale del agua directo a la mesa. Si hay buenas olas, se va al mazo.',
+    saludo: 'Si hay buenas olas, me voy al mazo, eh.',
     avatar: armar(
       {
         piel: 'Piel morena',
@@ -84,6 +88,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'la Hippie',
     lugar: 'Cabo Polonio',
     descripcion: 'Vive sin luz eléctrica y juega a la luz del faro. Paz, amor y retruco.',
+    saludo: 'Paz, amor… y retruco.',
     avatar: armar(
       {
         piel: 'Piel clara',
@@ -106,6 +111,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Murguista',
     lugar: 'Montevideo, en Carnaval',
     descripcion: 'Le canta la retirada al que pierde. Ensaya todo el año en el tablado del barrio.',
+    saludo: '¡Atención, atención, que llega la murga!',
     avatar: armar(
       {
         piel: 'Piel muy clara',
@@ -124,6 +130,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Candombero',
     lugar: 'Barrio Sur',
     descripcion: 'Toca el chico en las Llamadas. Golpea la mesa a ritmo de candombe cuando canta truco.',
+    saludo: 'Escuchá el tambor: el truco va a ese ritmo.',
     avatar: armar(
       {
         piel: 'Piel muy oscura',
@@ -143,6 +150,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Pescador',
     lugar: 'Punta del Diablo',
     descripcion: 'Sale al mar antes del alba. Tiene paciencia de pescador: espera la mano buena.',
+    saludo: 'Paciencia de pescador: espero la mano buena.',
     avatar: armar(
       {
         piel: 'Piel trigueña',
@@ -164,6 +172,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'la del almacén',
     lugar: 'El almacén del pueblo',
     descripcion: 'Anota las fiadas en la libreta y los tantos en la cabeza. Nunca se equivoca.',
+    saludo: 'Tranquilo, mijo, que yo llevo la cuenta.',
     avatar: armar(
       {
         piel: 'Piel clara',
@@ -184,6 +193,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Pituco',
     lugar: 'Carrasco',
     descripcion: 'Juega en la rambla con el buzo al hombro. Dice "obvio" a todo, hasta al vale cuatro.',
+    saludo: 'Obvio que ganamos. Obvio.',
     avatar: armar(
       {
         piel: 'Piel muy clara',
@@ -203,6 +213,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Hincha',
     lugar: 'El Centenario',
     descripcion: 'No se pierde un partido de la Celeste. Entre tiempo y tiempo, un truco y un choripán.',
+    saludo: '¡Vamo arriba, que estos no saben nada!',
     avatar: armar(
       {
         piel: 'Piel morena',
@@ -224,6 +235,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el veterano del boliche',
     lugar: 'El boliche de la esquina',
     descripcion: 'Juega en el mismo boliche desde el 62. Se sabe todas las señas, y algunas que inventó.',
+    saludo: 'Juego en el boliche desde el 62. Seguime las señas.',
     avatar: armar(
       {
         piel: 'Piel trigueña',
@@ -247,6 +259,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'la de las piedras',
     lugar: 'Catalán, Artigas',
     descripcion: 'Busca amatistas en las canteras desde chica. Dice que las piedras le avisan cuando el rival miente.',
+    saludo: 'Las piedras nunca mienten. Las cartas, a veces.',
     avatar: armar(
       {
         piel: 'Piel morena',
@@ -266,6 +279,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Bodeguero',
     lugar: 'Las Violetas, Canelones',
     descripcion: 'Hace Tannat como lo hacía su abuelo. Juega despacio, como se toma un buen vino.',
+    saludo: '¡Salud! Que gane el mejor… o sea, yo.',
     avatar: armar(
       {
         piel: 'Piel clara',
@@ -286,6 +300,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Fronterizo',
     lugar: 'Río Branco',
     descripcion: 'Planta arroz de este lado y compra del otro. Canta los tantos en portuñol.',
+    saludo: '¡Bora jugar! Digo… ¡vamos!',
     avatar: armar(
       {
         piel: 'Piel trigueña',
@@ -306,6 +321,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Quesero',
     lugar: 'Nueva Helvecia',
     descripcion: 'Nieto de suizos e italianos. Sus quesos maduran meses; sus jugadas, también.',
+    saludo: 'Despacito, que lo bueno madura lento.',
     avatar: armar(
       {
         piel: 'Piel muy clara',
@@ -325,6 +341,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Guía',
     lugar: 'Las Grutas del Palacio',
     descripcion: 'Conoce cada piedra de las Grutas. Te explica la geología mientras te gana el envido.',
+    saludo: 'Les cuento un dato mientras barajo.',
     avatar: armar(
       {
         piel: 'Piel clara',
@@ -345,6 +362,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'la Tambera',
     lugar: 'Sarandí Grande, Florida',
     descripcion: 'Ordeña a las cinco y a las seis ya está en la mesa. Nadie madruga más que ella.',
+    saludo: 'Yo a esta hora ya ordeñé y todo.',
     avatar: armar(
       {
         piel: 'Piel trigueña',
@@ -365,6 +383,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Payador',
     lugar: 'Minas',
     descripcion: 'Contesta cada truco con una décima. Entre mano y mano, un alfajor de Minas.',
+    saludo: 'Si me cantan truco, contesto con una décima.',
     avatar: armar(
       {
         piel: 'Piel trigueña',
@@ -386,6 +405,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Cervecero',
     lugar: 'Paysandú',
     descripcion: 'Hace cerveza artesanal frente al río. Si pierde, invita la ronda; casi nunca invita.',
+    saludo: 'El que pierde paga la ronda.',
     avatar: armar(
       {
         piel: 'Piel clara',
@@ -405,6 +425,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'de San Javier',
     lugar: 'San Javier, Río Negro',
     descripcion: 'Nieto de los colonos rusos. Baila en la Fiesta del Girasol y juega serio, sin sonreír.',
+    saludo: 'Juego serio. No me hagan reír.',
     avatar: armar(
       {
         piel: 'Piel muy clara',
@@ -424,6 +445,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'la del free shop',
     lugar: 'Rivera, en la frontera',
     descripcion: 'Atiende un free shop en la Sarandí. Regatea los puntos como regatea los perfumes.',
+    saludo: 'Hoy está todo en oferta, menos los puntos.',
     avatar: armar(
       {
         piel: 'Piel morena',
@@ -444,6 +466,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'la de las termas',
     lugar: 'Termas del Daymán',
     descripcion: 'Juega en bata, recién salida del agua caliente. Tranquila, hasta que le cantan retruco.',
+    saludo: 'Tranquilos, que el agua caliente relaja.',
     avatar: armar(
       {
         piel: 'Piel clara',
@@ -463,6 +486,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Maragato',
     lugar: 'San José de Mayo',
     descripcion: 'Maragato de ley, de los que no se achican. Golpea la mesa con el rebenque cuando gana.',
+    saludo: 'Los maragatos no se achican.',
     avatar: armar(
       {
         piel: 'Piel trigueña',
@@ -484,6 +508,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el Chacarero',
     lugar: 'Dolores, Soriano',
     descripcion: 'Siembra trigo en las chacras de Dolores. Mira el cielo antes de cantar.',
+    saludo: '¿Lloverá? Igual, juguemos.',
     avatar: armar(
       {
         piel: 'Piel morena',
@@ -505,6 +530,7 @@ export const PERSONAJES: readonly Personaje[] = [
     titulo: 'el del Olimar',
     lugar: 'Treinta y Tres',
     descripcion: 'Toca el bombo en el Festival del Olimar. Lleva el ritmo del truco con los dedos.',
+    saludo: 'Al ritmo del bombo, señores.',
     avatar: armar(
       {
         piel: 'Piel oscura',

@@ -1,6 +1,7 @@
 /*
  * Los 19 departamentos del modo historia: la mesa de cada uno (el paño repetido, con una viñeta
- * de su color de borde, y la madera) y su fondo (horizontal o vertical, según la pantalla).
+ * de su color de borde, y la madera) y su fondo: `--fondo-lugar` (horizontal o vertical, según la
+ * pantalla), `--fondo-ancho` (siempre el horizontal) y `--fondo-mini` (el chico, para el mapa).
  *
  * Generado por scripts/departamentos.py a partir del paquete de cada lugar: no editar a mano.
  */
@@ -19,6 +20,7 @@
 [data-fondo='artigas'],
 :root[data-lugar='artigas'] body {
   --fondo-lugar: url('/departamentos/artigas-horizontal.webp');
+  --fondo-ancho: url('/departamentos/artigas-horizontal.webp');
   --fondo-mini: url('/departamentos/artigas-mini.webp');
 }
 @media (orientation: portrait) {
@@ -42,6 +44,7 @@
 [data-fondo='canelones'],
 :root[data-lugar='canelones'] body {
   --fondo-lugar: url('/departamentos/canelones-horizontal.webp');
+  --fondo-ancho: url('/departamentos/canelones-horizontal.webp');
   --fondo-mini: url('/departamentos/canelones-mini.webp');
 }
 @media (orientation: portrait) {
@@ -65,6 +68,7 @@
 [data-fondo='cerro-largo'],
 :root[data-lugar='cerro-largo'] body {
   --fondo-lugar: url('/departamentos/cerro-largo-horizontal.webp');
+  --fondo-ancho: url('/departamentos/cerro-largo-horizontal.webp');
   --fondo-mini: url('/departamentos/cerro-largo-mini.webp');
 }
 @media (orientation: portrait) {
@@ -88,6 +92,7 @@
 [data-fondo='colonia'],
 :root[data-lugar='colonia'] body {
   --fondo-lugar: url('/departamentos/colonia-horizontal.webp');
+  --fondo-ancho: url('/departamentos/colonia-horizontal.webp');
   --fondo-mini: url('/departamentos/colonia-mini.webp');
 }
 @media (orientation: portrait) {
@@ -111,6 +116,7 @@
 [data-fondo='durazno'],
 :root[data-lugar='durazno'] body {
   --fondo-lugar: url('/departamentos/durazno-horizontal.webp');
+  --fondo-ancho: url('/departamentos/durazno-horizontal.webp');
   --fondo-mini: url('/departamentos/durazno-mini.webp');
 }
 @media (orientation: portrait) {
@@ -134,6 +140,7 @@
 [data-fondo='flores'],
 :root[data-lugar='flores'] body {
   --fondo-lugar: url('/departamentos/flores-horizontal.webp');
+  --fondo-ancho: url('/departamentos/flores-horizontal.webp');
   --fondo-mini: url('/departamentos/flores-mini.webp');
 }
 @media (orientation: portrait) {
@@ -157,6 +164,7 @@
 [data-fondo='florida'],
 :root[data-lugar='florida'] body {
   --fondo-lugar: url('/departamentos/florida-horizontal.webp');
+  --fondo-ancho: url('/departamentos/florida-horizontal.webp');
   --fondo-mini: url('/departamentos/florida-mini.webp');
 }
 @media (orientation: portrait) {
@@ -180,6 +188,7 @@
 [data-fondo='lavalleja'],
 :root[data-lugar='lavalleja'] body {
   --fondo-lugar: url('/departamentos/lavalleja-horizontal.webp');
+  --fondo-ancho: url('/departamentos/lavalleja-horizontal.webp');
   --fondo-mini: url('/departamentos/lavalleja-mini.webp');
 }
 @media (orientation: portrait) {
@@ -203,6 +212,7 @@
 [data-fondo='maldonado'],
 :root[data-lugar='maldonado'] body {
   --fondo-lugar: url('/departamentos/maldonado-horizontal.webp');
+  --fondo-ancho: url('/departamentos/maldonado-horizontal.webp');
   --fondo-mini: url('/departamentos/maldonado-mini.webp');
 }
 @media (orientation: portrait) {
@@ -226,6 +236,7 @@
 [data-fondo='montevideo'],
 :root[data-lugar='montevideo'] body {
   --fondo-lugar: url('/departamentos/montevideo-horizontal.webp');
+  --fondo-ancho: url('/departamentos/montevideo-horizontal.webp');
   --fondo-mini: url('/departamentos/montevideo-mini.webp');
 }
 @media (orientation: portrait) {
@@ -249,6 +260,7 @@
 [data-fondo='paysandu'],
 :root[data-lugar='paysandu'] body {
   --fondo-lugar: url('/departamentos/paysandu-horizontal.webp');
+  --fondo-ancho: url('/departamentos/paysandu-horizontal.webp');
   --fondo-mini: url('/departamentos/paysandu-mini.webp');
 }
 @media (orientation: portrait) {
@@ -272,6 +284,7 @@
 [data-fondo='rio-negro'],
 :root[data-lugar='rio-negro'] body {
   --fondo-lugar: url('/departamentos/rio-negro-horizontal.webp');
+  --fondo-ancho: url('/departamentos/rio-negro-horizontal.webp');
   --fondo-mini: url('/departamentos/rio-negro-mini.webp');
 }
 @media (orientation: portrait) {
@@ -295,6 +308,7 @@
 [data-fondo='rivera'],
 :root[data-lugar='rivera'] body {
   --fondo-lugar: url('/departamentos/rivera-horizontal.webp');
+  --fondo-ancho: url('/departamentos/rivera-horizontal.webp');
   --fondo-mini: url('/departamentos/rivera-mini.webp');
 }
 @media (orientation: portrait) {
@@ -318,6 +332,7 @@
 [data-fondo='rocha'],
 :root[data-lugar='rocha'] body {
   --fondo-lugar: url('/departamentos/rocha-horizontal.webp');
+  --fondo-ancho: url('/departamentos/rocha-horizontal.webp');
   --fondo-mini: url('/departamentos/rocha-mini.webp');
 }
 @media (orientation: portrait) {
@@ -341,6 +356,7 @@
 [data-fondo='salto'],
 :root[data-lugar='salto'] body {
   --fondo-lugar: url('/departamentos/salto-horizontal.webp');
+  --fondo-ancho: url('/departamentos/salto-horizontal.webp');
   --fondo-mini: url('/departamentos/salto-mini.webp');
 }
 @media (orientation: portrait) {
@@ -364,6 +380,7 @@
 [data-fondo='san-jose'],
 :root[data-lugar='san-jose'] body {
   --fondo-lugar: url('/departamentos/san-jose-horizontal.webp');
+  --fondo-ancho: url('/departamentos/san-jose-horizontal.webp');
   --fondo-mini: url('/departamentos/san-jose-mini.webp');
 }
 @media (orientation: portrait) {
@@ -387,6 +404,7 @@
 [data-fondo='soriano'],
 :root[data-lugar='soriano'] body {
   --fondo-lugar: url('/departamentos/soriano-horizontal.webp');
+  --fondo-ancho: url('/departamentos/soriano-horizontal.webp');
   --fondo-mini: url('/departamentos/soriano-mini.webp');
 }
 @media (orientation: portrait) {
@@ -410,6 +428,7 @@
 [data-fondo='tacuarembo'],
 :root[data-lugar='tacuarembo'] body {
   --fondo-lugar: url('/departamentos/tacuarembo-horizontal.webp');
+  --fondo-ancho: url('/departamentos/tacuarembo-horizontal.webp');
   --fondo-mini: url('/departamentos/tacuarembo-mini.webp');
 }
 @media (orientation: portrait) {
@@ -433,6 +452,7 @@
 [data-fondo='treinta-y-tres'],
 :root[data-lugar='treinta-y-tres'] body {
   --fondo-lugar: url('/departamentos/treinta-y-tres-horizontal.webp');
+  --fondo-ancho: url('/departamentos/treinta-y-tres-horizontal.webp');
   --fondo-mini: url('/departamentos/treinta-y-tres-mini.webp');
 }
 @media (orientation: portrait) {
