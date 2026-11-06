@@ -38,31 +38,41 @@ async function cuenta(): Promise<{ id: string; token: string; email: string }> {
 describe('modo historia', () => {
   it('los niveles se abren de a uno; la primera vez da sus recompensas, después ya no', async () => {
     const { id } = await cuenta()
-    await expect(ganarNivel(base, id, 'rocha', 2)).rejects.toThrow('Primero ganá el nivel anterior')
+    // Para el admin (todo abierto).
+    await expect(ganarNivel(base, id, 'rocha', 2, true)).rejects.toThrow('Primero ganá el nivel anterior')
     await expect(ganarNivel(base, id, 'rocha', 9)).rejects.toThrow('Ese nivel no existe')
     await expect(ganarNivel(base, id, 'narnia', 1)).rejects.toThrow('Ese nivel no existe')
 
     const rocha = HISTORIAS.rocha!
-    const r1 = await ganarNivel(base, id, 'rocha', 1)
+    const r1 = await ganarNivel(base, id, 'rocha', 1, true)
     expect(r1.nuevas).toEqual(rocha.niveles[0]!.recompensas)
     expect(r1.progreso).toEqual({ rocha: [1] })
     // Repetir un nivel ganado se puede, pero no vuelve a dar nada.
-    expect((await ganarNivel(base, id, 'rocha', 1)).nuevas).toEqual([])
+    expect((await ganarNivel(base, id, 'rocha', 1, true)).nuevas).toEqual([])
 
-    for (let nivel = 2; nivel <= rocha.niveles.length; nivel++) await ganarNivel(base, id, 'rocha', nivel)
+    for (let nivel = 2; nivel <= rocha.niveles.length; nivel++) await ganarNivel(base, id, 'rocha', nivel, true)
     expect(await progresoHistoria(base, id)).toEqual({ rocha: [1, 2, 3, 4, 5] })
     const tiene = await inventario(base, id)
     expect(tiene).toEqual(expect.arrayContaining([idBaraja('costa'), idMesa('rocha'), ...rocha.niveles.flatMap((x) => x.recompensas)]))
+  })
+
+  it('se arranca en Montevideo: un departamento se abre al completar uno de sus vecinos', async () => {
+    const { id } = await cuenta()
+    await expect(ganarNivel(base, id, 'canelones', 1)).rejects.toThrow('Ese departamento todavía está cerrado')
+    for (let nivel = 1; nivel <= HISTORIAS.montevideo!.niveles.length; nivel++) await ganarNivel(base, id, 'montevideo', nivel)
+    expect((await ganarNivel(base, id, 'canelones', 1)).progreso).toEqual({ canelones: [1], montevideo: [1, 2, 3] })
+    // Rocha no limita con Montevideo: sigue cerrado.
+    await expect(ganarNivel(base, id, 'rocha', 1)).rejects.toThrow('Ese departamento todavía está cerrado')
   })
 
   it('los niveles que dan monedas las suman al saldo, una sola vez', async () => {
     const { id } = await cuenta()
     expect(HISTORIAS.artigas!.niveles[0]!.recompensas).toEqual([idMonedas(100)])
     const antes = await saldo(base, id)
-    const r = await ganarNivel(base, id, 'artigas', 1)
+    const r = await ganarNivel(base, id, 'artigas', 1, true)
     expect(r.nuevas).toEqual([idMonedas(100)])
     expect(r.saldo).toBe(antes + 100)
-    expect((await ganarNivel(base, id, 'artigas', 1)).nuevas).toEqual([])
+    expect((await ganarNivel(base, id, 'artigas', 1, true)).nuevas).toEqual([])
     expect(await saldo(base, id)).toBe(antes + 100)
     // Las monedas no van al inventario.
     expect(await inventario(base, id)).not.toContain(idMonedas(100))
@@ -121,8 +131,8 @@ describe('modo historia en cooperativo', () => {
       if (l.tipo === 'bot') expect(l.apodo).toBe(elenco[l.asiento - 1]!.nombre)
     }
 
-    // Al ganar, a cada uno se le anota si tenía abierto el nivel (el amigo, que no tiene el 3, no).
-    for (let nivel = 1; nivel <= 3; nivel++) await ganarNivel(base, admin.id, 'rocha', nivel)
+    // Al ganar, a cada uno se le anota si tenía abierto el nivel (el amigo, que no tiene Rocha abierto ni el 3, no).
+    for (let nivel = 1; nivel <= 3; nivel++) await ganarNivel(base, admin.id, 'rocha', nivel, true)
     await (salaEnServidor(colyseus, a.room.roomId) as unknown as { anotarHistoria(g: 0 | 1): Promise<void> }).anotarHistoria(0)
     await a.esperar(() => a.de('historia').length > 0)
     expect(a.de('historia')[0]).toEqual({ nuevas: HISTORIAS.rocha!.niveles[3]!.recompensas, anotado: true, saldo: expect.any(Number) })

@@ -133,7 +133,7 @@ export function rutasCuentas(c: Cuentas | null): Router {
     conSesion(
       conHistoria(async (req, res, c, u) => {
         const b = (req.body ?? {}) as { departamento?: unknown; nivel?: unknown }
-        res.json(await ganarNivel(c.base, u.id, b.departamento, b.nivel))
+        res.json(await ganarNivel(c.base, u.id, b.departamento, b.nivel, esAdmin(u.email)))
       }),
     ),
   )

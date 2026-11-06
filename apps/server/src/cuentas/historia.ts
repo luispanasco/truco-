@@ -1,4 +1,4 @@
-import { monedasDeRecompensa, nivelAbierto, nivelDeHistoria, type IdDepartamento, type ProgresoHistoria } from '@truco/shared'
+import { departamentoAbierto, monedasDeRecompensa, nivelAbierto, nivelDeHistoria, type IdDepartamento, type ProgresoHistoria } from '@truco/shared'
 import type { Base } from './base'
 import { saldo } from './monedas'
 import { inventario } from './tienda'
@@ -19,7 +19,8 @@ export async function progresoHistoria(base: Base, cuentaId: string): Promise<Pr
 
 /**
  * Ganaste un nivel: queda anotado y, la primera vez, sus recompensas van al inventario (como si las
- * hubieras comprado, a precio 0); las monedas (`monedas:<n>`), al saldo. Hay que tener abierto el nivel (el anterior ganado). Las partidas
+ * hubieras comprado, a precio 0); las monedas (`monedas:<n>`), al saldo. El departamento tiene que
+ * estar abierto (un vecino completo, o Montevideo), salvo con `todoAbierto` (el admin). Hay que tener abierto el nivel (el anterior ganado). Las partidas
  * contra bots corren en el navegador, así que el servidor confía en que ganaste: las recompensas
  * son cosméticas.
  */
@@ -28,6 +29,7 @@ export async function ganarNivel(
   cuentaId: string,
   departamento: unknown,
   n: unknown,
+  todoAbierto = false,
 ): Promise<{ progreso: ProgresoHistoria; nuevas: string[]; inventario: string[]; saldo: number }> {
   const nivel = nivelDeHistoria(departamento, n)
   if (!nivel) throw new HistoriaRechazo('Ese nivel no existe')
@@ -35,7 +37,9 @@ export async function ganarNivel(
   const numero = n as number
   return base.transaccion(async (b) => {
     await b.consultar('select id from cuentas where id = $1 for update', [cuentaId])
-    if (!nivelAbierto(await progresoHistoria(b, cuentaId), dep, numero)) throw new HistoriaRechazo('Primero ganá el nivel anterior')
+    const progreso = await progresoHistoria(b, cuentaId)
+    if (!departamentoAbierto(progreso, dep, todoAbierto)) throw new HistoriaRechazo('Ese departamento todavía está cerrado: completá uno de sus vecinos')
+    if (!nivelAbierto(progreso, dep, numero)) throw new HistoriaRechazo('Primero ganá el nivel anterior')
     const primera = await b.consultar<{ nivel: number }>(
       'insert into historia (cuenta_id, departamento, nivel) values ($1, $2, $3) on conflict do nothing returning nivel',
       [cuentaId, dep, numero],

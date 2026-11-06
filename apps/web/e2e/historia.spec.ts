@@ -25,8 +25,14 @@ test('un nivel de Rocha con un amigo', async ({ browser }) => {
   expect(estado).toBe(200)
 
   await luis.goto('/historia/rocha/2')
-  for (let i = 0; i < 2; i++) await luis.getByRole('button', { name: 'Seguir' }).click()
-  await luis.getByRole('button', { name: 'Jugar con un amigo' }).click()
+  // La charla de la previa: "Seguir" hasta el final y, cuando le toca, contesta.
+  const amigo = luis.getByRole('button', { name: 'Jugar con un amigo' })
+  while (!(await amigo.isVisible())) {
+    const opciones = luis.getByRole('group', { name: 'Qué le decís' })
+    if (await opciones.isVisible()) await opciones.getByRole('button').first().click()
+    else await luis.getByRole('button', { name: 'Seguir' }).click()
+  }
+  await amigo.click()
   await expect(luis).toHaveURL(/\/sala$/)
   await expect(luis.getByRole('heading', { name: 'Rocha · Nivel 2' })).toBeVisible()
   const codigo = ((await luis.locator('.codigo-sala').first().textContent()) ?? '').trim()

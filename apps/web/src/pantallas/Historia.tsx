@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useLocation, useNavigate, useParams } from 'react-router'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
   buscarDepartamento,
   codificarAvatar,
   DEPARTAMENTOS,
+  departamentoAbierto,
+  departamentosCompletos,
   dialogoDelNivel,
   HISTORIAS,
   nivelAbierto,
-  nivelesPorTamanio,
   nombreRecompensa,
   PERSONAJES,
   type IdDepartamento,
@@ -22,6 +23,9 @@ import { leerPerfil } from '../perfil'
 import { useJuego } from '../estado'
 import { ConexionOnline, motivoError } from '../conexion/online'
 import { datosUnirse } from '../componentes/Online'
+import { MapaUruguay } from '../historia/MapaUruguay'
+import { MapaDepartamento } from '../historia/MapaDepartamento'
+import { PresentacionDepartamento } from '../historia/PresentacionDepartamento'
 import '../estilos-historia.css'
 
 const NOMBRE_FORMATO = Object.fromEntries(FORMATOS.map(([f, , corto]) => [f, corto]))
@@ -73,59 +77,58 @@ function Volver({ a, texto = 'Volver' }: { a: string; texto?: string }) {
   )
 }
 
-/** El mapa: los 19 departamentos, cada uno por su cuenta. Los que todavía no están dicen "Próximamente". */
+/** El mapa de Uruguay: se elige el departamento (los cerrados, con candado; el admin los tiene todos abiertos). */
 export function Historia() {
   const navegar = useNavigate()
   const { admin, cargando, progreso } = useHistoriaDelAdmin()
   if (!admin) return cargando ? <Cargando /> : <EnPreparacion />
+  const completos = progreso ? departamentosCompletos(progreso) : 0
   return (
-    <main className="historia">
+    <main className="historia historia-mapa">
       <Volver a="/" texto="Inicio" />
       <header className="historia-cabecera">
         <h1>Modo historia</h1>
-        <p>Recorré Uruguay jugando al truco. Cada departamento tiene su rival, sus niveles y sus premios.</p>
+        <p>Recorré Uruguay jugando al truco. Arrancás en Montevideo, y cada departamento que completás abre los que tiene al lado.</p>
+        <p className="historia-avance">
+          {completos} de {DEPARTAMENTOS.length} departamentos
+        </p>
       </header>
-      <ul className="historia-departamentos">
-        {DEPARTAMENTOS.map((d) => {
-          const historia = HISTORIAS[d.id]
-          const niveles = historia?.niveles.length ?? nivelesPorTamanio(d.km2)
-          const ganados = progreso?.[d.id]?.length ?? 0
-          return (
-            <li key={d.id}>
-              <button
-                type="button"
-                className={`historia-departamento${historia ? '' : ' cerrado'}`}
-                data-fondo={d.id}
-                disabled={!historia}
-                onClick={() => navegar(`/historia/${d.id}`)}
-              >
-                {historia && (
-                  <span className="historia-departamento-avatar" aria-hidden="true">
-                    <Avatar codigo={codificarAvatar(personaje(historia.jefe).avatar)} encuadre="cara" />
-                  </span>
-                )}
-                <strong>{d.nombre}</strong>
-                <small>{historia ? `${ganados} de ${niveles} niveles` : `Próximamente · ${niveles} niveles`}</small>
-              </button>
-            </li>
-          )
-        })}
-      </ul>
+      {progreso ? (
+        <MapaUruguay progreso={progreso} todoAbierto={admin} alElegir={(id) => navegar(`/historia/${id}`, { state: { desdeMapa: true } })} />
+      ) : (
+        <p role="status">Cargando…</p>
+      )}
     </main>
   )
 }
 
-/** Un departamento: su rival, la presentación y los niveles (cada uno se abre al ganar el anterior). */
+/**
+ * Un departamento: llegando desde el mapa, primero su presentación (con las nubes que se abren).
+ * Después su rival, el mapa con sus lugares unidos por el camino de los niveles, y el nivel
+ * elegido (al entrar, el que sigue) con lo que es, cómo se juega, su premio y "Jugar".
+ */
 export function DepartamentoHistoria() {
   const navegar = useNavigate()
   const { departamento } = useParams()
+  const ubicacion = useLocation()
   const { admin, cargando, progreso } = useHistoriaDelAdmin()
+  const [presentando, setPresentando] = useState(() => (ubicacion.state as { desdeMapa?: boolean } | null)?.desdeMapa === true)
+  const [elegido, setElegido] = useState<number | null>(null)
   const dep = buscarDepartamento(departamento)
   const historia = dep && HISTORIAS[dep.id]
   if (!admin) return cargando ? <Cargando /> : <EnPreparacion />
   if (!dep || !historia) return <EnPreparacion />
+  if (progreso && !departamentoAbierto(progreso, dep.id, admin)) return <EnPreparacion />
+  if (presentando) return <PresentacionDepartamento nombre={dep.nombre} historia={historia} alTerminar={() => setPresentando(false)} />
+
   const jefe = personaje(historia.jefe)
   const ganados = progreso?.[dep.id] ?? []
+  const numeros = historia.niveles.map((_, i) => i + 1)
+  const abiertos = progreso ? numeros.filter((n) => nivelAbierto(progreso, dep.id, n)) : []
+  const n = elegido ?? abiertos.find((a) => !ganados.includes(a)) ?? historia.niveles.length
+  const nivel = historia.niveles[n - 1]!
+  const ganado = ganados.includes(n)
+  const abierto = abiertos.includes(n)
   return (
     <main className="historia historia-lugar" data-fondo={dep.id}>
       <Volver a="/historia" texto="Mapa" />
@@ -138,44 +141,46 @@ export function DepartamentoHistoria() {
           <p className="historia-rival-nombre">
             {jefe.nombre} {jefe.titulo}
           </p>
-          <p>{historia.presentacion}</p>
+          <p>
+            {ganados.length} de {historia.niveles.length} niveles
+          </p>
         </div>
       </header>
-      <ol className="historia-niveles">
-        {historia.niveles.map((nivel, i) => {
-          const n = i + 1
-          const ganado = ganados.includes(n)
-          const abierto = progreso !== null && nivelAbierto(progreso, dep.id, n)
-          return (
-            <li key={n} className={`historia-nivel${ganado ? ' ganado' : ''}${abierto ? '' : ' cerrado'}`}>
-              <span className="historia-nivel-numero" aria-hidden="true">
-                {ganado ? '✓' : abierto ? n : '🔒'}
-              </span>
-              <span className="historia-nivel-texto">
-                <strong>
-                  Nivel {n} · {nivel.lugar}
-                </strong>
-                <small>
-                  {NOMBRE_FORMATO[nivel.formato]} · {NOMBRE_NIVEL[nivel.nivelBots]} · a {nivel.puntos}
-                </small>
-                <small className="historia-premio">
-                  {ganado ? 'Ganaste: ' : 'Premio: '}
-                  {nivel.recompensas.map(nombreRecompensa).join(' y ')}
-                </small>
-              </span>
-              <button
-                type="button"
-                className="boton"
-                disabled={!abierto}
-                aria-label={`${ganado ? 'Volver a jugar' : 'Jugar'} el nivel ${n}`}
-                onClick={() => navegar(`/historia/${dep.id}/${n}`)}
-              >
-                {ganado ? 'Repetir' : 'Jugar'}
-              </button>
-            </li>
-          )
-        })}
-      </ol>
+      <MapaDepartamento
+        departamento={dep.id as IdDepartamento}
+        niveles={historia.niveles}
+        ganados={ganados}
+        abiertos={abiertos}
+        elegido={n}
+        alElegir={setElegido}
+      />
+      <article className={`historia-nivel${ganado ? ' ganado' : ''}${abierto ? '' : ' cerrado'}`} aria-live="polite">
+        <span className="historia-nivel-numero" aria-hidden="true">
+          {ganado ? '✓' : abierto ? n : '🔒'}
+        </span>
+        <span className="historia-nivel-texto">
+          <strong>
+            Nivel {n} · {nivel.lugar}
+          </strong>
+          <small className="historia-nivel-resumen">{nivel.resumen}</small>
+          <small>
+            {NOMBRE_FORMATO[nivel.formato]} · {NOMBRE_NIVEL[nivel.nivelBots]} · a {nivel.puntos}
+          </small>
+          <small className="historia-premio">
+            {ganado ? 'Ganaste: ' : 'Premio: '}
+            {nivel.recompensas.map(nombreRecompensa).join(' y ')}
+          </small>
+        </span>
+        <button
+          type="button"
+          className="boton"
+          disabled={!abierto}
+          aria-label={`${ganado ? 'Volver a jugar' : 'Jugar'} el nivel ${n}`}
+          onClick={() => navegar(`/historia/${dep.id}/${n}`)}
+        >
+          {ganado ? 'Repetir' : abierto ? 'Jugar' : 'Cerrado'}
+        </button>
+      </article>
     </main>
   )
 }

@@ -15,6 +15,7 @@ import { BARAJAS } from './barajas'
 import { MESAS, type IdMesa } from './mesas'
 import type { CapaAvatar } from './avatar'
 import { HISTORIAS_DEPARTAMENTOS, monedasDeRecompensa } from './historias'
+import { VECINOS } from './vecinos'
 
 export interface Departamento {
   id: string
@@ -57,6 +58,10 @@ export function nivelesPorTamanio(km2: number): number {
 export interface NivelHistoria {
   /** Dónde se juega (la cinemática lo dice abajo del nombre del rival). */
   lugar: string
+  /** Dónde queda (latitud, longitud): para ubicarlo en el mapa del departamento. */
+  donde: readonly [number, number]
+  /** Qué es el lugar, en una línea (la presentación del departamento). */
+  resumen: string
   formato: Formato
   nivelBots: Nivel
   puntos: 15 | 30
@@ -87,6 +92,8 @@ const ROCHA: HistoriaDepartamento = {
   niveles: [
     {
       lugar: 'Punta del Diablo',
+      donde: [-34.045, -53.545],
+      resumen: 'Pueblo de pescadores artesanales sobre el Atlántico, cerca de la frontera con Brasil.',
       formato: '1v1',
       nivelBots: 'facil',
       puntos: 15,
@@ -101,6 +108,8 @@ const ROCHA: HistoriaDepartamento = {
     },
     {
       lugar: 'La Paloma',
+      donde: [-34.66, -54.16],
+      resumen: 'Balneario de olas y surf, con el faro del cabo Santa María.',
       formato: '2v2',
       nivelBots: 'medio',
       puntos: 15,
@@ -115,6 +124,8 @@ const ROCHA: HistoriaDepartamento = {
     },
     {
       lugar: 'La Pedrera',
+      donde: [-34.59, -54.125],
+      resumen: 'Balneario sobre las rocas, frente al mar abierto.',
       formato: '1v1',
       nivelBots: 'dificil',
       puntos: 30,
@@ -129,6 +140,8 @@ const ROCHA: HistoriaDepartamento = {
     },
     {
       lugar: 'Cabo Polonio',
+      donde: [-34.4, -53.78],
+      resumen: 'Pueblo sin luz eléctrica entre dunas, con su faro y los lobos marinos.',
       formato: '3v3',
       nivelBots: 'muyDificil',
       puntos: 30,
@@ -142,7 +155,9 @@ const ROCHA: HistoriaDepartamento = {
       ],
     },
     {
-      lugar: 'El faro de Punta del Diablo',
+      lugar: 'La Fortaleza de Santa Teresa',
+      donde: [-33.97, -53.55],
+      resumen: 'Fortaleza del siglo XVIII en medio del Parque Nacional Santa Teresa.',
       formato: '1v1',
       nivelBots: 'master',
       puntos: 30,
@@ -174,9 +189,20 @@ export function nivelDeHistoria(departamento: unknown, n: unknown): NivelHistori
 /** Progreso: los niveles ganados de cada departamento (los números, desde 1). */
 export type ProgresoHistoria = Partial<Record<IdDepartamento, number[]>>
 
-/** Un nivel se puede jugar si es el primero o si ya ganaste el anterior (los ganados se repiten). */
+/** Dentro de un departamento, un nivel se juega si es el primero o si ya ganaste el anterior (los ganados se repiten). */
 export function nivelAbierto(progreso: ProgresoHistoria, departamento: IdDepartamento, n: number): boolean {
   return n === 1 || (progreso[departamento] ?? []).includes(n - 1)
+}
+
+/** Donde se arranca el modo historia. */
+export const DEPARTAMENTO_INICIAL: IdDepartamento = 'montevideo'
+
+/**
+ * Un departamento se abre cuando completás uno de sus vecinos (Montevideo, desde el principio).
+ * Con `todoAbierto` (el admin), están todos abiertos.
+ */
+export function departamentoAbierto(progreso: ProgresoHistoria, departamento: IdDepartamento, todoAbierto = false): boolean {
+  return todoAbierto || departamento === DEPARTAMENTO_INICIAL || VECINOS[departamento].some((v) => departamentoCompleto(progreso, v))
 }
 
 /**
@@ -250,12 +276,13 @@ export function departamentosCompletos(progreso: ProgresoHistoria): number {
 }
 
 /**
- * Dónde seguir: el departamento que empezaste y no terminaste; si no hay, Montevideo (donde se
- * arranca); si no, el primero sin terminar. Null si completaste todo.
+ * Dónde seguir: el departamento abierto que empezaste y no terminaste; si no hay, Montevideo (donde
+ * se arranca); si no, el primero abierto sin terminar. Null si completaste todo.
  */
-export function departamentoSiguiente(progreso: ProgresoHistoria): IdDepartamento | null {
-  const empezado = DEPARTAMENTOS.find((d) => (progreso[d.id]?.length ?? 0) > 0 && !departamentoCompleto(progreso, d.id))
+export function departamentoSiguiente(progreso: ProgresoHistoria, todoAbierto = false): IdDepartamento | null {
+  const pendientes = DEPARTAMENTOS.filter((d) => departamentoAbierto(progreso, d.id, todoAbierto) && !departamentoCompleto(progreso, d.id))
+  const empezado = pendientes.find((d) => (progreso[d.id]?.length ?? 0) > 0)
   if (empezado) return empezado.id
-  if (!departamentoCompleto(progreso, 'montevideo')) return 'montevideo'
-  return DEPARTAMENTOS.find((d) => !departamentoCompleto(progreso, d.id))?.id ?? null
+  if (pendientes.some((d) => d.id === DEPARTAMENTO_INICIAL)) return DEPARTAMENTO_INICIAL
+  return pendientes[0]?.id ?? null
 }

@@ -1574,3 +1574,26 @@ Se juegan todos los departamentos, cada uno con su rival, sus niveles y sus prem
 - `--fondo-ancho` en estilos-departamentos.css: el fondo horizontal siempre (para el botón, que es ancho).
 - Admins: se sumó juanpedropanasco@gmail.com (en el `.env` local; en Fly hay que actualizar `ADMINS`).
 - Tests: la previa con todos, el que habla al frente, la respuesta y el ánimo del compañero.
+
+## Modo historia: el mapa de Uruguay y el orden desde Montevideo — 2026-11-06
+
+- **Orden:**
+  - Se arranca por Montevideo. Completar un departamento abre sus vecinos (`departamentoAbierto`, `VECINOS`).
+  - El servidor también lo controla: `ganarNivel` rechaza un departamento cerrado ("completá uno de sus vecinos").
+  - El admin tiene todo abierto (`todoAbierto`, en la API y en el cooperativo).
+  - `departamentoSiguiente` elige lo que empezaste o, si no hay, el primero abierto (Montevideo al principio).
+- **Mapa** (`scripts/mapa-uruguay.py`, a partir de Natural Earth, de dominio público):
+  - Genera `src/historia/geografia.ts`: el camino SVG de cada departamento, proyectado y simplificado (21 KB), su caja, su centro y la proyección por latitud y longitud.
+  - Genera `packages/shared/src/vecinos.ts`: los vecinos, calculados con los bordes compartidos. Artigas y Rivera se agregan a mano, porque en estos límites no comparten vértices.
+  - Todos los departamentos se alcanzan desde Montevideo (test).
+- **Pantallas:**
+  - **Mapa de Uruguay** (`MapaUruguay`): cada departamento completo (verde), abierto (dorado) o cerrado (gris con 🔒); el que sigue late. Al tocar uno, el mapa hace zoom hacia él, entran las nubes y se pasa al departamento.
+  - **Presentación** (`PresentacionDepartamento`): se abren las nubes y aparece el departamento con su fondo, su presentación y sus lugares de a uno, cada uno con su resumen. Después, "Ver el mapa" (o "Saltar").
+  - **Mapa del departamento** (`MapaDepartamento`): el contorno con los vecinos apagados y un punto por nivel donde queda su lugar. Los que caen encima de otro se separan un poco. El camino une los niveles en orden: lleno en lo ganado, punteado en lo que falta. Al tocar un punto se ve el nivel (qué es el lugar, cómo se juega, el premio y "Jugar"). Al entrar está elegido el que sigue.
+- **Lugares:** cada nivel tiene `donde` (latitud, longitud, aproximadas) y `resumen`.
+  - Se corrigieron tres: Rocha 5 ahora es la Fortaleza de Santa Teresa (Punta del Diablo no tiene faro), Florida 5 la Plaza Asamblea y Flores 3 Andresito.
+  - Las coordenadas y los datos verificados se piden con el formato de los fondos por nivel.
+- **Tests:**
+  - Web 358: el orden desde Montevideo, los vecinos de ida y vuelta, los lugares dentro de Uruguay, el mapa con la presentación y el mapa del departamento.
+  - Server 123: el departamento cerrado no se anota, salvo el admin.
+  - E2E del cooperativo, con la charla nueva.

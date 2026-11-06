@@ -56,52 +56,244 @@
   opacity: 0.85;
 }
 
-/* El mapa: una grilla de departamentos. */
-.historia-departamentos {
+/* El mapa de Uruguay: cada departamento con su estado. */
+.historia-mapa {
+  max-width: 640px;
+}
+.historia-avance {
+  color: var(--acento);
+  font-weight: 800;
+}
+.mapa-uruguay {
+  position: relative;
+}
+.mapa-uruguay svg {
+  display: block;
+  width: 100%;
+  max-height: 74dvh;
+  margin: 0 auto;
+  overflow: visible;
+}
+.mapa-departamento path {
+  stroke: #2a1d14;
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+  transition: fill 0.2s, filter 0.2s;
+}
+.mapa-departamento.abierto path {
+  fill: #e9c46a;
+  cursor: pointer;
+}
+.mapa-departamento.completo path {
+  fill: #6aa564;
+  cursor: pointer;
+}
+.mapa-departamento.cerrado path {
+  fill: #7d7368;
+  cursor: not-allowed;
+}
+.mapa-departamento:not(.cerrado):hover path,
+.mapa-departamento:focus-visible path {
+  filter: brightness(1.15);
+  outline: none;
+}
+.mapa-departamento:focus {
+  outline: none;
+}
+/* El que sigue late, para que se vea dónde seguir. */
+.mapa-departamento.siguiente path {
+  animation: mapa-siguiente 1.6s ease-in-out infinite;
+}
+.mapa-departamento.elegido path {
+  fill: #f2c14e;
+  animation: none;
+}
+@keyframes mapa-siguiente {
+  0%,
+  100% {
+    fill: #e9c46a;
+  }
+  50% {
+    fill: #f7dc8c;
+  }
+}
+.mapa-nombre {
+  fill: #2a1d14;
+  font-size: 22px;
+  font-weight: 800;
+  text-anchor: middle;
+  dominant-baseline: central;
+  paint-order: stroke;
+  stroke: rgb(255 255 255 / 0.55);
+  stroke-width: 4px;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mapa-departamento.siguiente path {
+    animation: none;
+  }
+}
+
+/* Las nubes que tapan la pantalla al entrar a un departamento y se abren al llegar. */
+.nubes {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+  pointer-events: none;
+}
+.nubes-lado {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  width: 75%;
+}
+.nubes-lado.izquierda {
+  left: -10%;
+}
+.nubes-lado.derecha {
+  right: -10%;
+  transform: scaleX(-1);
+}
+.nube {
+  position: absolute;
+  aspect-ratio: 2.2;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 60%, #fff 0 28%, transparent 29%),
+    radial-gradient(circle at 55% 40%, #fff 0 34%, transparent 35%),
+    radial-gradient(circle at 75% 62%, #f4f6f8 0 26%, transparent 27%),
+    radial-gradient(ellipse at 50% 70%, #eef1f4 0 48%, transparent 49%);
+  filter: blur(2px) drop-shadow(0 10px 18px rgb(40 60 80 / 0.22));
+}
+
+/* La presentación de un departamento: su nombre, qué es y sus lugares, de a uno. */
+.presentacion-departamento {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  overflow-y: auto;
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  padding: calc(56px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+  background:
+    linear-gradient(rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.75)),
+    var(--fondo-lugar, var(--madera)) center / cover;
+  color: var(--texto-claro);
+}
+.presentacion-departamento > * {
+  width: 100%;
+  max-width: 520px;
+  margin-inline: auto;
+}
+.presentacion-departamento > .historia-saltar {
+  width: auto;
+}
+.presentacion-departamento h1 {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: clamp(2.4rem, 11vw, 3.4rem);
+  text-align: center;
+  text-shadow: 0 3px 10px rgb(0 0 0 / 0.6);
+}
+.presentacion-texto {
+  margin: 0;
+  text-align: center;
+  font-size: 1.05rem;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 0.6);
+}
+.presentacion-lugares {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
-.historia-departamento {
-  width: 100%;
-  min-height: 92px;
+.presentacion-lugares li {
   display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 4px;
-  padding: 12px 8px;
-  border: 2px solid var(--acento);
-  border-radius: 16px;
-  background:
-    linear-gradient(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.65)),
-    var(--fondo-mini, none) center / cover,
-    rgb(0 0 0 / 0.3);
-  color: var(--texto-claro);
-  text-align: center;
-  text-shadow: 0 1px 4px rgb(0 0 0 / 0.7);
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgb(0 0 0 / 0.45);
 }
-.historia-departamento small {
-  opacity: 0.8;
+.presentacion-lugares li > span:last-child {
+  display: grid;
+  gap: 2px;
 }
-.historia-departamento.cerrado {
-  border-color: rgb(255 255 255 / 0.12);
-  cursor: default;
-  filter: grayscale(0.6);
-  opacity: 0.75;
+.presentacion-lugares small {
+  opacity: 0.85;
 }
-.historia-departamento-avatar {
-  width: 56px;
-  height: 56px;
+.presentacion-numero {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
   border-radius: 50%;
-  overflow: hidden;
-  background: rgb(255 255 255 / 0.15);
+  background: var(--acento);
+  color: var(--tinta);
+  font-weight: 800;
 }
-.historia-departamento-avatar .avatar-dibujo {
+
+/* El mapa de un departamento: el contorno, los vecinos apagados, el camino y los niveles. */
+.mapa-departamento-svg {
+  display: block;
   width: 100%;
-  height: 100%;
+  max-height: 56dvh;
+  border-radius: 18px;
+  background: rgb(0 0 0 / 0.35);
+}
+.mapa-vecino {
+  fill: rgb(255 255 255 / 0.06);
+  stroke: rgb(255 255 255 / 0.18);
+  stroke-width: 1.5;
+}
+.mapa-este {
+  fill: rgb(233 196 106 / 0.28);
+  stroke: var(--acento);
+  stroke-linejoin: round;
+}
+.mapa-camino {
+  stroke: #fff6c8;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+.mapa-camino.hecho {
+  stroke: var(--acento);
+}
+.mapa-nivel {
+  cursor: pointer;
+}
+.mapa-nivel:focus {
+  outline: none;
+}
+.mapa-nivel circle {
+  fill: var(--acento);
+  stroke: #2a1d14;
+}
+.mapa-nivel text {
+  fill: var(--tinta);
+  font-weight: 800;
+  pointer-events: none;
+}
+.mapa-nivel.ganado circle {
+  fill: var(--exito);
+}
+.mapa-nivel.ganado text {
+  fill: #fff;
+}
+.mapa-nivel.cerrado circle {
+  fill: #6f675e;
+}
+.mapa-nivel.elegido circle,
+.mapa-nivel:focus-visible circle {
+  stroke: #fff;
+}
+.historia-nivel-resumen {
+  font-style: italic;
 }
 
 /* Un departamento, con el lugar de fondo. */
@@ -152,13 +344,6 @@
 .historia-rival-nombre {
   color: var(--acento);
   font-weight: 800;
-}
-.historia-niveles {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
 }
 .historia-nivel {
   display: grid;

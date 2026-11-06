@@ -9,6 +9,8 @@ import {
   DEPARTAMENTOS,
   SENIAS_DEFAULT,
   type InfoSala,
+  departamentoAbierto,
+  departamentoSiguiente,
   dialogoDelNivel,
   elencoDelNivel,
   PERSONAJES,
@@ -20,6 +22,7 @@ import {
   nivelesPorTamanio,
   nombreRecompensa,
   permisosDe,
+  VECINOS,
   vitrinaDelDia,
 } from '@truco/shared'
 import { useCuenta } from '../src/cuenta/cuenta'
@@ -166,6 +169,40 @@ describe('los datos del modo historia', () => {
     expect(buscarItem(premios[0]!.id)?.recompensa).toBe('Artigas')
   })
 
+  it('se arranca en Montevideo y completar un departamento abre sus vecinos (el admin, todo abierto)', () => {
+    const completo = (id: keyof typeof HISTORIAS) => HISTORIAS[id]!.niveles.map((_, i) => i + 1)
+    expect(DEPARTAMENTOS.filter((d) => departamentoAbierto({}, d.id)).map((d) => d.id)).toEqual(['montevideo'])
+    expect(departamentoSiguiente({})).toBe('montevideo')
+    // Con un nivel de Montevideo todavía no se abre nada más.
+    expect(departamentoAbierto({ montevideo: [1] }, 'canelones')).toBe(false)
+    const conMontevideo = { montevideo: completo('montevideo') }
+    expect(DEPARTAMENTOS.filter((d) => departamentoAbierto(conMontevideo, d.id)).map((d) => d.id)).toEqual(['canelones', 'montevideo', 'san-jose'])
+    expect(departamentoSiguiente(conMontevideo)).toBe('canelones')
+    // Lo que empezaste va primero.
+    expect(departamentoSiguiente({ ...conMontevideo, 'san-jose': [1] })).toBe('san-jose')
+    expect(departamentoAbierto({}, 'artigas', true)).toBe(true)
+    // Los vecinos van de ida y vuelta, y todos se pueden alcanzar desde Montevideo.
+    for (const d of DEPARTAMENTOS) for (const v of VECINOS[d.id]) expect(VECINOS[v], `${d.id}-${v}`).toContain(d.id)
+    const alcanzados = new Set<string>(['montevideo'])
+    for (let cambio = true; cambio; ) {
+      cambio = false
+      for (const d of [...alcanzados]) for (const v of VECINOS[d as keyof typeof VECINOS]) if (!alcanzados.has(v)) (alcanzados.add(v), (cambio = true))
+    }
+    expect(alcanzados.size).toBe(19)
+  })
+
+  it('cada lugar queda dentro de Uruguay y tiene su resumen', () => {
+    for (const h of Object.values(HISTORIAS))
+      for (const n of h!.niveles) {
+        const [lat, lon] = n.donde
+        expect(lat, n.lugar).toBeGreaterThan(-35.1)
+        expect(lat, n.lugar).toBeLessThan(-30)
+        expect(lon, n.lugar).toBeGreaterThan(-58.5)
+        expect(lon, n.lugar).toBeLessThan(-53)
+        expect(n.resumen.length, n.lugar).toBeGreaterThan(10)
+      }
+  })
+
   it('las monedas como premio', () => {
     expect(monedasDeRecompensa(idMonedas(150))).toBe(150)
     expect(monedasDeRecompensa(idBaraja('costa'))).toBe(0)
@@ -189,25 +226,37 @@ describe('pantallas', () => {
     expect(screen.getByText(/Se está armando/)).toBeTruthy()
   })
 
-  it('el mapa: cada departamento con su rival y su progreso', async () => {
+  it('el mapa de Uruguay: cada departamento con su progreso; al tocar uno, su presentación y después su mapa', async () => {
     servidorFalso({ rocha: [1, 2] })
     comoAdmin()
     app('/historia')
-    const rocha = await screen.findByRole('button', { name: /Rocha.*2 de 5 niveles/ })
-    expect((rocha as HTMLButtonElement).disabled).toBe(false)
-    expect((screen.getByRole('button', { name: /Montevideo.*0 de 3 niveles/ }) as HTMLButtonElement).disabled).toBe(false)
-    expect(screen.queryByText(/Próximamente/)).toBeNull()
+    const rocha = await screen.findByRole('button', { name: /Rocha · 2 de 5 niveles/ })
+    // El admin tiene todo abierto.
+    expect(screen.getByRole('button', { name: /Montevideo · 0 de 3 niveles/ }).getAttribute('aria-disabled')).toBeNull()
     fireEvent.click(rocha)
+    // Después del zoom y las nubes, la presentación: el departamento y sus lugares, con lo que es cada uno.
+    const presentacion = await screen.findByRole('dialog', { name: 'Llegaste a Rocha' }, { timeout: 4000 })
+    for (const n of ROCHA.niveles) {
+      expect(within(presentacion).getByText(n.lugar)).toBeTruthy()
+      expect(within(presentacion).getByText(n.resumen)).toBeTruthy()
+    }
+    fireEvent.click(within(presentacion).getByRole('button', { name: 'Ver el mapa' }))
     expect(screen.getByRole('heading', { name: 'Rocha' })).toBeTruthy()
+    expect(screen.getByRole('group', { name: 'Mapa del departamento' })).toBeTruthy()
   })
 
-  it('Rocha: los niveles se abren de a uno y dicen su premio', async () => {
+  it('Rocha: un punto por nivel en el mapa; se elige y se ve qué es, su premio y si se juega', async () => {
     servidorFalso({ rocha: [1] })
     comoAdmin()
     app('/historia/rocha')
+    // Al entrar, el que sigue.
     await waitFor(() => expect((screen.getByRole('button', { name: 'Jugar el nivel 2' }) as HTMLButtonElement).disabled).toBe(false))
+    expect(screen.getByText(ROCHA.niveles[1]!.resumen)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: `Nivel 1 · ${ROCHA.niveles[0]!.lugar}` }))
     expect(screen.getByRole('button', { name: 'Volver a jugar el nivel 1' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: `Nivel 3 · ${ROCHA.niveles[2]!.lugar}` }))
     expect((screen.getByRole('button', { name: 'Jugar el nivel 3' }) as HTMLButtonElement).disabled).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: `Nivel 5 · ${ROCHA.niveles[4]!.lugar}` }))
     expect(screen.getByText(/Premio: Baraja Costa Uruguaya y Mesa Rocha/)).toBeTruthy()
   })
 
