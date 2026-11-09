@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Palo } from '@truco/engine'
-import { DIBUJO_DESDE, DIBUJO_HASTA, DISPOSICION, tamSimbolo } from '../src/componentes/dibujo'
+import { DIBUJO_DESDE, DIBUJO_HASTA, disposicion, MEDIDA_PALO } from '../src/componentes/dibujo'
 import {
   conTope,
   enTope,
@@ -40,15 +40,34 @@ describe('zonas', () => {
     expect(TOPE).toBeLessThan(ZONA_INDICE.desde * ALTO)
   })
 
-  it('el dibujo de los palos empieza debajo del número', () => {
+  /** Medio ancho de la punta de abajo y de la de arriba de cada palo derecho (a tamaño 100). */
+  const ANCHO_ABAJO: Record<Palo, number> = { oro: 48, copa: 28, espada: 7, basto: 9 }
+  const ANCHO_ARRIBA: Record<Palo, number> = { oro: 48, copa: 38, espada: 8, basto: 17 }
+
+  it('el dibujo de los palos empieza debajo del número y no se sale del marco', () => {
     const palos: Palo[] = ['oro', 'copa', 'espada', 'basto']
     for (const palo of palos) {
-      for (const [numero, puntos] of Object.entries(DISPOSICION)) {
-        // Cada palo ocupa un poco más de la mitad de su tamaño hacia arriba y hacia abajo.
-        const medio = tamSimbolo(palo, Number(numero)) * 0.53
-        for (const [, y] of puntos) {
-          expect(y - medio, `${numero} de ${palo}`).toBeGreaterThanOrEqual(DIBUJO_DESDE)
-          expect(y + medio, `${numero} de ${palo}`).toBeLessThanOrEqual(DIBUJO_HASTA)
+      for (let numero = 1; numero <= 7; numero++) {
+        const puntos = disposicion(palo, numero)
+        expect(puntos, `${numero} de ${palo}`).toHaveLength(numero === 1 ? 1 : palo === 'basto' && numero === 3 ? 3 : numero)
+        for (const { x, y, tam, rot } of puntos) {
+          // Las dos puntas del palo (a lo largo) y, si está derecho o acostado, también lo ancho.
+          const { ancho, alto } = MEDIDA_PALO[palo]
+          const r = (rot * Math.PI) / 180
+          const largo = { x: Math.sin(r) * alto * (tam / 100), y: Math.cos(r) * alto * (tam / 100) }
+          const recto = rot % 90 === 0
+          const anchoGirado = recto ? { x: Math.abs(Math.cos(r)) * ancho * (tam / 100), y: Math.abs(Math.sin(r)) * ancho * (tam / 100) } : { x: 0, y: 0 }
+          const nombre = `${numero} de ${palo}`
+          expect(y - Math.abs(largo.y) - anchoGirado.y, nombre).toBeGreaterThanOrEqual(DIBUJO_DESDE - 0.5)
+          expect(y + Math.abs(largo.y) + anchoGirado.y, nombre).toBeLessThanOrEqual(DIBUJO_HASTA + 0.5)
+          expect(x - Math.abs(largo.x) - anchoGirado.x, nombre).toBeGreaterThanOrEqual(14)
+          expect(x + Math.abs(largo.x) + anchoGirado.x, nombre).toBeLessThanOrEqual(186)
+          // Y no pisa el número de abajo (la esquina de abajo a la derecha, x de 146 a 182 e y desde 250).
+          // Derecho o al revés, lo que queda abajo es una punta: su ancho es el de esa punta.
+          const punta = rot === 0 ? ANCHO_ABAJO[palo] : rot === 180 ? ANCHO_ARRIBA[palo] : null
+          const anchoAbajo = punta === null ? anchoGirado.x : (punta * tam) / 100
+          const pisaNumero = x + Math.abs(largo.x) + anchoAbajo > 146 && y + Math.abs(largo.y) + anchoGirado.y > 250
+          expect(pisaNumero, `${nombre}: pisa el número de abajo`).toBe(false)
         }
       }
     }

@@ -103,67 +103,102 @@ const LIENZO_ALTO = 300
 /** Primera y última altura (del lienzo) que puede ocupar el dibujo. */
 export const DIBUJO_DESDE = ZONA_DIBUJO_DESDE * LIENZO_ALTO
 export const DIBUJO_HASTA = 258
-/** Altura del medio del dibujo: de ahí para abajo espadas y bastos van invertidos. */
+/** Altura del medio del dibujo. */
 const MEDIO = (DIBUJO_DESDE + DIBUJO_HASTA) / 2
-const COLS = [66, 134]
-export const DISPOSICION: Record<number, [number, number][]> = {
-  1: [[100, MEDIO]],
-  2: [
-    [100, 136],
-    [100, 218],
-  ],
-  3: [
-    [100, 124],
-    [100, MEDIO],
-    [100, 230],
-  ],
-  4: [
-    [COLS[0]!, 128],
-    [COLS[1]!, 128],
-    [COLS[0]!, 226],
-    [COLS[1]!, 226],
-  ],
-  5: [
-    [COLS[0]!, 124],
-    [COLS[1]!, 124],
-    [100, MEDIO],
-    [COLS[0]!, 230],
-    [COLS[1]!, 230],
-  ],
-  6: [
-    [COLS[0]!, 122],
-    [COLS[1]!, 122],
-    [COLS[0]!, MEDIO],
-    [COLS[1]!, MEDIO],
-    [COLS[0]!, 232],
-    [COLS[1]!, 232],
-  ],
-  7: [
-    [COLS[0]!, 119],
-    [COLS[1]!, 119],
-    [100, 152],
-    [COLS[0]!, 185],
-    [COLS[1]!, 185],
-    [COLS[0]!, 235],
-    [COLS[1]!, 235],
-  ],
-}
-const TAM_SIMBOLO: Record<number, number> = { 1: 118, 2: 74, 3: 52, 4: 56, 5: 50, 6: 46, 7: 42 }
 
-/** Tamaño de cada palo según la carta. Los anchos (1 de espadas y de bastos) son finos: van más grandes. */
-export function tamSimbolo(palo: Palo, numero: number): number {
-  return numero === 1 && (palo === 'espada' || palo === 'basto') ? 150 : (TAM_SIMBOLO[numero] ?? 42)
+/** Un palo en la carta: dónde va su centro, de qué tamaño y girado cuántos grados (0: punta o cabeza arriba). */
+export interface PaloEnCarta {
+  x: number
+  y: number
+  tam: number
+  rot: number
+}
+
+const p = (x: number, y: number, tam: number, rot = 0): PaloEnCarta => ({ x, y, tam, rot })
+
+/*
+ * Como en las barajas de siempre (Fournier, El Cid, Grimaud), cada palo tiene su disposición:
+ *
+ * - Oros y copas: el 2 en columna; el 3 en diagonal (arriba a la izquierda, al medio a la
+ *   derecha, abajo a la izquierda); el 4 en las esquinas; el 5, las esquinas y uno más grande al
+ *   medio; el 6 en dos columnas de a tres; el 7, dos arriba, uno al medio un poco más arriba y dos
+ *   filas de a dos.
+ * - Espadas: largas y derechas. El 2 y el 3, verticales de punta a punta, una sí y una no al revés;
+ *   el 4, en las esquinas apuntando al medio (una X abierta); el 5, cuatro en las esquinas y una
+ *   acostada al medio; el 6, dos filas de a tres; el 7, el 6 con una acostada al medio. Fuera del
+ *   2 y el 3, la empuñadura va hacia afuera y la punta hacia el medio.
+ * - Bastos: el 2, dos parados; el 3, cruzados (uno parado y dos en diagonal, como una X con un palo
+ *   al medio); el 4, en las esquinas, en diagonal; el 5, el 4 con uno acostado al medio; el 6 y el
+ *   7, como las espadas. La cabeza (lo grueso) va hacia afuera.
+ */
+const ORO_O_COPA: Record<number, PaloEnCarta[]> = {
+  1: [p(100, MEDIO, 118)],
+  2: [p(100, 137, 76), p(100, 217, 76)],
+  3: [p(62, 130, 60), p(138, MEDIO, 60), p(62, 224, 60)],
+  4: [p(58, 132, 58), p(142, 132, 58), p(58, 220, 58), p(142, 220, 58)],
+  5: [p(54, 126, 48), p(146, 126, 48), p(100, MEDIO, 62), p(54, 222, 48), p(146, 222, 48)],
+  6: [p(64, 124, 46), p(136, 124, 46), p(64, 174, 46), p(136, 174, 46), p(64, 224, 46), p(136, 224, 46)],
+  7: [p(60, 117, 42), p(140, 117, 42), p(100, 147, 42), p(60, 182, 42), p(140, 182, 42), p(60, 224, 42), p(140, 224, 42)],
+}
+
+/**
+ * Seis parados en dos filas de a tres, con lo ancho (la empuñadura o la cabeza del basto) hacia
+ * afuera: el 6 y, con uno acostado al medio, el 7. `rot` es el giro de la fila de arriba (la de
+ * abajo va al revés).
+ */
+const dosFilas = (tam: number, arriba: number, abajo: number, rot: number) => [
+  p(52, arriba, tam, rot),
+  p(100, arriba, tam, rot),
+  p(148, arriba, tam, rot),
+  p(52, abajo, tam, rot + 180),
+  p(100, abajo, tam, rot + 180),
+  p(148, abajo, tam, rot + 180),
+]
+
+const ESPADAS: Record<number, PaloEnCarta[]> = {
+  1: [p(100, MEDIO, 150)],
+  2: [p(64, MEDIO, 136, 180), p(136, MEDIO, 136)],
+  3: [p(46, MEDIO, 120), p(100, MEDIO, 120, 180), p(154, MEDIO, 120)],
+  4: [p(64, 135, 88, 135), p(136, 135, 88, -135), p(64, 213, 88, 45), p(136, 213, 88, -45)],
+  5: [p(56, 136, 70, 180), p(144, 136, 70, 180), p(100, MEDIO, 72, 90), p(56, 212, 70), p(144, 212, 70)],
+  6: dosFilas(70, 134, 212, 180),
+  7: [...dosFilas(56, 126, 218, 180), p(100, MEDIO, 72, 90)],
+}
+
+const BASTOS: Record<number, PaloEnCarta[]> = {
+  1: [p(100, MEDIO, 150)],
+  2: [p(62, MEDIO, 140), p(138, MEDIO, 140)],
+  // Cruzados: primero los dos en diagonal y arriba, el parado.
+  3: [p(100, MEDIO, 146, -35), p(100, MEDIO, 146, 35), p(100, MEDIO, 150)],
+  4: [p(66, 137, 82, -45), p(134, 137, 82, 45), p(66, 211, 82, -135), p(134, 211, 82, 135)],
+  5: [p(60, 132, 70, -45), p(140, 132, 70, 45), p(100, MEDIO, 76, 90), p(60, 216, 70, -135), p(140, 216, 70, 135)],
+  6: dosFilas(70, 134, 212, 0),
+  7: [...dosFilas(56, 126, 218, 0), p(100, MEDIO, 72, 90)],
+}
+
+const DISPOSICIONES: Record<Palo, Record<number, PaloEnCarta[]>> = { oro: ORO_O_COPA, copa: ORO_O_COPA, espada: ESPADAS, basto: BASTOS }
+
+/** Dónde va cada palo en las cartas del 1 al 7. */
+export function disposicion(palo: Palo, numero: number): PaloEnCarta[] {
+  return DISPOSICIONES[palo][numero] ?? []
+}
+
+/**
+ * Lo que ocupa cada palo desde su centro, sin girar (a tamaño 100): medio ancho y medio alto. Las
+ * espadas y los bastos son largos y finos.
+ */
+export const MEDIDA_PALO: Record<Palo, { ancho: number; alto: number }> = {
+  oro: { ancho: 48, alto: 48 },
+  copa: { ancho: 38, alto: 47 },
+  espada: { ancho: 26, alto: 53 },
+  basto: { ancho: 32, alto: 50 },
 }
 
 function Palos({ palo, numero }: { palo: Palo; numero: number }) {
-  const puntos = DISPOSICION[numero] ?? []
-  const tam = tamSimbolo(palo, numero)
-  // En la mitad de abajo, espadas y bastos van invertidos, como en la baraja.
-  const invertir = palo === 'espada' || palo === 'basto'
   return (
     <>
-      {puntos.map(([x, y], i) => (
-        <Simbolo key={i} palo={palo} x={x} y={y} tam={tam} rot={invertir && numero > 1 && y > MEDIO ? 180 : 0} />
+      {disposicion(palo, numero).map(({ x, y, tam, rot }, i) => (
+        <Simbolo key={i} palo={palo} x={x} y={y} tam={tam} rot={rot} />
       ))}
     </>
   )

@@ -1750,3 +1750,15 @@ Reportes del usuario jugando 3v3: (1) dos compañeros cantaron flor (uno con "fl
 - **La muestra fija:** una carta chica con "Muestra", a la izquierda del tanteo, durante toda la mano (además de la del mazo).
 - **El mazo del lugar:** cada nivel se juega con la baraja del departamento (`barajaDeDepartamento`: la que se gana en su último nivel), como ya pasaba con la mesa. Local y online.
 - **Tests:** motor 182 (la decisión, achicarse, cerrada y el caso de 3v3), bots 25, server 127, web 367 y los 14 de punta a punta (el jugador automático de las pruebas contesta "Con flor quiero").
+
+## Las cartas como en la baraja española — 2026-11-09
+
+Pedido: que los mazos sigan la disposición de siempre de las cartas (el 3 de bastos cruzado, el 3 de espadas con las tres paradas, el 3 de oros y el de copas en diagonal), mirando los mazos originales (Fournier, El Cid, Grimaud); corregir el SVG y pasar el prompt para corregir los mazos ilustrados, cuyos palos además son muy chicos.
+
+- **La baraja propia (SVG):** cada palo tiene su disposición, como en las barajas de siempre (`disposicion(palo, numero)` en dibujo.tsx):
+  - Oros y copas: el 2 en columna, el 3 en diagonal, el 4 en las esquinas, el 5 con uno más grande al medio, el 6 en dos columnas y el 7 con uno al medio un poco más arriba.
+  - Espadas: largas; el 2 y el 3 paradas de punta a punta (una sí y una no al revés), el 4 en X abierta, el 5 y el 7 con una acostada al medio; la empuñadura hacia afuera.
+  - Bastos: el 2 parados, el 3 cruzados (uno parado y dos en diagonal), el 4 en X abierta, el 5 y el 7 con uno acostado al medio; la cabeza hacia afuera.
+  - Test (ojeo.test.ts): ningún palo se sale de la zona del dibujo ni del marco, y ninguno pisa el número de abajo.
+- **INSTRUCTIVO-MAZOS.md:** qué está mal en los 19 mazos ilustrados (palos chicos y la misma grilla para los cuatro palos), qué no se toca (marco, pinta y números, medidos en píxeles para el ojeo), las coordenadas y tamaños de cada carta del 2 al 7 sobre 400 × 600, y dos prompts para el agente: la forma recomendada (que dibuje solo los cuatro palos sueltos de cada mazo, con fondo transparente, y un script del proyecto arma las cartas) y la de las cartas completas.
+- **Tests:** web todos en verde.
