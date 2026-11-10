@@ -22,9 +22,12 @@ test('la mesa y la baraja de la sala son las del anfitrión', async ({ browser }
   await expect(ana.getByRole('switch', { name: /Desbloquear la tienda/ })).toBeChecked()
   await ana.getByRole('dialog', { name: 'Ajustes' }).getByRole('button', { name: 'Cerrar' }).click()
   await ana.getByRole('tab', { name: 'Avatar' }).click()
+  // En Avatar, una pestaña por cosa: el paño y después el mazo.
+  await ana.getByRole('tab', { name: 'Paño' }).click()
   const bordo = ana.getByRole('radiogroup', { name: 'Mesa' }).getByRole('radio', { name: 'Bordó' })
   await bordo.click()
   await expect(bordo).toHaveAttribute('aria-checked', 'true')
+  await ana.getByRole('tab', { name: 'Mazo' }).click()
   await ana.getByRole('radio', { name: /^Clásica 1878/ }).click()
   await expect.poll(() => mesaDe(ana)).toBe('bordo')
   await captura(ana, '1-inicio-tienda-desbloqueada')
@@ -35,6 +38,7 @@ test('la mesa y la baraja de la sala son las del anfitrión', async ({ browser }
 
   const beto = await persona(browser, 'Beto')
   await beto.getByRole('tab', { name: 'Avatar' }).click()
+  await beto.getByRole('tab', { name: 'Paño' }).click()
   const azul = beto.getByRole('radiogroup', { name: 'Mesa' }).getByRole('radio', { name: 'Azul' })
   await azul.click()
   await expect(azul).toHaveAttribute('aria-checked', 'true')

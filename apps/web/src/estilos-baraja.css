@@ -16,26 +16,105 @@
   background: #efe6d2;
 }
 
+/*
+ * El selector de mazos: arriba la vitrina (el mazo en abanico, grande) con su nombre; abajo, un
+ * carrusel por grupo con una carta de cada mazo.
+ */
 .selector-baraja {
   grid-column: 1 / -1;
   display: grid;
-  gap: 6px;
+  gap: 10px;
+  min-width: 0;
 }
-.selector-baraja > span {
+.baraja-vitrina {
+  display: grid;
+  place-items: center;
+  padding: 14px 0 6px;
+}
+.baraja-abanico {
+  display: flex;
+  justify-content: center;
+}
+.baraja-abanico .carta {
+  --ancho: 74px;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.45);
+  transform-origin: 50% 120%;
+  transition: rotate 0.25s ease;
+}
+.baraja-abanico .carta + .carta {
+  margin-left: -34px;
+}
+.baraja-abanico .carta:nth-child(1) {
+  rotate: -15deg;
+}
+.baraja-abanico .carta:nth-child(2) {
+  rotate: -5deg;
+}
+.baraja-abanico .carta:nth-child(3) {
+  rotate: 5deg;
+}
+.baraja-abanico .carta:nth-child(4) {
+  rotate: 15deg;
+}
+/* Las que todavía no ganaste: se ven, pero apagadas. */
+.baraja-vitrina.bloqueada .baraja-abanico {
+  filter: grayscale(0.55) brightness(0.8);
+}
+.baraja-vitrina-texto {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin: 0;
+  text-align: center;
+}
+.baraja-vitrina-texto strong {
+  font-size: 1.05rem;
+}
+.baraja-vitrina-texto small {
   font-size: 0.75rem;
-  opacity: 0.8;
+  opacity: 0.75;
+}
+.baraja-ver-cartas {
+  justify-self: center;
+  padding: 6px 18px;
+  font-size: 0.85rem;
 }
 .selector-baraja-opciones {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 8px;
+  min-width: 0;
+}
+.baraja-grupo {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.baraja-grupo-titulo {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+/* El carrusel: se desliza de costado; al llegar al borde, el deslizamiento sigue en el del menú. */
+.baraja-carril {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding: 4px 2px 6px;
+}
+.baraja-carril::-webkit-scrollbar {
+  display: none;
 }
 .baraja-opcion {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 8px 8px;
+  flex: none;
+  width: 70px;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 6px 4px;
   border-radius: 12px;
   border: 2px solid transparent;
   background: rgb(255 255 255 / 0.06);
@@ -43,33 +122,43 @@
   font: inherit;
   text-align: center;
   cursor: pointer;
+  scroll-snap-align: center;
+}
+.baraja-opcion.en-vitrina {
+  background: rgb(255 255 255 / 0.12);
 }
 .baraja-opcion.elegido {
   border-color: var(--acento);
-  background: rgb(255 255 255 / 0.12);
+  background: rgb(255 255 255 / 0.14);
 }
-.baraja-opcion .carta {
-  --ancho: 34px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+.baraja-miniatura {
+  position: relative;
+  display: block;
 }
-.baraja-muestras {
-  display: flex;
+.baraja-miniatura .carta {
+  --ancho: 44px;
+  box-shadow: 0 2px 5px rgb(0 0 0 / 0.4);
 }
-.baraja-muestras .carta + .carta {
-  margin-left: -12px;
-  rotate: 7deg;
+.baraja-opcion.bloqueada .baraja-miniatura .carta {
+  filter: grayscale(0.6) brightness(0.7);
 }
-.baraja-muestras .carta:first-child {
-  rotate: -5deg;
-}
-.baraja-opcion-texto {
+.baraja-candado {
+  position: absolute;
+  inset: 0;
   display: grid;
-  gap: 2px;
-  min-width: 0;
+  place-items: center;
+  font-size: 1.1rem;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.7);
 }
-.baraja-opcion-texto small {
-  font-size: 0.7rem;
-  opacity: 0.75;
+.baraja-opcion-nombre {
+  width: 100%;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 /* /baraja: selector arriba para comparar las dos barajas. */
@@ -84,10 +173,4 @@
   font-size: 0.8rem;
   opacity: 0.75;
   margin: 0;
-}
-
-/* Las del modo historia que todavía no ganaste: se ven, pero apagadas. */
-.baraja-opcion.bloqueada .baraja-muestras {
-  opacity: 0.45;
-  filter: grayscale(0.6);
 }

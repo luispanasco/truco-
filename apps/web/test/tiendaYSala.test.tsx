@@ -48,7 +48,13 @@ function inicio() {
 }
 
 const interruptorTienda = () => screen.getByRole('switch', { name: /Desbloquear la tienda/ })
-const mesas = () => screen.getByRole('radiogroup', { name: 'Mesa' })
+/** El selector de mesas, en la pestaña Paño del panel de Avatar (la abre si hace falta). */
+function mesas() {
+  const abierto = screen.queryByRole('radiogroup', { name: 'Mesa' })
+  if (abierto) return abierto
+  fireEvent.click(screen.getByRole('tab', { name: 'Paño' }))
+  return screen.getByRole('radiogroup', { name: 'Mesa' })
+}
 
 describe('barajas en el catálogo', () => {
   it('todas son gratis y lo que no existe vuelve a la propia', () => {

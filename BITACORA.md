@@ -1780,3 +1780,16 @@ Pedido: que los ases sean dibujos especiales (el 1 de espadas y el de bastos, "m
   - Variantes de los palos: larga en el 2 y el 3 y corta del 4 al 7, dos colores alternados y el del medio del 5 más grande.
   - El prompt de la forma A pide 14 PNG por mazo: 4 ases, la moneda, la copa, y las espadas y bastos largos y cortos en dos colores.
 - **Tests:** web todos en verde.
+
+## El panel de Avatar, ordenado — 2026-11-10
+
+Pedido: "el menú de avatar sigue mal, no me convence la distribución de las cosas y el selector de cartas está feo". En el celular el panel medía unos 6.800 px: los 24 personajes, los 23 mazos en dos columnas, los 27 paños y la letra, uno abajo del otro. Elegido: "vitrina y pestañas" y "vitrina grande + carrusel" para los mazos.
+
+- **Tu avatar, en una fila:** la foto, "Tu avatar" con el apodo y "Editar" (sigue abriendo la hoja del perfil).
+- **Pestañas Mazo | Paño | Letra | Personajes** (la última, solo el admin): se ve una cosa por vez. Con el Mazo, el panel mide unos 820 px.
+- **Selector de mazos:**
+  - Vitrina: el mazo en abanico (1 de espadas, 1 de bastos, 7 de oros y rey de copas), grande, con nombre y crédito o "🔒 Se gana en …".
+  - Abajo, "Ver las cartas" y dos carruseles: Clásicas y Del modo historia, con el 1 de espadas de cada uno.
+  - Tocar uno que no tenés lo muestra en la vitrina sin elegirlo. El carrusel arranca centrado en el elegido.
+- **Selector de paños:** igual, con un paño grande con tres cartas encima y carruseles por grupo: Lisas, De la tienda y Del modo historia. Los mismos nombres accesibles de antes, así que la sala del anfitrión no cambia.
+- **Tests:** web todos en verde (menú y tienda abren la pestaña que corresponde) y los e2e de anfitrión, avatar y menú.

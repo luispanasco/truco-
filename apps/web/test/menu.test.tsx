@@ -194,9 +194,16 @@ describe('pantalla Avatar', () => {
     menu()
     fireEvent.click(pestania('Avatar'))
     const avatar = within(panel('avatar'))
-    expect(avatar.getByRole('radiogroup', { name: 'Mesa' })).toBeTruthy()
-    expect(avatar.getByRole('radiogroup', { name: 'Tipografía' })).toBeTruthy()
+    // Una pestaña por cosa: arranca en el mazo.
     expect(avatar.getByRole('radiogroup', { name: 'Baraja' })).toBeTruthy()
+    expect(avatar.queryByRole('radiogroup', { name: 'Mesa' })).toBeNull()
+    fireEvent.click(avatar.getByRole('tab', { name: 'Paño' }))
+    expect(avatar.getByRole('radiogroup', { name: 'Mesa' })).toBeTruthy()
+    fireEvent.click(avatar.getByRole('tab', { name: 'Letra' }))
+    expect(avatar.getByRole('radiogroup', { name: 'Tipografía' })).toBeTruthy()
+    // Los personajes, solo para el admin.
+    expect(avatar.queryByRole('tab', { name: 'Personajes' })).toBeNull()
+    fireEvent.click(avatar.getByRole('tab', { name: 'Mazo' }))
 
     // El avatar se edita en la misma hoja que desde el banner.
     fireEvent.click(avatar.getByRole('button', { name: 'Cambiar avatar y apodo' }))
@@ -236,6 +243,7 @@ describe('pantalla Avatar', () => {
     menu()
     fireEvent.click(pestania('Avatar'))
     const avatar = within(panel('avatar'))
+    fireEvent.click(avatar.getByRole('tab', { name: 'Personajes' }))
     expect(avatar.getByRole('heading', { name: 'Personajes del modo historia' })).toBeTruthy()
     expect(avatar.getAllByRole('button', { name: /^Probarte a / })).toHaveLength(PERSONAJES.length)
     const antes = leerPerfil().avatar

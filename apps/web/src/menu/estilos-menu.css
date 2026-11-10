@@ -1129,31 +1129,78 @@ button.selector-modo-detalle:hover {
 
 /* ── Avatar (personalizar) y grupos ───────────────────────────── */
 
-.personalizar-avatar-fila {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-/* Tu avatar, en Personalizá: grande, al medio, con un brillo dorado detrás. */
+/* Tu avatar, en una fila: la foto, quién sos y "Editar". */
 .menu-panel .tarjeta.personalizar-avatar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding-block: 12px;
   background:
-    radial-gradient(60% 70% at 50% 30%, var(--dorado-suave), transparent 70%),
+    radial-gradient(50% 120% at 12% 50%, var(--dorado-suave), transparent 70%),
     var(--menu-vidrio);
 }
-.personalizar-avatar .personalizar-avatar-fila {
-  flex-direction: column;
-}
-.personalizar-avatar .personalizar-avatar-fila > .personalizar-avatar-img {
-  width: 116px;
-  height: 116px;
-  border-width: 3px;
+.personalizar-avatar > .personalizar-avatar-img {
+  width: 64px;
+  height: 64px;
   box-shadow:
-    0 0 0 6px rgb(242 193 78 / 0.14),
-    0 10px 24px rgb(0 0 0 / 0.45);
+    0 0 0 4px rgb(242 193 78 / 0.14),
+    0 6px 16px rgb(0 0 0 / 0.4);
 }
-.personalizar-avatar .personalizar-avatar-fila .boton {
-  flex: none;
-  width: 100%;
+.personalizar-avatar-texto {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+.menu-panel .personalizar-avatar-texto h2 {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--menu-suave);
+}
+/* Sin la marca dorada de los títulos de tarjeta: acá el título es chiquito. */
+.menu-panel .personalizar-avatar-texto h2::before {
+  display: none;
+}
+.personalizar-avatar-texto strong {
+  overflow: hidden;
+  font-size: 1.15rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.personalizar-avatar > .boton {
+  padding: 8px 16px;
+}
+/* Las pestañas: Mazo | Paño | Letra (| Personajes). */
+.personalizar-pestanias {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.3);
+  border: 1px solid var(--menu-filo);
+}
+.personalizar-pestanias button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto-claro);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.personalizar-pestanias button.elegida {
+  background: var(--acento);
+  color: var(--tinta);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.35);
+}
+.personalizar-seccion {
+  min-width: 0;
 }
 .personalizar-avatar-img {
   flex: none;
@@ -1172,9 +1219,6 @@ button.selector-modo-detalle:hover {
   width: 100%;
   height: 100%;
   clip-path: circle(50%);
-}
-.personalizar-avatar-fila .boton {
-  flex: 1;
 }
 /* Personajes del modo historia (solo el admin): avatar, texto y "Probarte". */
 .personajes {
