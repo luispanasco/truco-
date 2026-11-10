@@ -53,6 +53,8 @@
   --fuente-texto: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --fuente-titulo: 'Alfa Slab One', Georgia, serif;
   --escala-texto: 1;
+  /* La letra base de la app: 14 px (un poco menos que los 16 del navegador), así entra más en cada pantalla. */
+  --letra-base: 88%;
   --sintesis-negrita: auto;
   /* Ancho de las cartas según dónde están: dorsos de los rivales, mesa (jugadas, muestra) y mano. */
   --carta-chica: 26px;
@@ -67,7 +69,7 @@
   /* Anillo de mantener apretada una carta para hacer su seña. */
   --senia-mantener: #8ec5ff;
   font-family: var(--fuente-texto);
-  font-size: calc(100% * var(--escala-texto));
+  font-size: calc(var(--letra-base) * var(--escala-texto));
   font-synthesis-weight: var(--sintesis-negrita);
   color: var(--texto-claro);
   background: var(--madera);
@@ -106,7 +108,9 @@ input {
 .boton {
   display: block;
   width: 100%;
-  padding: 12px 16px;
+  /* 44 px de alto como mínimo: lo justo para el dedo, aunque la letra sea chica. */
+  min-height: 44px;
+  padding: 10px 14px;
   border: 0;
   border-radius: var(--radio);
   background: var(--acento);
@@ -119,8 +123,8 @@ input {
   cursor: default;
 }
 .boton-grande {
-  padding: 16px;
-  font-size: 1.15rem;
+  padding: 13px;
+  font-size: 1.1rem;
 }
 .boton-secundario {
   background: rgb(255 255 255 / 0.12);
@@ -233,9 +237,9 @@ input {
 
 .tarjeta {
   display: grid;
-  gap: 14px;
-  padding: 16px;
-  border-radius: 18px;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
   /* Vidrio de noche con un filo dorado: se despega del fondo sin ser un bloque plano. */
   background:
     linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.015) 40%),

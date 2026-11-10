@@ -1793,3 +1793,21 @@ Pedido: "el menú de avatar sigue mal, no me convence la distribución de las co
   - Tocar uno que no tenés lo muestra en la vitrina sin elegirlo. El carrusel arranca centrado en el elegido.
 - **Selector de paños:** igual, con un paño grande con tres cartas encima y carruseles por grupo: Lisas, De la tienda y Del modo historia. Los mismos nombres accesibles de antes, así que la sala del anfitrión no cambia.
 - **Tests:** web todos en verde (menú y tienda abren la pestaña que corresponde) y los e2e de anfitrión, avatar y menú.
+
+## UI nueva, etapa 1: la base más compacta — 2026-11-10
+
+Pedido: "una nueva UI completa, respetando los menús que se arrastran a derecha e izquierda, capaz que ayuda un font más chico para que parezca más grande, más intuitiva, que te invite a hacer todas las cosas; la tienda también hay que cambiarla". Plan en cuatro etapas, cada una con su OK:
+1. La base.
+2. Jugar y Lobby, con misiones con monedas.
+3. La tienda, con vitrina y estantes.
+4. Grupos y retoques.
+
+Elegido: letra un 12 % más chica, misiones con monedas (el servidor las controla) y la tienda con vitrina y estantes.
+
+- **Letra base al 88 %** (`--letra-base` en la raíz: 14 px en vez de 16; se sigue multiplicando por la escala de cada tipografía). Afecta toda la app, también la mesa, que se revisó en 3 contra 3.
+- **Más compacto:**
+  - el título de cada pantalla, en una barra fina (1,15 rem);
+  - las tarjetas, con menos aire (padding 14, gap 12);
+  - los botones, con 44 px de alto mínimo para el dedo;
+  - "¡Jugar!", un poco más bajo.
+- **Tests:** web todos en verde y los e2e de menú, partida local y modo historia.
