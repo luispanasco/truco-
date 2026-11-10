@@ -1904,3 +1904,17 @@ Pedido: una escena al terminar cada partida del modo historia y, al completar un
   - web 379: la escena al ganar y al perder, la despedida la primera vez y no al repetir, la despedida completa con la ruta en el mapa, la despedida cerrada sin completar el departamento y los textos de todos;
   - el e2e del modo historia.
 - No cambia nada del servidor: con publicar la web alcanza.
+
+## Cambios de motor: flor y envido a la vista, canta la mesa en cuadro, el pie, el anotador y la seña sola — 2026-11-10
+
+Pedido: más tiempo para ver flor y envido al final de la mano, "Canta la mesa" en un pop up, los bugs del pie en 2vs2, ver el marcador con fósforos y la raya de la mitad, y una opción para que el resumen del compañero sea solo la seña. Se hicieron en paralelo (tres agentes, cada uno en su worktree) y se juntaron en develop.
+
+- **Flor y envido al final:** si al terminar la mano se dan vuelta cartas, la pausa es de 2,6 s (antes 1 s), en la mesa, en el servidor y contra bots (`PAUSA_MOSTRADAS_MS`, `pausaFinDeMano` en shared).
+- **Canta la mesa:** ahora es un cuadro (modal) encima de la mesa con las flores y lo que suma cada una; si te toca tirar, tus cartas aparecen adentro y la mano de abajo queda quieta.
+- **El pie (2vs2 y 3vs3):**
+  - El motor no deja mandar a tocar ni a gritar con un canto sin contestar o los tantos por declarar (de ahí venía el "toca, toco, quiero… ¡truco!" antes de declarar). Tampoco deja mandar a tocar al que tiene flor ni si el pie tiene flor.
+  - El bot pie toca él mismo en su turno; mandar a tocar quedó como algo raro (el compañero marcó 30 o más y el pie no, nunca al primero de la mano). Los que no son pie no tocan antes que el pie salvo con 31 o más.
+- **Anotador:** tocar el tanteador abre el anotador con los fósforos de cada equipo en cuadraditos de a 5 y la raya de la mitad (malas y buenas). Arreglo de paso: a 40 el marcador chico dibujaba solo 15 por lado.
+- **Solo la seña:** opción en Ajustes › Señas, "Solo la seña del compañero" (apagada por defecto): el resumen y el panel del compañero muestran solo el gesto.
+- **Tests:** engine 186, bots 29, server 131, web 388. Las tres ramas habían salido de un commit viejo: se juntaron con develop sin problemas (un conflicto en el marcador de `Mesa.tsx`, resuelto dejando la muestra y el tanteador tocable).
+- **Para publicar:** cambia el servidor (las órdenes del pie y la pausa de fin de mano), así que va el servidor y después la web.
