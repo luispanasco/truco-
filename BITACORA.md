@@ -1918,3 +1918,21 @@ Pedido: más tiempo para ver flor y envido al final de la mano, "Canta la mesa" 
 - **Solo la seña:** opción en Ajustes › Señas, "Solo la seña del compañero" (apagada por defecto): el resumen y el panel del compañero muestran solo el gesto.
 - **Tests:** engine 186, bots 29, server 131, web 388. Las tres ramas habían salido de un commit viejo: se juntaron con develop sin problemas (un conflicto en el marcador de `Mesa.tsx`, resuelto dejando la muestra y el tanteador tocable).
 - **Para publicar:** cambia el servidor (las órdenes del pie y la pausa de fin de mano), así que va el servidor y después la web.
+
+## Tutorial "Aprendé a jugar", etapa 1: Don Queiroz, la ruta y las lecciones 1 a 4 — 2026-11-10
+
+Pedido: un tutorial para los que no saben jugar, con un maestro y una ruta de progresión, haciendo en vez de mirar. El maestro es **Don Queiroz**, en homenaje al padrino del usuario (canoso, de bigote, el pelo largo para atrás con raya al medio). Plan aprobado: entrada en Jugar, estrellas sin vidas, recompensa al recibirse (etapa 4), sin cuenta. Las negras son el 10, el 11 y el 12.
+
+- **Shared** (`tutorial.ts`): `MAESTRO` (su avatar), `LECCIONES` (las 11, en orden, con `disponible`), `estrellasPorErrores`, `leccionAbierta` y `proximaLeccion`.
+- **La ruta** (`/aprender`): Don Queiroz saluda según cómo vas; las paradas unidas por una línea, con estrellas, candado o "Próximamente". Cada una se abre al terminar la anterior.
+- **La lección** (`/aprender/:leccion`): arriba el título y el avance, al medio la pizarra (un paño con las cartas o un dibujo), abajo Don Queiroz con su globo y "Seguir". Al final, de 1 a 3 estrellas (3 sin errores, 2 con uno o dos) y "Siguiente".
+- **Lecciones de esta etapa:**
+  1. Historia: el truc de Valencia y Cataluña, el viaje al Río de la Plata, la muestra uruguaya; una pregunta al final.
+  2. La baraja: los palos, sin 8 ni 9, las negras; tocar todas las espadas y "¿qué números no están?".
+  3. Qué carta mata a cuál: la escalera (matas, tres, dos, anchos falsos, negras, sietes falsos, 6-5-4) y diez rondas de "¿cuál gana?" (o parda), con la explicación de cada una.
+  4. La muestra y las piezas: tocar las piezas (también cuando la muestra es pieza y el 12 toma su lugar), "¿cuál gana?" con muestra y ordenar la mano.
+  - Los ejercicios usan la jerarquía del motor (`tutorial/cartas.ts`) y se arman al azar en cada vuelta.
+- **Progreso:** en el dispositivo (`truco.tutorial`), queda la mejor vez. Pasarlo a la cuenta va en la etapa 4.
+- **Entrada en Jugar:** debajo de "¡Jugar!", la tarjeta con la cara de Don Queiroz: "¿Primera vez? Aprendé a jugar" o, si ya empezaste, por dónde vas.
+- **Tests:** web 397 (la ruta, la primera lección con un error, las espadas, las rondas de los ejercicios) y el e2e `tutorial.spec.ts`.
+- No cambia el servidor.

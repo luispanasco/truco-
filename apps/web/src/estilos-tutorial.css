@@ -1,0 +1,334 @@
+/* "Aprendé a jugar": la ruta de lecciones y cada lección con Don Queiroz. */
+.tutorial {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgb(242 193 78 / 0.14), transparent 60%),
+    var(--madera);
+  max-width: none;
+}
+.tutorial > * {
+  width: 100%;
+  max-width: 528px;
+  margin-inline: auto;
+}
+.tutorial > .historia-volver {
+  width: auto;
+  margin-left: max(0px, calc((100% - 528px) / 2));
+}
+
+/* Don Queiroz al costado y su globo, con la colita hacia él. */
+.tutorial-maestro {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+.tutorial-maestro .previa-figura {
+  width: 96px;
+  margin: 0;
+}
+.tutorial-maestro .previa-figura-nombre {
+  font-size: 0.75rem;
+}
+.tutorial-globo {
+  position: relative;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--papel);
+  color: var(--tinta);
+  box-shadow: var(--sombra);
+}
+.tutorial-globo p {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.tutorial-globo::after {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  translate: 0 -50%;
+  border: 10px solid transparent;
+  border-left: 0;
+  border-right-color: var(--papel);
+}
+
+/* La ruta: las paradas unidas por una línea. */
+.tutorial-ruta {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.tutorial-ruta::before {
+  content: '';
+  position: absolute;
+  left: 31px;
+  top: 20px;
+  bottom: 20px;
+  border-left: 3px dashed rgb(255 255 255 / 0.25);
+}
+.tutorial-parada button {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 0;
+  border-radius: 14px;
+  background: rgb(0 0 0 / 0.38);
+  color: var(--texto-claro);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.tutorial-parada button:disabled {
+  cursor: default;
+}
+.tutorial-parada.cerrada button,
+.tutorial-parada.pronto button {
+  opacity: 0.55;
+}
+.tutorial-parada.proxima button {
+  box-shadow: 0 0 0 3px var(--acento);
+}
+.tutorial-parada-numero {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--acento);
+  color: var(--tinta);
+  font-weight: 800;
+}
+.tutorial-parada.hecha .tutorial-parada-numero {
+  background: var(--exito);
+  color: #fff;
+}
+.tutorial-parada.cerrada .tutorial-parada-numero,
+.tutorial-parada.pronto .tutorial-parada-numero {
+  background: rgb(255 255 255 / 0.15);
+  color: var(--texto-claro);
+}
+.tutorial-parada-texto {
+  display: grid;
+  gap: 2px;
+}
+.tutorial-parada-texto small {
+  opacity: 0.85;
+}
+.tutorial-estrellas {
+  display: inline-flex;
+  gap: 1px;
+  color: rgb(255 255 255 / 0.25);
+  font-size: 1rem;
+}
+.tutorial-estrellas .llena {
+  color: var(--acento);
+}
+.tutorial-estrellas.grandes {
+  font-size: 3rem;
+  gap: 6px;
+}
+
+/* La lección: el título, la pizarra con las cartas, Don Queiroz y el botón. */
+.tutorial-leccion {
+  grid-template-rows: auto auto 1fr auto auto;
+  gap: 12px;
+}
+.tutorial-leccion-titulo {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  text-align: center;
+}
+.tutorial-leccion-titulo h1 {
+  font-size: 1.6rem;
+}
+.tutorial-avance {
+  width: 100%;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.15);
+  overflow: hidden;
+}
+.tutorial-avance span {
+  display: block;
+  height: 100%;
+  background: var(--acento);
+  transition: width 0.3s ease;
+}
+.tutorial-pizarra {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+  padding: 14px 10px;
+  border-radius: 18px;
+  background: var(--tapete);
+  background-image: var(--grano);
+  box-shadow: inset 0 0 0 4px rgb(0 0 0 / 0.18);
+}
+.tutorial-pizarra-contenido,
+.tutorial-ejercicio {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.tutorial-dibujo {
+  font-size: 4.5rem;
+  line-height: 1;
+}
+.tutorial-leyenda {
+  margin: 0;
+  font-weight: 800;
+  text-align: center;
+}
+.tutorial-cartas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+.tutorial-carta {
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.tutorial-carta:not(:disabled):hover {
+  transform: translateY(-4px);
+}
+.tutorial-carta:disabled {
+  cursor: default;
+}
+.tutorial-carta.bien,
+.tutorial-carta.gana {
+  box-shadow: 0 0 0 4px var(--exito);
+}
+.tutorial-carta.mal {
+  box-shadow: 0 0 0 4px var(--peligro);
+  animation: tutorial-no 0.3s ease;
+}
+@keyframes tutorial-no {
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-carta.mal {
+    animation: none;
+  }
+}
+/* En los ejercicios de buscar hay muchas cartas: un poco más chicas. */
+.tutorial-ejercicio .tutorial-cartas .carta-grande {
+  --ancho: min(17vw, 72px);
+}
+.tutorial-par .carta-grande {
+  --ancho: min(26vw, 100px) !important;
+}
+.tutorial-contra {
+  font-family: var(--fuente-titulo);
+  font-size: 1.3rem;
+  opacity: 0.8;
+}
+.tutorial-muestra {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  font-weight: 800;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tutorial-muestra .carta {
+  rotate: -8deg;
+}
+.tutorial-ronda {
+  margin: 0;
+  font-weight: 800;
+  opacity: 0.85;
+}
+.tutorial-orden {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+.tutorial-orden-numero {
+  min-height: 1.4em;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--acento);
+}
+.tutorial-opciones {
+  max-width: 340px;
+}
+.tutorial-opciones .boton {
+  width: 100%;
+}
+.tutorial-opcion-bien {
+  background: var(--exito);
+  color: #fff;
+}
+.tutorial-resultado h2 {
+  margin: 0;
+}
+.tutorial-pie {
+  display: grid;
+  gap: 10px;
+}
+
+/* La entrada en Jugar: la tarjeta con Don Queiroz (la primera vez) o el botón de seguir. */
+.tarjeta-aprender {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 16px;
+  background: rgb(0 0 0 / 0.32);
+  color: var(--texto-claro);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.tarjeta-aprender.primera {
+  box-shadow: 0 0 0 2px var(--acento);
+}
+.tarjeta-aprender-cara {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.12);
+}
+.tarjeta-aprender-cara .avatar-dibujo {
+  width: 100%;
+  height: 100%;
+}
+.tarjeta-aprender-texto {
+  display: grid;
+  gap: 2px;
+}
+.tarjeta-aprender-texto small {
+  opacity: 0.85;
+}
+/* Cuatro cartas (las matas) entran en una fila. */
+.tutorial-pizarra-contenido .tutorial-cartas .carta-grande {
+  --ancho: min(18vw, 76px);
+}

@@ -31,6 +31,7 @@ import { Amigos } from './pantallas/Amigos'
 import { Grupo } from './pantallas/Grupo'
 import { Repeticion } from './pantallas/Repeticion'
 import { DepartamentoHistoria, DespedidaDepartamento, Historia, PreviaNivel } from './pantallas/Historia'
+import { Aprender, LeccionTutorial } from './pantallas/Aprender'
 import { AvisoInvitacion } from './componentes/Amistad'
 import './estilos-online.css'
 
@@ -68,6 +69,8 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/grupos/:id" element={<Grupo />} />
           <Route path="/repeticion/:id" element={<Repeticion />} />
           {/* Modo historia (cualquiera con cuenta: los departamentos publicados; el admin, todos). */}
+          <Route path="/aprender" element={<Aprender />} />
+          <Route path="/aprender/:leccion" element={<LeccionTutorial />} />
           <Route path="/historia" element={<Historia />} />
           <Route path="/historia/:departamento" element={<DepartamentoHistoria />} />
           <Route path="/historia/:departamento/despedida" element={<DespedidaDepartamento />} />

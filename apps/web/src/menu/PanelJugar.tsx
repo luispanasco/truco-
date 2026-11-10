@@ -15,6 +15,7 @@ import { conexionContraLaCompu } from './contraLaCompu'
 import { IconoBuscar, IconoCompu, IconoCrear, IconoLlave } from './Iconos'
 import { ParaHacer } from './ParaHacer'
 import { PortadaHistoria } from './PortadaHistoria'
+import { TarjetaAprender } from '../tutorial/TarjetaAprender'
 import { useCuenta } from '../cuenta/cuenta'
 
 /** Los 24 rayos del sol del logo, largos y cortos alternados (los mismos de public/icono.svg). */
@@ -245,6 +246,8 @@ export function PanelJugar({
           ¡Jugar!
         </button>
       </div>
+
+      <TarjetaAprender />
 
       <ParaHacer alIr={alIrMision} alEntrar={alEntrar} />
 
