@@ -4,6 +4,7 @@ import type { Carta, CartasMostradas, Evento, ResultadoEnfrentamiento, Resultado
 import type { Senia } from '@truco/bots'
 import {
   describirEvento,
+  PAUSA_MOSTRADAS_MS,
   TEXTO_CANTO,
   TEXTO_CORTE,
   TEXTO_ORDEN,
@@ -250,6 +251,8 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
   const pausar = (texto: string | null) => {
     enPausa = true
     set({ finDeMano: texto })
+    // Si se dieron vuelta cartas (flor o envido), quedan más tiempo para que se alcancen a ver.
+    const duracion = get().mostradas.length > 0 ? PAUSA_MOSTRADAS_MS : PAUSA_ENTRE_MANOS
     timerPausa = setTimeout(() => {
       timerPausa = null
       enPausa = false
@@ -257,7 +260,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       const pendientes = cola
       cola = []
       for (const m of pendientes) alMensaje(m)
-    }, PAUSA_ENTRE_MANOS)
+    }, duracion)
   }
 
   /**

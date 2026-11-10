@@ -164,6 +164,19 @@ export const ESPERA_PEDIR_SENIAS_MS = 10_000
  */
 export const ESPERA_REPARTO_MS = 2_300
 
+/**
+ * Al terminar una mano en la que se dieron vuelta cartas (flor, o envido ganado), la pausa entre
+ * manos dura esto, para que se alcancen a ver al menos 2 s después de darse vuelta. La mesa la
+ * usa tal cual; el servidor y el juego local le suman su margen.
+ */
+export const PAUSA_MOSTRADAS_MS = 2_600
+
+/** La pausa entre manos que corresponde: más larga si al terminar se mostraron cartas (0 sigue siendo 0). */
+export function pausaFinDeMano(pausaMs: number, eventos: readonly Evento[]): number {
+  const conMostradas = eventos.some((ev) => ev.tipo === 'enfrentamientoTerminado' && (ev.resultado.mostradas?.length ?? 0) > 0)
+  return conMostradas && pausaMs > 0 ? Math.max(pausaMs, PAUSA_MOSTRADAS_MS + 200) : pausaMs
+}
+
 // ── Cliente → servidor ──────────────────────────────────────────────
 
 /** Opciones al entrar a cualquier sala. */

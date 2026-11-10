@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { apply, crearPartida, vistaPara, type Accion, type Carta, type EstadoPartida } from '@truco/engine'
 import { CantaLaMesa } from '../src/componentes/CantaLaMesa'
 
@@ -45,10 +45,19 @@ describe('canta la mesa', () => {
     )
     const vista = vistaPara(estado, 'b')
     render(<CantaLaMesa vista={vista} apodo={(x) => ['Ana', 'Beto'][x]!} />)
-    const region = screen.getByRole('region', { name: 'Canta la mesa' })
+    const region = screen.getByRole('dialog', { name: '¡Canta la mesa!' })
     expect(within(region).getByLabelText('Suma 25')).toBeTruthy()
     expect(within(region).getByText('Tocá una carta de tu mano para tirarla')).toBeTruthy()
     // La vista de b trae las cartas que tiró a, pero no las que a todavía tiene.
     expect(JSON.stringify(vista)).not.toContain('"numero":7,"palo":"espada"')
+    cleanup()
+
+    // Con tus cartas, el cuadro te las muestra para tirarlas desde ahí.
+    const alTocar = vi.fn()
+    render(<CantaLaMesa vista={vista} apodo={(x) => ['Ana', 'Beto'][x]!} misCartas={vista.mano.misCartas} alTocar={alTocar} />)
+    const cuadro = screen.getByRole('dialog', { name: '¡Canta la mesa!' })
+    expect(within(cuadro).getByText('Tocá una carta para tirarla')).toBeTruthy()
+    fireEvent.click(within(cuadro).getAllByRole('button', { name: /^Jugar el/ })[0]!)
+    expect(alTocar).toHaveBeenCalledTimes(1)
   })
 })

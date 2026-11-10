@@ -281,7 +281,6 @@ export function Mesa() {
         manoRel={rel(vista.mano.mano)}
         perspectiva={perspectiva}
       />
-      <CantaLaMesa vista={vista} apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`} />
       <CartasEnMesa
         n={n}
         rel={rel}
@@ -464,7 +463,8 @@ export function Mesa() {
             onAbrir={() => setAbiertaEn(vista.mano.numero)}
             abrirAlTocar={meToca}
             reparto
-            jugable={puedeJugar}
+            // Cantando la mesa, se tira desde el cuadro (tapa la mano).
+            jugable={(c) => !e.flor.mesa && puedeJugar(c)}
             resaltada={(c) => sala.ayudas && !!muestra && esPiezaOMata(c, muestra)}
             alTocarEstrella={(c, estrella) => muestra && explicar(explicarCarta(c, muestra) ?? '', estrella)}
             alTocar={jugarCarta}
@@ -499,6 +499,17 @@ export function Mesa() {
         )}
         {explicacion && <GloboExplicacion key={explicacion.id} explicacion={explicacion} alCerrar={cerrarExplicacion} />}
       </section>
+
+      {/* "Canta la mesa" salta en un cuadro sobre la mesa; si te toca, tirás desde ahí. */}
+      {!(vista.ganador !== null && finVisible) && (
+        <CantaLaMesa
+          vista={vista}
+          apodo={(a) => sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
+          misCartas={meToca ? misCartas : []}
+          jugable={puedeJugar}
+          alTocar={jugarCarta}
+        />
+      )}
 
       {vista.ganador !== null && finVisible && (
         <div className="modal" role="dialog" aria-modal="true" aria-labelledby="fin-titulo">

@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Evento } from '@truco/engine'
+import { PAUSA_MOSTRADAS_MS } from '@truco/shared'
 import type { Conexion, MensajeServidor } from '../src/conexion/tipos'
 import { PAUSA_ENTRE_MANOS, useJuego } from '../src/estado'
 import { CORTE_MS, GIRO_MS, REPARTO_MS } from '../src/componentes/Mazo'
@@ -140,7 +141,10 @@ describe('pausa entre manos', () => {
       [1, 'Flor de 38', 2],
       [2, 'Envido 31', 1],
     ])
-    vi.advanceTimersByTime(PAUSA_ENTRE_MANOS + 10)
+    // Con cartas dadas vuelta la pausa es más larga: siguen a la vista al menos 2 s.
+    vi.advanceTimersByTime(2_000)
+    expect(useJuego.getState().mostradas).toHaveLength(2)
+    vi.advanceTimersByTime(PAUSA_MOSTRADAS_MS - 2_000 + 10)
     expect(useJuego.getState().mostradas).toEqual([])
   })
 })

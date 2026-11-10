@@ -39,6 +39,7 @@ import {
   tirarReyes,
   ESPERA_ORDEN_MS,
   ESPERA_REPARTO_MS,
+  pausaFinDeMano,
   yaJugoEnLaMano,
   type ConfigSenias,
   type InfoSala,
@@ -403,7 +404,7 @@ export class ConexionLocal implements Conexion {
     const [min, max] = this.op.demoraBots ?? DEMORA_BOTS
     const pausas = this.op.pausas ?? (this.op.demoraBots ? { vuelta: 0, mano: 0 } : PAUSAS)
     const extra = eventos.some((ev) => ev.tipo === 'enfrentamientoTerminado')
-      ? pausas.mano
+      ? pausaFinDeMano(pausas.mano, eventos)
       : eventos.some((ev) => ev.tipo === 'vueltaTerminada')
         ? pausas.vuelta
         : 0
