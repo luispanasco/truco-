@@ -1838,3 +1838,19 @@ Pedido: "dale de una" al plan de la etapa 2.
   - web 369 ("Para hacer": sin cuenta, el orden, cobrar e ir);
   - los 14 de punta a punta.
 - **Hay que publicar el servidor** (migración 13) para que las misiones anden.
+
+## UI nueva, etapa 3: la tienda — 2026-11-10
+
+Pedido: "sí" al plan de la tienda (vitrina y estantes). Ajuste al plan: la tienda vende solo los 6 de la vitrina del día (lo controla el servidor), así que los estantes muestran todo el catálogo y lo que hoy no está dice cuándo vuelve.
+
+- **Arriba, "¿Cómo gano monedas?":** una hoja con partidas, victoria, primera del día, misiones y modo historia.
+- **La destacada en una tarjeta baja:** la pieza a la izquierda; a la derecha la etiqueta, el nombre, el precio y "Cambia en".
+- **"Hoy en la vitrina":** las otras cinco, de a tres.
+- **Estantes por categoría** (`tienda/estantes.ts`): Pelo, Cara, Sombreros, lentes y aros, Ropa, En la mano y en la boca, Paños y Letras.
+  - Todo el catálogo, sin lo que se gana en el modo historia.
+  - Cada ficha muestra la pieza de cerca, con el borde de su rareza y "✓ Tuyo", el precio (si está hoy) o cuándo vuelve ("mañana", "el viernes 13", "el 2/12").
+  - El orden: lo de hoy primero y después lo que vuelve antes.
+  - Doce por estante y "Ver los N": así no se dibujan cientos de avatares de una vez.
+- **Cuándo vuelve:** `proximasVitrinas` en shared. La vitrina de cada día es fija, así que se calcula mirando los próximos 60 días.
+- **El probador:** lo que hoy no está en la vitrina se prueba igual, pero no se compra: "Hoy no está en la vitrina. Vuelve el …". "Cómo se ganan" suma las misiones y el modo historia.
+- **Tests:** web 372 (estantes, cuándo vuelve, el probador fuera de la vitrina y "¿Cómo gano monedas?") y los 14 de punta a punta. El test del probador ahora mira la muestra que aparece (durante la animación conviven las dos) y tiene más margen de tiempo.

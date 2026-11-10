@@ -814,3 +814,172 @@
     display: none;
   }
 }
+
+/* ── La tienda nueva: cómo ganar, la destacada baja, la vitrina de hoy y los estantes ── */
+
+.tienda-como-ganar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--menu-filo, rgb(255 255 255 / 0.12));
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.22);
+  color: var(--texto-claro);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+}
+.tienda-como-ganar > span:last-child {
+  margin-left: auto;
+  color: var(--acento);
+}
+
+/* La destacada: una tarjeta baja, con la pieza a la izquierda y lo demás a la derecha. */
+.vitrina-destacada {
+  grid-template-columns: 116px minmax(0, 1fr);
+  grid-template-rows: auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 18px;
+}
+.vitrina-destacada .vitrina-muestra {
+  aspect-ratio: 1;
+  border-radius: 14px;
+}
+.vitrina-destacada .vitrina-pie {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'etiqueta'
+    'nombre'
+    'precio';
+  justify-items: start;
+  gap: 4px;
+}
+.vitrina-destacada .vitrina-nombre {
+  font-size: 1.15rem;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.vitrina-destacada .vitrina-precio {
+  padding: 4px 12px;
+  font-size: 0.95rem;
+}
+.vitrina-destacada .vitrina-cambia {
+  top: auto;
+  left: auto;
+  bottom: 12px;
+  right: 12px;
+  font-size: 0.66rem;
+}
+
+.tienda-seccion {
+  margin: 4px 0 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--menu-suave, rgb(255 255 255 / 0.65));
+}
+.tienda-seccion small {
+  font-weight: 700;
+  letter-spacing: 0;
+  opacity: 0.8;
+}
+/* Las otras cinco de hoy: de a tres, todas del mismo tamaño. */
+.vitrina-hoy {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* Los estantes: todo el catálogo por categoría, deslizando de costado. */
+.estante {
+  min-width: 0;
+}
+.estante-carril {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 2px 2px 8px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+.estante-carril::-webkit-scrollbar {
+  display: none;
+}
+.estante-carril li {
+  flex: none;
+  scroll-snap-align: start;
+}
+.ficha {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 92px;
+  padding: 6px 6px 7px;
+  border: 1.5px solid color-mix(in srgb, var(--rareza) 45%, transparent);
+  border-radius: 14px;
+  background: rgb(0 0 0 / 0.24);
+  color: var(--texto-claro);
+  font: inherit;
+  text-align: center;
+}
+.ficha.hoy {
+  border-color: var(--acento);
+  box-shadow: 0 0 12px rgb(242 193 78 / 0.25);
+}
+.ficha-muestra {
+  /* La muestra del avatar va en absoluto: se queda adentro de la ficha. */
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 78px;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--rareza) 22%, transparent), rgb(255 255 255 / 0.02) 70%);
+}
+.ficha-muestra .muestra-tienda-mesa .carta {
+  --ancho: 18px;
+}
+.ficha-nombre {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-height: 2.3em;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.ficha-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--menu-suave, rgb(255 255 255 / 0.6));
+}
+.ficha-estado.hoy {
+  color: var(--acento);
+  font-weight: 900;
+}
+.ficha.tuyo .ficha-estado {
+  color: var(--en-linea, #5fd38d);
+}
+/* "Ver los N": la última ficha del estante, sin muestra. */
+.ficha-mas {
+  align-content: center;
+  min-height: 100%;
+  border-style: dashed;
+  border-color: var(--menu-filo, rgb(255 255 255 / 0.2));
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--acento);
+}

@@ -74,6 +74,20 @@ export function vitrinaDelDia(dia: string, catalogo: readonly ItemTienda[] = CAT
   return elegidos
 }
 
+/**
+ * Cuándo vuelve a salir cada cosa en la vitrina, a partir de mañana: el día (AAAA-MM-DD) de la
+ * próxima vez, mirando hasta `dias` días. Lo que no sale en ese plazo no está.
+ */
+export function proximasVitrinas(desde: Date, dias = 60): Map<string, string> {
+  const proximas = new Map<string, string>()
+  const hoy = Date.parse(`${diaDeTienda(desde)}T12:00:00Z`)
+  for (let i = 1; i <= dias; i++) {
+    const dia = new Date(hoy + i * 86_400_000).toISOString().slice(0, 10)
+    for (const item of vitrinaDelDia(dia)) if (!proximas.has(item.id)) proximas.set(item.id, dia)
+  }
+  return proximas
+}
+
 /** Qué puede usar quien tiene este inventario: lo gratis y lo comprado. */
 export function permisosDe(inventario: ReadonlySet<string> | readonly string[]) {
   const tiene = inventario instanceof Set ? inventario : new Set(inventario as readonly string[])

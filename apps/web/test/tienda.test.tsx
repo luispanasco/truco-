@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import { CATALOGO_TIENDA, NOMBRE_RAREZA, cambioDeVitrina, diaDeTienda } from '@truco/shared'
+import { CATALOGO_TIENDA, NOMBRE_RAREZA, cambioDeVitrina, diaDeTienda, proximasVitrinas } from '@truco/shared'
+import { armarEstantes, cuandoVuelve } from '../src/tienda/estantes'
 import { Tienda } from '../src/pantallas/Tienda'
 import { useCuenta } from '../src/cuenta/cuenta'
 import { esBeta, fijarInventario } from '../src/cuenta/inventario'
@@ -51,7 +52,9 @@ describe('tienda', () => {
     // Con / Sin: la muestra pasa de tu mesa a la nueva.
     expect(probador.querySelector('.muestra-mesa')?.getAttribute('data-mesa')).toBe('cantina')
     fireEvent.click(within(probador).getByRole('button', { name: 'Sin' }))
-    await waitFor(() => expect(probador.querySelector('.muestra-mesa')?.getAttribute('data-mesa')).toBe(leerPerfil().mesa))
+    // (Mientras sale la animación conviven la vieja y la nueva: alcanza con que aparezca la tuya.)
+    const muestras = () => [...probador.querySelectorAll('.muestra-mesa')].map((m) => m.getAttribute('data-mesa'))
+    await waitFor(() => expect(muestras()).toContain(leerPerfil().mesa), { timeout: 4000 })
     // Comprar pide confirmación.
     fireEvent.click(within(probador).getByRole('button', { name: `Comprar Mesa Cantina por ${mesa.precio} monedas` }))
     expect(within(probador).getByText(/¿Comprás/).textContent).toMatch(new RegExp(`Mesa Cantina por\\s+${mesa.precio}\\?`))
@@ -61,7 +64,7 @@ describe('tienda', () => {
     fireEvent.click(within(probador).getByRole('button', { name: 'Usar ahora' }))
     expect(leerPerfil().mesa).toBe('cantina')
     expect(within(probador).getByRole('button', { name: '✓ Puesto' })).toBeTruthy()
-  })
+  }, 15_000) // Dibuja la tienda entera (con los estantes): con la suite completa en paralelo tarda más de 5 s.
 
   it('"Mejor no" vuelve sin comprar', async () => {
     abrirTienda()
@@ -101,6 +104,41 @@ describe('tienda', () => {
     expect(leerPerfil().mesa).toBe('cantina')
     expect(within(coleccion).getByRole('button', { name: 'Mesa Cantina: puesto' })).toBeTruthy()
     expect(within(coleccion).getByRole('button', { name: `Usar ${letra.nombre}` })).toBeTruthy()
+  })
+})
+
+describe('estantes', () => {
+  it('todo el catálogo por categoría (sin lo del modo historia); cuándo vuelve, en palabras', () => {
+    const estantes = armarEstantes(CATALOGO_TIENDA)
+    expect(estantes.map((e) => e.titulo)).toEqual(['Pelo', 'Cara', 'Sombreros, lentes y aros', 'Ropa', 'En la mano y en la boca', 'Paños', 'Letras'])
+    const enEstantes = estantes.flatMap((e) => e.items)
+    expect(enEstantes).toHaveLength(CATALOGO_TIENDA.filter((i) => !i.recompensa).length)
+    expect(new Set(enEstantes.map((i) => i.id)).size).toBe(enEstantes.length)
+    expect(cuandoVuelve('2026-11-11', '2026-11-10')).toBe('mañana')
+    expect(cuandoVuelve('2026-11-13', '2026-11-10')).toBe('el viernes 13')
+    expect(cuandoVuelve('2026-12-02', '2026-11-10')).toBe('el 2/12')
+    // La próxima vez de cada cosa es un día en que de verdad sale en la vitrina.
+    const proximas = proximasVitrinas(new Date('2026-11-10T15:00:00Z'), 10)
+    expect(proximas.size).toBeGreaterThan(0)
+    for (const dia of proximas.values()) expect(dia > '2026-11-10').toBe(true)
+  })
+
+  it('lo que hoy no está en la vitrina se prueba pero no se compra, y dice cuándo vuelve', async () => {
+    abrirTienda()
+    const pelo = await screen.findByRole('region', { name: 'Pelo' })
+    const ficha = within(pelo).getAllByRole('button', { name: /, del estante\./ })[0]!
+    expect(ficha.getAttribute('aria-label')).toMatch(/Vuelve (mañana|el .+)\. Probar$|Vuelve más adelante\. Probar$/)
+    fireEvent.click(ficha)
+    const probador = screen.getByRole('dialog')
+    expect(within(probador).getByText(/Hoy no está en la vitrina/)).toBeTruthy()
+    expect(within(probador).queryByRole('button', { name: /^Comprar/ })).toBeNull()
+  })
+
+  it('"¿Cómo gano monedas?" cuenta las misiones', async () => {
+    abrirTienda()
+    fireEvent.click(await screen.findByRole('button', { name: /Cómo gano monedas/ }))
+    const hoja = screen.getByRole('dialog', { name: '¿Cómo gano monedas?' })
+    expect(within(hoja).getByText(/por cada misión/)).toBeTruthy()
   })
 })
 

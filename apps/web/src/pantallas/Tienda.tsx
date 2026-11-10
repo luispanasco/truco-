@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { NOMBRE_RAREZA, buscarItem, type ItemTienda } from '@truco/shared'
+import { CATALOGO_TIENDA, NOMBRE_RAREZA, buscarItem, proximasVitrinas, type ItemTienda } from '@truco/shared'
+import { Hoja } from '../componentes/Hoja'
 import { CabeceraOnline, MensajeError } from '../componentes/Online'
 import { usePerfil } from '../componentes/TarjetaPerfil'
 import { direccionApi, iniciarCuenta, useCuenta } from '../cuenta/cuenta'
 import { useInventario } from '../cuenta/inventario'
 import { estaPuesto, ponerItem } from '../tienda/items'
 import { Muestra } from '../tienda/Muestra'
-import { Moneda, Probador } from '../tienda/Probador'
+import { armarEstantes, cuandoVuelve } from '../tienda/estantes'
+import { ComoSeGanan, Moneda, Probador } from '../tienda/Probador'
 import '../estilos-mesas.css'
 import '../tienda/estilos-tienda.css'
 
@@ -47,17 +49,26 @@ function faltan(ms: number): string {
   return `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`
 }
 
+/** Lo que se abre en el probador y, si hoy no está en la vitrina, cuándo vuelve (null: no se sabe). */
+interface Abierto {
+  item: ItemTienda
+  vuelve?: string | null
+}
+
 /**
- * La vitrina del día: la destacada (el lugar épico o legendario) grande arriba, las otras cinco
- * más chicas abajo y, al final, lo que ya compraste. Tocando cualquiera se abre el probador.
- * Es la pantalla /tienda y el panel de la tienda en el menú. Sin cuenta, `alEntrar` abre el
- * login ahí mismo (si no viene, se manda al inicio).
+ * La tienda: arriba, cómo se ganan las monedas; la vitrina de hoy (lo único que se puede
+ * comprar), con la destacada en una tarjeta y las otras cinco en una grilla; después los
+ * estantes con todo el catálogo por categoría (lo que hoy no está dice cuándo vuelve) y, al
+ * final, lo que ya compraste. Tocando cualquiera se abre el probador. Es la pantalla /tienda y el
+ * panel de la tienda en el menú. Sin cuenta, `alEntrar` abre el login ahí mismo (si no viene, se
+ * manda al inicio).
  */
 export function VitrinaDelDia({ alEntrar }: { alEntrar?: () => void }) {
   const [vitrina, setVitrina] = useState<Vitrina | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [ahora, setAhora] = useState(() => Date.now())
-  const [abierto, setAbierto] = useState<ItemTienda | null>(null)
+  const [abierto, setAbierto] = useState<Abierto | null>(null)
+  const [comoGanar, setComoGanar] = useState(false)
   const estado = useCuenta((s) => s.estado)
   useEffect(() => void iniciarCuenta(), [])
   // Pasada la medianoche, se pide la vitrina nueva.
@@ -85,9 +96,15 @@ export function VitrinaDelDia({ alEntrar }: { alEntrar?: () => void }) {
 
   const destacada = vitrina?.items.at(-1)
   const resto = vitrina?.items.slice(0, -1) ?? []
-  // Las comunes van de a tres, chiquitas; las raras y épicas, de a dos.
-  const medianas = resto.filter((i) => i.rareza !== 'comun')
-  const chicas = resto.filter((i) => i.rareza === 'comun')
+  const deHoy = useMemo(() => new Set(vitrina?.items.map((i) => i.id) ?? []), [vitrina])
+  const estantes = useMemo(() => armarEstantes(CATALOGO_TIENDA), [])
+  const proximas = useMemo(() => (vitrina ? proximasVitrinas(new Date(`${vitrina.dia}T12:00:00Z`)) : new Map<string, string>()), [vitrina])
+  /** Abre el probador: si hoy no está en la vitrina, con cuándo vuelve. */
+  const abrir = (item: ItemTienda) => {
+    if (deHoy.has(item.id)) return setAbierto({ item })
+    const dia = proximas.get(item.id)
+    setAbierto({ item, vuelve: dia && vitrina ? cuandoVuelve(dia, vitrina.dia) : null })
+  }
   const entrar = alEntrar
     ? () => {
         setAbierto(null)
@@ -113,32 +130,143 @@ export function VitrinaDelDia({ alEntrar }: { alEntrar?: () => void }) {
           )}
         </section>
       )}
+      <button type="button" className="tienda-como-ganar" aria-haspopup="dialog" onClick={() => setComoGanar(true)}>
+        <Moneda /> ¿Cómo gano monedas? <span aria-hidden="true">›</span>
+      </button>
       {error && <MensajeError>{error}</MensajeError>}
       {!vitrina && !error && <p className="nota">Cargando…</p>}
       {vitrina && destacada && (
-        <ItemVitrina item={destacada} tam="destacada" alAbrir={setAbierto} cambia={faltan(Date.parse(vitrina.cambia) - ahora)} />
+        <ItemVitrina item={destacada} tam="destacada" alAbrir={abrir} cambia={faltan(Date.parse(vitrina.cambia) - ahora)} />
       )}
-      {medianas.length > 0 && (
-        <ul className="vitrina vitrina-medianas" aria-label="Más de la vitrina">
-          {medianas.map((i) => (
-            <li key={i.id}>
-              <ItemVitrina item={i} tam="mediana" alAbrir={setAbierto} />
-            </li>
-          ))}
-        </ul>
+      {resto.length > 0 && (
+        <section className="tienda-hoy" aria-labelledby="tienda-hoy">
+          <h2 id="tienda-hoy" className="tienda-seccion">
+            Hoy en la vitrina
+          </h2>
+          <ul className="vitrina vitrina-hoy" aria-label="Más de la vitrina">
+            {resto.map((i) => (
+              <li key={i.id}>
+                <ItemVitrina item={i} tam="chica" alAbrir={abrir} />
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
-      {chicas.length > 0 && (
-        <ul className="vitrina vitrina-chicas" aria-label="Las comunes de hoy">
-          {chicas.map((i) => (
-            <li key={i.id}>
-              <ItemVitrina item={i} tam="chica" alAbrir={setAbierto} />
-            </li>
-          ))}
-        </ul>
+      {vitrina &&
+        estantes.map((e) => (
+          <Estante
+            key={e.titulo}
+            titulo={e.titulo}
+            items={e.items}
+            hoy={deHoy}
+            vuelve={(id) => {
+              const dia = proximas.get(id)
+              return dia ? cuandoVuelve(dia, vitrina.dia) : null
+            }}
+            orden={(id) => (deHoy.has(id) ? '' : (proximas.get(id) ?? '~'))}
+            alAbrir={abrir}
+          />
+        ))}
+      <Coleccion alAbrir={abrir} />
+      {abierto && <Probador item={abierto.item} vuelve={abierto.vuelve} alCerrar={() => setAbierto(null)} alEntrar={entrar} />}
+      {comoGanar && (
+        <Hoja titulo="¿Cómo gano monedas?" alCerrar={() => setComoGanar(false)} clase="hoja-menu" claseFondo="hoja-fija">
+          <div className="hoja-menu-contenido">
+            <ComoSeGanan />
+            <p className="nota-izq">Lo que comprás es tuyo para siempre. La vitrina cambia todos los días a la medianoche.</p>
+            <button type="button" className="boton" onClick={() => setComoGanar(false)}>
+              Entendido
+            </button>
+          </div>
+        </Hoja>
       )}
-      <Coleccion alAbrir={setAbierto} />
-      {abierto && <Probador item={abierto} alCerrar={() => setAbierto(null)} alEntrar={entrar} />}
     </>
+  )
+}
+
+/** Cuántas fichas muestra un estante hasta que tocás "Ver todos". */
+const FICHAS_A_LA_VISTA = 12
+
+/**
+ * Un estante: lo de hoy primero, después lo que vuelve antes (y lo que no se sabe, al final).
+ * Muestra doce; el resto, con "Ver los N". Así la tienda no dibuja cientos de avatares de una vez.
+ */
+function Estante({
+  titulo,
+  items,
+  hoy,
+  vuelve,
+  orden,
+  alAbrir,
+}: {
+  titulo: string
+  items: ItemTienda[]
+  hoy: ReadonlySet<string>
+  vuelve: (id: string) => string | null
+  /** Clave para ordenar: '' lo de hoy, el día AAAA-MM-DD de la próxima vez, '~' si no se sabe. */
+  orden: (id: string) => string
+  alAbrir: (i: ItemTienda) => void
+}) {
+  const [todos, setTodos] = useState(false)
+  const ordenados = useMemo(() => [...items].sort((a, b) => orden(a.id).localeCompare(orden(b.id))), [items, orden])
+  const visibles = todos ? ordenados : ordenados.slice(0, FICHAS_A_LA_VISTA)
+  return (
+    <section className="estante" aria-label={titulo}>
+      <h2 className="tienda-seccion">
+        {titulo} <small>{items.length}</small>
+      </h2>
+      <ul className="estante-carril">
+        {visibles.map((i) => (
+          <li key={i.id}>
+            <Ficha item={i} hoy={hoy.has(i.id)} vuelve={vuelve(i.id)} alAbrir={alAbrir} />
+          </li>
+        ))}
+        {!todos && ordenados.length > FICHAS_A_LA_VISTA && (
+          <li>
+            <button type="button" className="ficha ficha-mas" onClick={() => setTodos(true)}>
+              Ver los {ordenados.length}
+            </button>
+          </li>
+        )}
+      </ul>
+    </section>
+  )
+}
+
+/**
+ * Una ficha de un estante: la pieza de cerca, su nombre y si es tuya, si está hoy en la vitrina o
+ * cuándo vuelve. Tocándola se prueba.
+ */
+function Ficha({ item, hoy, vuelve, alAbrir }: { item: ItemTienda; hoy: boolean; vuelve: string | null; alAbrir: (i: ItemTienda) => void }) {
+  const [perfil] = usePerfil()
+  const tenes = useInventario()
+  const tuyo = tenes.has(item.id)
+  const estado = tuyo ? 'Tuyo' : hoy ? 'Hoy en la vitrina' : vuelve ? `Vuelve ${vuelve}` : 'Vuelve más adelante'
+  return (
+    <button
+      type="button"
+      className={`ficha rareza-${item.rareza}${tuyo ? ' tuyo' : hoy ? ' hoy' : ''}`}
+      aria-label={`${item.nombre}, del estante. ${NOMBRE_RAREZA[item.rareza]}. ${estado}. Probar`}
+      onClick={() => alAbrir(item)}
+    >
+      <span className="ficha-muestra" aria-hidden="true">
+        <Muestra item={item} perfil={perfil} />
+      </span>
+      <span className="ficha-nombre" aria-hidden="true">
+        {item.nombre}
+      </span>
+      <span className={`ficha-estado${hoy && !tuyo ? ' hoy' : ''}`} aria-hidden="true">
+        {tuyo ? (
+          '✓ Tuyo'
+        ) : hoy ? (
+          <>
+            <Moneda /> {item.precio}
+          </>
+        ) : (
+          vuelve ?? 'más adelante'
+        )}
+      </span>
+    </button>
   )
 }
 

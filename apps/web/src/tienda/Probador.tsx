@@ -20,7 +20,7 @@ export function Moneda() {
  * Cuánto se gana jugando, para el que no llega (como `ECONOMIA` en el servidor,
  * apps/server/src/cuentas/monedas.ts: si cambia allá, cambia acá).
  */
-function ComoSeGanan() {
+export function ComoSeGanan() {
   return (
     <ul className="como-se-ganan">
       <li>
@@ -32,6 +32,12 @@ function ComoSeGanan() {
       <li>
         <strong>+30</strong> la primera partida del día
       </li>
+      <li>
+        <strong>+50 a +100</strong> por cada misión de "Para hacer", en Jugar
+      </li>
+      <li>
+        <strong>Monedas y premios</strong> en el modo historia
+      </li>
       <li className="como-se-ganan-nota">Con bots en la mesa se gana menos.</li>
     </ul>
   )
@@ -41,9 +47,22 @@ type Paso = 'mirar' | 'confirmar' | 'comprando' | 'comprado'
 
 /**
  * El probador: la pieza puesta en tu avatar, grande, con "Sin / Con" para comparar con lo que
- * tenés ahora (la mesa y la letra igual). Desde acá se compra, con confirmación, o se usa.
+ * tenés ahora (la mesa y la letra igual). Desde acá se compra, con confirmación, o se usa. Lo
+ * que hoy no está en la vitrina (`vuelve`: cuándo vuelve, o null si no se sabe) se prueba pero
+ * no se compra.
  */
-export function Probador({ item, alCerrar, alEntrar }: { item: ItemTienda; alCerrar: () => void; alEntrar?: () => void }) {
+export function Probador({
+  item,
+  alCerrar,
+  alEntrar,
+  vuelve,
+}: {
+  item: ItemTienda
+  alCerrar: () => void
+  alEntrar?: () => void
+  /** Si no está en la vitrina de hoy: cuándo vuelve ("el jueves 13"), o null si no sale en los próximos días. */
+  vuelve?: string | null
+}) {
   const [perfil, cambiar] = usePerfil()
   const tenes = useInventario()
   const { estado, saldo } = useCuenta()
@@ -92,6 +111,15 @@ export function Probador({ item, alCerrar, alEntrar }: { item: ItemTienda; alCer
             Seguir mirando
           </button>
         )}
+      </div>
+    )
+  } else if (vuelve !== undefined) {
+    acciones = (
+      <div className="probador-acciones probador-aviso">
+        <p>
+          Hoy no está en la vitrina. {vuelve ? <>Vuelve <strong>{vuelve}</strong>.</> : 'Vuelve más adelante.'}
+        </p>
+        <p className="nota-izq">La vitrina cambia todos los días a la medianoche: andá juntando monedas.</p>
       </div>
     )
   } else if (estado !== 'adentro') {
