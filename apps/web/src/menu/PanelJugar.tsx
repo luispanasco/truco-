@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import type { Nivel } from '@truco/bots'
 import type { Formato } from '@truco/engine'
-import type { IdDepartamento } from '@truco/shared'
+import type { DestinoMision, IdDepartamento } from '@truco/shared'
 import { AmigosConectados } from '../componentes/Amistad'
 import { Carta } from '../componentes/Carta'
 import { datosUnirse, destinoAlEntrar, MensajeError } from '../componentes/Online'
@@ -13,6 +13,7 @@ import { useJuego } from '../estado'
 import { leerPerfil, MODOS_JUGAR, type Perfil } from '../perfil'
 import { conexionContraLaCompu } from './contraLaCompu'
 import { IconoBuscar, IconoCompu, IconoCrear, IconoLlave } from './Iconos'
+import { ParaHacer } from './ParaHacer'
 import { PortadaHistoria } from './PortadaHistoria'
 import { useCuenta } from '../cuenta/cuenta'
 
@@ -130,6 +131,8 @@ export function PanelJugar({
   enLinea,
   conApodo,
   alConfigurarCompu,
+  alIrMision,
+  alEntrar,
 }: {
   perfil: Perfil
   cambiar: (p: Partial<Perfil>) => void
@@ -138,6 +141,10 @@ export function PanelJugar({
   conApodo: (accion: () => void) => void
   /** Ir a elegir el formato, el nivel y las reglas de contra la compu (el lobby). */
   alConfigurarCompu: () => void
+  /** "Ir" de una misión: a donde se hace. */
+  alIrMision: (destino: DestinoMision) => void
+  /** Abrir la hoja para entrar a la cuenta. */
+  alEntrar: () => void
 }) {
   const navegar = useNavigate()
   const sinMovimiento = useReducedMotion() ?? false
@@ -238,6 +245,8 @@ export function PanelJugar({
           ¡Jugar!
         </button>
       </div>
+
+      <ParaHacer alIr={alIrMision} alEntrar={alEntrar} />
 
       <div className="jugar-secundarios">
         <BotonChico

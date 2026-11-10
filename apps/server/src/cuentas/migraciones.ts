@@ -193,4 +193,23 @@ export const MIGRACIONES: string[] = [
   alter table repeticiones enable row level security;
   alter table grupo_muro enable row level security;
   `,
+  // 13. Misiones: cada partida online terminada (para contar las misiones aunque el tope del día no
+  //     deje cobrar monedas) y el cobro de cada misión (un movimiento `mision`, con la partida
+  //     `mision:<id>` o `mision:<id>:<día>`, así el índice único no deja cobrarla dos veces).
+  `
+  create table partidas_jugadas (
+    cuenta_id uuid not null references cuentas (id),
+    partida text not null,
+    gano boolean not null,
+    -- Si en la mesa había alguien de uno de sus grupos (con su cuenta).
+    con_grupo boolean not null default false,
+    creado timestamptz not null default now(),
+    primary key (cuenta_id, partida)
+  );
+  create index partidas_jugadas_cuenta on partidas_jugadas (cuenta_id, creado);
+  alter table partidas_jugadas enable row level security;
+  alter table movimientos drop constraint movimientos_tipo_check;
+  alter table movimientos add constraint movimientos_tipo_check
+    check (tipo in ('partida', 'victoria', 'bonusDiario', 'compra', 'ajuste', 'historia', 'mision'));
+  `,
 ]

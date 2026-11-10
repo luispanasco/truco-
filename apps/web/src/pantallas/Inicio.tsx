@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
-import { TODO_PERMITIDO } from '@truco/shared'
+import { useNavigate } from 'react-router'
+import { diaDeTienda, TODO_PERMITIDO, type DestinoMision } from '@truco/shared'
 import { mostrarBaraja } from '../baraja'
 import { EditorAvatar } from '../componentes/EditorAvatar'
 import { Hoja } from '../componentes/Hoja'
@@ -8,6 +9,7 @@ import { TarjetaCuenta } from '../componentes/TarjetaCuenta'
 import { VisorMazo } from '../componentes/VisorMazo'
 import { usePerfil } from '../componentes/TarjetaPerfil'
 import { useCuenta } from '../cuenta/cuenta'
+import { useHayParaCobrar } from '../cuenta/misiones'
 import { useEnLinea } from '../enLinea'
 import { Ajustes } from '../menu/Ajustes'
 import { Banner } from '../menu/Banner'
@@ -35,6 +37,17 @@ const DE_LOS_COSTADOS = new Set<string>(['avatar', 'grupos'])
 
 /** En qué pantalla quedó el menú: al volver de una sala o del ranking, se vuelve a la misma (hasta recargar). */
 let ultimoPanel = JUGAR
+
+/** El último día en que miraste la tienda: si cambió la vitrina desde entonces, la barra avisa. */
+const CLAVE_TIENDA_VISTA = 'truco.tiendaVista'
+
+function leerTiendaVista(): string | null {
+  try {
+    return localStorage.getItem(CLAVE_TIENDA_VISTA)
+  } catch {
+    return null
+  }
+}
 
 /** Con pantalla ancha (la compu), las tres pantallas van una al lado de la otra, sin deslizar. */
 const ANCHO = '(min-width: 1100px)'
@@ -116,11 +129,38 @@ export function Inicio() {
     if (i !== actual) fijar(i)
   }
 
+  // Mirar la tienda (o tenerla a la vista, en la compu) apaga su aviso hasta que cambie la vitrina.
+  const [tiendaVista, setTiendaVista] = useState(leerTiendaVista)
+  const hoy = diaDeTienda(new Date())
+  useEffect(() => {
+    if (!ancha && PANELES[actual]!.id !== 'tienda') return
+    try {
+      localStorage.setItem(CLAVE_TIENDA_VISTA, hoy)
+    } catch {
+      // Sin almacenamiento, el aviso vuelve a aparecer al recargar: no pasa nada.
+    }
+    setTiendaVista(hoy)
+  }, [actual, ancha, hoy])
+  const hayParaCobrar = useHayParaCobrar()
+  /** Las pantallas con algo nuevo: un puntito en su pestaña. */
+  const conAviso: Record<string, boolean> = { jugar: hayParaCobrar, tienda: tiendaVista !== hoy }
+
   /** Desde la barra de abajo (o el banner): desliza hasta esa pantalla. */
   const irA = (i: number) => {
     fijar(i)
     const c = carril.current
     if (c && !ancha) c.scrollTo?.({ left: i * c.clientWidth, behavior: sinMovimiento ? 'auto' : 'smooth' })
+  }
+
+  /** "Ir" de una misión: a donde se hace. */
+  const navegar = useNavigate()
+  const irAMision = (destino: DestinoMision) => {
+    if (destino === 'jugar') return conApodo(() => navegar('/buscar'))
+    if (destino === 'historia') return navegar('/historia')
+    if (destino === 'amigos') return navegar('/amigos')
+    if (destino === 'tienda') return irA(PANELES.findIndex((p) => p.id === 'tienda'))
+    if (ancha) setHoja('grupos')
+    else irA(PANELES.findIndex((p) => p.id === 'grupos'))
   }
 
   /** Flechas en la barra, como en cualquier grupo de pestañas. */
@@ -142,7 +182,15 @@ export function Inicio() {
       <h2 className="panel-titulo">Tienda</h2>
       <VitrinaDelDia alEntrar={() => setHoja('cuenta')} />
     </>,
-    <PanelJugar perfil={perfil} cambiar={cambiar} enLinea={enLinea} conApodo={conApodo} alConfigurarCompu={() => irA(3)} />,
+    <PanelJugar
+      perfil={perfil}
+      cambiar={cambiar}
+      enLinea={enLinea}
+      conApodo={conApodo}
+      alConfigurarCompu={() => irA(3)}
+      alIrMision={irAMision}
+      alEntrar={() => setHoja('cuenta')}
+    />,
     <PanelLobby perfil={perfil} cambiar={cambiar} conApodo={conApodo} />,
     <>
       <h2 className="panel-titulo">Grupos</h2>
@@ -198,6 +246,7 @@ export function Inicio() {
               >
                 {i === actual && <motion.span layoutId="menu-pestania-activa" className="menu-pestania-marca" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
                 <p.Icono clase="menu-pestania-icono" />
+                {conAviso[p.id] && <span className="menu-pestania-aviso" aria-hidden="true" />}
                 <span className="menu-pestania-nombre" aria-hidden="true">
                   {p.titulo}
                 </span>

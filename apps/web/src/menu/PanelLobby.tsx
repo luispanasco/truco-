@@ -1,12 +1,15 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
+import type { Formato } from '@truco/engine'
+import { Avatar } from '../componentes/Avatar'
 import { FORMATOS, NIVELES, Segmentado, SelectorLargo } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
-import { useCuenta } from '../cuenta/cuenta'
+import { direccionApi, useCuenta } from '../cuenta/cuenta'
 import { useJuego } from '../estado'
 import { leerPerfil, type Perfil } from '../perfil'
 import { conexionContraLaCompu } from './contraLaCompu'
-import { IconoCompu, IconoCrear, IconoLobby } from './Iconos'
+import { useElo } from './Banner'
+import { IconoBuscar, IconoCompu, IconoCrear } from './Iconos'
 
 /** Un atajo del lobby a otra pantalla: ícono, título y una línea que explica. */
 function Atajo({ icono, titulo, detalle, alTocar }: { icono: ReactNode; titulo: string; detalle: string; alTocar: () => void }) {
@@ -26,9 +29,69 @@ function Atajo({ icono, titulo, detalle, alTocar }: { icono: ReactNode; titulo: 
   )
 }
 
+const FORMATOS_ELO: [Formato, string][] = [
+  ['1v1', '1 vs 1'],
+  ['2v2', '2 vs 2'],
+  ['3v3', '3 vs 3'],
+]
+
+/** Tu Elo en un formato: el número grande y el formato abajo (sin cuenta, una raya). */
+function EloDe({ formato, nombre }: { formato: Formato; nombre: string }) {
+  const elo = useElo(formato)
+  return (
+    <span className="lobby-elo">
+      <strong>{elo?.puntos ?? '—'}</strong>
+      <small>{nombre}</small>
+    </span>
+  )
+}
+
+interface FilaTop {
+  posicion: number
+  cuentaId: string
+  apodo: string
+  avatar: string | null
+  puntos: number
+}
+
+/** Los cinco primeros del ranking de mano a mano. */
+function TopRanking() {
+  const [filas, setFilas] = useState<FilaTop[] | null>(null)
+  useEffect(() => {
+    let vigente = true
+    fetch(`${direccionApi()}/ranking?formato=1v1`)
+      .then(async (r) => {
+        if (!r.ok) throw new Error(String(r.status))
+        const d = (await r.json()) as { filas?: FilaTop[] }
+        if (vigente) setFilas(Array.isArray(d.filas) ? d.filas.slice(0, 5) : [])
+      })
+      .catch(() => vigente && setFilas([]))
+    return () => {
+      vigente = false
+    }
+  }, [])
+  if (!filas) return null
+  if (filas.length === 0) return <p className="nota-izq">Todavía nadie entró al ranking: jugá online con tu cuenta y sé el primero.</p>
+  return (
+    <ol className="lobby-top" aria-label="Los mejores de mano a mano">
+      {filas.map((f) => (
+        <li key={f.cuentaId}>
+          <span className={`tabla-puesto puesto-${f.posicion}`}>{f.posicion}</span>
+          <span className="lobby-top-avatar">
+            <Avatar codigo={f.avatar} apodo={f.apodo} />
+          </span>
+          <span className="lobby-top-nombre">{f.apodo}</span>
+          <strong>{f.puntos}</strong>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
 /**
- * La pantalla de la derecha del menú: contra la compu (formato, nivel de los bots y las reglas
- * de esa partida), el ranking y los amigos.
+ * La pantalla de la derecha del menú, lo competitivo. Arriba, "Competí": tu Elo en cada formato,
+ * buscar un rival online y los cinco mejores del ranking. Después, practicar contra la compu
+ * (formato, nivel de los bots y las reglas de esa partida) y los amigos.
  */
 export function PanelLobby({
   perfil,
@@ -52,11 +115,28 @@ export function PanelLobby({
   return (
     <>
       <h2 className="panel-titulo">Lobby</h2>
-      <section className="tarjeta contra-la-compu" aria-labelledby="titulo-compu">
+      <section className="tarjeta lobby-competi" aria-labelledby="titulo-competi">
+        <h2 id="titulo-competi">Competí</h2>
+        <div className="lobby-elos" aria-label="Tu Elo">
+          {FORMATOS_ELO.map(([f, nombre]) => (
+            <EloDe key={f} formato={f} nombre={nombre} />
+          ))}
+        </div>
+        {!adentro && <p className="nota-izq">Entrá a tu cuenta para tener Elo y aparecer en el ranking.</p>}
+        <button type="button" className="boton-jugar-grande lobby-buscar" onClick={() => conApodo(() => navegar('/buscar'))}>
+          <IconoBuscar clase="lobby-buscar-icono" /> Buscar rival
+        </button>
+        <TopRanking />
+        <button type="button" className="boton-texto lobby-ver-ranking" onClick={() => navegar('/ranking')}>
+          Ver todo el ranking <span aria-hidden="true">›</span>
+        </button>
+      </section>
+
+      <section className="tarjeta contra-la-compu lobby-compacto" aria-labelledby="titulo-compu">
         <h2 id="titulo-compu">
-          <IconoCompu clase="titulo-icono" /> Contra la compu
+          <IconoCompu clase="titulo-icono" /> Practicar contra la compu
         </h2>
-        <p className="nota-izq">Para practicar, sin internet. No cuenta para el Elo.</p>
+        <p className="nota-izq">Sin internet. No cuenta para el Elo.</p>
         <div className="campo">
           <span>Formato</span>
           <div className="segmentado">
@@ -118,7 +198,6 @@ export function PanelLobby({
       </section>
 
       <div className="atajos-lobby">
-        <Atajo icono={<IconoLobby />} titulo="Ranking" detalle="Los mejores de cada formato, por Elo" alTocar={() => navegar('/ranking')} />
         {adentro && <Atajo icono={<IconoCrear />} titulo="Amigos" detalle="Tu código, solicitudes y quién está conectado" alTocar={() => navegar('/amigos')} />}
       </div>
     </>

@@ -84,6 +84,7 @@ import { Archivo, type RegistroPartida } from './registro'
 import type { Cuentas } from './cuentas/api'
 import type { Usuario } from './cuentas/auth'
 import { pagarPartida } from './cuentas/monedas'
+import { anotarPartidaJugada } from './cuentas/misiones'
 import { anotarEnGrupos } from './cuentas/muro'
 import { actualizarElo } from './cuentas/elo'
 import { entrar } from './cuentas/cuentas'
@@ -1256,6 +1257,11 @@ export class SalaTruco extends Room {
       } catch (e) {
         console.error('No se pudieron pagar las monedas:', e)
       }
+      // Para las misiones: la partida cuenta aunque el tope del día no haya dejado cobrar.
+      const otras = this.lugares.flatMap((o) => (o.tipo === 'humano' && o.cuentaId && o.cuentaId !== l.cuentaId ? [o.cuentaId] : []))
+      await anotarPartidaJugada(this.cuentas.base, l.cuentaId, partida, ganador === equipo, otras).catch((e) =>
+        console.error('No se pudo anotar la partida para las misiones:', e),
+      )
     }
   }
 

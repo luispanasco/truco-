@@ -107,7 +107,8 @@ describe('menú principal', () => {
     fireEvent.keyDown(pestania('Grupos'), { key: 'ArrowLeft' })
     expect(pestania('Lobby').getAttribute('aria-selected')).toBe('true')
     expect(within(panel('lobby')).getByRole('button', { name: 'Jugar' })).toBeTruthy()
-    expect(within(panel('lobby')).getByText('Contra la compu')).toBeTruthy()
+    expect(within(panel('lobby')).getByText(/Practicar contra la compu/)).toBeTruthy()
+    expect(within(panel('lobby')).getByRole('button', { name: /Buscar rival/ })).toBeTruthy()
     fireEvent.keyDown(pestania('Lobby'), { key: 'ArrowRight' })
     expect(pestania('Grupos').getAttribute('aria-selected')).toBe('true')
   })
@@ -255,6 +256,9 @@ describe('pantalla Avatar', () => {
   })
 })
 
+/** Lo que dice el Elo del banner. */
+const eloDelBanner = () => document.querySelector('.banner-elo')?.textContent ?? ''
+
 describe('banner de la cuenta', () => {
   it('como invitado invita a entrar; al entrar se ven las monedas y el Elo del formato', async () => {
     servidorFalso()
@@ -268,8 +272,9 @@ describe('banner de la cuenta', () => {
     // Adentro, la hoja se cierra sola y el banner muestra lo de la cuenta.
     const monedas = await screen.findByRole('button', { name: '340 monedas. Ir a la tienda' })
     expect(screen.queryByRole('dialog')).toBeNull()
-    expect(await screen.findByText('1287')).toBeTruthy()
-    expect(screen.getByText('Elo 1 vs 1')).toBeTruthy()
+    // (El Elo también está en el lobby: acá se mira el del banner.)
+    await waitFor(() => expect(eloDelBanner()).toContain('1287'))
+    expect(eloDelBanner()).toContain('Elo 1 vs 1')
 
     // Las monedas llevan a la tienda.
     fireEvent.click(monedas)
@@ -278,15 +283,15 @@ describe('banner de la cuenta', () => {
     // Al cambiar de formato en el lobby, el banner muestra el Elo de ese formato.
     fireEvent.click(pestania('Lobby'))
     fireEvent.click(within(panel('lobby')).getByRole('button', { name: /^Parejas/ }))
-    expect(await screen.findByText('1111')).toBeTruthy()
-    expect(screen.getByText('Elo 2 vs 2')).toBeTruthy()
+    await waitFor(() => expect(eloDelBanner()).toContain('1111'))
+    expect(eloDelBanner()).toContain('Elo 2 vs 2')
   })
 
   it('sin partidas con Elo, muestra el inicial (1200)', async () => {
     servidorFalso({ conElo: false })
     useCuenta.setState({ estado: 'adentro', token: 'prueba:ana@ejemplo.com', saldo: 0 })
     menu()
-    expect(await screen.findByText('1200')).toBeTruthy()
+    await waitFor(() => expect(eloDelBanner()).toContain('1200'))
     expect(document.querySelector('.banner-elo.sin-partidas')).toBeTruthy()
   })
 })

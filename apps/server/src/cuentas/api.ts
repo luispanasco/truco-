@@ -30,6 +30,7 @@ import {
   salirDeGrupo,
 } from './grupos'
 import { invitarAlGrupo, muroDeGrupo, repeticion } from './muro'
+import { cobrarMision, MisionRechazo, misiones } from './misiones'
 
 export interface Cuentas {
   base: Base
@@ -136,6 +137,25 @@ export function rutasCuentas(c: Cuentas | null): Router {
         res.json(await ganarNivel(c.base, u.id, b.departamento, b.nivel, esAdmin(u.email)))
       }),
     ),
+  )
+
+  // Misiones: las de una vez que faltan y las del día, con su avance; y cobrar una cumplida.
+  r.get(
+    '/misiones',
+    conSesion(async (_req, res, c, u) => {
+      res.json(await misiones(c.base, u.id))
+    }),
+  )
+  r.post(
+    '/misiones/cobrar',
+    conSesion(async (req, res, c, u) => {
+      try {
+        res.json(await cobrarMision(c.base, u.id, (req.body as { id?: unknown } | undefined)?.id))
+      } catch (e) {
+        if (!(e instanceof MisionRechazo)) throw e
+        res.status(409).json({ motivo: e.message })
+      }
+    }),
   )
 
   // Amigos. El latido avisa que la app sigue abierta y trae las invitaciones a una sala.

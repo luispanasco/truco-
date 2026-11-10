@@ -8,6 +8,7 @@ const TEXTO: Record<MovimientoMonedas['tipo'], string> = {
   compra: 'Compra',
   ajuste: 'Ajuste',
   historia: 'Modo historia',
+  mision: 'Misión cumplida',
 }
 
 /** Al terminar la partida, lo que cobraste (si entraste con tu cuenta) y cómo quedó tu saldo. */

@@ -1811,3 +1811,30 @@ Elegido: letra un 12 % más chica, misiones con monedas (el servidor las control
   - los botones, con 44 px de alto mínimo para el dedo;
   - "¡Jugar!", un poco más bajo.
 - **Tests:** web todos en verde y los e2e de menú, partida local y modo historia.
+
+## UI nueva, etapa 2: misiones, Jugar y Lobby — 2026-11-10
+
+Pedido: "dale de una" al plan de la etapa 2.
+
+- **Misiones con monedas** (`packages/shared/src/misiones.ts`, `apps/server/src/cuentas/misiones.ts`):
+  - **De una vez**, 100 cada una: tu primera partida online, ganar el nivel 1 de Rocha, sumar un amigo, entrar a un grupo y comprar algo en la tienda. Las cobradas ya no se muestran.
+  - **Del día**: tres por día, sorteadas por día y por cuenta (`misionesDelDia`), entre jugar 2 o 3 partidas online, ganar 1 o 2 y jugar con alguien de tu grupo (esta, solo si estás en uno). Nunca salen dos de la misma familia; cambian a medianoche de Uruguay.
+  - Solo cuenta lo que el servidor puede comprobar: las partidas contra la compu corren en el navegador.
+  - **Servidor:**
+    - Migración 13: la tabla `partidas_jugadas` anota cada partida online terminada por cuenta (si ganó y si había alguien de uno de sus grupos), aunque el tope del día no deje cobrar monedas. Suma el tipo de movimiento `mision`.
+    - `GET /api/misiones` y `POST /api/misiones/cobrar`.
+    - El cobro es un movimiento con la partida `mision:<id>` (o `mision:<id>:<día>`): el índice único no deja cobrar dos veces.
+- **Jugar:**
+  - el logo, más chico;
+  - debajo de "¡Jugar!", la tarjeta "Para hacer": primeros pasos (las cumplidas primero, dos a la vista) y las del día, con su avance, "Cobrar" o "Ir" (lleva a buscar partida, al modo historia, a amigos, a grupos o a la tienda);
+  - sin cuenta, invita a entrar.
+- **Lobby, lo competitivo:**
+  - "Competí", con tu Elo en los tres formatos, "Buscar rival" y el top 5 de mano a mano, con "Ver todo el ranking";
+  - después "Practicar contra la compu", más compacto (los cinco niveles en una fila);
+  - y Amigos.
+- **Avisos en la barra de abajo:** un puntito en Jugar cuando hay una misión para cobrar y en la Tienda cuando cambió la vitrina y todavía no la miraste. El de Grupos queda para la etapa 4.
+- **Tests:**
+  - server 131 (misiones: el sorteo del día, las de una vez, el tope del día no afecta, una vez por día y "con tu grupo");
+  - web 369 ("Para hacer": sin cuenta, el orden, cobrar e ir);
+  - los 14 de punta a punta.
+- **Hay que publicar el servidor** (migración 13) para que las misiones anden.

@@ -309,7 +309,7 @@ export interface MensajeChat {
 
 /** Un movimiento de monedas, como lo ve el jugador. */
 export interface MovimientoMonedas {
-  tipo: 'partida' | 'victoria' | 'bonusDiario' | 'compra' | 'ajuste' | 'historia'
+  tipo: 'partida' | 'victoria' | 'bonusDiario' | 'compra' | 'ajuste' | 'historia' | 'mision'
   monto: number
 }
 
@@ -379,6 +379,7 @@ export * from './voz'
 export * from './grupos'
 export * from './personajes'
 export * from './historia'
+export * from './misiones'
 export * from './historias'
 export * from './vecinos'
 export * from './cargadas'
