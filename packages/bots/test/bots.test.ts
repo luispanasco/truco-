@@ -236,6 +236,92 @@ describe('bots', () => {
     p = conBot()
   })
 
+  it('el pie no manda nada con los tantos por declarar (ni a gritar en el medio)', () => {
+    // Muestra 3 de copas. c (pie) tiene 1 de espadas, 7 de espadas y 3: para gritar. a tocó y d quiso.
+    let p = partidaCon(['4e 6o 5b', '1b 2e 6e', '1e 7e 3o', '3e 6b 11o'], '3c')
+    p = aplicar(p, { tipo: 'cantarEnvido', jugador: 'a', canto: 'envido' }, { tipo: 'responder', jugador: 'd', respuesta: 'quiero' })
+    for (const nivel of NIVELES) {
+      for (let semilla = 0; semilla < 10; semilla++) {
+        expect(crearBot(nivel, semilla).ordenar(vistaPara(p, 'c'), {}, 0)).toBeNull()
+      }
+    }
+    // Y en una partida simulada, nadie grita con la declaración pendiente.
+    for (let semilla = 0; semilla < 4; semilla++) {
+      jugarPartida({
+        bots: [0, 1, 2, 3].map((i) => crearBot(NIVELES[(semilla + i) % NIVELES.length]!, semilla * 10 + i)),
+        semilla,
+        config: { formato: '2v2', puntosPartida: 20 },
+        alAccion: (estado, accion) => {
+          const e = estado.mano.enfrentamientos[estado.mano.actual]!
+          if (e.envido.estado === 'declarando') expect(accion.tipo).toBe('declararTanto')
+        },
+      })
+    }
+  })
+
+  // Muestra 3 de copas. Equipo 1: b (juega segundo) y d (el pie). b tiene 7 y 6 de espadas (33).
+  const TOCA = ['1o 12b 5b', '7e 6e 4b', '2o 11o 3b', '10e 3o 6b']
+  const seniasDeB = { 1: ['sieteBravo', 'envido'], envido: { 1: 33 } } as SeniasRecibidas
+
+  it('el toque es del pie: casi nunca manda a tocar, y nunca al primero de la mano', () => {
+    const p = aplicar(partidaCon(TOCA, '3c'), { tipo: 'jugarCarta', jugador: 'a', carta: c('1o') })
+    let mandadas = 0
+    for (let semilla = 0; semilla < 60; semilla++) {
+      const que = crearBot('dificil', semilla).ordenar(vistaPara(p, 'd'), seniasDeB, 1)
+      if (que === 'tocar') mandadas++
+      // Sin la seña de envido de b, nunca.
+      expect(crearBot('dificil', semilla).ordenar(vistaPara(p, 'd'), { 1: ['sieteBravo'] }, 1)).not.toBe('tocar')
+    }
+    // Algo raro: el compañero le marcó mucho envido que el pie no tiene, y no es el primero.
+    expect(mandadas).toBeGreaterThan(0)
+    expect(mandadas).toBeLessThan(30)
+    // Al que juega primero (a, mano), jamás, aunque le haya marcado 33.
+    const alPrimero = partidaCon(['7e 6e 4b', '1o 12b 5b', '10e 3o 6b', '2o 11o 3b'], '3c')
+    for (const nivel of NIVELES) {
+      for (let semilla = 0; semilla < 30; semilla++) {
+        expect(crearBot(nivel, semilla).ordenar(vistaPara(alPrimero, 'c'), { 0: ['sieteBravo', 'envido'], envido: { 0: 33 } }, 0)).not.toBe('tocar')
+      }
+    }
+  })
+
+  it('el pie no manda a tocar si el compañero le señó flor, ni si la tiene él', () => {
+    // a tiene flor de oros y se la señó a c (pie); c tiene 7 y 6 de espadas.
+    const conFlor = partidaCon(['1o 5o 7o', '1b 2e 6c', '7e 6e 12b', '3e 7b 11b'], '3c')
+    // b (no es el primero) tiene flor; d (pie) tiene 33.
+    const pieConFlor = aplicar(partidaCon(['4e 6c 12o', '1o 5o 7o', '1b 2e 6b', '7e 6e 3b'], '3c'), { tipo: 'jugarCarta', jugador: 'a', carta: c('4e') })
+    for (const nivel of NIVELES) {
+      for (let semilla = 0; semilla < 30; semilla++) {
+        expect(crearBot(nivel, semilla).ordenar(vistaPara(conFlor, 'c'), { 0: ['unoFalso', 'flor'] }, 0)).not.toBe('tocar')
+        expect(crearBot(nivel, semilla).ordenar(vistaPara(pieConFlor, 'd'), { 1: ['unoFalso', 'flor'] }, 1)).not.toBe('tocar')
+      }
+    }
+    // Y si el pie tiene flor, tampoco: d con flor de bastos, aunque b (segundo) le marcó 33.
+    const pieFlor = aplicar(partidaCon(['4e 6c 12o', '7e 6e 3o', '2o 11o 1e', '4b 6b 12b'], '3c'), { tipo: 'jugarCarta', jugador: 'a', carta: c('4e') })
+    for (let semilla = 0; semilla < 30; semilla++) {
+      expect(crearBot('dificil', semilla).ordenar(vistaPara(pieFlor, 'd'), { 1: ['sieteBravo', 'envido'], envido: { 1: 33 } }, 1)).not.toBe('tocar')
+    }
+  })
+
+  it('el que no es pie no se apura a tocar: lo deja para el pie, salvo con mucho tanto (en 1v1, toca)', () => {
+    // b (no es pie) tiene 7 y 3 de espadas: 30. El fácil, solo, toca desde 30.
+    const treinta = aplicar(partidaCon(['1o 12b 5b', '7e 3e 4b', '2o 11o 3b', '10e 3o 6b'], '3c'), { tipo: 'jugarCarta', jugador: 'a', carta: c('1o') })
+    expect(crearBot('facil', 1).decidir(vistaPara(treinta, 'b'))).toMatchObject({ tipo: 'jugarCarta' })
+    // Con 33 sí.
+    const treintaYTres = aplicar(partidaCon(TOCA, '3c'), { tipo: 'jugarCarta', jugador: 'a', carta: c('1o') })
+    expect(crearBot('facil', 1).decidir(vistaPara(treintaYTres, 'b'))).toMatchObject({ tipo: 'cantarEnvido' })
+    // El pie, con 30, toca él en su turno.
+    const alPie = aplicar(
+      partidaCon(['1o 12b 5b', '10e 3o 6b', '2o 11o 1c', '7e 3e 4b'], '3c'),
+      { tipo: 'jugarCarta', jugador: 'a', carta: c('1o') },
+      { tipo: 'jugarCarta', jugador: 'b', carta: c('10e') },
+      { tipo: 'jugarCarta', jugador: 'c', carta: c('2o') },
+    )
+    expect(crearBot('facil', 1).decidir(vistaPara(alPie, 'd'))).toMatchObject({ tipo: 'cantarEnvido' })
+    // En 1v1 no hay pie: con 30 toca.
+    const uno = aplicar(partidaCon(['1o 12b 5b', '7e 3e 4b'], '3c'), { tipo: 'jugarCarta', jugador: 'a', carta: c('1o') })
+    expect(crearBot('facil', 1).decidir(vistaPara(uno, 'b'))).toMatchObject({ tipo: 'cantarEnvido' })
+  })
+
   it('con "vení" tira la más baja', () => {
     const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 5o 12b', '3e 6b 11o'], '3c')
     for (const nivel of NIVELES) {

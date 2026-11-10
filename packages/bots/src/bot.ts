@@ -1,5 +1,5 @@
 import { equipoDe, ORDENES_DE_CARTA, valorEnvido, type Accion, type Orden, type Carta, type CantoEnvido, type CantoFlor, type QueManda, type TipoCorte, type VistaPartida } from '@truco/engine'
-import { Aleatorio, crearContexto, f, mejorDeLaVuelta, ordenadas, pendiente, type Contexto } from './contexto'
+import { Aleatorio, crearContexto, f, jugoEnPrimera, mejorDeLaVuelta, ordenadas, pendiente, type Contexto } from './contexto'
 import { ENVIDO_PARA_SENIAR, envidoParaSenia, seniasDeMano, type Senia, type SeniasRecibidas } from './senias'
 import { crearFacil } from './facil'
 import { crearMedio } from './medio'
@@ -101,10 +101,11 @@ export function crearBotCon(nivel: Nivel, estrategia: Estrategia, semilla: numbe
       if (!vista.mano.muestra) return null
       const e = vista.mano.enfrentamientos[vista.mano.actual]!
       if (e.ordenes.some((o) => o.asiento === companiero)) return null
+      // Con algo en el aire (un canto sin contestar, los tantos por declarar) no se manda nada.
+      if (pendiente(e) !== null) return null
       const ctx = crearContexto(vista, senias, rng)
-      const enPrimera = e.vueltas.length === 1 && e.envido.estado === 'libre' && e.flor.cantadas.length === 0
-      if (enPrimera && estrategia.cantarEnvido(ctx, ['envido', 'realEnvido', 'faltaEnvido'])) return 'tocar'
-      const puedeGritar = e.truco.valor < 4 && !e.truco.pendiente && (e.truco.puedeSubir === null || e.truco.puedeSubir === ctx.equipo)
+      if (mandaTocar(ctx, estrategia, companiero)) return 'tocar'
+      const puedeGritar = e.truco.valor < 4 && (e.truco.puedeSubir === null || e.truco.puedeSubir === ctx.equipo)
       if (puedeGritar && estrategia.cantarTruco(ctx)) return 'gritar'
       return null
     },
@@ -197,7 +198,8 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[], sugerencia?: 
 
   // Un bot que manda una persona no canta por su cuenta (salvo la flor, arriba): espera que lo manden.
   if (!mandadoPorPersona(ctx.vista)) {
-    if (envidos.length > 0) {
+    // En equipo toca el pie: el que no es pie no se apura, salvo con mucho tanto.
+    if (envidos.length > 0 && !leTocaAlPie(ctx)) {
       const canto = est.cantarEnvido(ctx, envidos)
       if (canto) return { tipo: 'cantarEnvido', jugador, canto }
     }
@@ -212,6 +214,38 @@ function elegir(ctx: Contexto, est: Estrategia, validas: Accion[], sugerencia?: 
     return { tipo: 'jugarCarta', jugador, carta }
   }
   return validas.find((a) => a.tipo !== 'irseAlMazo') ?? validas[0]!
+}
+
+/** Desde cuánto de envido el que no es pie toca él mismo, sin esperar al pie. */
+export const ENVIDO_MUCHO = 31
+
+/**
+ * Si el que toca tiene que ser el pie: el bot no es pie, el pie todavía no jugó la primera (le
+ * va a llegar el turno) y el bot no tiene mucho tanto. El pie sabe el envido de los demás por las
+ * señas y decide él.
+ */
+function leTocaAlPie(ctx: Contexto): boolean {
+  const pie = ctx.e.lideres[ctx.equipo] ?? null
+  if (pie === null || pie === ctx.yo || ctx.e.retirados.includes(pie) || jugoEnPrimera(ctx.e, pie)) return false
+  return ctx.miTanto.envido < ENVIDO_MUCHO
+}
+
+/**
+ * Si el pie manda a tocar a un compañero, cosa rara: el toque es del pie, que lo hace en su turno.
+ * Solo si el compañero le marcó mucho envido que el pie no tiene, el equipo quiere cantarlo y el
+ * compañero no es el primero en jugar la mano; y aun así, pocas veces. Con flor (la propia o la de un
+ * compañero, por la seña) nunca: con flor no se toca, se canta la flor.
+ */
+function mandaTocar(ctx: Contexto, est: Estrategia, companiero: number): boolean {
+  const e = ctx.e
+  const libre = e.vueltas.length === 1 && e.envido.estado === 'libre' && e.flor.cantadas.length === 0 && e.truco.valor === 1
+  if (!libre || jugoEnPrimera(e, companiero)) return false
+  if (ctx.miTanto.flor !== null || ctx.companeros.some((x) => ctx.senias.get(x)?.includes('flor'))) return false
+  if (companiero === e.vueltas[0]!.empieza) return false
+  const marcado = ctx.envidoMarcado.get(companiero)
+  if (marcado === undefined || marcado < ENVIDO_PARA_SENIAR || ctx.miTanto.envido >= marcado) return false
+  if (!est.cantarEnvido(ctx, ['envido', 'realEnvido', 'faltaEnvido'])) return false
+  return ctx.rng.chance(0.25)
 }
 
 /** Si el bot lo manda una persona (su pie): juega y canta lo que ella le diga. */

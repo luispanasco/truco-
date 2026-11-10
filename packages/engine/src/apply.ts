@@ -342,8 +342,16 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
       if (e.retirados.includes(comp)) return 'Ese compañero se fue al mazo'
       if (accion.que === 'tocar' || accion.que === 'gritar') {
         if (e.ordenes.some((o) => o.asiento === comp && o.que === accion.que)) return 'Ya se lo mandaste'
-        if (accion.que === 'tocar' && (!enPrimera || e.envido.estado !== 'libre' || e.flor.cantadas.length > 0)) {
-          return 'Ya no se puede tocar'
+        // Con algo en el aire (un canto sin contestar, los tantos por declarar) no se manda a cantar:
+        // primero se termina eso. Solo el envido va primero que el truco del rival.
+        const envidoVaPrimero = accion.que === 'tocar' && pend === 'truco' && e.truco.pendiente!.equipo !== eq && e.truco.pendiente!.nivel === 2
+        if (pend && !envidoVaPrimero) return MENSAJE_PENDIENTE[pend]
+        if (accion.que === 'tocar') {
+          if (!enPrimera || e.envido.estado !== 'libre' || e.flor.cantadas.length > 0 || e.truco.valor !== 1) return 'Ya no se puede tocar'
+          // Con flor no se toca: se canta la flor.
+          const conFlor = e.participantes.filter((x) => equipoDe(x) === eq && debeCantarFlor(estado, e, x))
+          if (conFlor.includes(comp)) return 'Tiene flor: que la cante'
+          if (conFlor.length > 0) return conFlor.includes(a) ? 'Tenés flor: cantala' : 'Hay flor en el equipo: no se toca'
         }
         if (accion.que === 'gritar' && e.truco.valor === 4) return 'No se puede subir más'
         if (accion.que === 'gritar' && companierosConFlor(eq, comp).length > 0) return 'Hay flor en el equipo: hasta que se cante no se grita'
@@ -445,7 +453,8 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
       const primeroEstaElEnvido = e.envido.estado === 'libre' && e.truco.pendiente !== null
       e.envido.estado = 'pendiente'
       e.envido.cantos.push({ canto: accion.canto, asiento: a, equipo: eq })
-      usarOrden(e, a, 'tocar')
+      // Ya se tocó: las órdenes de tocar que quedaban (de cualquiera) no van más.
+      e.ordenes = e.ordenes.filter((o) => o.que !== 'tocar')
       eventos.push({ tipo: 'cantoEnvido', asiento: a, canto: accion.canto, primeroEstaElEnvido })
       return
     }
@@ -463,6 +472,8 @@ function ejecutar(estado: EstadoPartida, accion: Accion, eventos: Evento[]) {
         t.florDeclarada = declarado
         f.cantadas.push({ asiento: a, equipo: eq, tantoDeclarado: declarado })
       }
+      // Con flor no hay envido: nadie toca.
+      e.ordenes = e.ordenes.filter((o) => o.que !== 'tocar')
       if (e.envido.estado !== 'anulado') {
         if (e.envido.estado !== 'libre') eventos.push({ tipo: 'envidoAnulado' })
         e.envido.estado = 'anulado'
