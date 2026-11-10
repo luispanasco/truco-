@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import { useState } from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { apply, crearConfig, crearPartida, esperandoA, nombreCarta, vistaPara, type Carta, type EstadoPartida, type VistaPartida } from '@truco/engine'
@@ -11,6 +12,8 @@ import { PanelSenias, seniasRapidas } from '../src/componentes/Senias'
 import { useJuego } from '../src/estado'
 import { guardarPerfil, leerPerfil } from '../src/perfil'
 import { Mesa } from '../src/pantallas/Mesa'
+import { Ajustes } from '../src/menu/Ajustes'
+import { GESTO_BREVE } from '../src/componentes/PanelCompaniero'
 
 function App() {
   return (
@@ -513,5 +516,71 @@ describe('resumen de señas sobre los compañeros', () => {
     fireEvent.click(interruptor())
     expect(leerPerfil().resumenSenias).toBe(false)
     expect(resumenDe(companiero)).toBeNull()
+  })
+})
+
+describe('resumen con solo la seña del compañero', () => {
+  afterEach(() => localStorage.clear())
+  const resumenDe = (asiento: number) => document.querySelector(`.asiento[data-asiento="${asiento}"] .resumen-senias`)
+
+  it('viene apagado: el resumen y el panel traducen las señas como siempre', async () => {
+    expect(leerPerfil().resumenSoloSenia).toBe(false)
+    guardarPerfil({ ...leerPerfil(), resumenSenias: true })
+    const datos = partida2v2()
+    const { llegar } = await entrar(datos)
+    const companiero = (datos.yo + 2) % 4
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'envido', mano: datos.vista.mano.numero, tanto: 27 } })
+    expect(resumenDe(companiero)!.textContent).toContain('Envido 27')
+    fireEvent.click(screen.getByRole('button', { name: `Señas de ${APODOS[companiero]}` }))
+    const panel = screen.getByRole('dialog', { name: `Señas de ${APODOS[companiero]}` })
+    expect(within(panel).getByText('envido 27')).toBeTruthy()
+  })
+
+  it('prendido: solo el gesto, sin la carta que anuncia ni el número del envido', async () => {
+    guardarPerfil({ ...leerPerfil(), resumenSenias: true, resumenSoloSenia: true })
+    const datos = partida2v2()
+    const { llegar } = await entrar(datos)
+    const companiero = (datos.yo + 2) % 4
+    const mano = datos.vista.mano.numero
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'pieza4', mano } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'envido', mano, tanto: 27 } })
+    // El cartelito sobre el compañero: los gestos, cortitos.
+    const resumen = resumenDe(companiero)!
+    const textos = [...resumen.querySelectorAll('.resumen-senia')].map((e) => e.textContent!.replace(e.querySelector('.resumen-icono')!.textContent!, ''))
+    expect(textos).toEqual([GESTO_BREVE.envido, GESTO_BREVE.pieza4])
+    expect(resumen.textContent).not.toMatch(/27|Pieza|Envido/)
+    expect(resumen.querySelector('.resumen-senia.envido')).toBeNull()
+    expect(resumen.getAttribute('aria-label')).toBe(`${APODOS[companiero]} te hizo: ${GESTO.envido.toLowerCase()}, ${GESTO.pieza4.toLowerCase()}`)
+    // El panel al tocarlo: el gesto completo, nada de lo que significa.
+    fireEvent.click(screen.getByRole('button', { name: `Señas de ${APODOS[companiero]}` }))
+    const panel = screen.getByRole('dialog', { name: `Señas de ${APODOS[companiero]}` })
+    expect(within(panel).getByText('Te hizo en esta mano')).toBeTruthy()
+    expect([...panel.querySelectorAll('.companiero-lista b')].map((b) => b.textContent)).toEqual([GESTO.pieza4, GESTO.envido])
+    expect(panel.querySelector('.companiero-lista small')).toBeNull()
+    expect(panel.querySelector('.companiero-lista')!.textContent).not.toMatch(/27|pieza|envido/i)
+  })
+
+  it('se prende desde los ajustes, con las demás opciones de señas, y queda guardado', () => {
+    function ConAjustes() {
+      const [perfil, setPerfil] = useState(leerPerfil)
+      return (
+        <MemoryRouter>
+          <Ajustes
+            perfil={perfil}
+            cambiar={(p) => {
+              const nuevo = { ...perfil, ...p }
+              guardarPerfil(nuevo)
+              setPerfil(nuevo)
+            }}
+          />
+        </MemoryRouter>
+      )
+    }
+    render(<ConAjustes />)
+    const sw = screen.getByRole('switch', { name: /Solo la seña del compañero/ }) as HTMLInputElement
+    expect(sw.checked).toBe(false)
+    fireEvent.click(sw)
+    expect(leerPerfil().resumenSoloSenia).toBe(true)
+    expect((screen.getByRole('switch', { name: /Solo la seña del compañero/ }) as HTMLInputElement).checked).toBe(true)
   })
 })

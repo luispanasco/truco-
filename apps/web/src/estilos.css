@@ -740,6 +740,24 @@ input {
   display: grid;
   gap: 4px;
   min-width: 0;
+  /* Es un botón: abre el anotador grande. */
+  margin: -3px -4px;
+  padding: 3px 4px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.marcador-filas:hover {
+  background: rgb(255 255 255 / 0.06);
+}
+.marcador-filas:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 1px;
 }
 .marcador-fila {
   display: grid;
@@ -2318,4 +2336,47 @@ input {
 .mano-reparto {
   display: block;
   flex: none;
+}
+
+/* ── Anotador: el tanteador grande con fósforos (al tocar el marcador) ── */
+.anotador-dibujo {
+  display: block;
+  margin-inline: auto;
+  width: min(100%, 300px);
+  height: auto;
+  max-height: 52vh;
+  max-height: 52dvh;
+}
+.anotador-nombre {
+  font-size: 7.5px;
+  font-weight: 800;
+  fill: var(--equipo-rival);
+}
+.anotador-columna.nosotros .anotador-nombre {
+  fill: var(--equipo-nuestro);
+}
+.anotador-puntos {
+  font-size: 12px;
+  font-weight: 900;
+  fill: currentColor;
+  font-variant-numeric: tabular-nums;
+}
+.anotador-mitad {
+  stroke: var(--acento);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 2;
+}
+.anotador-tramo {
+  font-size: 5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  fill: currentColor;
+  opacity: 0.75;
+}
+.anotador-pie {
+  margin: 0 auto;
+  max-width: 34ch;
+  text-align: center;
+  font-size: 0.82rem;
+  opacity: 0.85;
 }

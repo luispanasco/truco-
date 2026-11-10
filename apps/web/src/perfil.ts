@@ -63,6 +63,11 @@ export interface Perfil {
    * Es solo tuyo (no cambia la sala). Apagado de entrada; también se cambia desde la mesa.
    */
   resumenSenias: boolean
+  /**
+   * El resumen de un compañero (el cartelito y el panel al tocarlo) muestra solo la seña que te
+   * hizo (el gesto), sin traducirla a cartas ni al número del envido. Apagado de entrada.
+   */
+  resumenSoloSenia: boolean
   /** Tiempos de la última sala que armó (por jugada y primera jugada del mano). */
   tiempos: ConfigTiempos
   /** Dibujo de las cartas (cosmético): la baraja propia en SVG o la clásica de Fournier (1878). */
@@ -135,6 +140,7 @@ export function leerPerfil(): Perfil {
     seniasAntesDeJugar: false,
     seniasHabilitadas: true,
     resumenSenias: false,
+    resumenSoloSenia: false,
     tiempos: TIEMPOS_SALA_DEFAULT,
     baraja: BARAJA_DEFAULT,
     vistaMesa: 'circulos',
