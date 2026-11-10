@@ -323,6 +323,7 @@
   --tapete-oscuro: #21363e;
   --tapete-textura:
     radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #21363e 85%, transparent)),
+    url('/departamentos/rocha-emblema.webp') center / 55% auto no-repeat,
     url('/departamentos/rocha-pano.webp') center / 512px repeat;
   --madera: #35251c;
   --madera-clara: #805a3d;

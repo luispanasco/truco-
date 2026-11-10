@@ -6,3 +6,5 @@ Licencia: diseño propio con autorización de uso para el proyecto, incluidas in
 
 40 cartas españolas y dorso. WebP RGB, 400 × 600 px.
 Ojeo: oro 0 cortes; copa 1; espada 2; basto 3. Línea superior y numerales alineados.
+
+Ases y cartas del 2 al 7 rehechos en noviembre de 2026 a partir de objetos sueltos (forma A de INSTRUCTIVO-MAZOS.md), armados con scripts/barajas-propias-armar.py. Las figuras son las originales.
