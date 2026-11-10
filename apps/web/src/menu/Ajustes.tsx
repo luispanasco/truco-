@@ -74,6 +74,12 @@ export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Part
               titulo="Resumen de señas sobre los compañeros"
               detalle="Un cartelito arriba de cada compañero con lo que te marcó en la mano (también online). Solo lo ves vos"
             />
+            <Interruptor
+              activo={perfil.resumenSoloSenia}
+              alCambiar={(v) => cambiar({ resumenSoloSenia: v })}
+              titulo="Solo la seña del compañero"
+              detalle="El resumen y el panel de tu compañero muestran el gesto que te hizo, sin traducirlo a cartas ni al envido: lo descifrás vos"
+            />
           </>
         )}
       </section>

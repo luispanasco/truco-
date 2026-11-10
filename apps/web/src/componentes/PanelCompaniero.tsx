@@ -55,31 +55,55 @@ const BREVE: Record<Senia, string> = {
   flor: 'Flor',
   envido: 'Envido',
 }
+/** El gesto cortito, para el resumen con solo la seña (sin decir qué carta anuncia). */
+export const GESTO_BREVE: Record<Senia, string> = {
+  pieza2: 'Cejas',
+  pieza4: 'Beso',
+  pieza5: 'Nariz',
+  perico: 'Guiño der.',
+  perica: 'Guiño izq.',
+  unoBravo: 'Pera a la der.',
+  sieteBravo: 'Pera a la izq.',
+  tres: 'Labio',
+  dosComun: 'Boca abierta',
+  unoFalso: 'Lengua',
+  flor: 'Sapo',
+  envido: 'Mira arriba',
+}
 const breve = (m: Marca) => (m.senia === 'envido' && m.tanto !== undefined ? `Envido ${m.tanto}` : BREVE[m.senia])
 
 /**
  * Cartelito sobre el avatar de un compañero con lo que te marcó en esta mano ("🤔 Envido 27 ·
  * 💋 Pieza 4 · 🐸 Flor"). Es una preferencia de cada uno (apagada de entrada); solo lo ve quien
- * recibió las señas. Sin señas no se muestra nada.
+ * recibió las señas. Sin señas no se muestra nada. Con `soloSenia`, solo el gesto ("💋 Beso"):
+ * ni la carta ni el número del envido.
  */
 export function ResumenSenias({
   marcas,
   apodo,
   lado,
+  soloSenia = false,
 }: {
   marcas: readonly Marca[]
   apodo: string
   /** Para no tapar el mazo (o la muestra) cuando quedan donde va el resumen: al otro lado. */
   lado?: 'derecha'
+  /** Solo el gesto que te hizo, sin traducirlo. */
+  soloSenia?: boolean
 }) {
   if (marcas.length === 0) return null
-  const completo = marcas.map((m) => significadoDe(m.senia, m.tanto)).join(', ')
+  const completo = marcas.map((m) => (soloSenia ? GESTO[m.senia].toLowerCase() : significadoDe(m.senia, m.tanto))).join(', ')
   return (
-    <div className={`resumen-senias${lado ? ` resumen-${lado}` : ''}`} role="note" aria-label={`${apodo} te marcó: ${completo}`} title={completo}>
+    <div
+      className={`resumen-senias${lado ? ` resumen-${lado}` : ''}${soloSenia ? ' solo-senia' : ''}`}
+      role="note"
+      aria-label={`${apodo} te ${soloSenia ? 'hizo' : 'marcó'}: ${completo}`}
+      title={completo}
+    >
       {marcas.map((m) => (
-        <span key={m.senia} className={`resumen-senia${m.senia === 'envido' ? ' envido' : ''}`} aria-hidden="true">
+        <span key={m.senia} className={`resumen-senia${m.senia === 'envido' && !soloSenia ? ' envido' : ''}`} aria-hidden="true">
           <span className={`resumen-icono${CORTO[m.senia].espejo ? ' espejo' : ''}`}>{CORTO[m.senia].icono}</span>
-          {breve(m)}
+          {soloSenia ? GESTO_BREVE[m.senia] : breve(m)}
         </span>
       ))}
     </div>
@@ -102,6 +126,7 @@ export function PanelCompaniero({
   alCerrar,
   resumen,
   alCambiarResumen,
+  soloSenia = false,
 }: {
   lugar: LugarPublico
   marcadas: readonly Senia[]
@@ -118,13 +143,15 @@ export function PanelCompaniero({
   /** Tu preferencia: el resumen de señas sobre los compañeros (se cambia desde acá en la mesa). */
   resumen?: boolean
   alCambiarResumen?: (v: boolean) => void
+  /** Tu preferencia: solo el gesto de cada seña, sin decir qué carta anuncia ni el envido. */
+  soloSenia?: boolean
 }) {
   return (
     <Hoja titulo={`Señas de ${lugar.apodo}`} alCerrar={alCerrar} clase="hoja-companiero">
       <div className="companiero-marcadas">
         <Avatar lugar={lugar} />
         <div>
-          <p className="companiero-titulo">Te marcó en esta mano</p>
+          <p className="companiero-titulo">{soloSenia ? 'Te hizo en esta mano' : 'Te marcó en esta mano'}</p>
           {marcadas.length > 0 ? (
             <ul className="companiero-lista">
               {marcadas.map((s) => (
@@ -132,8 +159,14 @@ export function PanelCompaniero({
                   <span className={`senia-rapida-icono${CORTO[s].espejo ? ' espejo' : ''}`} aria-hidden="true">
                     {CORTO[s].icono}
                   </span>
-                  <b>{significadoDe(s, envido)}</b>
-                  <small>{GESTO[s].toLowerCase()}</small>
+                  {soloSenia ? (
+                    <b>{GESTO[s]}</b>
+                  ) : (
+                    <>
+                      <b>{significadoDe(s, envido)}</b>
+                      <small>{GESTO[s].toLowerCase()}</small>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>

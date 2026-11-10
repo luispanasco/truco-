@@ -18,6 +18,7 @@ import { AnilloVoz, ControlesVoz } from '../componentes/ControlesVoz'
 import { EstadoConexion } from '../componentes/EstadoConexion'
 import { GloboDeChat, useGlobosChat } from '../componentes/GlobosChat'
 import { Fosforos } from '../componentes/Fosforos'
+import { Anotador } from '../componentes/Anotador'
 import { ManoOjeable } from '../componentes/ManoOjeable'
 import { Mazo, useFaseCorte } from '../componentes/Mazo'
 import { MenuJugador, useSilenciados } from '../componentes/MenuJugador'
@@ -77,8 +78,8 @@ export function Mesa() {
   const faseCorte = useFaseCorte(corte)
   const [aviso, setAviso] = useState<string | null>(null)
   const [confirmarSalida, setConfirmarSalida] = useState(false)
-  // Paneles de la mesa: chat y señas (hojas desde abajo) y el menú sobre otro jugador.
-  const [panel, setPanel] = useState<'chat' | 'senias' | null>(null)
+  // Paneles de la mesa: chat, señas y el anotador (hojas desde abajo) y el menú sobre otro jugador.
+  const [panel, setPanel] = useState<'chat' | 'senias' | 'anotador' | null>(null)
   const [menuDe, setMenuDe] = useState<number | null>(null)
   // El compañero cuyo avatar tocaste (sus señas de esta mano) y a quiénes les pediste hace poco.
   const [companieroDe, setCompanieroDe] = useState<number | null>(null)
@@ -108,7 +109,8 @@ export function Mesa() {
   // Ayudas: la explicación de una estrella o de la ficha del tanto, arriba de tu lugar.
   const { explicacion, explicar, cerrar: cerrarExplicacion } = useExplicacion()
   // Cómo se ve la mesa. En perspectiva, dónde cae cada asiento alrededor del paño inclinado.
-  const { ojear, vistaMesa } = leerPerfil()
+  // Y si el resumen de cada compañero muestra solo la seña (el gesto), sin traducirla.
+  const { ojear, vistaMesa, resumenSoloSenia } = leerPerfil()
   const perspectiva = vistaMesa === 'perspectiva'
   const { ref: refTapete, medidas } = useMesaEnPerspectiva(perspectiva, vista?.jugadores.length ?? 0)
 
@@ -254,7 +256,12 @@ export function Mesa() {
   }
   const resumenPara = (a: number) =>
     conResumen && hayCompanieros && a !== yo && a % 2 === yo % 2 && participa(a) ? (
-      <ResumenSenias marcas={resumenDe(senias, a, vista.mano.numero)} apodo={sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`} lado={ladoResumen(rel(a))} />
+      <ResumenSenias
+        marcas={resumenDe(senias, a, vista.mano.numero)}
+        apodo={sala.lugares[a]?.apodo ?? `Jugador ${a + 1}`}
+        lado={ladoResumen(rel(a))}
+        soloSenia={resumenSoloSenia}
+      />
     ) : undefined
   const pieAbierto = pieAbiertoEn === vista.mano.numero && !finDeMano
   // Tu bot espera que le digas qué jugar (sos su pie): el panel se abre solo.
@@ -300,18 +307,25 @@ export function Mesa() {
   return (
     <div className={`pantalla-mesa n-${n}${vistaMesa === 'sentados' ? ' mesa-bustos' : ''}${perspectiva ? ' mesa-perspectiva' : ''}`}>
       <header className="marcador">
-        <div className="marcador-filas">
-          <div className="marcador-fila nosotros">
+        {/* Tocar el tanteador abre el anotador grande, con la raya de la mitad. */}
+        <button
+          type="button"
+          className="marcador-filas"
+          onClick={() => setPanel('anotador')}
+          aria-haspopup="dialog"
+          aria-label={`Ver el anotador: ${nombreNuestro} ${pn}, ${nombreEllos} ${pe}`}
+        >
+          <span className="marcador-fila nosotros">
             <span className="marcador-nombre">{nombreNuestro}</span>
             <Fosforos puntos={pn} malas={vista.config.puntosMalas} />
             <strong className="marcador-puntos">{pn}</strong>
-          </div>
-          <div className="marcador-fila ellos">
+          </span>
+          <span className="marcador-fila ellos">
             <span className="marcador-nombre">{nombreEllos}</span>
             <Fosforos puntos={pe} malas={vista.config.puntosMalas} />
             <strong className="marcador-puntos">{pe}</strong>
-          </div>
-        </div>
+          </span>
+        </button>
         <div className="marcador-centro">
           <span className="marcador-mano">
             Mano <b>{vista.mano.numero}</b>
@@ -543,6 +557,15 @@ export function Mesa() {
         </div>
       )}
 
+      {panel === 'anotador' && (
+        <Anotador
+          nosotros={{ nombre: nombreNuestro, puntos: pn }}
+          ellos={{ nombre: nombreEllos, puntos: pe }}
+          malas={vista.config.puntosMalas}
+          partida={vista.config.puntosPartida}
+          alCerrar={cerrarPanel}
+        />
+      )}
       {panel === 'chat' && (
         <PanelChat
           sala={sala}
@@ -577,6 +600,7 @@ export function Mesa() {
           envido={envidoMarcado(senias, lugarCompaniero.asiento, vista.mano.numero)}
           resumen={conResumen}
           alCambiarResumen={cambiarResumen}
+          soloSenia={resumenSoloSenia}
           esBot={lugarCompaniero.tipo !== 'humano' || !lugarCompaniero.conectado}
           cerrado={pedidoCerrado(lugarCompaniero.asiento)}
           pedido={pedidos.has(lugarCompaniero.asiento)}
