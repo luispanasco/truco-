@@ -141,8 +141,9 @@ describe('selector de tipografías', () => {
         <Inicio />
       </MemoryRouter>,
     )
-    // Las opciones finas están en el engranaje del banner.
-    fireEvent.click(screen.getByRole('button', { name: 'Ajustes' }))
+    // La letra está en la pestaña Letra de la pantalla Avatar.
+    fireEvent.click(screen.getByRole('tab', { name: 'Avatar' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Letra' }))
     expect(raiz.dataset.tipografia).toBe('nunito')
     const grupo = screen.getByRole('radiogroup', { name: 'Tipografía' })
     fireEvent.click(within(grupo).getByRole('radio', { name: 'Alfa Slab One' }))

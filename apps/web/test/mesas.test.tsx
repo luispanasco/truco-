@@ -106,6 +106,7 @@ describe('selector de mesas', () => {
     )
     // Lo cosmético está en la pantalla Avatar.
     fireEvent.click(screen.getByRole('tab', { name: 'Avatar' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Paño' }))
     expect(document.documentElement.dataset.mesa).toBe('boliche')
     const grupo = screen.getByRole('radiogroup', { name: 'Mesa' })
     fireEvent.click(within(grupo).getByRole('radio', { name: 'Azul' }))
