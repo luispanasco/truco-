@@ -1762,3 +1762,21 @@ Pedido: que los mazos sigan la disposición de siempre de las cartas (el 3 de ba
   - Test (ojeo.test.ts): ningún palo se sale de la zona del dibujo ni del marco, y ninguno pisa el número de abajo.
 - **INSTRUCTIVO-MAZOS.md:** qué está mal en los 19 mazos ilustrados (palos chicos y la misma grilla para los cuatro palos), qué no se toca (marco, pinta y números, medidos en píxeles para el ojeo), las coordenadas y tamaños de cada carta del 2 al 7 sobre 400 × 600, y dos prompts para el agente: la forma recomendada (que dibuje solo los cuatro palos sueltos de cada mazo, con fondo transparente, y un script del proyecto arma las cartas) y la de las cartas completas.
 - **Tests:** web todos en verde.
+
+## Los ases especiales y el espacio — 2026-11-10
+
+Pedido: que los ases sean dibujos especiales (el 1 de espadas y el de bastos, "más agresivos"), dejar los mazos "pipi cucu", y que lo del espacio (palos grandes que llenen la carta) quede bien remarcado.
+
+- **La baraja propia (SVG), con cuatro ases únicos** (`As` en dibujo.tsx; ya no es el palo agrandado):
+  - 1 de espadas: espada grande, apenas inclinada, con la cruz con volutas y piedra, el puño forrado y una cinta celeste y blanca enroscada en la hoja.
+  - 1 de bastos: garrote grande y nudoso, inclinado al otro lado, con ramas, hojas y una cinta roja atada.
+  - 1 de oros: medalla con el Sol de Mayo, laureles a los costados y cinta abajo.
+  - 1 de copas: copa de lujo con tapa y remate, piedras, nudo en el tallo y pie ancho.
+  - Ajustes: el 2 de copas sin que se toquen y el 3 de bastos más abierto (40°), para que se vea cruzado.
+- **INSTRUCTIVO-MAZOS.md, rehecho:**
+  - Se rehacen los ases y del 2 al 7 (28 por mazo).
+  - Sección "El espacio" con reglas medibles (los palos del 2 al 7 van por lo menos de y = 125 a 475, los tamaños son el mínimo y entre palos quedan 10 a 20 px).
+  - Sección "Los ases".
+  - Variantes de los palos: larga en el 2 y el 3 y corta del 4 al 7, dos colores alternados y el del medio del 5 más grande.
+  - El prompt de la forma A pide 14 PNG por mazo: 4 ases, la moneda, la copa, y las espadas y bastos largos y cortos en dos colores.
+- **Tests:** web todos en verde.

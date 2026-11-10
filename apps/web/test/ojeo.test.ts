@@ -47,9 +47,10 @@ describe('zonas', () => {
   it('el dibujo de los palos empieza debajo del número y no se sale del marco', () => {
     const palos: Palo[] = ['oro', 'copa', 'espada', 'basto']
     for (const palo of palos) {
-      for (let numero = 1; numero <= 7; numero++) {
+      // Los ases son dibujos propios (`As`); del 2 al 7, tantos palos como el número.
+      for (let numero = 2; numero <= 7; numero++) {
         const puntos = disposicion(palo, numero)
-        expect(puntos, `${numero} de ${palo}`).toHaveLength(numero === 1 ? 1 : palo === 'basto' && numero === 3 ? 3 : numero)
+        expect(puntos, `${numero} de ${palo}`).toHaveLength(numero)
         for (const { x, y, tam, rot } of puntos) {
           // Las dos puntas del palo (a lo largo) y, si está derecho o acostado, también lo ancho.
           const { ancho, alto } = MEDIDA_PALO[palo]

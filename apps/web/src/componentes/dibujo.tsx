@@ -132,8 +132,7 @@ const p = (x: number, y: number, tam: number, rot = 0): PaloEnCarta => ({ x, y, 
  *   7, como las espadas. La cabeza (lo grueso) va hacia afuera.
  */
 const ORO_O_COPA: Record<number, PaloEnCarta[]> = {
-  1: [p(100, MEDIO, 118)],
-  2: [p(100, 137, 76), p(100, 217, 76)],
+  2: [p(100, 136, 72), p(100, 218, 72)],
   3: [p(62, 130, 60), p(138, MEDIO, 60), p(62, 224, 60)],
   4: [p(58, 132, 58), p(142, 132, 58), p(58, 220, 58), p(142, 220, 58)],
   5: [p(54, 126, 48), p(146, 126, 48), p(100, MEDIO, 62), p(54, 222, 48), p(146, 222, 48)],
@@ -156,7 +155,6 @@ const dosFilas = (tam: number, arriba: number, abajo: number, rot: number) => [
 ]
 
 const ESPADAS: Record<number, PaloEnCarta[]> = {
-  1: [p(100, MEDIO, 150)],
   2: [p(64, MEDIO, 136, 180), p(136, MEDIO, 136)],
   3: [p(46, MEDIO, 120), p(100, MEDIO, 120, 180), p(154, MEDIO, 120)],
   4: [p(64, 135, 88, 135), p(136, 135, 88, -135), p(64, 213, 88, 45), p(136, 213, 88, -45)],
@@ -166,10 +164,9 @@ const ESPADAS: Record<number, PaloEnCarta[]> = {
 }
 
 const BASTOS: Record<number, PaloEnCarta[]> = {
-  1: [p(100, MEDIO, 150)],
   2: [p(62, MEDIO, 140), p(138, MEDIO, 140)],
   // Cruzados: primero los dos en diagonal y arriba, el parado.
-  3: [p(100, MEDIO, 146, -35), p(100, MEDIO, 146, 35), p(100, MEDIO, 150)],
+  3: [p(100, MEDIO, 150, -40), p(100, MEDIO, 150, 40), p(100, MEDIO, 146)],
   4: [p(66, 137, 82, -45), p(134, 137, 82, 45), p(66, 211, 82, -135), p(134, 211, 82, 135)],
   5: [p(60, 132, 70, -45), p(140, 132, 70, 45), p(100, MEDIO, 76, 90), p(60, 216, 70, -135), p(140, 216, 70, 135)],
   6: dosFilas(70, 134, 212, 0),
@@ -178,7 +175,7 @@ const BASTOS: Record<number, PaloEnCarta[]> = {
 
 const DISPOSICIONES: Record<Palo, Record<number, PaloEnCarta[]>> = { oro: ORO_O_COPA, copa: ORO_O_COPA, espada: ESPADAS, basto: BASTOS }
 
-/** Dónde va cada palo en las cartas del 1 al 7. */
+/** Dónde va cada palo en las cartas del 2 al 7 (los ases son dibujos propios: ver `As`). */
 export function disposicion(palo: Palo, numero: number): PaloEnCarta[] {
   return DISPOSICIONES[palo][numero] ?? []
 }
@@ -195,12 +192,202 @@ export const MEDIDA_PALO: Record<Palo, { ancho: number; alto: number }> = {
 }
 
 function Palos({ palo, numero }: { palo: Palo; numero: number }) {
+  if (numero === 1) return <As palo={palo} />
   return (
     <>
       {disposicion(palo, numero).map(({ x, y, tam, rot }, i) => (
         <Simbolo key={i} palo={palo} x={x} y={y} tam={tam} rot={rot} />
       ))}
     </>
+  )
+}
+
+// ── Los ases ──────────────────────────────────────────────────────────
+
+/*
+ * Como en las barajas de siempre, los cuatro ases son dibujos únicos y no el palo agrandado: la
+ * espada y el basto (las dos cartas más altas del truco) con cintas y fuerza; el oro, una medalla
+ * con el Sol de Mayo, laureles y cinta; la copa, una copa de lujo con tapa. Cada uno se dibuja
+ * alrededor del origen, en una caja de 156 × 158, y se pone en el medio de la zona del dibujo.
+ */
+const CELESTE = '#4f9fd8'
+const CELESTE_OSCURO = '#1f5f92'
+const MADERA = '#9a6a3a'
+const MADERA_OSCURA = '#4d3016'
+const HOJA = '#3f8f35'
+const HOJA_OSCURA = '#1f4d1a'
+
+/** Una hoja (de laurel o de basto) que sale del punto (x, y) hacia arriba, girada `rot` grados. */
+function Hoja({ x, y, rot, largo = 14 }: { x: number; y: number; rot: number; largo?: number }) {
+  return (
+    <path
+      transform={`translate(${x} ${y}) rotate(${rot})`}
+      d={`M0,0 Q${largo * 0.45},${-largo * 0.5} 0,${-largo} Q${-largo * 0.45},${-largo * 0.5} 0,0 Z`}
+      fill={HOJA}
+      stroke={HOJA_OSCURA}
+      strokeWidth="1.5"
+    />
+  )
+}
+
+/** Las hojas de cada rama del laurel (x, y y giro), del lado izquierdo; el derecho es su espejo. */
+const LAUREL: [number, number, number][] = [
+  [-6, 64, -70],
+  [-22, 60, -60],
+  [-37, 51, -48],
+  [-50, 38, -36],
+  [-59, 22, -22],
+  [-64, 5, -10],
+]
+
+/** Los rayos del Sol de Mayo: dieciséis, alternando largos y cortos. */
+const RAYOS_SOL_DE_MAYO = Array.from({ length: 16 }, (_, i) => {
+  const a = (i * Math.PI) / 8
+  const largo = i % 2 === 0 ? 38 : 31
+  const punto = (r: number, da: number) => `${(Math.cos(a + da) * r).toFixed(1)},${(Math.sin(a + da) * r).toFixed(1)}`
+  return `M${punto(17, -0.17)} L${punto(largo, 0)} L${punto(17, 0.17)} Z`
+}).join(' ')
+
+function AsDeOros() {
+  return (
+    <g strokeLinejoin="round">
+      {/* Las dos ramas de laurel, de abajo hacia los costados. */}
+      {([1, -1] as const).map((lado) => (
+        <g key={lado} transform={`scale(${lado} 1)`}>
+          <path d="M8,66 Q-58,58 -66,-4" fill="none" stroke={HOJA_OSCURA} strokeWidth="3" />
+          {LAUREL.map(([x, y, r]) => (
+            <g key={y}>
+              <Hoja x={x} y={y} rot={r} largo={16} />
+              <Hoja x={x} y={y} rot={r + 75} largo={13} />
+            </g>
+          ))}
+        </g>
+      ))}
+      {/* La medalla con el Sol de Mayo. */}
+      <circle cy="-6" r="56" fill={ORO} stroke={ORO_OSCURO} strokeWidth="4" />
+      <circle cy="-6" r="48" fill="none" stroke={ORO_OSCURO} strokeWidth="2" strokeDasharray="3 4" />
+      <g transform="translate(0 -6)">
+        <path d={RAYOS_SOL_DE_MAYO} fill="#fff3c4" stroke={ORO_OSCURO} strokeWidth="1.5" />
+        <circle r="17" fill="#fff3c4" stroke={ORO_OSCURO} strokeWidth="2" />
+        <circle cx="-6" cy="-3" r="2" fill={ORO_OSCURO} />
+        <circle cx="6" cy="-3" r="2" fill={ORO_OSCURO} />
+        <path d="M-6,6 Q0,11 6,6" fill="none" stroke={ORO_OSCURO} strokeWidth="2" strokeLinecap="round" />
+        <path d="M0,-1 L-1.5,3 H1.5" fill="none" stroke={ORO_OSCURO} strokeWidth="1.5" />
+      </g>
+      {/* La cinta de abajo, con sus puntas. */}
+      <path d="M-62,58 L-48,52 L-48,74 L-62,80 L-56,69 Z" fill={COLOR_PALO.oro} stroke={ORO_OSCURO} strokeWidth="2" />
+      <path d="M62,58 L48,52 L48,74 L62,80 L56,69 Z" fill={COLOR_PALO.oro} stroke={ORO_OSCURO} strokeWidth="2" />
+      <path d="M-50,50 Q0,62 50,50 L50,72 Q0,84 -50,72 Z" fill="#fff3c4" stroke={ORO_OSCURO} strokeWidth="2.5" />
+      <path d="M-34,63 Q0,72 34,63" fill="none" stroke={ORO_OSCURO} strokeWidth="1.5" strokeDasharray="4 3" />
+    </g>
+  )
+}
+
+function AsDeCopas() {
+  return (
+    <g strokeLinejoin="round">
+      {/* El pie y el tallo, con su nudo. */}
+      <path d="M-46,74 Q0,56 46,74 Q46,80 0,80 Q-46,80 -46,74 Z" fill={ORO} stroke={ORO_OSCURO} strokeWidth="3" />
+      <path d="M-30,64 Q0,52 30,64 L18,58 Q0,50 -18,58 Z" fill={ORO} stroke={ORO_OSCURO} strokeWidth="2.5" />
+      <rect x="-8" y="16" width="16" height="40" fill={ORO} stroke={ORO_OSCURO} strokeWidth="3" />
+      <ellipse cy="36" rx="16" ry="9" fill={ORO} stroke={ORO_OSCURO} strokeWidth="3" />
+      <circle cy="36" r="4" fill={COLOR_PALO.copa} stroke="#6b1016" strokeWidth="1.5" />
+      {/* El cáliz, con una guarda y piedras. */}
+      <path d="M-54,-34 H54 C54,4 28,22 0,24 C-28,22 -54,4 -54,-34 Z" fill="#c0392b" stroke="#6b1016" strokeWidth="3.5" />
+      <path d="M-46,-18 Q0,-6 46,-18" fill="none" stroke={ORO} strokeWidth="4" />
+      {[-30, -10, 10, 30].map((x) => (
+        <circle key={x} cx={x} cy={-11 + Math.abs(x) * 0.12} r="4.5" fill={ORO} stroke={ORO_OSCURO} strokeWidth="1.5" />
+      ))}
+      <path d="M-26,2 Q0,18 26,2" fill="none" stroke="#f5c6c1" strokeWidth="3" strokeLinecap="round" />
+      {/* El borde y la tapa con su remate. */}
+      <rect x="-58" y="-42" width="116" height="10" rx="5" fill={ORO} stroke={ORO_OSCURO} strokeWidth="3" />
+      <path d="M-44,-42 Q-40,-66 0,-68 Q40,-66 44,-42 Z" fill="#c0392b" stroke="#6b1016" strokeWidth="3" />
+      <path d="M-30,-48 Q0,-58 30,-48" fill="none" stroke={ORO} strokeWidth="3" />
+      <rect x="-5" y="-76" width="10" height="9" fill={ORO} stroke={ORO_OSCURO} strokeWidth="2" />
+      <circle cy="-80" r="6" fill={ORO} stroke={ORO_OSCURO} strokeWidth="2.5" />
+    </g>
+  )
+}
+
+/** La cinta del as de espadas: sale de la cruz y se enrosca dos veces en la hoja. */
+const CINTA_ESPADA = 'M-34,30 Q-44,14 -12,6 Q34,-6 22,-28 Q10,-48 -24,-52'
+
+function AsDeEspadas() {
+  return (
+    <g strokeLinejoin="round" strokeLinecap="round" transform="rotate(12)">
+      {/* La hoja, larga y ancha en la base, con su canal. */}
+      <path d="M0,-84 L12,-66 L10,30 L-10,30 L-12,-66 Z" fill="#dfe7f0" stroke="#3c4a5c" strokeWidth="3" />
+      <path d="M0,-70 V26" stroke="#9fb0c4" strokeWidth="3.5" />
+      {/* La cinta celeste y blanca, por detrás de la cruz, con sus dos puntas. */}
+      <path d="M-24,-52 Q-44,-56 -56,-44 L-46,-44 L-52,-32 Q-40,-44 -24,-46 Z" fill={CELESTE} stroke={CELESTE_OSCURO} strokeWidth="2" />
+      <path d="M-34,30 Q-52,40 -56,58 L-48,50 L-42,62 Q-44,44 -30,36 Z" fill={CELESTE} stroke={CELESTE_OSCURO} strokeWidth="2" />
+      <path d={CINTA_ESPADA} fill="none" stroke={CELESTE_OSCURO} strokeWidth="10" />
+      <path d={CINTA_ESPADA} fill="none" stroke={CELESTE} strokeWidth="7" />
+      <path d={CINTA_ESPADA} fill="none" stroke="#ffffff" strokeWidth="2" />
+      {/* La cruz, derecha, con las puntas enruladas y una piedra al medio. */}
+      <rect x="-46" y="30" width="92" height="11" rx="5" fill={ORO} stroke={ORO_OSCURO} strokeWidth="3" />
+      <circle cx="-48" cy="35.5" r="8" fill={ORO} stroke={ORO_OSCURO} strokeWidth="3" />
+      <circle cx="48" cy="35.5" r="8" fill={ORO} stroke={ORO_OSCURO} strokeWidth="3" />
+      <circle cx="-48" cy="35.5" r="3" fill={ORO_OSCURO} />
+      <circle cx="48" cy="35.5" r="3" fill={ORO_OSCURO} />
+      <circle cy="35.5" r="5" fill={COLOR_PALO.espada} stroke="#10294a" strokeWidth="1.5" />
+      {/* El puño, forrado, y el pomo. */}
+      <rect x="-8" y="41" width="16" height="26" rx="3" fill={COLOR_PALO.espada} stroke="#10294a" strokeWidth="3" />
+      <path d="M-8,48 L8,52 M-8,55 L8,59 M-8,62 L8,66" stroke={ORO} strokeWidth="2" />
+      <circle cy="75" r="10" fill={ORO} stroke={ORO_OSCURO} strokeWidth="3" />
+      <circle cy="75" r="4" fill={COLOR_PALO.espada} />
+    </g>
+  )
+}
+
+/** La cinta del as de bastos: una vuelta alrededor del garrote, de frente. */
+const CINTA_BASTO = 'M-26,-2 Q0,10 26,-12'
+
+function AsDeBastos() {
+  return (
+    <g strokeLinejoin="round" strokeLinecap="round" transform="rotate(-14) scale(1.08)">
+      {/* El garrote: cabeza gruesa arriba, nudoso, y la punta fina abajo. */}
+      <path
+        d="M-11,72 Q-14,40 -18,8 Q-26,-12 -22,-30 Q-30,-46 -24,-60 Q-14,-76 4,-76 Q24,-74 26,-58 Q32,-44 24,-28 Q28,-8 18,10 Q14,42 9,72 Q0,78 -11,72 Z"
+        fill={MADERA}
+        stroke={MADERA_OSCURA}
+        strokeWidth="3.5"
+      />
+      <path d="M-4,-62 Q-12,-20 -4,30 Q-2,52 -3,66" fill="none" stroke="#c49563" strokeWidth="4" />
+      <path d="M10,-54 Q14,-30 8,-6" fill="none" stroke="#c49563" strokeWidth="2.5" />
+      {/* Los nudos. */}
+      <ellipse cx="12" cy="-40" rx="5" ry="6" fill={MADERA_OSCURA} />
+      <ellipse cx="-12" cy="-18" rx="4.5" ry="5.5" fill={MADERA_OSCURA} />
+      <ellipse cx="8" cy="26" rx="4" ry="5" fill={MADERA_OSCURA} />
+      <ellipse cx="-7" cy="50" rx="3" ry="4" fill={MADERA_OSCURA} />
+      {/* Ramas cortadas, con sus hojas. */}
+      <path d="M22,-26 L38,-36 L40,-30 L24,-20 Z" fill={MADERA} stroke={MADERA_OSCURA} strokeWidth="2.5" />
+      <Hoja x={38} y={-34} rot={40} largo={20} />
+      <Hoja x={36} y={-32} rot={95} largo={16} />
+      <path d="M-18,22 L-34,14 L-36,20 L-20,28 Z" fill={MADERA} stroke={MADERA_OSCURA} strokeWidth="2.5" />
+      <Hoja x={-34} y={16} rot={-50} largo={20} />
+      <Hoja x={-32} y={18} rot={-110} largo={15} />
+      <Hoja x={-12} y={-74} rot={-20} largo={18} />
+      <Hoja x={-10} y={-72} rot={-70} largo={14} />
+      {/* La cinta roja: la vuelta de frente y las dos puntas colgando. */}
+      <path d="M-26,-2 Q-40,14 -42,36 L-34,28 L-28,40 Q-30,18 -20,6 Z" fill="#c0392b" stroke="#6b1016" strokeWidth="2" />
+      <path d="M26,-12 Q42,-2 46,18 L38,12 L34,24 Q34,6 22,-4 Z" fill="#c0392b" stroke="#6b1016" strokeWidth="2" />
+      <path d={CINTA_BASTO} fill="none" stroke="#6b1016" strokeWidth="11" />
+      <path d={CINTA_BASTO} fill="none" stroke="#c0392b" strokeWidth="7" />
+      <path d={CINTA_BASTO} fill="none" stroke="#f0a59d" strokeWidth="1.5" />
+    </g>
+  )
+}
+
+const ASES: Record<Palo, () => ReactNode> = { oro: AsDeOros, copa: AsDeCopas, espada: AsDeEspadas, basto: AsDeBastos }
+
+/** El as, en el medio de la zona del dibujo. */
+function As({ palo }: { palo: Palo }) {
+  const A = ASES[palo]
+  return (
+    <g transform={`translate(100 ${MEDIO})`}>
+      <A />
+    </g>
   )
 }
 
