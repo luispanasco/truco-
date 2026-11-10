@@ -1936,3 +1936,15 @@ Pedido: un tutorial para los que no saben jugar, con un maestro y una ruta de pr
 - **Entrada en Jugar:** debajo de "¡Jugar!", la tarjeta con la cara de Don Queiroz: "¿Primera vez? Aprendé a jugar" o, si ya empezaste, por dónde vas.
 - **Tests:** web 397 (la ruta, la primera lección con un error, las espadas, las rondas de los ejercicios) y el e2e `tutorial.spec.ts`.
 - No cambia el servidor.
+
+## Doce mazos con objetos nuevos y el paño de Rocha — 2026-11-10
+
+Entrega de arte (zip "Mazos-12-y-pano-Rocha", forma A del instructivo: objetos sueltos). La integró un agente en su worktree.
+
+- **Mazos:** artigas, canelones, cerro-largo, colonial, durazno, flores, florida, lavalleja, maldonado, grabado-nocturno, paysandu y costa-uruguaya. Las 28 cartas de cada uno (ases y del 2 al 7) se arman con los objetos nuevos sobre el papel, los números y el marco de antes. Las figuras siguen siendo las de antes. WebP de 400×600.
+- **Script para los próximos lotes:** `apps/web/scripts/barajas-propias-armar.py <carpeta> [mazo…]`. Si un palo se sale de la zona (los bastos en el 4 y el 5), lo corre hacia adentro para no pisar los números.
+- **Paño de Rocha:** `rocha-pano.webp` en mosaico de 512 px y `rocha-emblema.webp` (el faro, al 10 % y al 55 % del ancho) en la mesa de Rocha. `departamentos.py --panos <carpeta>` integra los próximos paños.
+- **Para pedir en la próxima entrega:**
+  - PNG RGBA de 24 bits (los de paleta traslucen un poco: el script lo corrige);
+  - el lazo del 3 de bastos, que no vino.
+- **Pendiente:** faltan 7 mazos (Río Negro, Rivera, Salto, San José, Soriano, Tacuarembó y Treinta y Tres) y los 18 paños. Probar una partida 3 contra 3 con el paño.
