@@ -43,6 +43,7 @@ import {
   permisosDe,
   ESPERA_PEDIR_SENIAS_MS,
   ESPERA_REPARTO_MS,
+  pausaFinDeMano,
   MOTIVO_ENVIDO_CON_FLOR,
   MOTIVO_SENIA_TARDE,
   MOTIVO_SENIA_TEMPRANO,
@@ -862,7 +863,7 @@ export class SalaTruco extends Room {
     const extra =
       esperaMs +
       (eventos.some((ev) => ev.tipo === 'enfrentamientoTerminado')
-        ? this.tiempos.pausaManoMs
+        ? pausaFinDeMano(this.tiempos.pausaManoMs, eventos)
         : eventos.some((ev) => ev.tipo === 'vueltaTerminada')
           ? this.tiempos.pausaVueltaMs
           : 0)
