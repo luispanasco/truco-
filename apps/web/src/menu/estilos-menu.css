@@ -1560,3 +1560,26 @@ button.selector-modo-detalle:hover {
   background: #ff5a4f;
   box-shadow: 0 0 0 2px var(--noche, #111);
 }
+
+/* ── Retoques de la UI nueva ──────────────────────────────────── */
+
+/* El modo de Jugar, más bajo: el ícono chico y el título un poco menor. */
+.selector-modo {
+  padding: 6px;
+}
+.selector-modo-icono {
+  width: 40px;
+  height: 40px;
+  font-size: 1.4rem;
+}
+.selector-modo-modo strong {
+  font-size: 1.25rem;
+}
+.selector-modo-flecha {
+  width: 36px;
+  height: 36px;
+}
+/* Las misiones, un poco más juntas. */
+.mision {
+  padding: 7px 10px;
+}

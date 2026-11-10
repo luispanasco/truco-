@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { EntradaMuro, MuroGrupo as TMuroGrupo } from '@truco/shared'
 import { Avatar } from './Avatar'
-import { muroGrupo } from '../cuenta/grupos'
+import { marcarMuroVisto, muroGrupo } from '../cuenta/grupos'
 import { useJuego } from '../estado'
 
 const NOMBRE_FORMATO = { '1v1': '1 vs 1', '2v2': '2 vs 2', '3v3': '3 vs 3' } as const
@@ -27,7 +27,11 @@ export function MuroGrupo({ grupo }: { grupo: string }) {
   const [error, setError] = useState(false)
   const cargar = useCallback(async () => {
     try {
-      setMuro(await muroGrupo(grupo))
+      const m = await muroGrupo(grupo)
+      setMuro(m)
+      // Lo que está a la vista ya no es novedad.
+      const ultimo = Math.max(0, ...m.entradas.map((e) => e.id))
+      if (ultimo > 0) marcarMuroVisto(grupo, ultimo)
       setError(false)
     } catch {
       setError(true)

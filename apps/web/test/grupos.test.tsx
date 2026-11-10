@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import type { DetalleGrupo, MuroGrupo, ResumenGrupo } from '@truco/shared'
 import { PanelGrupos } from '../src/menu/PanelGrupos'
 import { Grupo } from '../src/pantallas/Grupo'
 import { useCuenta } from '../src/cuenta/cuenta'
 import { useAmigos } from '../src/cuenta/amigos'
-import { useGrupos } from '../src/cuenta/grupos'
+import { marcarMuroVisto, useGrupos } from '../src/cuenta/grupos'
 import { AvisoInvitacion, InvitarGrupos } from '../src/componentes/Amistad'
 
 let pedidos: { url: string; cuerpo: Record<string, unknown> | null }[] = []
@@ -28,14 +28,14 @@ const resumen = (extra: Partial<ResumenGrupo>): ResumenGrupo => ({
   ...extra,
 })
 
-function servidor({ quedan = 8 } = {}) {
+function servidor({ quedan = 8, tuyo = {} as Partial<ResumenGrupo> } = {}) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
       pedidos.push({ url, cuerpo: init?.body && typeof init.body === 'string' ? JSON.parse(init.body) : null })
       if (url.endsWith('/grupos')) {
         return Response.json({
-          tuyos: [resumen({ rol: 'capitan' })],
+          tuyos: [resumen({ rol: 'capitan', ...tuyo })],
           buscar: [resumen({ id: 'g2', nombre: 'La Barra', sigla: 'BAR', ingreso: 'solicitud', miembros: 2 })],
           quedan,
         })
@@ -117,6 +117,26 @@ describe('grupos en el menú', () => {
     // Tocando uno tuyo, se abre su pantalla.
     fireEvent.click(screen.getByRole('button', { name: /Los del Boliche/ }))
     await waitFor(() => expect(screen.getByRole('heading', { name: /Los del Boliche/, level: 2 })).toBeTruthy())
+  })
+
+  it('tus grupos: cuántos están conectados y las novedades del muro, hasta que lo mirás', async () => {
+    localStorage.removeItem('truco.muroVisto')
+    useGrupos.setState({ vistos: {} })
+    servidor({ tuyo: { conectados: 2, ultimoMuro: 7 } })
+    montar('/')
+    expect(await screen.findByText('Novedades')).toBeTruthy()
+    expect(screen.getByText('● 2')).toBeTruthy()
+    // Al mirar el muro, lo que había ya no es novedad (y se recuerda).
+    act(() => marcarMuroVisto('g1', 7))
+    expect(screen.queryByText('Novedades')).toBeNull()
+    expect(JSON.parse(localStorage.getItem('truco.muroVisto')!)).toEqual({ g1: 7 })
+  })
+
+  it('sin grupos, cuenta para qué sirve uno', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({ tuyos: [], buscar: [], quedan: 8 })))
+    montar('/')
+    expect(await screen.findByText('Todavía no estás en ningún grupo.')).toBeTruthy()
+    expect(screen.getByText(/El muro, con cada partida y su repetición/)).toBeTruthy()
   })
 
   it(`con el tope alcanzado no se puede crear`, async () => {

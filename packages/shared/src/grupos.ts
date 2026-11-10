@@ -62,6 +62,10 @@ export interface ResumenGrupo {
   rol: RolGrupo | null
   /** Si pediste entrar y todavía no te respondieron. */
   pedido: boolean
+  /** En los tuyos: cuántos de los demás tienen la app abierta. */
+  conectados?: number
+  /** En los tuyos: la última entrada del muro (para avisar si hay algo nuevo); null, el muro vacío. */
+  ultimoMuro?: number | null
 }
 
 export interface MiembroGrupo {

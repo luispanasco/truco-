@@ -5,7 +5,7 @@ import { ALFABETO_CODIGO, LARGO_CODIGO, pasosDeRepeticion } from '@truco/shared'
 import { baseLocal, type Base } from '../src/cuentas/base'
 import { verificadorDePrueba } from '../src/cuentas/auth'
 import { entrar } from '../src/cuentas/cuentas'
-import { configurarGrupo, crearGrupo, entrarAGrupo } from '../src/cuentas/grupos'
+import { configurarGrupo, crearGrupo, entrarAGrupo, listaDeGrupos } from '../src/cuentas/grupos'
 import { anotarEnGrupos, invitarAlGrupo, muroDeGrupo, repeticion } from '../src/cuentas/muro'
 import type { RegistroPartida } from '../src/registro'
 
@@ -71,10 +71,13 @@ describe('el muro de los grupos', () => {
     const { id: grupo } = await crearGrupo(base, ana, datosGrupo())
     await entrarAGrupo(base, beto, grupo)
     const registro = partidaJugada([ana, beto])
+    // Antes, el muro vacío; después, la lista de tus grupos dice cuál es la última novedad.
+    expect((await listaDeGrupos(base, ana)).tuyos[0]!.ultimoMuro).toBeNull()
     expect(await anotarEnGrupos(base, registro)).toBe(1)
 
     const muro = await muroDeGrupo(base, ana, grupo)
     const [entrada] = muro.entradas
+    expect((await listaDeGrupos(base, ana)).tuyos.find((g) => g.id === grupo)!.ultimoMuro).toBe(entrada!.id)
     expect(entrada?.tipo).toBe('resultado')
     if (entrada?.tipo !== 'resultado') return
     expect(entrada.datos.puntos).toEqual(registro.resultado && 'puntos' in registro.resultado ? registro.resultado.puntos : null)

@@ -122,10 +122,29 @@ async function nombreLibre(b: Base, nombre: string, salvo: string | null) {
 }
 
 /** Tus grupos, los que se pueden buscar para entrar (abiertos o con solicitud) y cuántos se pueden crear todavía. */
-export async function listaDeGrupos(base: Base, yo: string) {
+export async function listaDeGrupos(base: Base, yo: string, presencia?: Presencia) {
   const filas = await base.consultar<FilaGrupo>(`${SELECT_GRUPOS} order by g.creado`, [yo])
+  const tuyos = filas.filter((f) => f.rol).map(resumen)
+  // En los tuyos, además: cuántos de los demás están conectados y la última novedad del muro.
+  const ids = tuyos.map((g) => g.id)
+  if (ids.length > 0) {
+    const miembros = await base.consultar<{ grupo_id: string; cuenta_id: string }>(
+      'select grupo_id, cuenta_id from grupo_miembros where grupo_id = any($1) and cuenta_id <> $2',
+      [ids, yo],
+    )
+    const ultimos = await base.consultar<{ grupo_id: string; ultimo: number }>(
+      'select grupo_id, max(id)::int as ultimo from grupo_muro where grupo_id = any($1) group by grupo_id',
+      [ids],
+    )
+    for (const g of tuyos) {
+      g.conectados = presencia
+        ? miembros.filter((m) => m.grupo_id === g.id && presencia.estado(m.cuenta_id).estado !== 'desconectado').length
+        : 0
+      g.ultimoMuro = ultimos.find((u) => u.grupo_id === g.id)?.ultimo ?? null
+    }
+  }
   return {
-    tuyos: filas.filter((f) => f.rol).map(resumen),
+    tuyos,
     buscar: filas.filter((f) => !f.rol && f.ingreso !== 'cerrado').map(resumen),
     quedan: Math.max(0, MAX_GRUPOS - filas.length),
   }

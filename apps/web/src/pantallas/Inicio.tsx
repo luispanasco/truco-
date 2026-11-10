@@ -10,6 +10,7 @@ import { VisorMazo } from '../componentes/VisorMazo'
 import { usePerfil } from '../componentes/TarjetaPerfil'
 import { useCuenta } from '../cuenta/cuenta'
 import { useHayParaCobrar } from '../cuenta/misiones'
+import { cargarGrupos, useHayNovedadesEnGrupos } from '../cuenta/grupos'
 import { useEnLinea } from '../enLinea'
 import { Ajustes } from '../menu/Ajustes'
 import { Banner } from '../menu/Banner'
@@ -142,8 +143,13 @@ export function Inicio() {
     setTiendaVista(hoy)
   }, [actual, ancha, hoy])
   const hayParaCobrar = useHayParaCobrar()
+  const hayNovedadesEnGrupos = useHayNovedadesEnGrupos()
+  // En la compu Grupos es una hoja (no está montada): la lista, para su aviso, se pide igual.
+  useEffect(() => {
+    if (adentro && ancha) void cargarGrupos().catch(() => {})
+  }, [adentro, ancha])
   /** Las pantallas con algo nuevo: un puntito en su pestaña. */
-  const conAviso: Record<string, boolean> = { jugar: hayParaCobrar, tienda: tiendaVista !== hoy }
+  const conAviso: Record<string, boolean> = { jugar: hayParaCobrar, tienda: tiendaVista !== hoy, grupos: hayNovedadesEnGrupos }
 
   /** Desde la barra de abajo (o el banner): desliza hasta esa pantalla. */
   const irA = (i: number) => {

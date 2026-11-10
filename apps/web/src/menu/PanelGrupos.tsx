@@ -8,12 +8,29 @@ import { MensajeError } from '../componentes/Online'
 import { useCuenta } from '../cuenta/cuenta'
 import { IconoGrupos } from './Iconos'
 import '../estilos-grupos.css'
-import { cancelarPedido, cargarGrupos, crearGrupo, entrarAGrupo, entrarConCodigo, subirFoto, useGrupos } from '../cuenta/grupos'
+import { cancelarPedido, cargarGrupos, crearGrupo, entrarAGrupo, entrarConCodigo, subirFoto, tieneNovedades, useGrupos } from '../cuenta/grupos'
 
 /** "3 miembros", "1 miembro", "4 de 10". */
 export function textoMiembros(g: Pick<ResumenGrupo, 'miembros' | 'cupo'>): string {
   if (g.cupo !== null) return `${g.miembros} de ${g.cupo}`
   return `${g.miembros} ${g.miembros === 1 ? 'miembro' : 'miembros'}`
+}
+
+/** Para qué sirve un grupo, en tres renglones: se muestra mientras no estás en ninguno. */
+function ParaQueSirve() {
+  return (
+    <ul className="grupos-beneficios">
+      <li>
+        <span aria-hidden="true">🃏</span> Armen salas y jueguen entre ustedes, con un toque
+      </li>
+      <li>
+        <span aria-hidden="true">🏆</span> Una tabla con quién gana más en el grupo
+      </li>
+      <li>
+        <span aria-hidden="true">📜</span> El muro, con cada partida y su repetición
+      </li>
+    </ul>
+  )
 }
 
 /**
@@ -24,6 +41,7 @@ export function PanelGrupos({ alEntrar }: { alEntrar: () => void }) {
   const navegar = useNavigate()
   const estado = useCuenta((s) => s.estado)
   const lista = useGrupos((s) => s.lista)
+  const vistos = useGrupos((s) => s.vistos)
   const [codigo, setCodigo] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
@@ -39,6 +57,7 @@ export function PanelGrupos({ alEntrar }: { alEntrar: () => void }) {
         <IconoGrupos clase="grupos-pronto-icono" />
         <h2 id="grupos-sin-cuenta">Armá tu grupo</h2>
         <p>Con nombre, sigla y foto, con tus amigos de la mesa. Para crear uno o entrar, entrá a tu cuenta.</p>
+        <ParaQueSirve />
         {(estado === 'afuera' || estado === 'entrando') && (
           <button type="button" className="boton" onClick={alEntrar}>
             Entrar a tu cuenta
@@ -69,13 +88,22 @@ export function PanelGrupos({ alEntrar }: { alEntrar: () => void }) {
       <section className="tarjeta" aria-labelledby="grupos-tuyos">
         <h2 id="grupos-tuyos">Tus grupos</h2>
         {!lista && <p className="nota">Cargando…</p>}
-        {lista && lista.tuyos.length === 0 && <p className="nota-izq">Todavía no estás en ningún grupo.</p>}
+        {lista && lista.tuyos.length === 0 && (
+          <>
+            <p className="nota-izq">Todavía no estás en ningún grupo.</p>
+            <ParaQueSirve />
+          </>
+        )}
         {lista && lista.tuyos.length > 0 && (
           <ul className="grupos">
             {lista.tuyos.map((g) => (
               <li key={g.id}>
                 <button type="button" className="grupo-fila" onClick={() => navegar(`/grupos/${g.id}`)}>
                   <FilaGrupo grupo={g} detalle={`${NOMBRE_ROL[g.rol!]} · ${textoMiembros(g)}`} />
+                  <span className="grupo-fila-chips">
+                    {tieneNovedades(g, vistos) && <span className="grupo-chip-novedad">Novedades</span>}
+                    {(g.conectados ?? 0) > 0 && <span className="grupo-chip-conectados">● {g.conectados}</span>}
+                  </span>
                   <span className="grupo-fila-ir" aria-hidden="true">
                     ›
                   </span>

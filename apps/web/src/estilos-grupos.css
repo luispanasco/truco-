@@ -539,3 +539,52 @@ button.grupo-fila:focus-visible {
 .repeticion-progreso {
   text-align: center;
 }
+
+/* Tus grupos: los chips de cuántos están conectados y si hay novedades en el muro. */
+.grupo-fila:has(.grupo-fila-chips) {
+  grid-template-columns: auto 1fr auto auto;
+}
+.grupo-fila-chips {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+}
+.grupo-fila-chips:empty {
+  display: none;
+}
+.grupo-chip-novedad {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #ff5a4f;
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+.grupo-chip-conectados {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--en-linea, #5fd38d);
+}
+/* Para qué sirve un grupo: tres renglones con su ícono. */
+.grupos-beneficios {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+.grupos-beneficios li {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.2);
+  font-size: 0.9rem;
+}
+.grupos-beneficios li > span {
+  font-size: 1.15rem;
+  text-align: center;
+}

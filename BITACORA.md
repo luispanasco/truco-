@@ -1854,3 +1854,25 @@ Pedido: "sí" al plan de la tienda (vitrina y estantes). Ajuste al plan: la tien
 - **Cuándo vuelve:** `proximasVitrinas` en shared. La vitrina de cada día es fija, así que se calcula mirando los próximos 60 días.
 - **El probador:** lo que hoy no está en la vitrina se prueba igual, pero no se compra: "Hoy no está en la vitrina. Vuelve el …". "Cómo se ganan" suma las misiones y el modo historia.
 - **Tests:** web 372 (estantes, cuándo vuelve, el probador fuera de la vitrina y "¿Cómo gano monedas?") y los 14 de punta a punta. El test del probador ahora mira la muestra que aparece (durante la animación conviven las dos) y tiene más margen de tiempo.
+
+## UI nueva, etapa 4: Grupos y retoques — 2026-11-10
+
+Pedido: "hacelo" (la etapa 4 del plan).
+
+- **Grupos:**
+  - Sin grupo (y sin cuenta), "para qué sirve": jugar entre ustedes con un toque, la tabla de quién gana más y el muro con cada partida y su repetición. Debajo, "Crear grupo" y "Unirme con código".
+  - Con grupos, cada fila suma cuántos de los demás están conectados (● 2) y "Novedades" si hay algo nuevo en el muro desde la última vez que lo miraste.
+- **Servidor:** la lista de tus grupos trae `conectados` (con la presencia) y `ultimoMuro` (la última entrada del muro).
+- **Web:**
+  - Lo visto de cada muro se guarda en el navegador (`truco.muroVisto`, `marcarMuroVisto`): al cargar el muro de un grupo, lo que está a la vista deja de ser novedad.
+  - El puntito de la barra de abajo también en Grupos (`useHayNovedadesEnGrupos`). En la compu, donde Grupos es una hoja, la lista se pide igual.
+- **Retoques:**
+  - el modo de Jugar, más bajo (ícono y título más chicos);
+  - las misiones, un poco más juntas;
+  - "Ver las cartas", del ancho del texto.
+- **Tests:**
+  - web 374 (los chips de conectados y novedades, que se apagan al mirar el muro; para qué sirve un grupo);
+  - server 131 (la lista de grupos con la última novedad del muro);
+  - los 14 de punta a punta.
+  - `tiemposSala` falló una vez por carga y pasa solo y en la suite completa.
+- **Para publicar:** el servidor (migración 13, misiones, la lista de grupos con novedades y la flor contra flor del motor) y después la web, cuando el usuario confirme que probó la flor contra flor.

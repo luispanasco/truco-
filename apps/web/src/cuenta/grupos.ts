@@ -18,7 +18,40 @@ interface ListaGrupos {
   quedan: number
 }
 
-export const useGrupos = create<{ lista: ListaGrupos | null }>(() => ({ lista: null }))
+/** Lo último del muro de cada grupo que ya viste (se recuerda en el navegador). */
+const CLAVE_VISTOS = 'truco.muroVisto'
+
+function leerVistos(): Record<string, number> {
+  try {
+    const x = JSON.parse(localStorage.getItem(CLAVE_VISTOS) ?? '{}') as unknown
+    return x && typeof x === 'object' ? (x as Record<string, number>) : {}
+  } catch {
+    return {}
+  }
+}
+
+export const useGrupos = create<{ lista: ListaGrupos | null; vistos: Record<string, number> }>(() => ({ lista: null, vistos: leerVistos() }))
+
+/** Viste el muro de un grupo hasta la entrada `ultimo`: se apaga su aviso. */
+export function marcarMuroVisto(grupo: string, ultimo: number) {
+  const vistos = useGrupos.getState().vistos
+  if ((vistos[grupo] ?? 0) >= ultimo) return
+  const nuevos = { ...vistos, [grupo]: ultimo }
+  useGrupos.setState({ vistos: nuevos })
+  try {
+    localStorage.setItem(CLAVE_VISTOS, JSON.stringify(nuevos))
+  } catch {
+    // Sin almacenamiento, el aviso vuelve a aparecer al recargar: no pasa nada.
+  }
+}
+
+/** Si un grupo tuyo tiene algo nuevo en el muro desde la última vez que lo miraste. */
+export const tieneNovedades = (g: ResumenGrupo, vistos: Record<string, number>) => (g.ultimoMuro ?? 0) > (vistos[g.id] ?? 0)
+
+/** Si alguno de tus grupos tiene novedades (para el puntito de la barra). */
+export function useHayNovedadesEnGrupos(): boolean {
+  return useGrupos((s) => !!s.lista && s.lista.tuyos.some((g) => tieneNovedades(g, s.vistos)))
+}
 
 async function pedir<T>(metodo: 'GET' | 'POST' | 'PUT', ruta: string, cuerpo?: unknown): Promise<T> {
   const token = useCuenta.getState().token

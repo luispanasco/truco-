@@ -74,8 +74,10 @@
   font-size: 0.75rem;
   opacity: 0.75;
 }
-.baraja-ver-cartas {
+.baraja-ver-cartas.boton {
   justify-self: center;
+  width: auto;
+  min-height: 36px;
   padding: 6px 18px;
   font-size: 0.85rem;
 }

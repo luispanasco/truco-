@@ -232,7 +232,7 @@ export function rutasCuentas(c: Cuentas | null): Router {
   r.get(
     '/grupos',
     conSesion(async (_req, res, c, u) => {
-      res.json(await listaDeGrupos(c.base, u.id))
+      res.json(await listaDeGrupos(c.base, u.id, presencia))
     }),
   )
   rutaGrupo('crear', (b, c, u) => crearGrupo(c.base, u.id, b))
