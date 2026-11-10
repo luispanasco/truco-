@@ -76,6 +76,8 @@ export interface NivelHistoria {
   frases: readonly string[]
   /** Lo que el rival cuenta del lugar: datos verificados, en su voz, con la fuente de cada uno. */
   datos?: readonly { texto: string; fuente: string }[]
+  /** Lo que dice el rival al terminar, si ganaste o si perdiste (si no está, lo de siempre de su personaje). */
+  alFinal?: { ganaste: string; perdiste: string }
 }
 
 export interface HistoriaDepartamento {
@@ -84,6 +86,8 @@ export interface HistoriaDepartamento {
   jefe: string
   presentacion: string
   niveles: readonly NivelHistoria[]
+  /** Lo que dice el rival cuando completás el departamento y te vas: una frase por globo. */
+  despedida: readonly string[]
 }
 
 const pieza = (capa: CapaAvatar, nombre: string) => idPieza(capa, piezaPorNombre(capa, nombre))
@@ -92,6 +96,11 @@ const ROCHA: HistoriaDepartamento = {
   departamento: 'rocha',
   jefe: 'pescador',
   presentacion: 'Costa, faros y lobos marinos. Julio te espera en Punta del Diablo, con la red remendada y el mazo bajo el brazo.',
+  despedida: [
+    'Bueno, gurí… llegó la hora. Ganaste en toda la costa.',
+    'Te llevás el mazo, el paño y un pedacito del mar de Rocha.',
+    'Que el viento del este te empuje. ¡Buen viaje, y que te toquen buenas cartas!',
+  ],
   niveles: [
     {
       lugar: 'Punta del Diablo',
@@ -112,6 +121,10 @@ const ROCHA: HistoriaDepartamento = {
         'Acá el truco se juega con olor a pescado y viento del este.',
         'Sentate, que la red no se remienda sola… ni el truco se gana solo.',
       ],
+      alFinal: {
+        ganaste: 'Mirá vos, el gurí de la capital sabe jugar. Te ganaste el gorro.',
+        perdiste: 'Volvé mañana temprano, que el mar y el truco se aprenden de a poco.',
+      },
     },
     {
       lugar: 'La Paloma',
@@ -132,6 +145,10 @@ const ROCHA: HistoriaDepartamento = {
         'Dice que lee las cartas como lee las olas. Yo no le creo nada.',
         '¿Trajiste compañero? Mejor: así pierden de a dos.',
       ],
+      alFinal: {
+        ganaste: 'Nico, nos revolcó la ola. Llevate el impermeable, por si llueve.',
+        perdiste: '¡Les dije! De a dos se pierde más rápido.',
+      },
     },
     {
       lugar: 'La Pedrera',
@@ -152,6 +169,10 @@ const ROCHA: HistoriaDepartamento = {
         'Ahora va en serio: a treinta, mano a mano.',
         'Si me cantás flor, te contesto con la red.',
       ],
+      alFinal: {
+        ganaste: 'A treinta y mano a mano… y me ganaste. Llevate la caña, que es tuya.',
+        perdiste: 'Desde estas rocas vi perder a muchos. No sos el primero.',
+      },
     },
     {
       lugar: 'Cabo Polonio',
@@ -172,6 +193,10 @@ const ROCHA: HistoriaDepartamento = {
         'Tres contra tres, como en la barra del boliche.',
         'Acá no hay luz eléctrica, pero señas hay de sobra.',
       ],
+      alFinal: {
+        ganaste: 'Ni con Luna y Nico pudimos. Los lobos marinos te aplauden.',
+        perdiste: 'El faro alumbra a todos, pero hoy nos alumbró a nosotros.',
+      },
     },
     {
       lugar: 'La Fortaleza de Santa Teresa',
@@ -192,6 +217,10 @@ const ROCHA: HistoriaDepartamento = {
         'Esta es la última: el que pierde paga las brótolas.',
         'Si me ganás, te llevás el mazo de la costa. Si no, a remar.',
       ],
+      alFinal: {
+        ganaste: 'Ganaste en la fortaleza. El mazo de la costa es tuyo, gurí.',
+        perdiste: 'Estos muros aguantaron siglos. Uno más no les hace nada.',
+      },
     },
   ],
 }
@@ -312,6 +341,75 @@ export function dialogoDelNivel(nivel: NivelHistoria, n: number): TurnoPrevia[] 
     ...nivel.companieros.slice(0, 1).map(saludo),
     ...(ultima ? [{ quien: jefe, texto: ultima }] : []),
   ]
+}
+
+/** Una frase de una escena del modo historia: quién la dice (el id del personaje) y qué. */
+export interface TurnoEscena {
+  quien: string
+  texto: string
+}
+
+/** Lo que dice tu compañero al terminar un nivel: si ganaron y si perdieron (uno por nivel, en orden). */
+const FESTEJOS = [
+  '¡Eso! ¡Qué manera de jugar, compañero!',
+  '¡Vamo arriba! ¡Ganamos!',
+  'Con esas señas, ¿quién nos para?',
+  '¡Ganamos! Esta se cuenta en el boliche.',
+  '¡Lo dimos vuelta! Te debo una.',
+]
+const ANIMOS = [
+  'Tranquilo, que la próxima es nuestra.',
+  'Perdimos una mano, no la guerra.',
+  'Nos faltó suerte. La revancha es nuestra.',
+  'Arriba, que esto recién empieza.',
+  'Respirá hondo y repartimos de nuevo.',
+]
+
+/**
+ * La escena al terminar un nivel: el rival dice lo suyo (lo del nivel o, si no tiene, lo de su
+ * personaje) y, en los de equipo, uno de tus compañeros festeja o te da ánimo.
+ */
+export function escenaDelFinal(nivel: NivelHistoria, n: number, ganaste: boolean): TurnoEscena[] {
+  const jefe = PERSONAJES.find((p) => p.id === nivel.rivales[0])!
+  const companiero = nivel.companieros[0]
+  return [
+    { quien: jefe.id, texto: nivel.alFinal ? nivel.alFinal[ganaste ? 'ganaste' : 'perdiste'] : jefe[ganaste ? 'siPierde' : 'siGana'] },
+    ...(companiero ? [{ quien: companiero, texto: (ganaste ? FESTEJOS : ANIMOS)[(n - 1) % FESTEJOS.length]! }] : []),
+  ]
+}
+
+/** Los del departamento: los que juegan de rivales en sus niveles, el personaje del departamento primero. */
+export function elencoDelDepartamento(historia: HistoriaDepartamento): string[] {
+  return [...new Set([historia.jefe, ...historia.niveles.flatMap((n) => n.rivales)])]
+}
+
+/** Lo que te dicen los demás del departamento cuando te vas (uno cada uno, en orden). */
+const ADIOSES = [
+  '¡Buen viaje! Volvé cuando quieras.',
+  'Andá tranquilo, que el camino es lindo.',
+  '¡Que te toquen buenas cartas en la ruta!',
+  'Cuidate. ¡Y no te olvides de nosotros!',
+]
+
+/**
+ * La despedida al completar un departamento: el rival abre con su primera frase, los demás del
+ * departamento te desean buen viaje y el rival cierra con el resto.
+ */
+export function despedidaDelDepartamento(historia: HistoriaDepartamento): TurnoEscena[] {
+  const [primera, ...resto] = historia.despedida
+  const jefe = historia.jefe
+  return [
+    { quien: jefe, texto: primera! },
+    ...elencoDelDepartamento(historia)
+      .slice(1)
+      .map((quien, i) => ({ quien, texto: ADIOSES[i % ADIOSES.length]! })),
+    ...resto.map((texto) => ({ quien: jefe, texto })),
+  ]
+}
+
+/** Todo lo que se gana en un departamento, nivel por nivel. */
+export function recompensasDelDepartamento(historia: HistoriaDepartamento): string[] {
+  return historia.niveles.flatMap((n) => n.recompensas)
 }
 
 /** Si ganaste todos los niveles de un departamento. */

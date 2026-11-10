@@ -30,7 +30,7 @@ import { Tienda } from './pantallas/Tienda'
 import { Amigos } from './pantallas/Amigos'
 import { Grupo } from './pantallas/Grupo'
 import { Repeticion } from './pantallas/Repeticion'
-import { DepartamentoHistoria, Historia, PreviaNivel } from './pantallas/Historia'
+import { DepartamentoHistoria, DespedidaDepartamento, Historia, PreviaNivel } from './pantallas/Historia'
 import { AvisoInvitacion } from './componentes/Amistad'
 import './estilos-online.css'
 
@@ -70,6 +70,7 @@ createRoot(document.getElementById('raiz')!).render(
           {/* Modo historia (cualquiera con cuenta: los departamentos publicados; el admin, todos). */}
           <Route path="/historia" element={<Historia />} />
           <Route path="/historia/:departamento" element={<DepartamentoHistoria />} />
+          <Route path="/historia/:departamento/despedida" element={<DespedidaDepartamento />} />
           <Route path="/historia/:departamento/:nivel" element={<PreviaNivel />} />
         </Routes>
       </BrowserRouter>

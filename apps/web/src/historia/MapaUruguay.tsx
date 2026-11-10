@@ -9,6 +9,7 @@ import {
   HISTORIAS,
   type IdDepartamento,
   type ProgresoHistoria,
+  VECINOS,
 } from '@truco/shared'
 import { ALTO_MAPA, ANCHO_MAPA, MAPA_URUGUAY } from './geografia'
 import { Nubes } from './Nubes'
@@ -31,15 +32,18 @@ function vistaDe(id: IdDepartamento): string {
 /**
  * El mapa de Uruguay del modo historia: cada departamento con su estado (completo, abierto o
  * cerrado; el que sigue, latiendo). Al tocar uno abierto, el mapa se acerca, entran las nubes y
- * se pasa al departamento.
+ * se pasa al departamento. Con `desde` (al volver de la despedida de un departamento), se marca la
+ * ruta de ahí a cada vecino.
  */
 export function MapaUruguay({
   progreso,
   todoAbierto,
   alElegir,
+  desde,
 }: {
   progreso: ProgresoHistoria
   todoAbierto: boolean
+  desde?: IdDepartamento
   alElegir: (id: IdDepartamento) => void
 }) {
   const sinMovimiento = useReducedMotion() ?? false
@@ -85,6 +89,27 @@ export function MapaUruguay({
             </g>
           )
         })}
+        {/* La ruta desde el departamento que completaste a sus vecinos: una curva punteada que se dibuja. */}
+        {desde &&
+          !elegido &&
+          VECINOS[desde].map((v, i) => {
+            const [x1, y1] = MAPA_URUGUAY[desde].centro
+            const [x2, y2] = MAPA_URUGUAY[v].centro
+            // El punto de control, corrido a un costado de la recta: la ruta hace una curva suave.
+            const cx = (x1 + x2) / 2 - (y2 - y1) * 0.2
+            const cy = (y1 + y2) / 2 + (x2 - x1) * 0.2
+            return (
+              <motion.path
+                key={v}
+                className={`mapa-ruta${departamentoAbierto(progreso, v, todoAbierto) ? ' abierta' : ''}`}
+                d={`M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`}
+                initial={sinMovimiento ? false : { pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ delay: 1 + i * 0.3, duration: 0.9, ease: 'easeInOut' }}
+                aria-hidden="true"
+              />
+            )
+          })}
         {/* Los nombres, arriba de todos los departamentos (si no, el de al lado los tapa). */}
         {DEPARTAMENTOS.map((d) => {
           const [cx, cy] = MAPA_URUGUAY[d.id].centro

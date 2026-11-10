@@ -13,8 +13,11 @@ import {
   type InfoSala,
   departamentoAbierto,
   departamentoSiguiente,
+  despedidaDelDepartamento,
   dialogoDelNivel,
+  elencoDelDepartamento,
   elencoDelNivel,
+  escenaDelFinal,
   PERSONAJES,
   HISTORIAS,
   idBaraja,
@@ -36,7 +39,7 @@ import { leerPerfil } from '../src/perfil'
 import type { Conexion, MensajeServidor } from '../src/conexion/tipos'
 import { Sala } from '../src/pantallas/Sala'
 import { FinHistoria } from '../src/componentes/FinHistoria'
-import { DepartamentoHistoria, Historia, PreviaNivel } from '../src/pantallas/Historia'
+import { DepartamentoHistoria, DespedidaDepartamento, Historia, PreviaNivel } from '../src/pantallas/Historia'
 import { useJuego } from '../src/estado'
 import { PortadaHistoria } from '../src/menu/PortadaHistoria'
 
@@ -80,7 +83,20 @@ function app(ruta: string) {
       <Routes>
         <Route path="/historia" element={<Historia />} />
         <Route path="/historia/:departamento" element={<DepartamentoHistoria />} />
+        <Route path="/historia/:departamento/despedida" element={<DespedidaDepartamento />} />
         <Route path="/historia/:departamento/:nivel" element={<PreviaNivel />} />
+        <Route path="*" element={<Ruta />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
+
+/** El final de un nivel, en una ruta (para ver adónde llevan los botones). */
+function fin(nivel: number, ganamos: boolean, revancha = () => {}) {
+  return render(
+    <MemoryRouter initialEntries={['/mesa']}>
+      <Routes>
+        <Route path="/mesa" element={<FinHistoria jugado={{ departamento: 'rocha', nivel }} ganamos={ganamos} revancha={revancha} />} />
         <Route path="*" element={<Ruta />} />
       </Routes>
     </MemoryRouter>,
@@ -391,34 +407,71 @@ describe('la partida de un nivel', () => {
     expect(sala.nivelBots).toBe('muyDificil')
   })
 
-  it('al ganar, se anota y se ven las recompensas; el último nivel no tiene "Siguiente"', async () => {
+  it('al ganar el último, se anota y se ven las recompensas; la escena del final lleva a la despedida (no hay "Siguiente")', async () => {
     const pedidos = servidorFalso({ rocha: [1, 2, 3, 4] })
     comoAdmin()
-    render(
-      <MemoryRouter>
-        <FinHistoria jugado={{ departamento: 'rocha', nivel: 5 }} ganamos revancha={() => {}} />
-      </MemoryRouter>,
-    )
+    fin(5, true)
     const premios = await screen.findByRole('status')
     await waitFor(() => expect(within(premios).getByText(/Baraja Costa Uruguaya/)).toBeTruthy())
     expect(within(premios).getByText(/Mesa Rocha/)).toBeTruthy()
     expect(pedidos.find((p) => p.url.endsWith('/historia/ganar'))!.cuerpo).toEqual({ departamento: 'rocha', nivel: 5 })
-    expect(screen.queryByRole('button', { name: 'Siguiente nivel' })).toBeNull()
-    expect(screen.getByRole('button', { name: 'Volver a Rocha' })).toBeTruthy()
+    // "Seguir": la escena en la Fortaleza, con lo que dice Julio al perder (es mano a mano: sin compañero).
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    const escena = screen.getByRole('dialog', { name: 'Ganaste en La Fortaleza de Santa Teresa' })
+    expect(within(escena).getByText(ROCHA.niveles[4]!.alFinal!.ganaste)).toBeTruthy()
+    const loQueGanaste = within(escena).getByRole('region', { name: 'Lo que ganaste' })
+    expect(within(loQueGanaste).getByText(/Baraja Costa Uruguaya/)).toBeTruthy()
+    expect(within(escena).queryByRole('button', { name: 'Siguiente nivel' })).toBeNull()
+    fireEvent.click(within(escena).getByRole('button', { name: 'Despedirte de Rocha' }))
+    expect(screen.getByTestId('ruta').textContent).toBe('/historia/rocha/despedida')
   })
 
-  it('al perder no se anota nada: revancha o volver', () => {
+  it('al ganar uno del medio: el rival te reconoce, tu compañero festeja y sigue el siguiente nivel', async () => {
+    servidorFalso({ rocha: [1] })
+    comoAdmin()
+    fin(2, true)
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    const escena = screen.getByRole('dialog', { name: 'Ganaste en La Paloma' })
+    const [rival, companiero] = escenaDelFinal(ROCHA.niveles[1]!, 2, true)
+    expect(within(escena).getByText(rival!.texto)).toBeTruthy()
+    // Mientras hablan no están los botones; "Saltar" va directo al final.
+    expect(within(escena).queryByRole('button', { name: 'Siguiente nivel' })).toBeNull()
+    fireEvent.click(within(escena).getByRole('button', { name: 'Seguir' }))
+    expect(await within(escena).findByText(companiero!.texto)).toBeTruthy()
+    expect(within(escena).queryByRole('button', { name: 'Saltar' })).toBeNull()
+    await within(escena).findByText(/Impermeable amarillo/)
+    fireEvent.click(within(escena).getByRole('button', { name: 'Siguiente nivel' }))
+    expect(screen.getByTestId('ruta').textContent).toBe('/historia/rocha/3')
+  })
+
+  it('al perder no se anota nada: el rival te gasta, tu compañero te da ánimo y revancha o volver', async () => {
     const pedidos = servidorFalso()
     comoAdmin()
     const revancha = vi.fn()
-    render(
-      <MemoryRouter>
-        <FinHistoria jugado={{ departamento: 'rocha', nivel: 2 }} ganamos={false} revancha={revancha} />
-      </MemoryRouter>,
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Revancha' }))
+    fin(2, false, revancha)
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    const escena = screen.getByRole('dialog', { name: 'Perdiste en La Paloma' })
+    expect(within(escena).getByText(ROCHA.niveles[1]!.alFinal!.perdiste)).toBeTruthy()
+    fireEvent.click(within(escena).getByRole('button', { name: 'Saltar' }))
+    expect(await within(escena).findByText(escenaDelFinal(ROCHA.niveles[1]!, 2, false)[1]!.texto)).toBeTruthy()
+    expect(within(escena).queryByRole('region', { name: 'Lo que ganaste' })).toBeNull()
+    fireEvent.click(within(escena).getByRole('button', { name: 'Revancha' }))
     expect(revancha).toHaveBeenCalled()
     expect(pedidos.some((p) => p.url.endsWith('/historia/ganar'))).toBe(false)
+  })
+
+  it('el último nivel repetido no vuelve a despedirse: Volver al departamento', async () => {
+    servidorFalso({ rocha: [1, 2, 3, 4, 5] })
+    comoAdmin()
+    vi.mocked(fetch).mockImplementation(async (url) =>
+      String(url).endsWith('/historia/ganar') ? Response.json({ progreso: { rocha: [1, 2, 3, 4, 5] }, nuevas: [], inventario: [] }) : Response.json({ progreso: {} }),
+    )
+    fin(5, true)
+    await screen.findByText('Este nivel ya lo tenías ganado.')
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    const escena = screen.getByRole('dialog')
+    expect(within(escena).queryByRole('button', { name: /Despedirte/ })).toBeNull()
+    expect(within(escena).getByRole('button', { name: 'Volver a Rocha' }).className).toContain('boton-grande')
   })
 })
 
@@ -437,6 +490,67 @@ function conexionFalsa() {
   }
   return { c: c as Conexion, llegar: (m: MensajeServidor) => act(() => oyente!(m)) }
 }
+
+describe('la despedida de un departamento', () => {
+  it('los textos: cada personaje tiene lo suyo para el final y cada departamento su despedida', () => {
+    for (const p of PERSONAJES) {
+      expect(p.siGana.length, p.id).toBeGreaterThan(0)
+      expect(p.siPierde.length, p.id).toBeGreaterThan(0)
+    }
+    for (const d of DEPARTAMENTOS) {
+      const h = HISTORIAS[d.id]!
+      expect(h.despedida.length, d.id).toBeGreaterThanOrEqual(2)
+      // Sin "alFinal", el rival dice lo de su personaje.
+      const sinTexto = h.niveles.find((n) => !n.alFinal)
+      if (sinTexto) {
+        const jefe = PERSONAJES.find((p) => p.id === sinTexto.rivales[0])!
+        expect(escenaDelFinal(sinTexto, 1, true)[0]!.texto).toBe(jefe.siPierde)
+        expect(escenaDelFinal(sinTexto, 1, false)[0]!.texto).toBe(jefe.siGana)
+      }
+    }
+    // Rocha: los de la costa (Julio, Nico y Luna); Julio abre y cierra.
+    expect(elencoDelDepartamento(ROCHA)).toEqual(['pescador', 'surfista', 'hippie'])
+    const charla = despedidaDelDepartamento(ROCHA)
+    expect(charla.map((t) => t.quien)).toEqual(['pescador', 'surfista', 'hippie', 'pescador', 'pescador'])
+  })
+
+  it('te despiden, ves lo que te llevás y los próximos destinos; "Seguir viaje" vuelve al mapa con la ruta', async () => {
+    servidorFalso({ rocha: [1, 2, 3, 4, 5] })
+    comoAdmin(false)
+    app('/historia/rocha/despedida')
+    const charla = despedidaDelDepartamento(ROCHA)
+    for (const [i, turno] of charla.entries()) {
+      expect(await screen.findByText(turno.texto)).toBeTruthy()
+      if (i < charla.length - 1) fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    const llevas = screen.getByRole('region', { name: 'Te llevás de Rocha' })
+    expect(within(llevas).getAllByRole('listitem')).toHaveLength(ROCHA.niveles.flatMap((n) => n.recompensas).length)
+    expect(within(llevas).getByText(/Baraja Costa Uruguaya/)).toBeTruthy()
+    // Los vecinos de Rocha, todavía sin publicar.
+    const destinos = screen.getByRole('region', { name: 'Próximos destinos' })
+    expect(within(destinos).getAllByRole('listitem').map((li) => li.firstChild!.textContent)).toEqual(['Lavalleja', 'Maldonado', 'Treinta y Tres'])
+    expect(within(destinos).getAllByText('Próximamente')).toHaveLength(3)
+    expect(within(destinos).getByText(/se abren muy pronto/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir viaje' }))
+    // Las nubes se cierran y se vuelve al mapa de Uruguay, con la ruta a los vecinos.
+    await screen.findByRole('group', { name: 'Mapa de Uruguay' }, { timeout: 4000 })
+    expect(document.querySelectorAll('.mapa-ruta')).toHaveLength(VECINOS.rocha.length)
+  })
+
+  it('sin completar el departamento no hay despedida; completo, se vuelve a ver desde el departamento', async () => {
+    servidorFalso({ rocha: [1, 2] })
+    comoAdmin(false)
+    const { unmount } = app('/historia/rocha/despedida')
+    expect(await screen.findByText(/Se está armando/)).toBeTruthy()
+    unmount()
+    useHistoria.setState({ progreso: null })
+    servidorFalso({ rocha: [1, 2, 3, 4, 5] })
+    app('/historia/rocha')
+    fireEvent.click(await screen.findByRole('button', { name: 'Ver la despedida' }))
+    expect(await screen.findByText(despedidaDelDepartamento(ROCHA)[0]!.texto)).toBeTruthy()
+  })
+})
 
 describe('cooperativo', () => {
   it('"Jugar con un amigo" está en los niveles de equipos, no en los mano a mano', async () => {

@@ -1876,3 +1876,31 @@ Pedido: "hacelo" (la etapa 4 del plan).
   - los 14 de punta a punta.
   - `tiemposSala` falló una vez por carga y pasa solo y en la suite completa.
 - **Para publicar:** el servidor (migración 13, misiones, la lista de grupos con novedades y la flor contra flor del motor) y después la web, cuando el usuario confirme que probó la flor contra flor.
+
+## Modo historia: escena al terminar cada nivel y despedida del departamento — 2026-11-10
+
+Pedido: una escena al terminar cada partida del modo historia y, al completar un departamento, una despedida deseándote suerte en el viaje. Plan aprobado ("esta perfecto, dale asi").
+
+- **Escena del final de un nivel** (`historia/EscenaFinal.tsx`):
+  - En el cartel del final, "Seguir" abre la escena en el lugar, con el mismo fondo y las figuras que la previa y encima de la mesa.
+  - El rival dice lo suyo: te reconoce si ganaste y te gasta si perdiste. En los niveles de equipo, tu compañero festeja o te da ánimo.
+  - Si ganaste, después aparecen los premios de a uno. Al final están los botones: Siguiente nivel, Revancha o Volver. "Saltar" va directo al final.
+  - Los botones salieron del cartel: ahí quedan "Seguir" y "Volver a …".
+- **Textos:**
+  - cada personaje tiene `siGana` y `siPierde` (los 24);
+  - cada nivel puede traer lo suyo en `alFinal`: los 5 de Rocha lo tienen, los demás usan lo del personaje;
+  - los compañeros, cinco festejos y cinco ánimos, uno por nivel;
+  - cada departamento tiene su `despedida`: tres frases del rival, para los 19 departamentos. Las de Rocha se pueden revisar y las de los demás quedan listas para corregir antes de publicarlos.
+- **Despedida del departamento** (`/historia/:departamento/despedida`):
+  - Se juntan los del departamento: el rival abre, los demás te desean buen viaje de a uno y el rival cierra.
+  - Después se ve todo lo que te llevás y los próximos destinos (los vecinos): ¡Abierto!, Cerrado o Próximamente. Mientras ninguno esté publicado, dice que se abren muy pronto.
+  - "Seguir viaje" cierra las nubes y vuelve al mapa de Uruguay. Ahí se abren las nubes y se dibuja la ruta a cada vecino: roja si está abierto, oscura si no.
+  - Sale la primera vez que ganás el último nivel (cuando hay premios nuevos). Después se puede volver a ver con "Ver la despedida", desde el departamento. Sin completarlo, no hay despedida, salvo para el admin.
+- **Shared:** `escenaDelFinal`, `elencoDelDepartamento`, `despedidaDelDepartamento` y `recompensasDelDepartamento`.
+- **Web:**
+  - La figura y el globo de la previa pasaron a `historia/Escena.tsx`, para que las tres escenas se vean igual.
+  - Las nubes al abrirse dejaban una franja a la vista: ahora se van más lejos.
+- **Tests:**
+  - web 379: la escena al ganar y al perder, la despedida la primera vez y no al repetir, la despedida completa con la ruta en el mapa, la despedida cerrada sin completar el departamento y los textos de todos;
+  - el e2e del modo historia.
+- No cambia nada del servidor: con publicar la web alcanza.

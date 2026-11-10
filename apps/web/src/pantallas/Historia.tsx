@@ -1,18 +1,24 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import {
   buscarDepartamento,
   codificarAvatar,
   DEPARTAMENTOS,
   DEPARTAMENTO_INICIAL,
   departamentoAbierto,
+  departamentoCompleto,
+  departamentoPublicado,
   departamentosCompletos,
+  despedidaDelDepartamento,
   dialogoDelNivel,
+  elencoDelDepartamento,
   HISTORIAS,
   nivelAbierto,
   nombreRecompensa,
   PERSONAJES,
+  recompensasDelDepartamento,
+  VECINOS,
   type IdDepartamento,
 } from '@truco/shared'
 import { Avatar } from '../componentes/Avatar'
@@ -28,6 +34,8 @@ import { datosUnirse } from '../componentes/Online'
 import { MapaUruguay } from '../historia/MapaUruguay'
 import { MapaDepartamento } from '../historia/MapaDepartamento'
 import { PresentacionDepartamento } from '../historia/PresentacionDepartamento'
+import { Nubes } from '../historia/Nubes'
+import { alMedio, FiguraDe, FiguraVos, Globo, nombreDe } from '../historia/Escena'
 import '../estilos-historia.css'
 import '../estilos-niveles.css'
 
@@ -100,6 +108,7 @@ function Volver({ a, texto = 'Volver' }: { a: string; texto?: string }) {
 /** El mapa de Uruguay: se elige el departamento (los cerrados, con candado; el admin los tiene todos abiertos). */
 export function Historia() {
   const navegar = useNavigate()
+  const desde = (useLocation().state as { desde?: IdDepartamento } | null)?.desde
   const { adentro, admin, cargando, progreso } = useHistoriaDeLaCuenta()
   if (!adentro) return cargando ? <Cargando /> : <SinCuenta />
   const completos = progreso ? departamentosCompletos(progreso) : 0
@@ -117,10 +126,16 @@ export function Historia() {
         </p>
       </header>
       {progreso ? (
-        <MapaUruguay progreso={progreso} todoAbierto={admin} alElegir={(id) => navegar(`/historia/${id}`, { state: { desdeMapa: true } })} />
+        <MapaUruguay
+          progreso={progreso}
+          todoAbierto={admin}
+          desde={desde}
+          alElegir={(id) => navegar(`/historia/${id}`, { state: { desdeMapa: true } })}
+        />
       ) : (
         <p role="status">Cargando…</p>
       )}
+      {desde && <Nubes modo="abrir" />}
     </main>
   )
 }
@@ -204,33 +219,14 @@ export function DepartamentoHistoria() {
           {ganado ? 'Repetir' : abierto ? 'Jugar' : 'Cerrado'}
         </button>
       </article>
+      {progreso && departamentoCompleto(progreso, dep.id) && (
+        <button type="button" className="boton boton-secundario historia-ver-despedida" onClick={() => navegar(`/historia/${dep.id}/despedida`)}>
+          Ver la despedida
+        </button>
+      )}
     </main>
   )
 }
-
-/** Una figura de la previa: al frente e iluminada si está hablando; si no, atrás y en penumbra. */
-function Figura({ codigo, apodo, nombre, habla, quieto }: { codigo: string; apodo?: string; nombre: string; habla: boolean; quieto: boolean }) {
-  return (
-    <motion.div
-      className={`previa-figura${habla ? ' habla' : ''}`}
-      initial={false}
-      animate={{
-        scale: habla ? 1.12 : 0.8,
-        y: habla ? 0 : 10,
-        filter: habla ? 'brightness(1) saturate(1)' : 'brightness(0.45) saturate(0.6)',
-      }}
-      transition={quieto ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 26 }}
-    >
-      <span className="previa-figura-avatar" aria-hidden="true">
-        <Avatar codigo={codigo} apodo={apodo} encuadre="busto" />
-      </span>
-      <span className="previa-figura-nombre">{nombre}</span>
-    </motion.div>
-  )
-}
-
-/** El del medio va al medio: [a, b, c] → [b, a, c]. */
-const alMedio = <T,>(lista: readonly T[]): T[] => (lista.length < 2 ? [...lista] : [lista[1]!, lista[0]!, ...lista.slice(2)])
 
 /**
  * La previa de un nivel: los rivales arriba y tu equipo abajo (vos al medio), en el lugar. Charlan
@@ -254,7 +250,6 @@ export function PreviaNivel() {
   // Sin el departamento abierto o el anterior ganado no se juega (si el progreso todavía no llegó, se espera).
   if (progreso && (!departamentoAbierto(progreso, dep.id, admin) || !nivelAbierto(progreso, dep.id, n))) return <EnPreparacion />
 
-  const perfil = leerPerfil()
   const dialogo = dialogoDelNivel(nivel, n)
   const turno = dialogo[paso]!
   const ultimo = paso >= dialogo.length - 1
@@ -263,7 +258,6 @@ export function PreviaNivel() {
   const quienHabla = turno.quien
   const esDato = turno.quien !== null && turno.dato === true
   const texto = turno.quien === null ? (respuesta ?? '¿Qué le decís?') : turno.texto
-  const nombreDe = (id: string | null) => (id === null ? perfil.apodo || 'Vos' : personaje(id).nombre)
   const seguir = () => setPaso((p) => p + 1)
 
   const jugado = { departamento: dep.id as IdDepartamento, nivel: n }
@@ -282,11 +276,8 @@ export function PreviaNivel() {
       setConAmigo({ creando: false, error: motivoError(e) })
     }
   }
-  const figuraDe = (id: string) => {
-    const p = personaje(id)
-    return <Figura key={id} codigo={codificarAvatar(p.avatar)} nombre={p.nombre} habla={quienHabla === id} quieto={sinMovimiento} />
-  }
-  const vos = <Figura key="vos" codigo={perfil.avatar} apodo={perfil.apodo} nombre={nombreDe(null)} habla={quienHabla === null} quieto={sinMovimiento} />
+  const figuraDe = (id: string) => <FiguraDe key={id} id={id} habla={quienHabla === id} quieto={sinMovimiento} />
+  const vos = <FiguraVos key="vos" habla={quienHabla === null} quieto={sinMovimiento} />
   return (
     <main className="historia-previa" data-fondo={dep.id} data-nivel={n}>
       <button type="button" className="historia-saltar" onClick={jugar}>
@@ -305,23 +296,16 @@ export function PreviaNivel() {
         <div className="previa-fila" aria-label="Rivales">
           {alMedio(nivel.rivales).map(figuraDe)}
         </div>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={`${paso}-${respuesta ?? ''}`}
-            className={`historia-globo ${quienHabla === null ? 'desde-abajo' : 'desde-arriba'}${esDato ? ' dato' : ''}`}
-            role="status"
-            initial={sinMovimiento ? false : { opacity: 0, y: quienHabla === null ? 10 : -10, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={sinMovimiento ? undefined : { opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <span className="historia-globo-quien">
-              {nombreDe(quienHabla)}
-              {esDato && <span className="historia-globo-dato"> · ¿Sabías que…?</span>}
-            </span>
-            <p>{texto}</p>
-          </motion.div>
-        </AnimatePresence>
+        <Globo
+          clave={`${paso}-${respuesta ?? ''}`}
+          quien={nombreDe(quienHabla)}
+          desdeAbajo={quienHabla === null}
+          clase={esDato ? 'dato' : ''}
+          extra={esDato && <span className="historia-globo-dato"> · ¿Sabías que…?</span>}
+          quieto={sinMovimiento}
+        >
+          {texto}
+        </Globo>
         <div className="previa-fila previa-tuyos" aria-label="Tu equipo">
           {alMedio([null, ...nivel.companieros]).map((id) => (id === null ? vos : figuraDe(id)))}
         </div>
@@ -353,6 +337,114 @@ export function PreviaNivel() {
           </button>
         )}
       </footer>
+    </main>
+  )
+}
+
+type PasoDespedida = 'charla' | 'premios' | 'nubes'
+
+/**
+ * La despedida al completar un departamento: los de ahí se juntan y te desean buen viaje; después,
+ * todo lo que te llevás y los próximos destinos (los vecinos: abiertos o, si todavía no están
+ * publicados, próximamente). "Seguir viaje" cierra las nubes y vuelve al mapa de Uruguay, con la
+ * ruta marcada. Se ve al ganar el último nivel y, después, desde el departamento.
+ */
+export function DespedidaDepartamento() {
+  const navegar = useNavigate()
+  const { departamento } = useParams()
+  const { adentro, admin, cargando, progreso } = useHistoriaDeLaCuenta()
+  const sinMovimiento = useReducedMotion() ?? false
+  const [paso, setPaso] = useState<PasoDespedida>('charla')
+  const [turno, setTurno] = useState(0)
+  const dep = buscarDepartamento(departamento)
+  const historia = dep && HISTORIAS[dep.id]
+  if (!adentro) return cargando ? <Cargando /> : <SinCuenta />
+  if (!dep || !historia) return <EnPreparacion />
+  // Hasta que lo completás no hay despedida (el admin la ve igual).
+  if (progreso && !admin && !departamentoCompleto(progreso, dep.id)) return <EnPreparacion />
+
+  const id = dep.id as IdDepartamento
+  const dialogo = despedidaDelDepartamento(historia)
+  const actual = dialogo[turno]!
+  const elenco = elencoDelDepartamento(historia)
+  const vecinos = VECINOS[id].map((v) => ({
+    id: v,
+    nombre: buscarDepartamento(v)!.nombre,
+    estado: progreso && departamentoAbierto(progreso, v, admin) ? 'abierto' : departamentoPublicado(v) ? 'cerrado' : 'pronto',
+  }))
+  const hayAbierto = vecinos.some((v) => v.estado === 'abierto')
+  const entra = (i: number) =>
+    sinMovimiento ? {} : { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.2 + i * 0.3, duration: 0.35 } }
+  return (
+    <main className="historia-previa historia-despedida" data-fondo={id} data-nivel={historia.niveles.length}>
+      {paso === 'charla' && (
+        <button type="button" className="historia-saltar" onClick={() => setPaso('premios')}>
+          Saltar <span aria-hidden="true">›</span>
+        </button>
+      )}
+      <header className="historia-previa-titulo">
+        <small>¡Completaste {dep.nombre}!</small>
+        <h1>Hasta la próxima</h1>
+      </header>
+      {paso === 'charla' ? (
+        <>
+          <div className="previa-escena">
+            <div className="previa-fila" aria-label={`Los de ${dep.nombre}`}>
+              {alMedio(elenco).map((p) => (
+                <FiguraDe key={p} id={p} habla={actual.quien === p} quieto={sinMovimiento} />
+              ))}
+            </div>
+            <Globo clave={String(turno)} quien={nombreDe(actual.quien)} desdeAbajo={false} quieto={sinMovimiento}>
+              {actual.texto}
+            </Globo>
+            <div className="previa-fila previa-tuyos">
+              <FiguraVos habla={false} quieto={sinMovimiento} />
+            </div>
+          </div>
+          <footer className="historia-previa-pie">
+            <button
+              type="button"
+              className="boton boton-grande"
+              onClick={() => (turno >= dialogo.length - 1 ? setPaso('premios') : setTurno((t) => t + 1))}
+            >
+              Seguir
+            </button>
+          </footer>
+        </>
+      ) : (
+        <>
+          <div className="despedida-resumen">
+            <motion.section className="escena-premios" aria-label={`Te llevás de ${dep.nombre}`} {...entra(0)}>
+              <h2>Te llevás de {dep.nombre}</h2>
+              <ul>
+                {recompensasDelDepartamento(historia).map((r, i) => (
+                  <motion.li key={r} {...entra(i + 1)}>
+                    <span aria-hidden="true">{r.startsWith('monedas:') ? '🪙' : '🎁'}</span> {nombreRecompensa(r)}
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.section>
+            <motion.section className="escena-premios despedida-destinos" aria-label="Próximos destinos" {...entra(2)}>
+              <h2>Próximos destinos</h2>
+              <ul>
+                {vecinos.map((v) => (
+                  <li key={v.id} className={v.estado}>
+                    {v.nombre}
+                    <small>{v.estado === 'abierto' ? '¡Abierto!' : v.estado === 'cerrado' ? '🔒 Cerrado' : 'Próximamente'}</small>
+                  </li>
+                ))}
+              </ul>
+              {!hayAbierto && <p className="nota">Los próximos destinos se abren muy pronto.</p>}
+            </motion.section>
+          </div>
+          <footer className="historia-previa-pie">
+            <button type="button" className="boton boton-grande" disabled={paso === 'nubes'} onClick={() => setPaso('nubes')}>
+              Seguir viaje
+            </button>
+          </footer>
+        </>
+      )}
+      {paso === 'nubes' && <Nubes modo="cerrar" alTerminar={() => navegar('/historia', { state: { desde: id } })} />}
     </main>
   )
 }

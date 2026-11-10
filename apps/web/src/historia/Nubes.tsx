@@ -16,7 +16,9 @@ const NUBES = Array.from({ length: 22 }, (_, i) => {
 export function Nubes({ modo, alTerminar }: { modo: 'cerrar' | 'abrir'; alTerminar?: () => void }) {
   const sinMovimiento = useReducedMotion() ?? false
   const tapado = { x: '0%', opacity: 1 }
-  const afuera = (lado: 1 | -1) => (sinMovimiento ? { x: '0%', opacity: 0 } : { x: `${lado * 110}%`, opacity: 1 })
+  // Las nubes se salen de su mitad (las más corridas llegan a 1,6 veces su ancho): para que no quede
+  // ninguna asomando, cada mitad se va bien lejos.
+  const afuera = (lado: 1 | -1) => (sinMovimiento ? { x: '0%', opacity: 0 } : { x: `${lado * 170}%`, opacity: 1 })
   const lado = (l: 1 | -1) => (
     <motion.div
       className={`nubes-lado ${l < 0 ? 'izquierda' : 'derecha'}`}

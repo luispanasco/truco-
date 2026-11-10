@@ -55,12 +55,107 @@ interface Etapa {
   datos?: readonly { texto: string; fuente: string }[]
 }
 
-function historia(departamento: IdDepartamento, jefe: string, presentacion: string, etapas: readonly Etapa[]): HistoriaDepartamento {
+/** Lo que dice el rival de cada departamento cuando lo completás y te vas. */
+const DESPEDIDAS: Record<Exclude<IdDepartamento, 'rocha'>, readonly string[]> = {
+  artigas: [
+    'Recorriste Artigas de punta a punta. Brillaste como una amatista.',
+    'Llevate el mazo y el paño, que en tus manos van a estar bien cuidados.',
+    '¡Suerte en el viaje! Y guardame una piedrita.',
+  ],
+  canelones: [
+    'Te ganaste todo Canelones. Esto merece un brindis.',
+    'Llevate el mazo y el paño, y acordate del Tannat de Las Violetas.',
+    '¡Buen viaje! Y que en cada mesa te sirvan una copa.',
+  ],
+  'cerro-largo': [
+    'Bah, tchê… me voy a quedar extrañando estas partidas.',
+    'Te llevás el mazo de la frontera, de los dos lados del puente.',
+    '¡Boa viagem! Digo… ¡buen viaje! Y suerte con las cartas.',
+  ],
+  colonia: [
+    'Llegaste verde y te vas bien madurado, como un buen queso.',
+    'El mazo y el paño de Colonia son tuyos. Cuidalos.',
+    '¡Buen viaje! Que en cada puerto te espere una buena mano.',
+  ],
+  durazno: [
+    'Bailaste al ritmo del Yí. Te ganaste el aplauso.',
+    'Llevate el mazo, que suena lindo cuando lo barajás.',
+    '¡Buen viaje! Que el tambor te acompañe en la ruta.',
+  ],
+  flores: [
+    'Último dato de la visita: sos de los mejores que pasaron por Flores.',
+    'El mazo y el paño son tuyos. Cuidalos como yo cuido las grutas.',
+    '¡Buen viaje! Y llevá linterna, que hay caminos oscuros.',
+  ],
+  florida: [
+    'Me ganaste en mi tierra, y eso no lo hace cualquiera.',
+    'Llevate el mazo, y un tarro de leche para el camino.',
+    '¡Buen viaje! Que madrugues y que te toquen buenas cartas.',
+  ],
+  lavalleja: [
+    'Para despedirte, una décima corta: ganaste en las sierras, y eso nadie te lo quita.',
+    'Te llevás el mazo de Lavalleja… y un alfajor de Minas, de yapa.',
+    '¡Buen viaje, payador del truco! Que tu canto llegue lejos.',
+  ],
+  maldonado: [
+    'Obvio que te ibas a ganar todo. Bueno… casi obvio.',
+    'El mazo y el paño de Maldonado son tuyos. Con estilo, como corresponde.',
+    '¡Buen viaje! Y la próxima temporada te espero en La Barra.',
+  ],
+  montevideo: [
+    '¡Atención, atención! Llegó la hora de la retirada.',
+    'Te ganaste el mazo de la capital, con el aplauso de todo el tablado.',
+    '¡Buen viaje! Que la murga te despida cantando.',
+  ],
+  paysandu: [
+    'Te ganaste todo Paysandú. Esta ronda la pago yo, con gusto.',
+    'Llevate el mazo, que lo hicimos con el mismo cariño que la cerveza.',
+    '¡Buen viaje! Salud, y que el río te lleve lejos.',
+  ],
+  'rio-negro': [
+    'Juego serio, te dije. Y vos jugaste más serio que yo.',
+    'El mazo de Río Negro es tuyo. Te lo ganaste entre girasoles.',
+    'Buen viaje. Y ahora sí… me podés hacer reír.',
+  ],
+  rivera: [
+    'Te llevás todo, y sin pasar por la aduana.',
+    'El mazo y el paño de Rivera, de regalo. Bueno… ganados.',
+    '¡Buen viaje! Volvé cuando quieras, que siempre hay ofertas.',
+  ],
+  salto: [
+    'Me ganaste todo, y yo tan tranquila. Las termas, viste.',
+    'Llevate el mazo de Salto, y unas naranjas para el viaje.',
+    '¡Buen viaje! Que el agua calentita te espere a la vuelta.',
+  ],
+  'san-jose': [
+    'Un maragato no se achica, pero reconoce al que juega bien.',
+    'El mazo de San José es tuyo. Con orgullo maragato.',
+    '¡Buen viaje! Y que nadie te haga achicar en la ruta.',
+  ],
+  soriano: [
+    'Buena cosecha la tuya, eh. Te ganaste todo Soriano.',
+    'Llevate el mazo, que vale más que una bolsa de trigo.',
+    '¡Buen viaje! Que llueva cuando haga falta y que salga el sol cuando juegues.',
+  ],
+  tacuarembo: [
+    'Ganaste en tierra gaucha. Pocos lo hacen.',
+    'Llevate el mazo de Tacuarembó, y este mate para el camino.',
+    '¡Buen viaje, paisano! Y que la guitarra te acompañe.',
+  ],
+  'treinta-y-tres': [
+    'Al ritmo del bombo, te ganaste todo Treinta y Tres.',
+    'El mazo es tuyo. Llevalo con el Olimar en el corazón.',
+    '¡Buen viaje! Y que los cuervos te cuiden desde la quebrada.',
+  ],
+}
+
+function historia(departamento: Exclude<IdDepartamento, 'rocha'>, jefe: string, presentacion: string, etapas: readonly Etapa[]): HistoriaDepartamento {
   const plantilla = PLANTILLAS[etapas.length as 3 | 4 | 5]
   return {
     departamento,
     jefe,
     presentacion,
+    despedida: DESPEDIDAS[departamento],
     niveles: etapas.map((e, i) => ({
       ...plantilla[i]!,
       lugar: e.lugar,

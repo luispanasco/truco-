@@ -561,3 +561,100 @@
   background: rgb(255 255 255 / 0.1);
   font-weight: 700;
 }
+
+/* La escena al terminar un nivel: como la previa, pero encima de la mesa. */
+.escena-final {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  min-height: 0;
+  overflow-y: auto;
+}
+.escena-final .historia-previa-titulo h1 {
+  font-size: 2.6rem;
+}
+/* Lo que ganaste (en el final de un nivel y en la despedida), de a uno. */
+.escena-premios {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgb(0 0 0 / 0.45);
+}
+.escena-premios h2 {
+  margin: 0;
+  color: var(--acento);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+.escena-premios ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+.escena-premios li {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--papel);
+  color: var(--tinta);
+  font-weight: 800;
+  box-shadow: var(--sombra);
+}
+.escena-premios-nota {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
+}
+
+/* La despedida de un departamento. */
+.despedida-resumen {
+  align-self: center;
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 460px;
+  margin: 16px auto 0;
+}
+.despedida-destinos li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.despedida-destinos li small {
+  font-weight: 700;
+  opacity: 0.7;
+}
+.despedida-destinos li.abierto small {
+  color: var(--exito);
+  opacity: 1;
+}
+.despedida-destinos .nota {
+  margin: 0;
+  text-align: center;
+}
+.historia-ver-despedida {
+  justify-self: center;
+}
+
+/* La ruta en el mapa de Uruguay, del departamento que completaste a sus vecinos. */
+.mapa-ruta {
+  fill: none;
+  stroke: var(--tinta);
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.55;
+  filter: drop-shadow(0 0 2px rgb(255 255 255 / 0.8));
+  pointer-events: none;
+}
+.mapa-ruta.abierta {
+  stroke: #b3261e;
+  opacity: 0.9;
+  stroke-width: 5;
+}
