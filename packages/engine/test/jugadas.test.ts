@@ -179,6 +179,58 @@ describe('el pie', () => {
     expect(apply(cantada, { tipo: 'mandar', jugador: 'c', a: 0, que: 'gritar' }).ok).toBe(true)
   })
 
+  it('con el envido querido primero se declaran los tantos: ni se grita ni se manda a gritar en el medio', () => {
+    // c (pie) manda a a tocar; a toca, d (pie rival) quiere. Antes de declarar no se grita.
+    let estado = aplicar(partidaCon(MANOS_2V2, '3c'), { tipo: 'mandar', jugador: 'c', a: 0, que: 'tocar' })
+    estado = jugar(estado, ['envido', 'a'], ['quiero', 'd']).estado
+    expect(enfrentamientoActual(estado).ordenes).toEqual([])
+    rechaza(estado, ['truco', 'a'], 'Se están declarando')
+    rechaza(estado, ['truco', 'b'], 'Se están declarando')
+    expect(apply(estado, { tipo: 'mandar', jugador: 'c', a: 0, que: 'gritar' })).toMatchObject({ ok: false, motivo: 'Se están declarando los tantos' })
+    expect(accionesValidas(estado, 'c').some((x) => x.tipo === 'mandar' && (x.que === 'gritar' || x.que === 'tocar'))).toBe(false)
+    expect(accionesValidas(estado, 'a').some((x) => x.tipo === 'cantarTruco')).toBe(false)
+    // Se declaran todos y recién ahí a puede gritar.
+    while (enfrentamientoActual(estado).envido.estado === 'declarando') {
+      const quien = estado.jugadores[esperandoA(estado)[0]!]!.id
+      estado = aplicar(estado, accionesValidas(estado, quien).find((x) => x.tipo === 'declararTanto')!)
+    }
+    expect(enfrentamientoActual(estado).envido.estado).toBe('resuelto')
+    jugar(estado, ['truco', 'a'])
+  })
+
+  it('con un canto sin contestar no se manda a tocar ni a gritar (salvo "envido va primero")', () => {
+    const conTruco = jugar(partidaCon(MANOS_2V2, '3c'), ['jugar', 'a', '1e'], ['truco', 'b']).estado
+    // El truco del rival: se puede mandar a tocar (envido va primero), no a gritar.
+    expect(apply(conTruco, { tipo: 'mandar', jugador: 'c', a: 0, que: 'gritar' })).toMatchObject({ ok: false, motivo: 'Hay un truco sin responder' })
+    const conEnvido = jugar(partidaCon(MANOS_2V2, '3c'), ['envido', 'a']).estado
+    expect(apply(conEnvido, { tipo: 'mandar', jugador: 'd', a: 1, que: 'gritar' })).toMatchObject({ ok: false, motivo: 'Hay un envido sin responder' })
+    // Con el truco ya querido, el envido se cerró: no se manda a tocar.
+    const querido = jugar(partidaCon(MANOS_2V2, '3c'), ['truco', 'a'], ['quiero', 'd']).estado
+    expect(apply(querido, { tipo: 'mandar', jugador: 'd', a: 1, que: 'tocar' })).toMatchObject({ ok: false, motivo: 'Ya no se puede tocar' })
+  })
+
+  it('con flor no se toca: el pie no manda a tocar al que tiene flor (ni si la tiene él)', () => {
+    // a tiene flor de oros (muestra 3 de copas); c es su pie.
+    const aConFlor = ['1o 5o 7o', '1b 2e 6c', '4e 6b 12b', '3e 7b 11b']
+    // c tiene flor de bastos.
+    const cConFlor = ['4e 6c 12o', '1b 2e 6o', '4b 6b 12b', '3e 7o 11c']
+    for (const config of [{}, { florObligatoria: false }]) {
+      const p = partidaCon(aConFlor, '3c', config)
+      expect(apply(p, { tipo: 'mandar', jugador: 'c', a: 0, que: 'tocar' })).toMatchObject({ ok: false, motivo: 'Tiene flor: que la cante' })
+      expect(accionesValidas(p, 'c').some((x) => x.tipo === 'mandar' && x.que === 'tocar')).toBe(false)
+      expect(apply(partidaCon(cConFlor, '3c', config), { tipo: 'mandar', jugador: 'c', a: 0, que: 'tocar' })).toMatchObject({ ok: false, motivo: 'Tenés flor: cantala' })
+    }
+    // Sin flor, sí.
+    expect(apply(partidaCon(MANOS_2V2, '3c'), { tipo: 'mandar', jugador: 'c', a: 0, que: 'tocar' }).ok).toBe(true)
+  })
+
+  it('cantada la flor o tocado el envido, las órdenes de tocar que quedaban no van más', () => {
+    // c manda a tocar a a, pero a juega sin tocar y toca b (rival): la orden se cae.
+    let estado = aplicar(partidaCon(MANOS_2V2, '3c'), { tipo: 'mandar', jugador: 'c', a: 0, que: 'tocar' })
+    estado = jugar(estado, ['jugar', 'a', '1e'], ['envido', 'b']).estado
+    expect(enfrentamientoActual(estado).ordenes).toEqual([])
+  })
+
   it('con la última carta del compañero, el pie solo le dice que grite o callado', () => {
     // Tercera vuelta: a (equipo 0) tiene una sola carta; el pie de su equipo es c.
     const estado = dosVueltas()
