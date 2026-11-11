@@ -17,6 +17,7 @@ import { ParaHacer } from './ParaHacer'
 import { PortadaHistoria } from './PortadaHistoria'
 import { TarjetaAprender } from '../tutorial/TarjetaAprender'
 import { useCuenta } from '../cuenta/cuenta'
+import { textoGente, useGente } from '../gente'
 
 /** Los 24 rayos del sol del logo, largos y cortos alternados (los mismos de public/icono.svg). */
 const RAYOS_SOL =
@@ -159,6 +160,8 @@ export function PanelJugar({
   const modo = perfil.modoJugar
   const sinRed = modo === 'buscar' && !enLinea
   const detalle = (texto: string) => (enLinea ? texto : 'Sin conexión')
+  // Antes de buscar partida, cuánta gente hay buscando (y jugando).
+  const gente = useGente(modo === 'buscar' && enLinea)
 
   const jugar = () =>
     conApodo(() => {
@@ -227,7 +230,9 @@ export function PanelJugar({
                     {NOMBRE_FORMATO[perfil.formato]} · {NOMBRE_NIVEL[perfil.nivelBots]} <span aria-hidden="true">›</span>
                   </button>
                 ) : (
-                  <span className="selector-modo-detalle">{detalle('Mano a mano online, con Elo')}</span>
+                  <span className="selector-modo-detalle">
+                    {detalle(gente ? textoGente(gente) : 'Mano a mano online, con Elo')}
+                  </span>
                 )}
               </motion.div>
             </AnimatePresence>

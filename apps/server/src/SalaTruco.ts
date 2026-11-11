@@ -324,6 +324,13 @@ export class SalaTruco extends Room {
     salasVivas.set(this.roomId, this)
   }
 
+  /** Las personas conectadas en la sala: en la cola pública esperando, buscan partida; si ya empezó, juegan. */
+  gente(): { buscando: number; jugando: number } {
+    const conectados = this.lugares.filter((l) => this.humanoConectado(l.asiento)).length
+    if (this.fase === 'esperando') return { buscando: this.publica ? conectados : 0, jugando: 0 }
+    return { buscando: 0, jugando: this.fase === 'jugando' ? conectados : 0 }
+  }
+
   /** Para un reporte de problema: la partida registrada (en curso o la última), solo a quien jugó en ella. */
   repeticionPara(quien: { invitadoId: string; cuentaId: string | null }): RepeticionPartida | null {
     const r = this.registro

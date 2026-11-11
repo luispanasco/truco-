@@ -1588,3 +1588,12 @@ button.selector-modo-detalle:hover {
 .mision {
   padding: 7px 10px;
 }
+
+/* Debajo de "Buscar rival": cuánta gente está buscando partida y jugando. */
+.lobby-gente {
+  margin: -4px 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  opacity: 0.9;
+}

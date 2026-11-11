@@ -2031,3 +2031,12 @@ Pedido del usuario: un video como el reel anterior, presentando el juego para el
   - cierre: "¡Ya salió la beta!", "Gratis para Android", "En iPhone, jugá desde la web", @truco_uruguayo.
 - **Clips nuevos:** 11, grabados con Playwright (CDP screencast, 1170×2532) contra la web y un servidor locales con PGlite y login de prueba, no contra producción. Los del reparto, los cantos y las señas son del reel anterior (mesa Cantina).
 - **Salidas:** en Descargas, `Truco-lanzamiento.mp4`, `Truco-lanzamiento-sin-musica.mp4` y `Truco-lanzamiento-portada.png`. Los clips y la música no van a git.
+
+## Buscar partida: cada uno con su mazo y su mesa, y cuánta gente hay buscando — 2026-11-11
+
+- **El mazo y el paño en la cola pública:** al buscar partida salían los de base, porque la mesa y la baraja de una sala online son las del anfitrión, y la cola pública no tiene. Ahora, en la cola pública, cada uno ve los suyos (`aplicarTemaPropio`). En las salas privadas siguen las del anfitrión, y en el modo historia las del lugar.
+- **Gente online:** `GET /api/gente` devuelve `{ buscando, jugando }`. Lo cuentan las salas vivas: los conectados esperando en la cola pública y los que están en una partida que ya empezó.
+  - En Jugar, con "Buscar partida" elegido, debajo dice "3 buscando partida · 12 jugando" o "Nadie buscando ahora".
+  - En el Lobby, debajo de "Buscar rival".
+  - Se pregunta cada 15 s mientras se ve (`useGente`).
+- **Tests:** server `gente.test.ts`; web `gente.test.ts`.

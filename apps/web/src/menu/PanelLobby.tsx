@@ -8,6 +8,7 @@ import { direccionApi, useCuenta } from '../cuenta/cuenta'
 import { useJuego } from '../estado'
 import { leerPerfil, type Perfil } from '../perfil'
 import { conexionContraLaCompu } from './contraLaCompu'
+import { textoGente, useGente } from '../gente'
 import { useElo } from './Banner'
 import { IconoBuscar, IconoCompu, IconoCrear } from './Iconos'
 
@@ -105,6 +106,7 @@ export function PanelLobby({
 }) {
   const navegar = useNavigate()
   const adentro = useCuenta((s) => s.estado === 'adentro')
+  const gente = useGente()
 
   const jugarContraBots = () =>
     conApodo(() => {
@@ -126,6 +128,11 @@ export function PanelLobby({
         <button type="button" className="boton-jugar-grande lobby-buscar" onClick={() => conApodo(() => navegar('/buscar'))}>
           <IconoBuscar clase="lobby-buscar-icono" /> Buscar rival
         </button>
+        {gente && (
+          <p className="lobby-gente" role="status">
+            <span aria-hidden="true">🟢</span> {textoGente(gente)}
+          </p>
+        )}
         <TopRanking />
         <button type="button" className="boton-texto lobby-ver-ranking" onClick={() => navegar('/ranking')}>
           Ver todo el ranking <span aria-hidden="true">›</span>

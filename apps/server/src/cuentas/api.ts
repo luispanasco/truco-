@@ -33,6 +33,7 @@ import { invitarAlGrupo, muroDeGrupo, repeticion } from './muro'
 import { cobrarMision, MisionRechazo, misiones } from './misiones'
 import { recibirse } from './tutorial'
 import { guardarReporte, LimiteReportes, listarReportes, reporteCompleto, ReporteRechazo, repeticionDeReporte } from './reportes'
+import { genteEnLinea } from '../salasVivas'
 
 export interface Cuentas {
   base: Base
@@ -83,6 +84,11 @@ export function rutasCuentas(c: Cuentas | null): Router {
 
   r.get('/estado', (_req, res) => {
     res.json({ cuentas: c !== null, loginDePrueba: c?.loginDePrueba ?? false })
+  })
+
+  // Para el menú: cuánta gente está buscando partida en la cola pública y cuánta jugando online.
+  r.get('/gente', (_req, res) => {
+    res.json(genteEnLinea())
   })
 
   const conSesion =
