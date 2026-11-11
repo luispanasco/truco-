@@ -32,6 +32,11 @@ test('sin conexión carga, avisa en lo online y se juega contra la compu con la 
       return original.apply(this, args)
     }
   })
+  // Sin el recorrido de bienvenida ni el de la primera partida (taparían el menú y la mesa).
+  await page.addInitScript(() => {
+    localStorage.setItem('truco.recorrido', 'visto')
+    localStorage.setItem('truco.recorridoMesa', 'visto')
+  })
   await page.goto('/')
   await page.getByPlaceholder('¿Cómo te dicen?').fill('Luis')
 

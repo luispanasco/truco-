@@ -132,6 +132,9 @@ export class ConexionLocal implements Conexion {
   /** Para reportar un problema: con qué arrancó la partida y cada acción en orden (se repite igual). */
   private inicio = { fecha: '', reparte: 0 }
   private acciones: { asiento: number; accion: Accion }[] = []
+  /** El recorrido de la mesa: al repartir, los bots esperan (`frenarAlRepartir`) hasta `seguir()`. */
+  private frenarAlRepartir = false
+  private frenada = false
 
   readonly historia?: NivelJugado
   readonly examen?: boolean
@@ -173,6 +176,31 @@ export class ConexionLocal implements Conexion {
     this.version++
     if (this.timer) clearTimeout(this.timer)
     this.oyentes.clear()
+  }
+
+  /**
+   * Para el recorrido de la primera partida: cuando ya se repartió, el juego espera (los bots no
+   * juegan) hasta `seguir()`. Si ya está repartida, espera desde ahora.
+   */
+  esperarAlRepartir() {
+    if (this.estado && this.estado.mano.cortando === null) this.frenar()
+    else this.frenarAlRepartir = true
+  }
+
+  /** Termina la espera del recorrido: el juego sigue donde estaba. */
+  seguir() {
+    this.frenarAlRepartir = false
+    if (!this.frenada) return
+    this.frenada = false
+    if (this.estado && !this.terminada && this.oyentes.size > 0) this.programar()
+  }
+
+  private frenar() {
+    this.frenarAlRepartir = false
+    this.frenada = true
+    this.version++
+    if (this.timer) clearTimeout(this.timer)
+    this.timer = null
   }
 
   // ── Internos ─────────────────────────────────────────────────────
@@ -286,6 +314,7 @@ export class ConexionLocal implements Conexion {
     this.claveMano = clave
     if (nueva) this.senias = this.estado.jugadores.map(() => ({}))
     if (m.cortando === null) {
+      if (this.frenarAlRepartir) this.frenar()
       // Te llegan cuando ya ves tus cartas: después de la pausa entre manos y del reparto.
       const reparto = this.op.esperaRepartoMs ?? (this.op.demoraBots?.[1] === 0 ? 0 : ESPERA_REPARTO_MS)
       const pausa = (this.op.pausas ?? PAUSAS).mano
@@ -425,6 +454,11 @@ export class ConexionLocal implements Conexion {
     if (this.timer) clearTimeout(this.timer)
     const esperando = esperandoA(this.estado)
     if (esperando.includes(0) || esperando.length === 0) {
+      this.emitir('turno', { asientos: esperando, venceEn: null })
+      return
+    }
+    // Mientras dura el recorrido de la mesa, los bots esperan (al seguir, se vuelve a programar).
+    if (this.frenada) {
       this.emitir('turno', { asientos: esperando, venceEn: null })
       return
     }

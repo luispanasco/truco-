@@ -10,6 +10,7 @@ import { InstalarApp } from '../componentes/Pwa'
 import { SelectorVistaMesa } from '../componentes/SelectorVistaMesa'
 import { TarjetaCuenta } from '../componentes/TarjetaCuenta'
 import { cosmeticosPermitidos, type Perfil } from '../perfil'
+import { VerRecorrido } from '../recorrido/VerRecorrido'
 
 /**
  * Lo que abre el engranaje del banner, solo lo del juego: el sonido, cómo se ve la partida
@@ -124,6 +125,7 @@ export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Part
 
       {/* Al final, como en cualquier app: entrar o salir de la cuenta. */}
       <TarjetaCuenta sinEnlaces />
+      <VerRecorrido />
       <InstalarApp />
       <p className="inicio-pie">
         Truco uruguayo · versión beta · <a href="/privacidad.html">Privacidad</a>

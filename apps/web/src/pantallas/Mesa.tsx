@@ -37,6 +37,7 @@ import { MonedasGanadas } from '../componentes/MonedasGanadas'
 import { FinHistoria } from '../componentes/FinHistoria'
 import { CartelExamen, FinExamen } from '../tutorial/Examen'
 import '../estilos-mesa-bustos.css'
+import { RecorridoMesa } from '../recorrido/RecorridoMesa'
 
 export function Mesa() {
   const navegar = useNavigate()
@@ -668,6 +669,8 @@ export function Mesa() {
           </div>
         </div>
       )}
+
+      <RecorridoMesa />
 
       {confirmarSalida && (
         <div className="modal" role="dialog" aria-modal="true" aria-labelledby="salir-titulo">
