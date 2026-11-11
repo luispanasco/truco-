@@ -16,15 +16,15 @@ export type PasoEquipo =
   | { tipo: 'examen'; consigna: string }
 
 /** Las señas que se enseñan (y entran en el ejercicio), con lo que anuncian dicho para el que aprende. */
-export const SENIAS_TUTORIAL: readonly Senia[] = ['pieza2', 'pieza4', 'perico', 'perica', 'unoBravo', 'tres', 'flor']
+export const SENIAS_TUTORIAL: readonly Senia[] = ['pieza2', 'pieza4', 'perico', 'perica', 'unoBravo', 'sieteBravo', 'tres', 'flor']
 export const QUE_ANUNCIA: Record<Senia, string> = {
   pieza2: 'El 2 de la muestra',
   pieza4: 'El 4 de la muestra',
   pieza5: 'El 5 de la muestra',
   perico: 'El perico (11 de la muestra)',
   perica: 'La perica (10 de la muestra)',
-  unoBravo: 'El 1 de espadas o de bastos',
-  sieteBravo: 'El 7 de espadas o de oros',
+  unoBravo: 'La espadilla o el bastillo',
+  sieteBravo: 'El 7 de espadas o el 7 de oros',
   tres: 'Un 3',
   dosComun: 'Un 2',
   unoFalso: 'El 1 de copas o de oros',
@@ -46,6 +46,7 @@ export const EQUIPOS: Paso[] = [
   { tipo: 'gesto', consigna: 'Guiñar el ojo derecho es el perico: el 11 de la muestra.', senia: 'perico' },
   { tipo: 'gesto', consigna: 'Y el ojo izquierdo, la perica: el 10 de la muestra.', senia: 'perica' },
   { tipo: 'gesto', consigna: 'La pera para la derecha es la espadilla o el bastillo: una mata grande.', senia: 'unoBravo' },
+  { tipo: 'gesto', consigna: 'Y la pera para el otro lado, a la izquierda, es el 7 de espadas o el 7 de oros: las otras dos matas.', senia: 'sieteBravo' },
   { tipo: 'gesto', consigna: 'Morderse el labio de abajo es un 3.', senia: 'tres' },
   { tipo: 'gesto', consigna: 'Y si inflás los cachetes como un sapo, tenés flor.', senia: 'flor' },
   { tipo: 'senias', consigna: 'A ver si me entendés. ¿Qué seña te hizo tu compañero?', rondas: 6 },
