@@ -212,4 +212,20 @@ export const MIGRACIONES: string[] = [
   alter table movimientos add constraint movimientos_tipo_check
     check (tipo in ('partida', 'victoria', 'bonusDiario', 'compra', 'ajuste', 'historia', 'mision'));
   `,
+  // 14. Reportes de problemas de los testers (con o sin cuenta), con lo que se adjunta solo
+  //     (la partida para repetirla, la vista, el navegador). Los lee el admin.
+  `
+  create table reportes (
+    id bigint generated always as identity primary key,
+    fecha timestamptz not null default now(),
+    tipo text not null check (tipo in ('reglas', 'trabado', 'bot', 'visual', 'otro')),
+    descripcion text not null default '',
+    cuenta_id uuid references cuentas (id),
+    invitado_id text not null,
+    apodo text not null,
+    contexto jsonb not null default '{}'
+  );
+  create index reportes_fecha on reportes (fecha desc);
+  alter table reportes enable row level security;
+  `,
 ]

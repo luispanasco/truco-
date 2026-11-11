@@ -23,6 +23,7 @@ import { Anotador } from '../componentes/Anotador'
 import { ManoOjeable } from '../componentes/ManoOjeable'
 import { Mazo, useFaseCorte } from '../componentes/Mazo'
 import { MenuJugador, useSilenciados } from '../componentes/MenuJugador'
+import { HojaReporte } from '../componentes/HojaReporte'
 import { AnilloReloj, RelojPropio } from '../componentes/Reloj'
 import { useGestos } from '../gestos'
 import { AvisoSeniaHecha, BotonSenias, PanelSenias, seniasRapidas, TiraSenias } from '../componentes/Senias'
@@ -80,6 +81,8 @@ export function Mesa() {
   const faseCorte = useFaseCorte(corte)
   const [aviso, setAviso] = useState<string | null>(null)
   const [confirmarSalida, setConfirmarSalida] = useState(false)
+  // Reportar un problema (desde el menú de la ✕): se manda sin salir de la partida.
+  const [reportando, setReportando] = useState(false)
   // Paneles de la mesa: chat, señas y el anotador (hojas desde abajo) y el menú sobre otro jugador.
   const [panel, setPanel] = useState<'chat' | 'senias' | 'anotador' | null>(null)
   const [menuDe, setMenuDe] = useState<number | null>(null)
@@ -684,9 +687,20 @@ export function Mesa() {
                 Seguir jugando
               </button>
             </div>
+            <button
+              type="button"
+              className="boton-enlace modal-reportar"
+              onClick={() => {
+                setConfirmarSalida(false)
+                setReportando(true)
+              }}
+            >
+              🐞 Reportar un problema
+            </button>
           </div>
         </div>
       )}
+      {reportando && <HojaReporte alCerrar={() => setReportando(false)} />}
     </div>
   )
 }

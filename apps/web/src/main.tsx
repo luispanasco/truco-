@@ -30,6 +30,7 @@ import { Tienda } from './pantallas/Tienda'
 import { Amigos } from './pantallas/Amigos'
 import { Grupo } from './pantallas/Grupo'
 import { Repeticion } from './pantallas/Repeticion'
+import { AdminReportes } from './pantallas/AdminReportes'
 import { DepartamentoHistoria, DespedidaDepartamento, Historia, PreviaNivel } from './pantallas/Historia'
 import { Aprender, LeccionTutorial } from './pantallas/Aprender'
 import { Diploma } from './tutorial/Diploma'
@@ -72,6 +73,8 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/amigos" element={<Amigos />} />
           <Route path="/grupos/:id" element={<Grupo />} />
           <Route path="/repeticion/:id" element={<Repeticion />} />
+          <Route path="/admin/reportes" element={<AdminReportes />} />
+          <Route path="/admin/reportes/:id/partida" element={<Repeticion deReporte />} />
           {/* Modo historia (cualquiera con cuenta: los departamentos publicados; el admin, todos). */}
           <Route path="/aprender" element={<Aprender />} />
           <Route path="/aprender/diploma" element={<Diploma />} />

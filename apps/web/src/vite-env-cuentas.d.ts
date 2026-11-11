@@ -5,3 +5,6 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL?: string
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string
 }
+
+/** El commit y el día del build (vite.config.ts): va en los reportes de problemas. */
+declare const __VERSION_APP__: string
