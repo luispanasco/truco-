@@ -392,6 +392,7 @@
   gap: 8px;
   width: 100%;
   max-width: 340px;
+}
 
 /* Las manos guiadas (vueltas, truco y envido en juego): Don Queiroz arriba, las vueltas, lo que
    vale la mano y tus cartas abajo. */
@@ -552,6 +553,7 @@
   .guiada-botones .guiada-mal {
     animation: none;
   }
+}
 
 /* ── "En equipo", el examen y el diploma ───────────────────────── */
 
