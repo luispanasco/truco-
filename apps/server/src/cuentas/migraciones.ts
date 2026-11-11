@@ -228,4 +228,20 @@ export const MIGRACIONES: string[] = [
   create index reportes_fecha on reportes (fecha desc);
   alter table reportes enable row level security;
   `,
+  // 15. El chat de cada grupo: textos y emotes (una seña hecha por el avatar). Se guardan los
+  //     últimos de cada grupo (los más viejos se borran al mandar uno nuevo).
+  `
+  create table grupo_chat (
+    id bigint generated always as identity primary key,
+    grupo_id uuid not null references grupos (id) on delete cascade,
+    cuenta_id uuid not null references cuentas (id),
+    tipo text not null check (tipo in ('texto', 'emote')),
+    texto text,
+    senia text,
+    creado timestamptz not null default now(),
+    check ((tipo = 'texto' and texto is not null) or (tipo = 'emote' and senia is not null))
+  );
+  create index grupo_chat_grupo on grupo_chat (grupo_id, id desc);
+  alter table grupo_chat enable row level security;
+  `,
 ]

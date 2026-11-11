@@ -1,3 +1,5 @@
+import type { Senia } from '@truco/bots'
+
 /**
  * Los grupos (como los clanes de los juegos): con nombre, sigla, foto y roles. Lo usan el servidor
  * (que valida y guarda) y la web (que muestra y avisa antes de mandar).
@@ -66,6 +68,8 @@ export interface ResumenGrupo {
   conectados?: number
   /** En los tuyos: la última entrada del muro (para avisar si hay algo nuevo); null, el muro vacío. */
   ultimoMuro?: number | null
+  /** En los tuyos: el último mensaje del chat que mandó otro (para avisar si hay nuevos); null, ninguno. */
+  ultimoChat?: number | null
 }
 
 export interface MiembroGrupo {
@@ -97,6 +101,8 @@ export const PUEDE = {
   /** Armar una partida y llamar a todo el grupo: según la configuración, todos o líder y capitanes. */
   convocar: (r: RolGrupo | null, convocan: ConvocanGrupo) => r !== null && (convocan === 'todos' || r !== 'miembro'),
   expulsar: (yo: RolGrupo | null, otro: RolGrupo) => (yo === 'lider' && otro !== 'lider') || (yo === 'capitan' && otro === 'miembro'),
+  /** Borrar mensajes ajenos del chat: el líder y los capitanes (los propios, cada uno). */
+  moderarChat: (r: RolGrupo | null) => r === 'lider' || r === 'capitan',
 }
 
 const limpiar = (s: unknown) => (typeof s === 'string' ? s.trim().replace(/\s+/g, ' ') : '')
@@ -186,3 +192,22 @@ export interface MuroGrupo {
   entradas: EntradaMuro[]
   ranking: FilaRankingGrupo[]
 }
+
+// ── El chat del grupo ──────────────────────────────────────────────
+
+/** Lo más largo que puede ser un mensaje de texto del chat. */
+export const LARGO_MENSAJE_GRUPO = 200
+/** Cuántos mensajes trae el chat al abrirlo (los últimos). */
+export const TRAE_CHAT_GRUPO = 50
+/** Cuántos mensajes guarda cada grupo: al pasarse, se borran los más viejos. */
+export const GUARDA_CHAT_GRUPO = 200
+
+/**
+ * Un mensaje del chat del grupo: un texto o un emote (una seña hecha por el avatar de quien la
+ * manda, con su nombre abajo).
+ */
+export type MensajeGrupo = {
+  id: number
+  creado: string
+  autor: { id: string; apodo: string; avatar: string | null }
+} & ({ tipo: 'texto'; texto: string; senia: null } | { tipo: 'emote'; texto: null; senia: Senia })

@@ -4,6 +4,7 @@ import { NOMBRE_INGRESO, NOMBRE_ROL, PUEDE, type DetalleGrupo, type MiembroGrupo
 import { Avatar } from '../componentes/Avatar'
 import { EscudoGrupo } from '../componentes/EscudoGrupo'
 import { MuroGrupo } from '../componentes/MuroGrupo'
+import { ChatGrupo } from '../componentes/ChatGrupo'
 import { FormularioGrupo } from '../componentes/FormularioGrupo'
 import type { ConvocarAlCrear } from '../componentes/Amistad'
 import { CabeceraOnline, MensajeError } from '../componentes/Online'
@@ -21,9 +22,11 @@ import {
   sacarFoto,
   salirDeGrupo,
   subirFoto,
+  useChatConNuevos,
 } from '../cuenta/grupos'
 import { textoMiembros } from '../menu/PanelGrupos'
 import { useJuego } from '../estado'
+import { leerPerfil } from '../perfil'
 import { TEXTO_ESTADO } from './Amigos'
 import '../estilos-grupos.css'
 
@@ -34,6 +37,7 @@ type Resultado = { ok: true } | { ok: false; motivo: string }
  * conectados) y tres pestañas:
  * - Muro: jugar con el grupo (armar una partida, unirse a la sala de alguno) y el muro, con las
  *   salas que mandaron, los resultados de las partidas entre miembros (con su repetición) y la tabla;
+ * - Chat: mensajes y emotes (las señas, hechas por el avatar de cada uno);
  * - Miembros: las solicitudes (capitanes y líder) y los miembros, con lo que tu rol te deja hacer;
  * - Ajustes: el código de invitación, la configuración (el líder) y salir.
  * Quien no es del grupo ve la portada (con "Entrar") y los miembros. Se actualiza solo.
@@ -43,12 +47,15 @@ export function Grupo() {
   const navegar = useNavigate()
   const estado = useCuenta((s) => s.estado)
   const yo = useCuenta((s) => s.cuenta?.id ?? null)
+  const miAvatar = useCuenta((s) => s.cuenta?.avatar) ?? leerPerfil().avatar
+  const miApodo = useCuenta((s) => s.cuenta?.apodo ?? '')
+  const chatConNuevos = useChatConNuevos(id)
   const [grupo, setGrupo] = useState<DetalleGrupo | null>(null)
   const [noExiste, setNoExiste] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [confirmar, setConfirmar] = useState<'salir' | 'borrar' | null>(null)
-  const [pestania, setPestania] = useState<'muro' | 'miembros' | 'ajustes'>('muro')
+  const [pestania, setPestania] = useState<'muro' | 'chat' | 'miembros' | 'ajustes'>('muro')
   useEffect(() => void iniciarCuenta(), [])
 
   const cargar = useCallback(async () => {
@@ -103,6 +110,7 @@ export function Grupo() {
   const pestanias = rol
     ? ([
         ['muro', 'Muro'],
+        ['chat', 'Chat'],
         ['miembros', pendientes > 0 ? `Miembros (${pendientes})` : 'Miembros'],
         ['ajustes', 'Ajustes'],
       ] as const)
@@ -143,6 +151,7 @@ export function Grupo() {
           {pestanias.map(([id, texto]) => (
             <button key={id} type="button" role="tab" aria-selected={ver === id} className={`grupo-pestania${ver === id ? ' elegida' : ''}`} onClick={() => setPestania(id)}>
               {texto}
+              {id === 'chat' && chatConNuevos && ver !== 'chat' && <span className="grupo-pestania-punto" aria-label="(mensajes nuevos)" />}
             </button>
           ))}
         </div>
@@ -161,6 +170,8 @@ export function Grupo() {
           <MuroGrupo grupo={grupo.id} />
         </>
       )}
+
+      {ver === 'chat' && <ChatGrupo grupo={grupo.id} yo={yo} miAvatar={miAvatar} miApodo={miApodo} modera={PUEDE.moderarChat(rol)} />}
 
       {ver === 'miembros' && (
         <>

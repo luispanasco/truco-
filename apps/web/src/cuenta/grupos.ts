@@ -4,11 +4,13 @@ import {
   MAX_BYTES_FOTO_GRUPO,
   type ConfigGrupo,
   type DetalleGrupo,
+  type MensajeGrupo,
   type MuroGrupo,
   type RepeticionPartida,
   type ResumenGrupo,
   type RolGrupo,
 } from '@truco/shared'
+import type { Senia } from '@truco/bots'
 import { direccionApi, useCuenta } from './cuenta'
 
 interface ListaGrupos {
@@ -20,40 +22,61 @@ interface ListaGrupos {
 
 /** Lo último del muro de cada grupo que ya viste (se recuerda en el navegador). */
 const CLAVE_VISTOS = 'truco.muroVisto'
+/** Y el último mensaje del chat de cada grupo que ya viste. */
+const CLAVE_CHAT_VISTO = 'truco.chatVisto'
 
-function leerVistos(): Record<string, number> {
+function leerVistos(clave: string): Record<string, number> {
   try {
-    const x = JSON.parse(localStorage.getItem(CLAVE_VISTOS) ?? '{}') as unknown
+    const x = JSON.parse(localStorage.getItem(clave) ?? '{}') as unknown
     return x && typeof x === 'object' ? (x as Record<string, number>) : {}
   } catch {
     return {}
   }
 }
 
-export const useGrupos = create<{ lista: ListaGrupos | null; vistos: Record<string, number> }>(() => ({ lista: null, vistos: leerVistos() }))
+type Vistos = Record<string, number>
+export const useGrupos = create<{ lista: ListaGrupos | null; vistos: Vistos; chatVisto: Vistos }>(() => ({
+  lista: null,
+  vistos: leerVistos(CLAVE_VISTOS),
+  chatVisto: leerVistos(CLAVE_CHAT_VISTO),
+}))
 
-/** Viste el muro de un grupo hasta la entrada `ultimo`: se apaga su aviso. */
-export function marcarMuroVisto(grupo: string, ultimo: number) {
-  const vistos = useGrupos.getState().vistos
+function marcar(campo: 'vistos' | 'chatVisto', clave: string, grupo: string, ultimo: number) {
+  const vistos = useGrupos.getState()[campo]
   if ((vistos[grupo] ?? 0) >= ultimo) return
   const nuevos = { ...vistos, [grupo]: ultimo }
-  useGrupos.setState({ vistos: nuevos })
+  useGrupos.setState({ [campo]: nuevos })
   try {
-    localStorage.setItem(CLAVE_VISTOS, JSON.stringify(nuevos))
+    localStorage.setItem(clave, JSON.stringify(nuevos))
   } catch {
     // Sin almacenamiento, el aviso vuelve a aparecer al recargar: no pasa nada.
   }
 }
 
-/** Si un grupo tuyo tiene algo nuevo en el muro desde la última vez que lo miraste. */
-export const tieneNovedades = (g: ResumenGrupo, vistos: Record<string, number>) => (g.ultimoMuro ?? 0) > (vistos[g.id] ?? 0)
+/** Viste el muro de un grupo hasta la entrada `ultimo`: se apaga su aviso. */
+export const marcarMuroVisto = (grupo: string, ultimo: number) => marcar('vistos', CLAVE_VISTOS, grupo, ultimo)
+/** Leíste el chat de un grupo hasta el mensaje `ultimo`: se apaga su aviso. */
+export const marcarChatVisto = (grupo: string, ultimo: number) => marcar('chatVisto', CLAVE_CHAT_VISTO, grupo, ultimo)
 
-/** Si alguno de tus grupos tiene novedades (para el puntito de la barra). */
+/** Si un grupo tuyo tiene algo nuevo en el muro desde la última vez que lo miraste. */
+export const tieneNovedades = (g: ResumenGrupo, vistos: Vistos) => (g.ultimoMuro ?? 0) > (vistos[g.id] ?? 0)
+/** Si en el chat de un grupo tuyo escribió alguien desde la última vez que lo leíste. */
+export const tieneMensajesNuevos = (g: ResumenGrupo, chatVisto: Vistos) => (g.ultimoChat ?? 0) > (chatVisto[g.id] ?? 0)
+
+/** Si alguno de tus grupos tiene novedades en el muro o mensajes nuevos (para el puntito de la barra). */
 export function useHayNovedadesEnGrupos(): boolean {
-  return useGrupos((s) => !!s.lista && s.lista.tuyos.some((g) => tieneNovedades(g, s.vistos)))
+  return useGrupos((s) => !!s.lista && s.lista.tuyos.some((g) => tieneNovedades(g, s.vistos) || tieneMensajesNuevos(g, s.chatVisto)))
 }
 
-async function pedir<T>(metodo: 'GET' | 'POST' | 'PUT', ruta: string, cuerpo?: unknown): Promise<T> {
+/** Si el chat de ese grupo tiene mensajes nuevos (para el puntito de su pestaña). */
+export function useChatConNuevos(grupo: string): boolean {
+  return useGrupos((s) => {
+    const g = s.lista?.tuyos.find((x) => x.id === grupo)
+    return !!g && tieneMensajesNuevos(g, s.chatVisto)
+  })
+}
+
+async function pedir<T>(metodo: 'GET' | 'POST' | 'PUT' | 'DELETE', ruta: string, cuerpo?: unknown): Promise<T> {
   const token = useCuenta.getState().token
   if (!token) throw new Error('Entrá a tu cuenta')
   const foto = cuerpo instanceof Blob
@@ -78,6 +101,13 @@ export const detalleGrupo = (id: string) => pedir<DetalleGrupo>('POST', '/grupos
 export const muroGrupo = (id: string) => pedir<MuroGrupo>('POST', '/grupos/muro', { id })
 /** La repetición de una partida del muro. */
 export const repeticionDeGrupo = (repeticion: string) => pedir<RepeticionPartida>('POST', '/grupos/repeticion', { repeticion })
+
+/** El chat del grupo: los últimos mensajes o, con `desde`, los que llegaron después de ese. */
+export const chatGrupo = (id: string, desde?: number) =>
+  pedir<{ mensajes: MensajeGrupo[] }>('GET', `/grupos/${id}/chat${desde ? `?desde=${desde}` : ''}`)
+/** Mandar al chat un texto o un emote (una seña). Devuelve el mensaje como quedó (el texto, filtrado). */
+export const mandarAlChat = (id: string, mensaje: { texto: string } | { senia: Senia }) => pedir<MensajeGrupo>('POST', `/grupos/${id}/chat`, mensaje)
+export const borrarDelChat = (id: string, mensaje: number) => pedir<{ ok: true }>('DELETE', `/grupos/${id}/chat/${mensaje}`)
 
 /** La dirección de la foto (con su versión, así la caché no muestra una vieja). */
 export const urlFotoGrupo = (id: string, version: number) => `${direccionApi()}/grupos/${id}/foto?v=${version}`
