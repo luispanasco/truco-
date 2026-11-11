@@ -8,7 +8,7 @@
  * está acá (fue el primero); los demás, en historias.ts.
  */
 
-import type { Formato } from '@truco/engine'
+import type { Formato, LARGOS_PARTIDA } from '@truco/engine'
 import type { Nivel } from '@truco/bots'
 import { buscarItem, idBaraja, idMesa, idPieza } from './tienda'
 import { PERSONAJES, piezaPorNombre, type Personaje } from './personajes'
@@ -65,7 +65,8 @@ export interface NivelHistoria {
   resumen: string
   formato: Formato
   nivelBots: Nivel
-  puntos: 15 | 30
+  /** A cuánto se juega: uno de los largos del motor (a 20, 30 o 40; "a 15" no existe). */
+  puntos: (typeof LARGOS_PARTIDA)[number]
   /** Los personajes rivales: el primero es el del departamento. */
   rivales: readonly string[]
   /** Tus compañeros (bots), en 2v2 y 3v3. */
@@ -108,7 +109,7 @@ const ROCHA: HistoriaDepartamento = {
       resumen: 'Pueblo de pescadores artesanales sobre el Atlántico, cerca de la frontera con Brasil.',
       formato: '1v1',
       nivelBots: 'facil',
-      puntos: 15,
+      puntos: 20,
       rivales: ['pescador'],
       companieros: [],
       recompensas: [pieza('sombrero', 'Gorro de pescador')],
@@ -132,7 +133,7 @@ const ROCHA: HistoriaDepartamento = {
       resumen: 'Balneario de olas y surf, con el faro del cabo Santa María.',
       formato: '2v2',
       nivelBots: 'medio',
-      puntos: 15,
+      puntos: 20,
       rivales: ['pescador', 'surfista'],
       companieros: ['hincha'],
       recompensas: [pieza('ropa', 'Impermeable amarillo')],

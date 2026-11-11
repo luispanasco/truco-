@@ -32,13 +32,13 @@ const enLaMano = (nombre: string) => pieza('accesorio', nombre)
 const final = (baraja: IdBaraja, mesa: IdMesa) => [idBaraja(baraja), idMesa(mesa)]
 
 type Plantilla = Pick<NivelHistoria, 'formato' | 'nivelBots' | 'puntos'>
-const nivel = (formato: Formato, nivelBots: Nivel, puntos: 15 | 30): Plantilla => ({ formato, nivelBots, puntos })
+const nivel = (formato: Formato, nivelBots: Nivel, puntos: NivelHistoria['puntos']): Plantilla => ({ formato, nivelBots, puntos })
 
 /** Formato, dificultad y puntos de cada nivel, según cuántos tiene el departamento. */
 export const PLANTILLAS: Record<3 | 4 | 5, readonly Plantilla[]> = {
-  3: [nivel('1v1', 'facil', 15), nivel('2v2', 'medio', 30), nivel('1v1', 'dificil', 30)],
-  4: [nivel('1v1', 'facil', 15), nivel('2v2', 'medio', 15), nivel('3v3', 'dificil', 30), nivel('1v1', 'muyDificil', 30)],
-  5: [nivel('1v1', 'facil', 15), nivel('2v2', 'medio', 15), nivel('1v1', 'dificil', 30), nivel('3v3', 'muyDificil', 30), nivel('1v1', 'master', 30)],
+  3: [nivel('1v1', 'facil', 20), nivel('2v2', 'medio', 30), nivel('1v1', 'dificil', 30)],
+  4: [nivel('1v1', 'facil', 20), nivel('2v2', 'medio', 20), nivel('3v3', 'dificil', 30), nivel('1v1', 'muyDificil', 30)],
+  5: [nivel('1v1', 'facil', 20), nivel('2v2', 'medio', 20), nivel('1v1', 'dificil', 30), nivel('3v3', 'muyDificil', 30), nivel('1v1', 'master', 30)],
 }
 
 interface Etapa {
