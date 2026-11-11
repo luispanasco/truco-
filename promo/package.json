@@ -7,7 +7,10 @@
     "estudio": "remotion studio src/index.ts --port=3123",
     "render": "remotion render src/index.ts Reel salida/truco-reel.mp4 --codec h264 --crf 16 --audio-bitrate 320k --port=3123",
     "render:sin-musica": "remotion render src/index.ts ReelSinMusica salida/truco-reel-sin-musica.mp4 --codec h264 --crf 16 --audio-bitrate 320k --port=3123",
-    "portada": "remotion still src/index.ts Reel salida/truco-portada.png --frame=880 --port=3123"
+    "portada": "remotion still src/index.ts Reel salida/truco-portada.png --frame=880 --port=3123",
+    "render:lanzamiento": "remotion render src/index.ts Lanzamiento salida/truco-lanzamiento.mp4 --codec h264 --crf 16 --audio-bitrate 320k --port=3131",
+    "render:lanzamiento:sin-musica": "remotion render src/index.ts LanzamientoSinMusica salida/truco-lanzamiento-sin-musica.mp4 --codec h264 --crf 16 --audio-bitrate 320k --port=3131",
+    "portada:lanzamiento": "remotion still src/index.ts Lanzamiento salida/truco-lanzamiento-portada.png --frame=1700 --port=3131"
   },
   "dependencies": {
     "@remotion/cli": "4.0.537",
