@@ -68,7 +68,7 @@ const UNA_Y_UNA: ManoGuiada = {
       mal: (m) =>
         m.tipo === 'carta' && m.carta.numero === 12
           ? 'El 12 de oros es una negra: no le gana a un 3. Buscá una mata.'
-          : 'Un 5 no le gana a un 3. El ancho de espadas sí: es la carta más alta de todas.',
+          : 'Un 5 no le gana a un 3. La espadilla sí: es la mata más alta. Solo las piezas le ganan, y acá no hay ninguna.',
     },
     {
       pide: '¡Lo mataste con la espadilla! La primera es tuya, así que empezás vos. Tirá el 12 de oros.',
@@ -174,7 +174,7 @@ const NO_SE_QUIERE: ManoGuiada = {
   guion: [
     { rival: TRUCO },
     {
-      pide: '¡Truco! Te lo canté de entrada. Mirá tus cartas: un 4, un 5 y un 6, de las más bajas. ¿Qué me contestás?',
+      pide: '¡Truco! Te lo grité de entrada. Mirá tus cartas: un 4, un 5 y un 6, de las más bajas. ¿Qué me contestás?',
       espera: NO_QUIERO,
       botones: [QUIERO, NO_QUIERO, TRUCO],
       mal: (m) =>
@@ -201,7 +201,7 @@ const VALE_CUATRO: ManoGuiada = {
       espera: carta(7, 'espada'),
       mal: (m) =>
         m.tipo === 'carta' && m.carta.numero === 1
-          ? 'Con la espadilla también lo matás, pero guardala: es la carta más alta y te va a servir después. Usá el 7 de espadas.'
+          ? 'Con la espadilla también lo matás, pero guardala: es la mata más alta y te va a servir después. Usá el 7 de espadas.'
           : 'El 5 no le gana a un 2. Usá el 7 de espadas.',
     },
     {
@@ -211,7 +211,7 @@ const VALE_CUATRO: ManoGuiada = {
     },
     { rival: TRUCO },
     {
-      pide: '¡Truco! Ganaste la primera y tenés la espadilla guardada: nadie te lo gana. ¿Qué me contestás?',
+      pide: '¡Truco! Ganaste la primera y tenés la espadilla guardada: es la mata más alta, solo una pieza te la gana. Y la muestra es de copas: de mis cartas no hay ninguna de copas. ¿Qué me contestás?',
       espera: QUIERO,
       botones: [QUIERO, NO_QUIERO],
       mal: (m) => (esCarta(m) ? 'Primero contestá el truco.' : 'Si no querés, me llevo 1. ¡Con la espadilla en la mano hay que querer!'),
@@ -287,7 +287,7 @@ function cantos(): Paso[] {
       opciones: ['Yo, que lo quise', 'Don Queiroz, que lo gritó', 'Cualquiera de los dos'],
       correcta: 0,
       bien: '¡Bien! Sube el que quiso el último canto: vos.',
-      mal: 'No: el que canta no puede subir su propio canto. Sube el que lo quiso: vos.',
+      mal: 'No: el que gritó no puede subir lo suyo. Sube el que lo quiso: vos.',
     },
     {
       tipo: 'pregunta',
@@ -345,7 +345,7 @@ const ENVIDO_VA_PRIMERO: ManoGuiada = {
       botones: [QUIERO, NO_QUIERO, ENVIDO],
       mal: (m) =>
         m.tipo === 'quiero'
-          ? 'Si querés el truco, el envido ya no se puede cantar. Primero el envido.'
+          ? 'Si querés el truco, el envido ya no se puede tocar. Primero el envido.'
           : m.tipo === 'noQuiero'
             ? 'Si no querés, se termina la mano y perdés el envido. ¡El envido va primero!'
             : 'Primero hay que contestar el truco… o tocar envido, que va primero.',
@@ -387,12 +387,12 @@ function envidoEnJuego(): Paso[] {
   return [
     {
       tipo: 'dice',
-      texto: 'El envido es otra apuesta, aparte de las vueltas: gana el que tiene más tanto. Cómo se cuenta ya lo vimos; ahora, cómo se canta.',
+      texto: 'El envido es otra apuesta, aparte de las vueltas: gana el que tiene más tanto. Cómo se cuenta ya lo vimos; ahora, cómo se toca.',
       pizarra: { dibujo: '🎲', leyenda: 'Una apuesta aparte' },
     },
     {
       tipo: 'dice',
-      texto: 'Se canta en la primera vuelta, en tu turno y antes de tirar tu carta. Después, ya no.',
+      texto: 'Se toca en la primera vuelta, en tu turno y antes de tirar tu carta. Después, ya no.',
       pizarra: { dibujo: '1️⃣', leyenda: 'Solo en la primera' },
     },
     {
@@ -446,8 +446,8 @@ function envidoEnJuego(): Paso[] {
       pregunta: 'Ya tiraste tu carta de la primera vuelta. ¿Podés tocar envido?',
       opciones: ['No: es antes de tirar', 'Sí, mientras dure la primera', 'Sí, en cualquier vuelta'],
       correcta: 0,
-      bien: 'Así es: el envido se canta antes de tirar tu carta de la primera.',
-      mal: 'No: una vez que tiraste tu carta de la primera, el envido ya no se canta.',
+      bien: 'Así es: el envido se toca antes de tirar tu carta de la primera.',
+      mal: 'No: una vez que tiraste tu carta de la primera, el envido ya no se toca.',
     },
   ]
 }

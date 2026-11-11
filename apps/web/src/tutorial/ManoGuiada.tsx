@@ -131,7 +131,7 @@ function Marcador({ v }: { v: Vista }) {
         : env.estado === 'cantado'
           ? `${cantos} sin contestar`
           : env.estado === 'querido'
-            ? `${cantos} querido: se cantan los tantos`
+            ? `${cantos} querido: se dicen los tantos`
             : env.estado === 'noQuerido'
               ? `${cantos} no querido: para ${quien(env.ganador!)}`
               : `${cantos}: lo gana ${quien(env.ganador!)}`
