@@ -2040,3 +2040,11 @@ Pedido del usuario: un video como el reel anterior, presentando el juego para el
   - En el Lobby, debajo de "Buscar rival".
   - Se pregunta cada 15 s mientras se ve (`useGente`).
 - **Tests:** server `gente.test.ts`; web `gente.test.ts`.
+
+## Lo bloqueado no se ve: la tienda solo con la vitrina del día, y en el Avatar solo los mazos y paños que tenés — 2026-11-11
+
+Pedido del usuario: que no se pueda ver lo bloqueado, solo lo disponible.
+
+- **Tienda:** se sacan los estantes con todo el catálogo por categoría. Quedan "¿Cómo gano monedas?", la destacada y la vitrina de hoy, y tu colección. Se borran `Estante` y `Ficha`; `armarEstantes` y `cuandoVuelve` siguen en `tienda/estantes.ts`, y el probador usa `cuandoVuelve` para lo de tu colección.
+- **Avatar › Mazo y Paño:** los carruseles muestran solo lo que tenés. No aparecen las mesas de la tienda sin comprar ni los mazos y mesas del modo historia sin ganar. Los beta y la tienda de prueba siguen viendo todo. Un grupo que queda vacío no se muestra.
+- **Tests:** mesas, tienda y tienda de prueba, ajustados a lo nuevo.

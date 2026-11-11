@@ -8,7 +8,7 @@ import { direccionApi, iniciarCuenta, useCuenta } from '../cuenta/cuenta'
 import { useInventario } from '../cuenta/inventario'
 import { estaPuesto, ponerItem } from '../tienda/items'
 import { Muestra } from '../tienda/Muestra'
-import { armarEstantes, cuandoVuelve } from '../tienda/estantes'
+import { cuandoVuelve } from '../tienda/estantes'
 import { ComoSeGanan, Moneda, Probador } from '../tienda/Probador'
 import '../estilos-mesas.css'
 import '../tienda/estilos-tienda.css'
@@ -56,10 +56,9 @@ interface Abierto {
 }
 
 /**
- * La tienda: arriba, cómo se ganan las monedas; la vitrina de hoy (lo único que se puede
- * comprar), con la destacada en una tarjeta y las otras cinco en una grilla; después los
- * estantes con todo el catálogo por categoría (lo que hoy no está dice cuándo vuelve) y, al
- * final, lo que ya compraste. Tocando cualquiera se abre el probador. Es la pantalla /tienda y el
+ * La tienda: arriba, cómo se ganan las monedas; la vitrina de hoy (lo único que se ve y se
+ * puede comprar: lo bloqueado no se muestra), con la destacada en una tarjeta y las otras cinco
+ * en una grilla; al final, lo que ya compraste. Tocando cualquiera se abre el probador. Es la pantalla /tienda y el
  * panel de la tienda en el menú. Sin cuenta, `alEntrar` abre el login ahí mismo (si no viene, se
  * manda al inicio).
  */
@@ -97,7 +96,6 @@ export function VitrinaDelDia({ alEntrar }: { alEntrar?: () => void }) {
   const destacada = vitrina?.items.at(-1)
   const resto = vitrina?.items.slice(0, -1) ?? []
   const deHoy = useMemo(() => new Set(vitrina?.items.map((i) => i.id) ?? []), [vitrina])
-  const estantes = useMemo(() => armarEstantes(CATALOGO_TIENDA), [])
   const proximas = useMemo(() => (vitrina ? proximasVitrinas(new Date(`${vitrina.dia}T12:00:00Z`)) : new Map<string, string>()), [vitrina])
   /** Abre el probador: si hoy no está en la vitrina, con cuándo vuelve. */
   const abrir = (item: ItemTienda) => {
@@ -152,21 +150,6 @@ export function VitrinaDelDia({ alEntrar }: { alEntrar?: () => void }) {
           </ul>
         </section>
       )}
-      {vitrina &&
-        estantes.map((e) => (
-          <Estante
-            key={e.titulo}
-            titulo={e.titulo}
-            items={e.items}
-            hoy={deHoy}
-            vuelve={(id) => {
-              const dia = proximas.get(id)
-              return dia ? cuandoVuelve(dia, vitrina.dia) : null
-            }}
-            orden={(id) => (deHoy.has(id) ? '' : (proximas.get(id) ?? '~'))}
-            alAbrir={abrir}
-          />
-        ))}
       <Coleccion alAbrir={abrir} />
       {abierto && <Probador item={abierto.item} vuelve={abierto.vuelve} alCerrar={() => setAbierto(null)} alEntrar={entrar} />}
       {comoGanar && (
@@ -181,92 +164,6 @@ export function VitrinaDelDia({ alEntrar }: { alEntrar?: () => void }) {
         </Hoja>
       )}
     </>
-  )
-}
-
-/** Cuántas fichas muestra un estante hasta que tocás "Ver todos". */
-const FICHAS_A_LA_VISTA = 12
-
-/**
- * Un estante: lo de hoy primero, después lo que vuelve antes (y lo que no se sabe, al final).
- * Muestra doce; el resto, con "Ver los N". Así la tienda no dibuja cientos de avatares de una vez.
- */
-function Estante({
-  titulo,
-  items,
-  hoy,
-  vuelve,
-  orden,
-  alAbrir,
-}: {
-  titulo: string
-  items: ItemTienda[]
-  hoy: ReadonlySet<string>
-  vuelve: (id: string) => string | null
-  /** Clave para ordenar: '' lo de hoy, el día AAAA-MM-DD de la próxima vez, '~' si no se sabe. */
-  orden: (id: string) => string
-  alAbrir: (i: ItemTienda) => void
-}) {
-  const [todos, setTodos] = useState(false)
-  const ordenados = useMemo(() => [...items].sort((a, b) => orden(a.id).localeCompare(orden(b.id))), [items, orden])
-  const visibles = todos ? ordenados : ordenados.slice(0, FICHAS_A_LA_VISTA)
-  return (
-    <section className="estante" aria-label={titulo}>
-      <h2 className="tienda-seccion">
-        {titulo} <small>{items.length}</small>
-      </h2>
-      <ul className="estante-carril">
-        {visibles.map((i) => (
-          <li key={i.id}>
-            <Ficha item={i} hoy={hoy.has(i.id)} vuelve={vuelve(i.id)} alAbrir={alAbrir} />
-          </li>
-        ))}
-        {!todos && ordenados.length > FICHAS_A_LA_VISTA && (
-          <li>
-            <button type="button" className="ficha ficha-mas" onClick={() => setTodos(true)}>
-              Ver los {ordenados.length}
-            </button>
-          </li>
-        )}
-      </ul>
-    </section>
-  )
-}
-
-/**
- * Una ficha de un estante: la pieza de cerca, su nombre y si es tuya, si está hoy en la vitrina o
- * cuándo vuelve. Tocándola se prueba.
- */
-function Ficha({ item, hoy, vuelve, alAbrir }: { item: ItemTienda; hoy: boolean; vuelve: string | null; alAbrir: (i: ItemTienda) => void }) {
-  const [perfil] = usePerfil()
-  const tenes = useInventario()
-  const tuyo = tenes.has(item.id)
-  const estado = tuyo ? 'Tuyo' : hoy ? 'Hoy en la vitrina' : vuelve ? `Vuelve ${vuelve}` : 'Vuelve más adelante'
-  return (
-    <button
-      type="button"
-      className={`ficha rareza-${item.rareza}${tuyo ? ' tuyo' : hoy ? ' hoy' : ''}`}
-      aria-label={`${item.nombre}, del estante. ${NOMBRE_RAREZA[item.rareza]}. ${estado}. Probar`}
-      onClick={() => alAbrir(item)}
-    >
-      <span className="ficha-muestra" aria-hidden="true">
-        <Muestra item={item} perfil={perfil} />
-      </span>
-      <span className="ficha-nombre" aria-hidden="true">
-        {item.nombre}
-      </span>
-      <span className={`ficha-estado${hoy && !tuyo ? ' hoy' : ''}`} aria-hidden="true">
-        {tuyo ? (
-          '✓ Tuyo'
-        ) : hoy ? (
-          <>
-            <Moneda /> {item.precio}
-          </>
-        ) : (
-          vuelve ?? 'más adelante'
-        )}
-      </span>
-    </button>
   )
 }
 

@@ -123,15 +123,11 @@ describe('estantes', () => {
     for (const dia of proximas.values()) expect(dia > '2026-11-10').toBe(true)
   })
 
-  it('lo que hoy no está en la vitrina se prueba pero no se compra, y dice cuándo vuelve', async () => {
+  it('solo se ve la vitrina del día: lo que hoy no está, no aparece', async () => {
     abrirTienda()
-    const pelo = await screen.findByRole('region', { name: 'Pelo' })
-    const ficha = within(pelo).getAllByRole('button', { name: /, del estante\./ })[0]!
-    expect(ficha.getAttribute('aria-label')).toMatch(/Vuelve (mañana|el .+)\. Probar$|Vuelve más adelante\. Probar$/)
-    fireEvent.click(ficha)
-    const probador = screen.getByRole('dialog')
-    expect(within(probador).getByText(/Hoy no está en la vitrina/)).toBeTruthy()
-    expect(within(probador).queryByRole('button', { name: /^Comprar/ })).toBeNull()
+    await screen.findByRole('region', { name: /Hoy en la vitrina/ })
+    expect(screen.queryByRole('region', { name: 'Pelo' })).toBeNull()
+    expect(screen.queryAllByRole('button', { name: /, del estante\./ })).toHaveLength(0)
   })
 
   it('"¿Cómo gano monedas?" cuenta las misiones', async () => {

@@ -78,20 +78,14 @@ describe('aplicar la mesa', () => {
 })
 
 describe('selector de mesas', () => {
-  it('muestra todas con su muestra; las de la tienda con candado y precio, sin poder elegirlas', () => {
+  it('solo muestra las que tenés: las de la tienda y las del modo historia no aparecen', () => {
     const elegidas: string[] = []
     render(<SelectorMesa valor="boliche" alCambiar={(m) => elegidas.push(m)} />)
     const grupo = screen.getByRole('radiogroup', { name: 'Mesa' })
-    const opciones = within(grupo).getAllByRole('radio')
-    expect(opciones).toHaveLength(MESAS.length)
-    for (const m of MESAS) expect(grupo.querySelector(`.muestra-mesa[data-mesa="${m.id}"]`)).toBeTruthy()
-
-    const cantina = within(grupo).getByRole('radio', { name: /Cantina: 800 monedas/ })
-    expect(cantina.getAttribute('aria-disabled')).toBe('true')
-    expect(cantina.querySelector('.candado')).toBeTruthy()
-    fireEvent.click(cantina)
-    expect(elegidas).toEqual([])
-    expect(screen.getByRole('status').textContent).toMatch(/800 monedas\. Buscala en la tienda/)
+    const libres = MESAS.filter((m) => mesaGratis(m.id))
+    expect(within(grupo).getAllByRole('radio')).toHaveLength(libres.length)
+    for (const m of libres) expect(grupo.querySelector(`.muestra-mesa[data-mesa="${m.id}"]`)).toBeTruthy()
+    expect(within(grupo).queryByRole('radio', { name: /Cantina/ })).toBeNull()
 
     fireEvent.click(within(grupo).getByRole('radio', { name: 'Azul' }))
     expect(elegidas).toEqual(['azul'])
@@ -113,9 +107,7 @@ describe('selector de mesas', () => {
     expect(document.documentElement.dataset.mesa).toBe('azul')
     expect(leerPerfil().mesa).toBe('azul')
     expect(within(grupo).getByRole('radio', { name: 'Azul' }).getAttribute('aria-checked')).toBe('true')
-    // Una de la tienda no cambia nada.
-    fireEvent.click(within(grupo).getByRole('radio', { name: /Bordó/ }))
-    expect(document.documentElement.dataset.mesa).toBe('azul')
-    expect(leerPerfil().mesa).toBe('azul')
+    // Las de la tienda (sin comprar) ni aparecen.
+    expect(within(grupo).queryByRole('radio', { name: /Bordó/ })).toBeNull()
   })
 })

@@ -94,9 +94,8 @@ describe('desbloquear la tienda (prueba)', () => {
     guardar({})
     inicio()
     expect((interruptorTienda() as HTMLInputElement).checked).toBe(false)
-    // Con la tienda cerrada, Bordó no se elige.
-    fireEvent.click(within(mesas()).getByRole('radio', { name: /Bordó/ }))
-    expect(leerPerfil().mesa).toBe('boliche')
+    // Con la tienda cerrada, Bordó ni aparece.
+    expect(within(mesas()).queryByRole('radio', { name: /Bordó/ })).toBeNull()
 
     fireEvent.click(interruptorTienda())
     expect(leerPerfil().tiendaDesbloqueada).toBe(true)
@@ -112,7 +111,7 @@ describe('desbloquear la tienda (prueba)', () => {
     expect(leerPerfil().tiendaDesbloqueada).toBe(false)
     expect(leerPerfil().mesa).toBe('boliche')
     expect(document.documentElement.dataset.mesa).toBe('boliche')
-    expect(within(mesas()).getByRole('radio', { name: /Bordó: 800 monedas/ }).getAttribute('aria-disabled')).toBe('true')
+    expect(within(mesas()).queryByRole('radio', { name: /Bordó/ })).toBeNull()
   }, 15_000) // Arma las muestras de las 26 mesas: con la suite completa en paralelo tarda más de 5 s.
 
   it('al apagarlo, las piezas pagas del avatar vuelven a las gratis', () => {
