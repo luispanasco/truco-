@@ -1,4 +1,8 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { PESCAR_SENIAS_DISPONIBLE } from '@truco/shared'
+import { HojaReporte } from '../componentes/HojaReporte'
+import { useCuenta } from '../cuenta/cuenta'
 import { AjustesSonido } from '../componentes/AjustesSonido'
 import { SelectorCartasJugadas } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
@@ -17,6 +21,9 @@ export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Part
   /** Prendida, todo lo pago se elige; apagada, lo pago que tuvieras vuelve a lo gratis. */
   const cambiarTienda = (tiendaDesbloqueada: boolean) =>
     cambiar({ tiendaDesbloqueada, ...cosmeticosPermitidos({ ...perfil, tiendaDesbloqueada }) })
+  const [reportando, setReportando] = useState(false)
+  const admin = useCuenta((s) => s.cuenta?.admin === true)
+  const navegar = useNavigate()
 
   return (
     <div className="ajustes">
@@ -98,6 +105,22 @@ export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Part
           />
         </section>
       )}
+
+      {/* Para los testers: lo que pase fuera de una partida (en la mesa, está en el menú de la ✕). */}
+      <section className="tarjeta ajustes-ayuda" aria-labelledby="ajustes-ayuda">
+        <h2 id="ajustes-ayuda">
+          <span aria-hidden="true">🐞</span> ¿Algo anda mal?
+        </h2>
+        <button type="button" className="boton boton-secundario" onClick={() => setReportando(true)}>
+          🐞 Reportar un problema
+        </button>
+        {admin && (
+          <button type="button" className="boton boton-secundario" onClick={() => navegar('/admin/reportes')}>
+            📋 Ver los reportes (admin)
+          </button>
+        )}
+      </section>
+      {reportando && <HojaReporte fija alCerrar={() => setReportando(false)} />}
 
       {/* Al final, como en cualquier app: entrar o salir de la cuenta. */}
       <TarjetaCuenta sinEnlaces />

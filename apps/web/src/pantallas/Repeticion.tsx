@@ -6,6 +6,7 @@ import { Carta } from '../componentes/Carta'
 import { CabeceraOnline } from '../componentes/Online'
 import { iniciarCuenta, useCuenta } from '../cuenta/cuenta'
 import { repeticionDeGrupo } from '../cuenta/grupos'
+import { repeticionDeReporte } from '../reportes'
 import '../estilos-grupos.css'
 
 const NOMBRE_FORMATO = { '1v1': '1 vs 1', '2v2': '2 vs 2', '3v3': '3 vs 3' } as const
@@ -15,9 +16,10 @@ const PASO_MS = 1100
 /**
  * La repetición de una partida del muro de un grupo: se vuelve a jugar con el motor (con la semilla
  * y las acciones) y se ve con las cartas de todos boca arriba: la muestra, las vueltas de la mano y
- * lo que va pasando. Se avanza de a una jugada, de a una mano o sola.
+ * lo que va pasando. Se avanza de a una jugada, de a una mano o sola. Con `deReporte`, la partida
+ * de un reporte de problema (solo el admin).
  */
-export function Repeticion() {
+export function Repeticion({ deReporte = false }: { deReporte?: boolean }) {
   const { id = '' } = useParams()
   const navegar = useNavigate()
   const estado = useCuenta((s) => s.estado)
@@ -28,8 +30,8 @@ export function Repeticion() {
   useEffect(() => void iniciarCuenta(), [])
   useEffect(() => {
     if (estado !== 'adentro') return
-    repeticionDeGrupo(id).then(setDatos, (e: unknown) => setError(e instanceof Error ? e.message : 'No se pudo traer la repetición'))
-  }, [estado, id])
+    ;(deReporte ? repeticionDeReporte(id) : repeticionDeGrupo(id)).then(setDatos, (e: unknown) => setError(e instanceof Error ? e.message : 'No se pudo traer la repetición'))
+  }, [estado, id, deReporte])
   const pasos = useMemo(() => (datos ? pasosDeRepeticion(datos) : []), [datos])
   // Dónde empieza cada mano (para saltar de a una).
   const manos = useMemo(() => pasos.flatMap((p, k) => (k === 0 || p.estado.mano.numero !== pasos[k - 1]!.estado.mano.numero ? [k] : [])), [pasos])

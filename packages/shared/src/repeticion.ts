@@ -15,7 +15,8 @@ export interface RepeticionPartida {
   config: ConfigSala
   jugadores: { asiento: number; apodo: string; bot: boolean }[]
   acciones: { asiento: number; accion: Accion }[]
-  resultado: { ganador: 0 | 1; puntos: [number, number] }
+  /** null: la partida no terminó (la de un reporte de problema). */
+  resultado: { ganador: 0 | 1; puntos: [number, number] } | null
 }
 
 /** Un paso de la repetición: el estado después de una acción (el primero, el del reparto). */

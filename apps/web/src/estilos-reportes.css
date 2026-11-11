@@ -1,0 +1,113 @@
+/* ── Reportar un problema (hoja) y la lista del admin ─────────── */
+
+.hoja.hoja-reporte {
+  max-height: 92%;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.reporte-form {
+  display: grid;
+  gap: 12px;
+}
+.reporte-tipos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.reporte-tipos button {
+  flex: 1 1 40%;
+  padding: 10px 8px;
+  border: 0;
+  border-radius: var(--radio);
+  background: rgb(255 255 255 / 0.12);
+  color: var(--texto-claro);
+  font: inherit;
+  font-size: 0.9rem;
+}
+.reporte-tipos button.elegido {
+  background: var(--acento);
+  color: var(--tinta);
+  font-weight: 700;
+}
+.reporte-form textarea {
+  padding: 10px 12px;
+  border-radius: var(--radio);
+  border: 0;
+  font: inherit;
+  font-size: 0.95rem;
+  background: var(--papel);
+  color: var(--tinta);
+  resize: vertical;
+}
+.reporte-gracias {
+  display: grid;
+  gap: 14px;
+  padding: 10px 0 4px;
+  text-align: center;
+  color: var(--papel);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.reporte-gracias p {
+  margin: 0;
+}
+
+/* En el menú de la ✕ de la mesa. */
+.modal-reportar {
+  display: block;
+  margin: 14px auto 0;
+  padding: 6px 10px;
+  border: 0;
+  background: none;
+  color: var(--texto-claro);
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+/* Ajustes: la tarjeta de ayuda. */
+.ajustes-ayuda {
+  display: grid;
+  gap: 8px;
+}
+
+/* La lista del admin. */
+.lista-reportes {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.reporte-item {
+  display: grid;
+  gap: 4px;
+}
+.reporte-item-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+}
+.reporte-tipo {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--acento);
+  color: var(--tinta);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.reporte-item small {
+  opacity: 0.75;
+}
+.reporte-descripcion {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.reporte-item .boton {
+  justify-self: start;
+}

@@ -1,4 +1,4 @@
-import type { IdDepartamento, MensajesCliente, MensajesServidor } from '@truco/shared'
+import type { IdDepartamento, MensajesCliente, MensajesServidor, RepeticionPartida } from '@truco/shared'
 
 export type MensajeServidor = {
   [K in keyof MensajesServidor]: { tipo: K; datos: MensajesServidor[K] }
@@ -20,6 +20,8 @@ export interface Conexion {
   /** Estado de la conexión (solo online). Devuelve una función para dejar de escuchar. */
   observarEstado?(oyente: (e: EstadoConexion) => void): () => void
   salir(): void
+  /** Solo local: la partida hasta ahora, para reportar un problema (online la arma el servidor). */
+  repeticion?(): RepeticionPartida | null
   /** Si es un nivel del modo historia: la mesa es la del lugar y, al ganar, se anota. */
   readonly historia?: NivelJugado
   /** Si es el examen del tutorial (contra la compu): al ganar, te recibís. */

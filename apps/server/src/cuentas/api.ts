@@ -8,7 +8,7 @@ import { ranking } from './elo'
 import { comprar, CompraRechazada, inventario, vitrina } from './tienda'
 import { agregarAmigo, AmigosRechazo, borrarAmigo, invitarAmigo, listaDeAmigos, responderSolicitud } from './amigos'
 import { Presencia } from './presencia'
-import { MAX_BYTES_FOTO_GRUPO } from '@truco/shared'
+import { MAX_BYTES_FOTO_GRUPO, MAX_BYTES_REPORTE } from '@truco/shared'
 import {
   borrarGrupo,
   cambiarRol,
@@ -32,6 +32,7 @@ import {
 import { invitarAlGrupo, muroDeGrupo, repeticion } from './muro'
 import { cobrarMision, MisionRechazo, misiones } from './misiones'
 import { recibirse } from './tutorial'
+import { guardarReporte, LimiteReportes, listarReportes, reporteCompleto, ReporteRechazo, repeticionDeReporte } from './reportes'
 
 export interface Cuentas {
   base: Base
@@ -59,6 +60,24 @@ export function rutasCuentas(c: Cuentas | null): Router {
     })
     if (req.method === 'OPTIONS') return void res.sendStatus(204)
     siguiente()
+  })
+  // Los reportes de problemas traen la partida (pesan más): van antes del límite de 16 kB.
+  const limiteReportes = new LimiteReportes()
+  r.post('/reportes', express.json({ limit: MAX_BYTES_REPORTE }), async (req, res) => {
+    if (!c) return void res.status(503).json({ motivo: 'Los reportes no están configurados' })
+    const token = /^Bearer (.+)$/.exec(req.get('authorization') ?? '')?.[1]
+    const u = token ? await c.verificar(token) : null
+    const invitado = (req.body as { invitadoId?: unknown } | undefined)?.invitadoId
+    const ip = req.get('fly-client-ip') ?? req.ip ?? 'sin-ip'
+    const claves = [`ip:${ip}`, ...(typeof invitado === 'string' ? [`inv:${invitado.slice(0, 64)}`] : [])]
+    if (!limiteReportes.permitir(claves)) return void res.status(429).json({ motivo: 'Mandaste muchos reportes seguidos. Probá en un rato.' })
+    try {
+      res.json({ id: await guardarReporte(c.base, req.body, u?.id ?? null) })
+    } catch (e) {
+      if (e instanceof ReporteRechazo) return void res.status(e.estado).json({ motivo: e.message })
+      console.error(e)
+      res.status(500).json({ motivo: 'Falló la base de datos' })
+    }
   })
   r.use(express.json({ limit: '16kb' }))
 
@@ -300,6 +319,42 @@ export function rutasCuentas(c: Cuentas | null): Router {
       res.status(500).json({ motivo: 'Falló la base de datos' })
     }
   })
+
+  // Los reportes de problemas: solo el admin los ve.
+  const soloAdmin =
+    (fn: (req: Request, res: Response, c: Cuentas, u: Usuario) => Promise<void>) => async (req: Request, res: Response, c: Cuentas, u: Usuario) => {
+      if (!esAdmin(u.email)) return void res.status(403).json({ motivo: 'Solo para el admin' })
+      try {
+        await fn(req, res, c, u)
+      } catch (e) {
+        if (!(e instanceof ReporteRechazo)) throw e
+        res.status(e.estado).json({ motivo: e.message })
+      }
+    }
+  r.get(
+    '/reportes',
+    conSesion(
+      soloAdmin(async (_req, res, c) => {
+        res.json({ reportes: await listarReportes(c.base) })
+      }),
+    ),
+  )
+  r.get(
+    '/reportes/:id',
+    conSesion(
+      soloAdmin(async (req, res, c) => {
+        res.json(await reporteCompleto(c.base, req.params.id))
+      }),
+    ),
+  )
+  r.get(
+    '/reportes/:id/repeticion',
+    conSesion(
+      soloAdmin(async (req, res, c) => {
+        res.json(await repeticionDeReporte(c.base, req.params.id))
+      }),
+    ),
+  )
 
   r.put(
     '/perfil',

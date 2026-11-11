@@ -45,6 +45,7 @@ import {
   type InfoSala,
   type MensajesCliente,
   type MensajesServidor,
+  type RepeticionPartida,
   type TirarReyes,
 } from '@truco/shared'
 import {
@@ -128,6 +129,9 @@ export class ConexionLocal implements Conexion {
   /** En el modo historia, lo que dicen en la mesa (el rival te cancherea, tus compañeros te alientan). */
   private charla: CharlaDeMesa | null = null
   private configSenias: ConfigSenias
+  /** Para reportar un problema: con qué arrancó la partida y cada acción en orden (se repite igual). */
+  private inicio = { fecha: '', reparte: 0 }
+  private acciones: { asiento: number; accion: Accion }[] = []
 
   readonly historia?: NivelJugado
   readonly examen?: boolean
@@ -149,6 +153,20 @@ export class ConexionLocal implements Conexion {
 
   enviar<K extends keyof MensajesCliente>(tipo: K, datos: MensajesCliente[K]) {
     this.diferir(() => this.recibir(tipo, datos))
+  }
+
+  /** La partida hasta ahora, como una repetición (para el reporte de un problema). */
+  repeticion(): RepeticionPartida | null {
+    if (!this.estado) return null
+    return {
+      fecha: this.inicio.fecha,
+      semilla: this.semilla,
+      reparte: this.inicio.reparte,
+      config: this.config,
+      jugadores: this.estado.jugadores.map((j, a) => ({ asiento: a, apodo: this.nombre(a), bot: !!j.bot })),
+      acciones: [...this.acciones],
+      resultado: this.estado.ganador !== null ? { ganador: this.estado.ganador, puntos: this.estado.puntos } : null,
+    }
   }
 
   salir() {
@@ -250,6 +268,8 @@ export class ConexionLocal implements Conexion {
       config: this.config,
       reparte,
     })
+    this.inicio = { fecha: new Date().toISOString(), reparte }
+    this.acciones = []
     this.claveMano = ''
     this.emitir('sala', this.infoSala())
     this.revisarNuevaMano()
@@ -297,8 +317,10 @@ export class ConexionLocal implements Conexion {
     if (lider === null || lider === turno || lider === 0 || e.ordenes.some((o) => o.asiento === turno)) return false
     const que = this.bots[lider]!.ordenar(vistaPara(estado, id(lider)), this.senias[lider], turno)
     if (!que) return false
-    const r = apply(estado, { tipo: 'mandar', jugador: id(lider), a: turno, que })
+    const accion: Accion = { tipo: 'mandar', jugador: id(lider), a: turno, que }
+    const r = apply(estado, accion)
     if (!r.ok) return false
+    this.acciones.push({ asiento: lider, accion })
     this.estado = r.estado
     this.difundir(r.eventos)
     return true
@@ -370,8 +392,10 @@ export class ConexionLocal implements Conexion {
   }
 
   private aplicar(asiento: number, accion: Accion): string | null {
-    const r = apply(this.estado, { ...accion, jugador: id(asiento) } as Accion)
+    const conJugador = { ...accion, jugador: id(asiento) } as Accion
+    const r = apply(this.estado, conJugador)
     if (!r.ok) return r.motivo
+    this.acciones.push({ asiento, accion: conJugador })
     this.estado = r.estado
     if (r.estado.ganador !== null) {
       this.terminada = true

@@ -93,6 +93,8 @@ import { inventario } from './cuentas/tienda'
 import { ganarNivel, HistoriaRechazo } from './cuentas/historia'
 import type { EnSala } from './cuentas/presencia'
 import { VozDeSala } from './voz'
+import { salasVivas } from './salasVivas'
+import type { RepeticionPartida } from '@truco/shared'
 
 export interface Tiempos {
   /**
@@ -319,6 +321,24 @@ export class SalaTruco extends Room {
     this.maxClients = margenConexiones(this.lugares.length)
     this.registrarMensajes()
     this.revisarCierre()
+    salasVivas.set(this.roomId, this)
+  }
+
+  /** Para un reporte de problema: la partida registrada (en curso o la última), solo a quien jugó en ella. */
+  repeticionPara(quien: { invitadoId: string; cuentaId: string | null }): RepeticionPartida | null {
+    const r = this.registro
+    if (!r) return null
+    const jugo = r.jugadores.some((j) => j.invitadoId === quien.invitadoId || (quien.cuentaId !== null && j.cuentaId === quien.cuentaId))
+    if (!jugo) return null
+    return {
+      fecha: r.inicio,
+      semilla: r.semilla,
+      reparte: r.reparte,
+      config: r.config,
+      jugadores: r.jugadores.map((j) => ({ asiento: j.asiento, apodo: j.apodo, bot: j.tipo === 'bot' })),
+      acciones: r.acciones.map((a) => ({ asiento: a.asiento, accion: a.accion })),
+      resultado: r.resultado && !('abandonada' in r.resultado) ? r.resultado : null,
+    }
   }
 
   /** Con un token de sesión, se verifica la cuenta; sin token se entra como invitado. */
@@ -430,6 +450,7 @@ export class SalaTruco extends Room {
   private enSala: EnSala = { codigo: null, jugando: () => this.fase !== 'esperando' }
 
   override onDispose() {
+    if (salasVivas.get(this.roomId) === this) salasVivas.delete(this.roomId)
     for (const l of this.lugares) if (l.cuentaId) this.cuentas?.presencia?.salirDeSala(l.cuentaId, this.enSala)
     this.limpiarTimer('timerJuego')
     this.limpiarTimer('timerCierre')

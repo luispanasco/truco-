@@ -1,6 +1,18 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
+
+/** La versión que viaja en los reportes de problemas: el commit y el día del build. */
+function versionApp(): string {
+  let commit = 'sin-git'
+  try {
+    commit = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+  } catch {
+    // Sin git (un build desde un zip): queda solo la fecha.
+  }
+  return `${commit} (${new Date().toISOString().slice(0, 10)})`
+}
 
 /**
  * El servidor de juego (puerto 2567) se alcanza por la misma dirección de la página,
@@ -113,6 +125,7 @@ const pwa = VitePWA({
 
 export default defineConfig({
   plugins: [react(), pwa],
+  define: { __VERSION_APP__: JSON.stringify(versionApp()) },
   // Los links de los túneles de Cloudflare (pnpm compartir) cambian cada vez.
   server: { port: 5173, proxy, allowedHosts: ['.trycloudflare.com'] },
   preview: { proxy, allowedHosts: ['.trycloudflare.com'] },
