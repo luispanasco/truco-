@@ -1962,3 +1962,36 @@ Para el lanzamiento (MVP): la mesa de Rocha y dos dorsos de las muestras que man
 - **CSS:** `--tapete-marco` (por defecto `none`) en la mesa, en la mesa en perspectiva y en las muestras de mesa.
 - **Dorsos:** Artigas y Salto, con una moneda grande al centro.
 - **Mapa del departamento:** el camino entre los niveles ahora es punteado, dorado en los tramos ganados y claro en los que faltan. Antes salía sólido porque la animación del largo pisaba el punteado.
+
+## Tutorial "Aprendé a jugar" completo: las 11 lecciones, el examen y el diploma; partidas a 20 en el modo historia — 2026-11-11
+
+Para el lanzamiento de hoy. Las etapas 2 a 4 del tutorial se hicieron en paralelo (tres agentes, cada uno en su worktree) y se juntaron en develop.
+
+- **El envido y la flor** (`lecciones-tanto.ts`, `EjerciciosTanto.tsx`, `manosTanto.ts`):
+  - el alumno calcula y **carga** el número con un teclado, sin y con piezas;
+  - si se equivoca, Don Queiroz hace la cuenta paso a paso;
+  - "¿tiene flor?" con manos que engañan.
+  - El valor correcto lo da siempre el motor (`calcularEnvido`, `calcularFlor` con la regla de la config).
+- **Las vueltas, los cantos y el envido en juego** (`guion.ts`, `ManoGuiada.tsx`, `lecciones-mano.ts`):
+  - siete manos guiadas con el motor de verdad y las cartas armadas (`repartoFijo`);
+  - Don Queiroz juega con un guion y explica;
+  - si el alumno hace otra cosa, cuenta error y puede reintentar.
+  - Cubren las pardas, truco, retruco, vale cuatro, no querer, "el envido va primero", la falta y los tantos declarados.
+- **En equipo** (`lecciones-equipo.ts`, `EjerciciosEquipo.tsx`):
+  - la mesa de 2v2 y 3v3;
+  - siete señas hechas por Don Queiroz con su cara, y "¿qué seña te hizo?";
+  - el pie: tira las reglas y el toque es suyo.
+- **El examen** (`Examen.tsx`, `conexionExamen`):
+  - 1v1 contra la compu en fácil, a 20, con ayudas;
+  - Don Queiroz en un cartel al empezar;
+  - ganando te recibís con 3 estrellas; perdiendo, revancha.
+- **Diploma y premio** (`/aprender/diploma`):
+  - "Te recibiste de truquero", 300 monedas y los Naipes, que pasan a ser exclusivos: ya no se venden, y quien los tenía los conserva.
+  - Se cobra con `POST /api/tutorial/recibirse` (misión de una vez `recibirse`, sin migración).
+  - Sin cuenta, el diploma queda en el dispositivo y se cobra solo al entrar (`vigilarDiploma`).
+- **Modo historia:** los niveles que iban a 15 pasan a 20 (10 malas y 10 buenas): a 15 no se juega. `NivelHistoria.puntos` ahora es uno de `LARGOS_PARTIDA`.
+- **Tests:**
+  - web 431 (los de avatar y señas que fallan por tiempo con la máquina cargada pasan solos);
+  - server 133;
+  - e2e del tutorial y del modo historia.
+- **Para publicar:** el servidor (la ruta del diploma) y después la web.
