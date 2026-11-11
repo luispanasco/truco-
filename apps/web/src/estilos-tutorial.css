@@ -332,3 +332,64 @@
 .tutorial-pizarra-contenido .tutorial-cartas .carta-grande {
   --ancho: min(18vw, 76px);
 }
+
+/* Envido y flor: la mano con la muestra al costado, y el teclado para cargar el tanto. */
+.tutorial-mano-tanto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.tutorial-mano-tanto .tutorial-cartas {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+.tutorial-cargar {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+}
+.tutorial-cargar-numero {
+  display: block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--fuente-titulo);
+  font-size: 2rem;
+  line-height: 1.2;
+  text-align: center;
+}
+.tutorial-cargar-numero.bien {
+  box-shadow: 0 0 0 4px var(--exito);
+}
+.tutorial-cargar-numero.mal {
+  box-shadow: 0 0 0 4px var(--peligro);
+}
+.tutorial-cargar-numero small {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--exito);
+}
+.tutorial-teclado {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.tutorial-teclado .boton {
+  min-height: 44px;
+  padding: 0;
+  font-size: 1.2rem;
+}
+.tutorial-teclado-cargar {
+  grid-column: span 4;
+}
+.tutorial-si-no {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  max-width: 340px;
+}
