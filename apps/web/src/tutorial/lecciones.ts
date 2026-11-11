@@ -1,5 +1,6 @@
 import { esPieza, type Carta } from '@truco/engine'
 import type { IdLeccion } from '@truco/shared'
+import { envido, flor } from './lecciones-tanto'
 import { cartasConPalo, cartasConPiezas, ESCALERA, muestraAlAzar, muestraPieza, type Azar } from './cartas'
 
 /**
@@ -24,6 +25,10 @@ export type Paso =
   | { tipo: 'comparar'; consigna: string; rondas: number; conMuestra: boolean }
   /** Rondas de ordenar tres cartas de la mejor a la peor, con muestra. */
   | { tipo: 'ordenar'; consigna: string; rondas: number }
+  /** Rondas de cargar el envido o la flor de una mano (con o sin muestra). */
+  | { tipo: 'cargar'; consigna: string; que: 'envido' | 'flor'; rondas: number; conMuestra: boolean }
+  /** Rondas de "¿tiene flor o no?", con muestra. */
+  | { tipo: 'tieneFlor'; consigna: string; rondas: number }
 
 const c = (numero: Carta['numero'], palo: Carta['palo']): Carta => ({ numero, palo })
 
@@ -135,6 +140,10 @@ export function pasosDe(id: IdLeccion, azar: Azar = Math.random): Paso[] | null 
       return JERARQUIA
     case 'piezas':
       return piezas(azar)
+    case 'envido':
+      return envido()
+    case 'flor':
+      return flor()
     default:
       return null
   }
