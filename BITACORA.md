@@ -1995,3 +1995,23 @@ Para el lanzamiento de hoy. Las etapas 2 a 4 del tutorial se hicieron en paralel
   - server 133;
   - e2e del tutorial y del modo historia.
 - **Para publicar:** el servidor (la ruta del diploma) y después la web.
+
+## Reportar un problema, recorrido de bienvenida y lanzamiento — 2026-11-11
+
+- **Reportar un problema** (para los testers):
+  - **Dónde:** en la mesa (la ✕ › "🐞 Reportar un problema") y en Ajustes.
+  - **Qué se carga:** el tipo (reglas o puntos mal, se trabó, un bot hizo algo raro, se ve mal, otro) y una descripción opcional.
+  - **Qué se adjunta solo:**
+    - en las partidas locales, la repetición (`ConexionLocal` ahora guarda las acciones);
+    - en las online, la del servidor, si la sala sigue abierta (`salasVivas.ts`);
+    - siempre, la vista, el registro, la versión (`__VERSION_APP__`), el dispositivo y la pantalla.
+  - **Servidor:** `POST /api/reportes`, con o sin cuenta, hasta 1 MB y 10 por hora. Va a la tabla `reportes` (migración 14).
+  - **Admin:** `/admin/reportes` con "Ver la partida" en el visor de repeticiones.
+- **Recorrido de bienvenida** (`src/recorrido/`):
+  - Don Queiroz recorre el menú en 11 pasos: la pantalla se oscurece, queda iluminado lo que explica y el menú se mueve solo.
+  - En la primera partida local, 5 pasos (6 en equipo) sobre la mesa. El juego espera (`esperarAlRepartir` y `seguir` en `ConexionLocal`). Online no sale.
+  - Solo sale la primera vez, y no a quien ya usaba la app. Se vuelve a ver desde Ajustes.
+- **Lanzamiento:**
+  - servidor publicado en Fly (una máquina, `api/estado` bien);
+  - develop pasa a main.
+- **Tests:** web 442, server 139, y los e2e de recorrido, menú, local, online, tutorial y modo historia.
