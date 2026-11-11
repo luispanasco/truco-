@@ -1293,7 +1293,12 @@ button.selector-modo-detalle:hover {
 .hoja.hoja-visor-mazo {
   height: 90dvh;
 }
-.visor-barajas button,
+.visor-baraja {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
 .visor-palos button {
   padding: 8px 2px;
   font-size: 0.85rem;

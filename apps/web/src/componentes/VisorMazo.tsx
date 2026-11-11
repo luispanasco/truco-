@@ -53,34 +53,19 @@ export function cartasDelPalo(palo: Palo, soloLasQueMandan: boolean): CartaDelVi
   return todas.filter((c) => c.etiqueta !== null).sort((a, b) => fuerza(b.carta, muestra) - fuerza(a.carta, muestra))
 }
 
-/**
- * Para ver las cartas de una baraja de a un palo (pestañas arriba). Arranca con la baraja que
- * usás, pero se puede mirar cualquiera, también las de la tienda antes de comprarlas.
- */
-export function VisorMazo({ baraja: inicial, alCerrar }: { baraja: Baraja; alCerrar: () => void }) {
-  const [baraja, setBaraja] = useState(inicial)
+/** Para ver las cartas de la baraja que usás, de a un palo (pestañas arriba). */
+export function VisorMazo({ baraja, alCerrar }: { baraja: Baraja; alCerrar: () => void }) {
   const [palo, setPalo] = useState<Palo>('espada')
   const [soloLasQueMandan, setSoloLasQueMandan] = useState(false)
-  const credito = BARAJAS.find((b) => b.id === baraja)?.credito
+  const datos = BARAJAS.find((b) => b.id === baraja)
   const cartas = cartasDelPalo(palo, soloLasQueMandan)
   return (
     <Hoja titulo="Las cartas del mazo" alCerrar={alCerrar} clase="hoja-menu hoja-visor-mazo" claseFondo="hoja-fija">
       <div className="hoja-menu-contenido visor-mazo">
-        <div className="segmentado visor-barajas" role="radiogroup" aria-label="Baraja que mirás">
-          {BARAJAS.map((b) => (
-            <button
-              key={b.id}
-              type="button"
-              role="radio"
-              aria-checked={baraja === b.id}
-              className={baraja === b.id ? 'elegido' : ''}
-              onClick={() => setBaraja(b.id)}
-            >
-              {b.corto[0]!.toUpperCase() + b.corto.slice(1)}
-            </button>
-          ))}
-        </div>
-        {credito && <p className="baraja-comparar-credito">{credito}</p>}
+        <p className="visor-baraja">
+          <strong>{datos?.nombre}</strong>
+          {datos?.credito && <small className="baraja-comparar-credito">{datos.credito}</small>}
+        </p>
         <div className="segmentado visor-palos" role="radiogroup" aria-label="Palo">
           {PALOS_VISOR.map((p) => (
             <button

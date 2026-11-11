@@ -45,6 +45,9 @@ S = 2  # se dibuja al doble y se achica al final
 ADENTRO = (22, 27, 378, 573)
 NUMEROS = ((22, 27, 67, 107), (333, 493, 378, 573))
 ZONA = (40, 110, 360, 490)
+# Los ases, más chicos que toda la zona: llenándola quedaban fuera de proporción (el 1 de copa
+# tapaba la carta y se pegaba a los números). Ocupan más o menos lo que en una baraja de verdad.
+ZONA_AS = (85, 150, 315, 450)
 CENTRO = (200, 300)
 
 PALOS = ('oro', 'copa', 'espada', 'basto')
@@ -240,7 +243,7 @@ def papel_del_mazo(carpeta):
 def capa_de(objetos, palo, n):
     capa = np.zeros((ALTO * S, ANCHO * S, 4), np.float32)
     if n == 1:
-        encajar(capa, objetos[f'as-{palo}'], ZONA)
+        encajar(capa, objetos[f'as-{palo}'], ZONA_AS)
     elif palo in ('oro', 'copa'):
         for x, y, t in oros_copas(n):
             poner(capa, objetos[palo], x, y, t, medida='lado' if palo == 'oro' else 'alto')

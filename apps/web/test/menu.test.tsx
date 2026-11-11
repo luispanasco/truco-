@@ -224,10 +224,8 @@ describe('pantalla Avatar', () => {
     fireEvent.click(visor.getByRole('radio', { name: 'Espada' }))
     expect(cartas()).toEqual(['2', '4', '5', '11', '10', '1', '7'].map((n) => `${n} de espadas`))
     expect(visor.getByText('Perico')).toBeTruthy()
-    // Se mira cualquier baraja sin cambiar la tuya.
-    fireEvent.click(visor.getByRole('radio', { name: 'El Cid' }))
-    expect(visor.getAllByRole('listitem')[0]!.querySelector('img')!.getAttribute('src')).toMatch(/cid-1888\/2-espada\.webp$/)
-    expect(leerPerfil().baraja).toBe('propia')
+    // Solo se ve la baraja que usás (no hay selector de barajas).
+    expect(visor.queryByRole('radiogroup', { name: 'Baraja que mirás' })).toBeNull()
     // Sin ser admin no están los personajes.
     expect(avatar.queryByRole('heading', { name: 'Personajes del modo historia' })).toBeNull()
   })
