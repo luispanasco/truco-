@@ -2056,3 +2056,22 @@ Pedidos del usuario:
 - **Vocabulario:** la flor se canta, el envido se **toca** y el truco se **grita**. El 1 de espadas es la **espadilla** (no "el macho") y el 1 de bastos, el **bastillo**. Corregido en todas las lecciones y en cuatro frases de personajes.
 - **Revisión de reglas argentinas en las lecciones (mismo día):** la espadilla no es "la carta más alta de todas" ni "nadie te la gana": es la mata más alta, y las piezas le ganan. Se corrigieron esas frases y quedan las explicaciones de cuándo no hay pieza que le gane. También "ancho de espadas" pasa a "espadilla", "te lo canté" a "te lo grité" en el truco, el envido "se toca", y en la mano guiada "se dicen los tantos".
 - **En equipo:** faltaba la seña de la pera para la izquierda (`sieteBravo`): el 7 de espadas o el 7 de oros. Ya estaba en el juego; ahora Don Queiroz la muestra y entra en "¿Qué seña te hizo?". Las de la pera dicen "la espadilla o el bastillo" y "el 7 de espadas o el 7 de oros".
+
+## Chat del grupo con emotes — 2026-11-11
+
+Pedido del usuario: chat en los grupos y emotes, que son las señas hechas por tu avatar. Plan aprobado; lo hizo un agente en su worktree.
+
+- **Servidor:**
+  - Migración 15, tabla `grupo_chat`: texto o emote; se guardan los últimos 200 por grupo.
+  - Rutas, solo para miembros:
+    - `GET /api/grupos/:id/chat?desde=`
+    - `POST /api/grupos/:id/chat` con `{texto}` (1 a 200 caracteres, con el filtro de la mesa) o `{senia}`
+    - `DELETE /api/grupos/:id/chat/:mensaje`: el autor, el líder o los capitanes (`PUEDE.moderarChat`)
+  - Límite: 1 mensaje por segundo y 20 por minuto.
+  - `GET /api/grupos` trae `ultimoChat`, el último mensaje de otro, para el aviso.
+- **Web** (`ChatGrupo.tsx`):
+  - La pestaña Chat va entre Muro y Miembros. Cada mensaje lleva la cara, el apodo y la hora; los tuyos van a la derecha.
+  - El botón 😜 abre una grilla con 12 señas hechas por tu avatar. El emote se ve como tu cara haciendo el gesto, que se repite de vez en cuando, con su nombre abajo (`NOMBRE_EMOTE`).
+  - Lo nuevo se pide cada 3,5 s, y cada 35 s se trae todo de nuevo para que desaparezca lo borrado.
+  - El aviso se suma al puntito de Grupos, al chip "Mensajes" de la lista y al puntito de la pestaña.
+- **Tests:** server 147 (7 nuevos), web 473 (4 nuevos).
