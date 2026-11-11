@@ -22,6 +22,8 @@ export interface Conexion {
   salir(): void
   /** Si es un nivel del modo historia: la mesa es la del lugar y, al ganar, se anota. */
   readonly historia?: NivelJugado
+  /** Si es el examen del tutorial (contra la compu): al ganar, te recibís. */
+  readonly examen?: boolean
 }
 
 /** Un nivel del modo historia en juego. */

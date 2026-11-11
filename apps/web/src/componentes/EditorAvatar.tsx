@@ -11,12 +11,16 @@ import {
   type CapaAvatar,
   type PiezaAvatar,
   idPieza,
+  DONDE_DIPLOMA,
 } from '@truco/shared'
 import { useEsBeta, useInventario } from '../cuenta/inventario'
 import { GESTO, SENIAS, type Senia } from '@truco/bots'
 import { Avatar } from './Avatar'
 import { DURACION_GESTO } from '../gestos'
 import '../estilos-avatar.css'
+
+/** Dónde se gana una pieza de premio: en un departamento del modo historia o al recibirte en el tutorial. */
+const seGana = (donde: string) => (donde === DONDE_DIPLOMA ? `se gana al recibirte en ${DONDE_DIPLOMA}` : `se gana en ${donde}, en el modo historia`)
 
 /** Las piezas de la capa con su posición en el catálogo, las gratis primero. */
 function ordenGratisPrimero(capa: CapaAvatar) {
@@ -157,7 +161,7 @@ function Opciones({
         const etiqueta = !paga
           ? pieza.nombre
           : pieza.recompensa
-            ? `${pieza.nombre}: se gana en ${pieza.recompensa}, en el modo historia`
+            ? `${pieza.nombre}: ${seGana(pieza.recompensa)}`
             : `${pieza.nombre}: ${pieza.precio} monedas, en la tienda`
         return (
           <button
@@ -291,7 +295,7 @@ export function EditorAvatar({
                 apodo={apodo}
                 alElegir={(i) => elegir(capa, i)}
                 alTocarPaga={(p) =>
-                  setAviso(p.recompensa ? `${p.nombre} se gana en ${p.recompensa}, en el modo historia.` : `${p.nombre} cuesta ${p.precio} monedas. Buscala en la tienda.`)
+                  setAviso(p.recompensa ? `${p.nombre} ${seGana(p.recompensa)}.` : `${p.nombre} cuesta ${p.precio} monedas. Buscala en la tienda.`)
                 }
                 tiendaDesbloqueada={tiendaDesbloqueada}
               />

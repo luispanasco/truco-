@@ -163,6 +163,7 @@ export function Inicio() {
   const irAMision = (destino: DestinoMision) => {
     if (destino === 'jugar') return conApodo(() => navegar('/buscar'))
     if (destino === 'historia') return navegar('/historia')
+    if (destino === 'aprender') return navegar('/aprender')
     if (destino === 'amigos') return navegar('/amigos')
     if (destino === 'tienda') return irA(PANELES.findIndex((p) => p.id === 'tienda'))
     if (ancha) setHoja('grupos')

@@ -59,3 +59,22 @@ export function conexionHistoria(perfil: Perfil, jugado: NivelJugado): ConexionL
     historia: jugado,
   })
 }
+
+/**
+ * El examen del tutorial: mano a mano contra la compu en fácil, a 20 (10 malas y 10 buenas), con las ayudas prendidas y
+ * sin pica-pica, corte ni reyes. La mesa y la baraja, las tuyas. Sin apodo, "Vos".
+ */
+export function conexionExamen(perfil: Perfil): ConexionLocal {
+  const base = conexionContraLaCompuOpciones(perfil)
+  return new ConexionLocal({
+    ...base,
+    apodo: base.apodo || 'Vos',
+    formato: '1v1',
+    nivelBots: 'facil',
+    ayudas: true,
+    config: { ...base.config, picaPica: false, puntosPartida: 20, puntosMalas: 10, corte: false },
+    tirarReyes: 'no',
+    personajes: false,
+    examen: true,
+  })
+}

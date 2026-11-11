@@ -5,8 +5,10 @@
  * comprobar (las partidas contra la compu corren en el navegador y se podrían inventar).
  */
 
+import { MONEDAS_DIPLOMA } from './tutorial'
+
 /** A qué pantalla lleva "Ir" en cada misión. */
-export type DestinoMision = 'jugar' | 'historia' | 'amigos' | 'grupos' | 'tienda'
+export type DestinoMision = 'jugar' | 'historia' | 'amigos' | 'grupos' | 'tienda' | 'aprender'
 
 export interface Mision {
   id: string
@@ -49,6 +51,8 @@ export const MISIONES_DE_UNA_VEZ: readonly (Mision & { avance: (d: DatosMisiones
   { id: 'un-amigo', texto: 'Sumá un amigo', meta: 1, premio: 100, ir: 'amigos', avance: (d) => d.amigos },
   { id: 'un-grupo', texto: 'Entrá a un grupo (o armá el tuyo)', meta: 1, premio: 100, ir: 'grupos', avance: (d) => d.grupos },
   { id: 'primera-compra', texto: 'Comprá algo en la tienda', meta: 1, premio: 100, ir: 'tienda', avance: (d) => d.compras },
+  // Se cobra sola al recibirte en el tutorial (POST /tutorial/recibirse, con los Naipes): acá solo invita.
+  { id: 'recibirse', texto: 'Recibite con Don Queiroz en "Aprendé a jugar"', meta: 1, premio: MONEDAS_DIPLOMA, ir: 'aprender', avance: () => 0 },
 ]
 
 /** Las del día salen de acá: tres por día. La del grupo, solo si estás en uno. */

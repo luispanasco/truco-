@@ -32,6 +32,8 @@ import { Grupo } from './pantallas/Grupo'
 import { Repeticion } from './pantallas/Repeticion'
 import { DepartamentoHistoria, DespedidaDepartamento, Historia, PreviaNivel } from './pantallas/Historia'
 import { Aprender, LeccionTutorial } from './pantallas/Aprender'
+import { Diploma } from './tutorial/Diploma'
+import { vigilarDiploma } from './tutorial/cobroDiploma'
 import { AvisoInvitacion } from './componentes/Amistad'
 import './estilos-online.css'
 
@@ -42,6 +44,8 @@ vistaDesdeUrl(location.search)
 aplicarMesa(leerPerfil().mesa)
 // La tipografía también, y es siempre la tuya. El perfil ya trae solo la que se puede usar.
 aplicarTipografia(leerPerfil().tipografia, TODO_PERMITIDO)
+// Si te recibiste en el tutorial sin cuenta, al entrar a una se cobra el premio.
+vigilarDiploma()
 // El service worker existe solo en la versión compilada (en desarrollo molestaría con la caché).
 if (import.meta.env.PROD) void import('./registrarSW').then((m) => m.registrarSW())
 
@@ -70,6 +74,7 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/repeticion/:id" element={<Repeticion />} />
           {/* Modo historia (cualquiera con cuenta: los departamentos publicados; el admin, todos). */}
           <Route path="/aprender" element={<Aprender />} />
+          <Route path="/aprender/diploma" element={<Diploma />} />
           <Route path="/aprender/:leccion" element={<LeccionTutorial />} />
           <Route path="/historia" element={<Historia />} />
           <Route path="/historia/:departamento" element={<DepartamentoHistoria />} />

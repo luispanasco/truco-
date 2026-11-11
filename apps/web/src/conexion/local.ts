@@ -87,6 +87,8 @@ export interface OpcionesLocal {
   personajes?: boolean
   /** Un nivel del modo historia: los bots son su elenco (rivales y compañeros, cada uno en su lugar). */
   historia?: NivelJugado
+  /** El examen del tutorial: Don Queiroz mira y, al ganar, te recibís. */
+  examen?: boolean
 }
 
 const NOMBRES_BOTS = ['Bot Pepe', 'Bot Chela', 'Bot Tito', 'Bot Mirta', 'Bot Ruben']
@@ -128,9 +130,11 @@ export class ConexionLocal implements Conexion {
   private configSenias: ConfigSenias
 
   readonly historia?: NivelJugado
+  readonly examen?: boolean
 
   constructor(private readonly op: OpcionesLocal) {
     this.historia = op.historia
+    this.examen = op.examen
     this.config = crearConfig({ ...op.config, formato: op.formato, modoSucio: false })
     this.semilla = op.semilla ?? Math.floor(Math.random() * 2 ** 31)
     this.configSenias = normalizarSenias(op.senias)
