@@ -31,6 +31,7 @@ import {
 } from './grupos'
 import { invitarAlGrupo, muroDeGrupo, repeticion } from './muro'
 import { cobrarMision, MisionRechazo, misiones } from './misiones'
+import { recibirse } from './tutorial'
 
 export interface Cuentas {
   base: Base
@@ -155,6 +156,14 @@ export function rutasCuentas(c: Cuentas | null): Router {
         if (!(e instanceof MisionRechazo)) throw e
         res.status(409).json({ motivo: e.message })
       }
+    }),
+  )
+
+  // El tutorial: al recibirte (ganar el examen), las monedas y los Naipes, una sola vez.
+  r.post(
+    '/tutorial/recibirse',
+    conSesion(async (_req, res, c, u) => {
+      res.json(await recibirse(c.base, u.id))
     }),
   )
 

@@ -318,7 +318,8 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     paga('Libro', 200),
     paga('Diario', 200),
     paga('Pelota', 250),
-    paga('Naipes', 300),
+    // Se gana al recibirse en "Aprendé a jugar" (no se vende).
+    premio('Naipes', 300, 'Aprendé a jugar'),
     paga('Café', 200),
     // Criollos: el asado y la sobremesa.
     paga('Choripán', 200),

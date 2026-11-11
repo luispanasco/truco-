@@ -6,6 +6,7 @@ import { Carta } from '../componentes/Carta'
 import { Figura } from '../historia/Escena'
 import { Buscar, Comparar, Muestra, Ordenar, Pregunta } from '../tutorial/Ejercicios'
 import { Cargar, TieneFlor } from '../tutorial/EjerciciosTanto'
+import { AdivinarSenia, EmpezarExamen, GestoMaestro, MesaEquipo } from '../tutorial/EjerciciosEquipo'
 import { AL_TERMINAR, pasosDe, type Paso, type Pizarra } from '../tutorial/lecciones'
 import { useTutorial } from '../tutorial/progreso'
 import { JugarManoGuiada } from '../tutorial/ManoGuiada'
@@ -13,7 +14,7 @@ import '../estilos-historia.css'
 import '../estilos-tutorial.css'
 
 /** Don Queiroz con su globo: lo que dice cambia con cada paso (y se anuncia). */
-function Maestro({ texto, clave }: { texto: string; clave: string }) {
+export function Maestro({ texto, clave }: { texto: string; clave: string }) {
   const quieto = useReducedMotion() ?? false
   return (
     <div className="tutorial-maestro">
@@ -58,7 +59,9 @@ export function Aprender() {
   const saludo =
     hechas === 0
       ? '¡Bienvenido, gurí! Arrancamos por el principio: tocá la primera lección.'
-      : proxima
+      : progreso.examen !== undefined
+        ? '¡Ya te recibiste de truquero! Repasá lo que quieras, que la puerta está abierta.'
+        : proxima
         ? `Vamos bien. Te espera "${proxima.titulo}".`
         : 'Por ahora es todo lo que hay. Las lecciones que faltan las estoy preparando.'
   return (
@@ -94,6 +97,11 @@ export function Aprender() {
           )
         })}
       </ol>
+      {progreso.examen !== undefined && (
+        <button type="button" className="boton boton-grande" onClick={() => navegar('/aprender/diploma')}>
+          🎓 Ver tu diploma
+        </button>
+      )}
     </main>
   )
 }
@@ -219,13 +227,20 @@ function Leccion({ leccion }: { leccion: string | undefined }) {
             {paso.tipo === 'cargar' && <Cargar {...props} que={paso.que} rondas={paso.rondas} conMuestra={paso.conMuestra} />}
             {paso.tipo === 'tieneFlor' && <TieneFlor {...props} rondas={paso.rondas} />}
             {paso.tipo === 'mano' && <JugarManoGuiada {...props} mano={paso.mano} />}
+            {paso.tipo === 'mesa' && <MesaEquipo {...props} jugadores={paso.jugadores} marcar={paso.marcar} />}
+            {paso.tipo === 'gesto' && <GestoMaestro {...props} senia={paso.senia} />}
+            {paso.tipo === 'senias' && <AdivinarSenia {...props} rondas={paso.rondas} />}
+            {paso.tipo === 'examen' && <EmpezarExamen />}
           </section>
           <Maestro texto={dicho?.texto ?? textoDe(paso)} clave={`${n}-${dicho?.vez ?? 0}`} />
-          <footer className="tutorial-pie">
-            <button type="button" className="boton boton-grande" disabled={paso.tipo !== 'dice' && !listo} onClick={seguir}>
-              {n === pasos.length - 1 ? 'Terminar' : 'Seguir'}
-            </button>
-          </footer>
+          {/* En el examen, el botón es el de ir a la mesa: se termina al ganar la partida. */}
+          {paso.tipo !== 'examen' && (
+            <footer className="tutorial-pie">
+              <button type="button" className="boton boton-grande" disabled={paso.tipo !== 'dice' && !listo} onClick={seguir}>
+                {n === pasos.length - 1 ? 'Terminar' : 'Seguir'}
+              </button>
+            </footer>
+          )}
         </>
       )}
     </main>

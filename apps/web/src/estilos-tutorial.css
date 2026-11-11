@@ -552,4 +552,287 @@
   .guiada-botones .guiada-mal {
     animation: none;
   }
+
+/* ── "En equipo", el examen y el diploma ───────────────────────── */
+
+/* La cara de Don Queiroz haciendo la seña, grande y redonda. */
+.equipo-cara {
+  width: min(52vw, 190px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 35%, #f6eedc, #d8c7a4);
+  box-shadow: 0 0 0 4px rgb(0 0 0 / 0.2);
+}
+/* Como la cara de señas de la mesa: entera, con un poco de aire alrededor. */
+.equipo-cara .avatar-dibujo {
+  width: 100%;
+  height: 100%;
+  --zoom: calc(var(--zoom-cara) * 0.82);
+}
+/* Con `.boton` adelante: estilos.css se carga después y si no, su fondo amarillo les gana. */
+.boton.equipo-opcion-mal {
+  background: var(--peligro);
+  color: #fff;
+}
+.boton.tutorial-opcion-bien {
+  background: var(--exito);
+  color: #fff;
+}
+/* Al responder se apagan las otras, pero la buena y la tuya (si erraste) se ven bien. */
+.tutorial-opciones .boton:disabled:is(.tutorial-opcion-bien, .equipo-opcion-mal) {
+  opacity: 1;
+}
+
+/* La mesa vista de arriba: el paño al medio y los lugares alrededor. */
+.equipo-mesa {
+  position: relative;
+  width: min(78vw, 280px);
+  aspect-ratio: 1;
+}
+.equipo-pano {
+  position: absolute;
+  inset: 24%;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.22);
+  box-shadow: inset 0 0 0 3px rgb(255 255 255 / 0.15);
+}
+.equipo-lugar {
+  position: absolute;
+  z-index: 1;
+  translate: -50% -50%;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  text-align: center;
+}
+.equipo-lugar small {
+  font-weight: 800;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+}
+.equipo-ficha {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+}
+.equipo-lugar.nosotros .equipo-ficha {
+  background: var(--acento);
+  color: var(--tinta);
+}
+.equipo-lugar.ellos .equipo-ficha {
+  background: #b9443a;
+  color: #fff;
+}
+.equipo-lugar.yo .equipo-ficha {
+  box-shadow:
+    0 0 0 3px #fff,
+    0 2px 6px rgb(0 0 0 / 0.35);
+}
+.equipo-pie {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--tinta);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+}
+.equipo-examen-datos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+/* Don Queiroz en la mesa del examen: al empezar (arriba, se va solo) y en el cartel del final. */
+.examen-dice {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+.examen-dice p {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.examen-cara {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.2);
+}
+.examen-cara .avatar-dibujo {
+  width: 100%;
+  height: 100%;
+}
+.examen-cartel {
+  position: fixed;
+  z-index: 40;
+  top: 84px;
+  left: 50%;
+  translate: -50% 0;
+  width: min(calc(100% - 32px), 440px);
+  padding: 10px 40px 10px 12px;
+  border-radius: 16px;
+  background: var(--papel);
+  color: var(--tinta);
+  box-shadow: var(--sombra);
+  cursor: pointer;
+}
+.examen-cerrar {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.08);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.examen-fin {
+  margin: 12px 0 4px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.1);
+}
+
+/* El diploma: un papel con borde doble, la firma y el sello. */
+.tutorial-graduacion {
+  gap: 14px;
+}
+.diploma {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 22px 18px 18px;
+  border-radius: 6px;
+  background: linear-gradient(160deg, #fbf3dc, #f0e0b6);
+  color: #3b2a14;
+  text-align: center;
+  text-shadow: none;
+  box-shadow:
+    inset 0 0 0 3px #fbf3dc,
+    inset 0 0 0 5px #b48a3c,
+    inset 0 0 0 8px #fbf3dc,
+    inset 0 0 0 9px #b48a3c,
+    var(--sombra);
+}
+/* La letra de los títulos tiene un solo peso: en negrita, el navegador la emborrona. */
+.diploma :is(h1, .diploma-nombre, .diploma-titulo) {
+  font-weight: 400;
+}
+.diploma h1 {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-size: 2.1rem;
+  color: #7a4f12;
+}
+.diploma p {
+  margin: 0;
+  font-weight: 600;
+}
+.diploma-boliche {
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.diploma-nombre {
+  margin: 2px 0;
+  padding: 0 12px 2px;
+  border-bottom: 2px solid #b48a3c;
+  font-family: var(--fuente-titulo);
+  font-size: 1.6rem;
+  overflow-wrap: anywhere;
+}
+.diploma .diploma-titulo {
+  margin-top: 6px;
+  font-family: var(--fuente-titulo);
+  font-size: 1.3rem;
+  color: #7a4f12;
+}
+.diploma-firma {
+  display: grid;
+  justify-items: center;
+  min-width: 60%;
+  margin-top: 10px;
+  padding-top: 2px;
+  border-top: 1px solid #3b2a14;
+}
+.diploma-firma span {
+  font-family: 'Brush Script MT', 'Segoe Script', cursive;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.diploma-firma small {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+.diploma-sello {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, #d4463b, #9b2a22);
+  font-size: 1.6rem;
+  rotate: -12deg;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+}
+.diploma-premio {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgb(0 0 0 / 0.32);
+}
+.diploma-premio h2 {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+}
+.diploma-premio ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-weight: 700;
+}
+.diploma-premio-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.12);
+}
+.diploma-premio-avatar .avatar-dibujo {
+  width: 100%;
+  height: 100%;
+}
+.diploma-estado {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
 }

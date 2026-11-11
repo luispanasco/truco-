@@ -34,6 +34,7 @@ import { estiloAsiento, haciaAsiento, PanioEnPerspectiva, useMesaEnPerspectiva }
 import '../estilos-mesa-online.css'
 import { MonedasGanadas } from '../componentes/MonedasGanadas'
 import { FinHistoria } from '../componentes/FinHistoria'
+import { CartelExamen, FinExamen } from '../tutorial/Examen'
 import '../estilos-mesa-bustos.css'
 
 export function Mesa() {
@@ -352,6 +353,7 @@ export function Mesa() {
         </div>
       </header>
       <EstadoConexion alIrAlInicio={salirDeLaMesa} />
+      {conexion?.examen && vista.mano.numero === 1 && <CartelExamen />}
 
       <main className="tapete" ref={refTapete}>
         <div className="registro" aria-live="polite">
@@ -550,7 +552,10 @@ export function Mesa() {
               </div>
             </div>
             <MonedasGanadas />
-            {conexion?.historia || sala.historia ? (
+            {conexion?.examen ? (
+              // El examen del tutorial: al ganar te recibís (y vas al diploma).
+              <FinExamen ganamos={ganamos} revancha={() => enviar('revancha', {})} />
+            ) : conexion?.historia || sala.historia ? (
               // Un nivel del modo historia: se anota al ganar y se sigue por el departamento (en
               // cooperativo lo anota el servidor).
               <FinHistoria

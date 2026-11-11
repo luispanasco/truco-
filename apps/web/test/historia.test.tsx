@@ -29,6 +29,7 @@ import {
   permisosDe,
   VECINOS,
   vitrinaDelDia,
+  DONDE_DIPLOMA,
 } from '@truco/shared'
 import { useCuenta } from '../src/cuenta/cuenta'
 import { useHistoria } from '../src/cuenta/historia'
@@ -177,7 +178,8 @@ describe('los datos del modo historia', () => {
   })
 
   it('las piezas de los departamentos se ganan ahí: no salen en la vitrina', () => {
-    const premios = CATALOGO_TIENDA.filter((i) => i.recompensa)
+    // Los Naipes también son premio, pero del tutorial (al recibirte).
+    const premios = CATALOGO_TIENDA.filter((i) => i.recompensa && i.recompensa !== DONDE_DIPLOMA)
     expect(premios).toHaveLength(28)
     const ganables = new Set(Object.values(HISTORIAS).flatMap((h) => h!.niveles.flatMap((n) => n.recompensas)))
     for (const p of premios) expect(ganables.has(p.id), p.nombre).toBe(true)

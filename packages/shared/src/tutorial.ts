@@ -6,6 +6,7 @@
 
 import { AVATAR_BASE, type Avatar, type CapaAvatar } from './avatar'
 import { piezaPorNombre } from './personajes'
+import { idPieza } from './tienda'
 
 /** Don Queiroz: canoso, de bigote, el pelo largo para atrás con raya al medio. */
 export const MAESTRO = {
@@ -53,8 +54,8 @@ export const LECCIONES: readonly Leccion[] = [
   { id: 'flor', titulo: 'La flor', resumen: 'Tres del mismo palo… o con piezas', disponible: true },
   { id: 'cantos', titulo: 'Truco, retruco y vale cuatro', resumen: 'Querer, no querer y cuánto vale', disponible: true },
   { id: 'envidoEnJuego', titulo: 'El envido en juego', resumen: 'Envido, real envido y falta', disponible: true },
-  { id: 'equipos', titulo: 'En equipo', resumen: 'Las señas y el pie', disponible: false },
-  { id: 'examen', titulo: 'El examen', resumen: 'Una partida con Don Queiroz mirando', disponible: false },
+  { id: 'equipos', titulo: 'En equipo', resumen: 'Las señas y el pie', disponible: true },
+  { id: 'examen', titulo: 'El examen', resumen: 'Una partida con Don Queiroz mirando', disponible: true },
 ]
 
 /** Las estrellas de un ejercicio: 3 sin errores, 2 con uno o dos, 1 con más. */
@@ -76,3 +77,11 @@ export function leccionAbierta(progreso: ProgresoTutorial, id: IdLeccion): boole
 export function proximaLeccion(progreso: ProgresoTutorial): Leccion | null {
   return LECCIONES.find((l) => leccionAbierta(progreso, l.id) && progreso[l.id] === undefined) ?? null
 }
+
+/**
+ * Al recibirte (ganar el examen): monedas y los Naipes para el avatar, que no se venden. Lo cobra
+ * la misión de una vez `recibirse` (el servidor confía en que ganaste, como en el modo historia).
+ */
+export const DONDE_DIPLOMA = 'Aprendé a jugar'
+export const MONEDAS_DIPLOMA = 300
+export const PREMIO_DIPLOMA = idPieza('accesorio', piezaPorNombre('accesorio', 'Naipes'))

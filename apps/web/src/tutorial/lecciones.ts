@@ -4,6 +4,7 @@ import { envido, flor } from './lecciones-tanto'
 import { cartasConPalo, cartasConPiezas, ESCALERA, muestraAlAzar, muestraPieza, type Azar } from './cartas'
 import type { ManoGuiada } from './guion'
 import { PASOS_MANO } from './lecciones-mano'
+import { EQUIPOS, EXAMEN, type PasoEquipo } from './lecciones-equipo'
 
 /**
  * Lo que dice Don Queiroz en cada lección y los ejercicios, paso a paso. Las cartas de los
@@ -33,6 +34,8 @@ export type Paso =
   | { tipo: 'tieneFlor'; consigna: string; rondas: number }
   /** Una mano jugada con el motor y las cartas armadas, siguiendo un guion. */
   | { tipo: 'mano'; consigna: string; mano: ManoGuiada }
+  /** Los de "En equipo" y el examen (lecciones-equipo.ts). */
+  | PasoEquipo
 
 const c = (numero: Carta['numero'], palo: Carta['palo']): Carta => ({ numero, palo })
 
@@ -154,6 +157,10 @@ export function pasosDe(id: IdLeccion, azar: Azar = Math.random): Paso[] | null 
       return PASOS_MANO.cantos()
     case 'envidoEnJuego':
       return PASOS_MANO.envidoEnJuego()
+    case 'equipos':
+      return EQUIPOS
+    case 'examen':
+      return EXAMEN
     default:
       return null
   }

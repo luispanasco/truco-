@@ -53,11 +53,12 @@ describe('la ruta del tutorial', () => {
     for (const l of LECCIONES) expect(pasosDe(l.id) !== null).toBe(l.disponible)
   })
 
-  it('en la ruta, la primera está abierta y las demás con candado o próximamente', () => {
+  it('en la ruta, la primera está abierta y las demás con candado', () => {
     abrir('/aprender')
     expect((screen.getByRole('button', { name: 'Lección 1: Un poco de historia' }) as HTMLButtonElement).disabled).toBe(false)
     expect((screen.getByRole('button', { name: 'Lección 2: La baraja' }) as HTMLButtonElement).disabled).toBe(true)
-    expect(screen.getByRole('button', { name: /Lección 11:/ }).textContent).toContain('Próximamente')
+    // Ya están las 11: las que siguen, con candado hasta terminar la anterior.
+    expect(screen.getByRole('button', { name: /Lección 11:/ }).textContent).toContain('🔒')
     expect(screen.getByText(/Bienvenido/)).toBeTruthy()
   })
 
