@@ -8,6 +8,7 @@ import { Buscar, Comparar, Muestra, Ordenar, Pregunta } from '../tutorial/Ejerci
 import { Cargar, TieneFlor } from '../tutorial/EjerciciosTanto'
 import { AL_TERMINAR, pasosDe, type Paso, type Pizarra } from '../tutorial/lecciones'
 import { useTutorial } from '../tutorial/progreso'
+import { JugarManoGuiada } from '../tutorial/ManoGuiada'
 import '../estilos-historia.css'
 import '../estilos-tutorial.css'
 
@@ -217,6 +218,7 @@ function Leccion({ leccion }: { leccion: string | undefined }) {
             {paso.tipo === 'ordenar' && <Ordenar {...props} rondas={paso.rondas} />}
             {paso.tipo === 'cargar' && <Cargar {...props} que={paso.que} rondas={paso.rondas} conMuestra={paso.conMuestra} />}
             {paso.tipo === 'tieneFlor' && <TieneFlor {...props} rondas={paso.rondas} />}
+            {paso.tipo === 'mano' && <JugarManoGuiada {...props} mano={paso.mano} />}
           </section>
           <Maestro texto={dicho?.texto ?? textoDe(paso)} clave={`${n}-${dicho?.vez ?? 0}`} />
           <footer className="tutorial-pie">

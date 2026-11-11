@@ -45,9 +45,9 @@ describe('la ruta del tutorial', () => {
     expect(leccionAbierta({}, 'historia')).toBe(true)
     expect(leccionAbierta({}, 'baraja')).toBe(false)
     expect(leccionAbierta({ historia: 1 }, 'baraja')).toBe(true)
-    expect(leccionAbierta({ historia: 3, baraja: 3, jerarquia: 3, piezas: 3 }, 'vueltas')).toBe(false)
+    expect(leccionAbierta({ historia: 3, baraja: 3, jerarquia: 3, piezas: 3 }, 'vueltas')).toBe(true)
     expect(proximaLeccion({ historia: 2 })?.id).toBe('baraja')
-    expect(proximaLeccion({ historia: 3, baraja: 3, jerarquia: 3, piezas: 3 })).toBeNull()
+    expect(proximaLeccion({ historia: 3, baraja: 3, jerarquia: 3, piezas: 3 })?.id).toBe('vueltas')
     expect([0, 1, 2, 3, 9].map(estrellasPorErrores)).toEqual([3, 2, 2, 1, 1])
     // Cada lección disponible tiene sus pasos.
     for (const l of LECCIONES) expect(pasosDe(l.id) !== null).toBe(l.disponible)
@@ -57,7 +57,7 @@ describe('la ruta del tutorial', () => {
     abrir('/aprender')
     expect((screen.getByRole('button', { name: 'Lección 1: Un poco de historia' }) as HTMLButtonElement).disabled).toBe(false)
     expect((screen.getByRole('button', { name: 'Lección 2: La baraja' }) as HTMLButtonElement).disabled).toBe(true)
-    expect(screen.getByRole('button', { name: /Lección 5:/ }).textContent).toContain('Próximamente')
+    expect(screen.getByRole('button', { name: /Lección 11:/ }).textContent).toContain('Próximamente')
     expect(screen.getByText(/Bienvenido/)).toBeTruthy()
   })
 
