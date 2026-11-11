@@ -22,6 +22,7 @@ import { PanelPersonalizar } from '../menu/PanelPersonalizar'
 import { aplicarMesa } from '../temaMesa'
 import { aplicarTipografia } from '../temaTipografia'
 import { VitrinaDelDia } from './Tienda'
+import { RecorridoMenu } from '../recorrido/RecorridoMenu'
 import '../menu/estilos-menu.css'
 
 /** Las cinco pantallas del menú, de izquierda a derecha. Abre en la del medio: jugar. */
@@ -262,6 +263,8 @@ export function Inicio() {
           </div>
         </nav>
       )}
+
+      <RecorridoMenu paneles={PANELES.map((p) => p.id)} irA={irA} alCerrarHoja={cerrarHoja} alEntrar={() => setHoja('cuenta')} />
 
       {hoja === 'perfil' && (
         <Hoja titulo="Tu perfil" alCerrar={cerrarHoja} clase="hoja-avatar hoja-perfil" claseFondo="hoja-fija">

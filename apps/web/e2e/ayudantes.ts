@@ -23,10 +23,22 @@ export const test = base.extend<{ cerrarPersonas: void }>({
 })
 export { expect }
 
+/**
+ * Marca vistos los recorridos de Don Queiroz (el de bienvenida y el de la primera partida): en
+ * los tests no tapan nada. El de recorrido.spec.ts los prueba aparte.
+ */
+export async function sinRecorridos(ctx: BrowserContext) {
+  await ctx.addInitScript(() => {
+    localStorage.setItem('truco.recorrido', 'visto')
+    localStorage.setItem('truco.recorridoMesa', 'visto')
+  })
+}
+
 /** Una persona nueva, en su propio navegador (contexto), con el apodo ya puesto en el inicio. */
 export async function persona(browser: Browser, apodo: string): Promise<Page> {
   const ctx = await browser.newContext()
   abiertos.push(ctx)
+  await sinRecorridos(ctx)
   const page = await ctx.newPage()
   await page.goto('/')
   // El apodo se pone tocándolo en el banner (o el menú lo pide al jugar).
