@@ -71,7 +71,7 @@ const UNA_Y_UNA: ManoGuiada = {
           : 'Un 5 no le gana a un 3. El ancho de espadas sí: es la carta más alta de todas.',
     },
     {
-      pide: '¡Lo mataste con el macho! La primera es tuya, así que empezás vos. Tirá el 12 de oros.',
+      pide: '¡Lo mataste con la espadilla! La primera es tuya, así que empezás vos. Tirá el 12 de oros.',
       espera: carta(12, 'oro'),
       mal: 'Tirá el 12 de oros, que te quiero mostrar qué pasa cuando cada uno gana una.',
     },
@@ -137,7 +137,7 @@ function vueltas(): Paso[] {
     {
       tipo: 'pregunta',
       pregunta: 'Ganaste la primera y la segunda fue parda. ¿De quién es la mano?',
-      opciones: ['Tuya', 'Mía', 'Se juega la tercera'],
+      opciones: ['Mía', 'De Don Queiroz', 'Se juega la tercera'],
       correcta: 0,
       bien: '¡Eso! Ganaste la primera y la segunda fue parda: no hace falta la tercera.',
       mal: 'No: con la segunda parda gana el que ganó la primera. Y la primera fue tuya.',
@@ -145,7 +145,7 @@ function vueltas(): Paso[] {
     {
       tipo: 'pregunta',
       pregunta: 'Gané yo la primera, vos la segunda y la tercera fue parda. ¿De quién es la mano?',
-      opciones: ['Tuya', 'Mía, que gané la primera', 'Del que es mano'],
+      opciones: ['Mía', 'De Don Queiroz, que ganó la primera', 'Del que es mano'],
       correcta: 1,
       bien: 'Así es: una y una con la tercera parda, gana el que ganó la primera.',
       mal: 'No… Una y una y la tercera parda: gana el que ganó la primera. Y la primera fue mía.',
@@ -153,7 +153,7 @@ function vueltas(): Paso[] {
     {
       tipo: 'pregunta',
       pregunta: 'Vos sos mano y salen las tres pardas. ¿Quién gana?',
-      opciones: ['Vos, que sos mano', 'Yo', 'Nadie: se reparte de nuevo'],
+      opciones: ['Yo, que soy mano', 'Don Queiroz', 'Nadie: se reparte de nuevo'],
       correcta: 0,
       bien: '¡Bien! Todas pardas, gana el mano. Por eso ser mano es una ventaja.',
       mal: 'No: si son todas pardas, gana el mano. Y el mano sos vos.',
@@ -165,7 +165,7 @@ function vueltas(): Paso[] {
 
 const MUESTRA_CANTOS = c(12, 'copa')
 
-/** Te canto truco de entrada y tus cartas son las peores: no se quiere. */
+/** Te grito truco de entrada y tus cartas son las peores: no se quiere. */
 const NO_SE_QUIERE: ManoGuiada = {
   mano: 'rival',
   muestra: MUESTRA_CANTOS,
@@ -197,45 +197,45 @@ const VALE_CUATRO: ManoGuiada = {
   guion: [
     { rival: carta(2, 'oro') },
     {
-      pide: 'Ahora vamos con todo. Tiré un 2. Matalo con el 7 de espadas y guardá el macho.',
+      pide: 'Ahora vamos con todo. Tiré un 2. Matalo con el 7 de espadas y guardá la espadilla.',
       espera: carta(7, 'espada'),
       mal: (m) =>
         m.tipo === 'carta' && m.carta.numero === 1
-          ? 'Con el macho también lo matás, pero guardalo: es la carta más alta y te va a servir después. Usá el 7 de espadas.'
+          ? 'Con la espadilla también lo matás, pero guardala: es la carta más alta y te va a servir después. Usá el 7 de espadas.'
           : 'El 5 no le gana a un 2. Usá el 7 de espadas.',
     },
     {
-      pide: 'La primera es tuya y empezás vos. Tirá el 5 de oros: el macho, guardado.',
+      pide: 'La primera es tuya y empezás vos. Tirá el 5 de oros: la espadilla, guardada.',
       espera: carta(5, 'oro'),
-      mal: 'Tirá el 5 de oros: el macho lo guardamos para el final.',
+      mal: 'Tirá el 5 de oros: la espadilla la guardamos para el final.',
     },
     { rival: TRUCO },
     {
-      pide: '¡Truco! Ganaste la primera y tenés el macho guardado: nadie te lo gana. ¿Qué me contestás?',
+      pide: '¡Truco! Ganaste la primera y tenés la espadilla guardada: nadie te lo gana. ¿Qué me contestás?',
       espera: QUIERO,
       botones: [QUIERO, NO_QUIERO],
-      mal: (m) => (esCarta(m) ? 'Primero contestá el truco.' : 'Si no querés, me llevo 1. ¡Con el macho en la mano hay que querer!'),
+      mal: (m) => (esCarta(m) ? 'Primero contestá el truco.' : 'Si no querés, me llevo 1. ¡Con la espadilla en la mano hay que querer!'),
     },
     { rival: carta(12, 'espada') },
     { rival: carta(4, 'basto') },
     {
-      pide: 'Mi 12 de espadas mató a tu 5: uno y uno. Y abrí la tercera con mi última carta, un 4. Vos quisiste el truco, así que podés subir: antes de tirar, ¡cantá retruco!',
+      pide: 'Mi 12 de espadas mató a tu 5: uno y uno. Y abrí la tercera con mi última carta, un 4. Vos quisiste el truco, así que podés subir: antes de tirar, ¡gritá retruco!',
       espera: TRUCO,
       botones: [TRUCO],
-      mal: 'Si tirás ya, ganás 2. Antes de tirar cantá retruco: el que quiso el truco es el que puede subir.',
+      mal: 'Si tirás ya, ganás 2. Antes de tirar gritá retruco: el que quiso el truco es el que puede subir.',
     },
     { rival: TRUCO },
     {
-      pide: '¡Vale cuatro! Me agrandé: en el truco también se miente. ¿Lo querés? Mirá la mesa: mi última carta es un 4 y a vos te queda el macho.',
+      pide: '¡Vale cuatro! Me agrandé: en el truco también se miente. ¿Lo querés? Mirá la mesa: mi última carta es un 4 y a vos te queda la espadilla.',
       espera: QUIERO,
       botones: [QUIERO, NO_QUIERO],
       mal: (m) =>
-        esCarta(m) ? 'Primero contestá el vale cuatro.' : 'Si no querés, me llevo 3, lo que valía el retruco. ¡Y tu macho le gana seguro a mi 4!',
+        esCarta(m) ? 'Primero contestá el vale cuatro.' : 'Si no querés, me llevo 3, lo que valía el retruco. ¡Y tu espadilla le gana seguro a mi 4!',
     },
     {
-      pide: '¡Quisiste! Ahora la mano vale 4. Tirá el macho.',
+      pide: '¡Quisiste! Ahora la mano vale 4. Tirá la espadilla.',
       espera: carta(1, 'espada'),
-      mal: 'Tirá el macho.',
+      mal: 'Tirá la espadilla.',
     },
   ],
   fin: '¡Vale cuatro querido y ganado: 4 puntos para vos! Truco, retruco y vale cuatro en una sola mano.',
@@ -245,29 +245,29 @@ function cantos(): Paso[] {
   return [
     {
       tipo: 'dice',
-      texto: 'Hasta ahora cada mano valía 1 punto. Pero en el truco se apuesta: el que tiene buenas cartas, o se hace el que tiene, canta truco.',
+      texto: 'Hasta ahora cada mano valía 1 punto. Pero en el truco se apuesta: el que tiene buenas cartas, o se hace el que tiene, grita truco.',
       pizarra: { dibujo: '📣', leyenda: '¡Truco!' },
     },
     {
       tipo: 'dice',
-      texto: 'Si te cantan truco y lo querés, la mano vale 2. El que quiso puede subir: retruco, y vale 3. Y el que cantó el truco le contesta vale cuatro: vale 4. Más no hay.',
+      texto: 'Si te gritan truco y lo querés, la mano vale 2. El que quiso puede subir: retruco, y vale 3. Y el que gritó el truco le contesta vale cuatro: vale 4. Más no hay.',
       pizarra: { dibujo: '📈', leyenda: 'Truco 2 · Retruco 3 · Vale cuatro 4' },
     },
     {
       tipo: 'dice',
-      texto: 'Si no querés, la mano se termina ahí y el que cantó se lleva lo que valía antes: el truco no querido da 1, el retruco no querido da 2 y el vale cuatro no querido da 3.',
+      texto: 'Si no querés, la mano se termina ahí y el que gritó se lleva lo que valía antes: el truco no querido da 1, el retruco no querido da 2 y el vale cuatro no querido da 3.',
       pizarra: { dibujo: '🙅', leyenda: 'No quiero: lo de antes' },
     },
     {
       tipo: 'dice',
-      texto: 'Se canta en tu turno, antes de tirar. Y sube solo el que quiso el último canto: si yo canto truco y vos lo querés, el retruco lo cantás vos cuando te toque. Si te cantan, en vez de "quiero" podés subir de una: eso ya es querer.',
+      texto: 'Se grita en tu turno, antes de tirar. Y sube solo el que quiso el último canto: si yo grito truco y vos lo querés, el retruco lo gritás vos cuando te toque. Si te gritan, en vez de "quiero" podés subir de una: eso ya es querer.',
       pizarra: { dibujo: '🔁', leyenda: 'Sube el que quiso' },
     },
     mano(NO_SE_QUIERE, 'Vamos a jugar. Esta vez soy mano yo…'),
     mano(VALE_CUATRO, 'Otra. Soy mano otra vez…'),
     {
       tipo: 'pregunta',
-      pregunta: 'Cantaste truco, te lo quise y ganaste la mano. ¿Cuántos puntos te llevás?',
+      pregunta: 'Gritaste truco, te lo quise y ganaste la mano. ¿Cuántos puntos te llevás?',
       opciones: ['1', '2', '3'],
       correcta: 1,
       bien: '¡Eso! Truco querido: 2 puntos.',
@@ -275,7 +275,7 @@ function cantos(): Paso[] {
     },
     {
       tipo: 'pregunta',
-      pregunta: 'Te canto retruco y no lo querés. ¿Cuántos puntos me llevo?',
+      pregunta: 'Te grito retruco y no lo querés. ¿Cuántos puntos me llevo?',
       opciones: ['1', '2', '3'],
       correcta: 1,
       bien: 'Así es: me llevo lo que valía antes del retruco, el truco querido: 2.',
@@ -283,15 +283,15 @@ function cantos(): Paso[] {
     },
     {
       tipo: 'pregunta',
-      pregunta: 'Yo canté truco y vos lo quisiste. ¿Quién puede cantar retruco?',
-      opciones: ['Vos', 'Yo', 'Cualquiera de los dos'],
+      pregunta: 'Yo grité truco y vos lo quisiste. ¿Quién puede gritar retruco?',
+      opciones: ['Yo, que lo quise', 'Don Queiroz, que lo gritó', 'Cualquiera de los dos'],
       correcta: 0,
       bien: '¡Bien! Sube el que quiso el último canto: vos.',
       mal: 'No: el que canta no puede subir su propio canto. Sube el que lo quiso: vos.',
     },
     {
       tipo: 'pregunta',
-      pregunta: '¿Qué cantás acá? Me quisiste el truco, tenés el macho y el 7 de espadas, y te toca.',
+      pregunta: '¿Qué gritás acá? Me quisiste el truco, tenés la espadilla y el 7 de espadas, y te toca.',
       opciones: ['Retruco', 'Vale cuatro', 'Truco otra vez'],
       correcta: 0,
       bien: '¡Retruco! Vos quisiste, así que subís vos, y de a uno: después del truco viene el retruco.',
@@ -304,7 +304,7 @@ function cantos(): Paso[] {
 
 const MUESTRA_ENVIDO = c(12, 'copa')
 
-/** Sos mano con 33: cantás envido, no te lo quiero y me voy al mazo. */
+/** Sos mano con 33: tocás envido, no te lo quiero y me voy al mazo. */
 const ENVIDO_NO_QUERIDO: ManoGuiada = {
   mano: 'vos',
   muestra: MUESTRA_ENVIDO,
@@ -312,13 +312,13 @@ const ENVIDO_NO_QUERIDO: ManoGuiada = {
   rival: [c(4, 'espada'), c(6, 'basto'), c(12, 'oro')],
   guion: [
     {
-      pide: 'Sos mano y tenés el 7 y el 6 de oros: 33 de tanto, ¡un tantazo! Antes de tirar, cantá envido.',
+      pide: 'Sos mano y tenés el 7 y el 6 de oros: 33 de tanto, ¡un tantazo! Antes de tirar, tocá envido.',
       espera: ENVIDO,
       botones: [ENVIDO, TRUCO],
       mal: (m) =>
         esCarta(m)
-          ? '¡Ojo! Si tirás la carta, ya no podés cantar envido. Primero el envido.'
-          : 'El truco, después. Ahora cantá envido, que con 33 lo ganás casi seguro.',
+          ? '¡Ojo! Si tirás la carta, ya no podés tocar envido. Primero el envido.'
+          : 'El truco, después. Ahora tocá envido, que con 33 lo ganás casi seguro.',
     },
     { rival: NO_QUIERO },
     {
@@ -331,7 +331,7 @@ const ENVIDO_NO_QUERIDO: ManoGuiada = {
   fin: 'Me fui al mazo: te llevás la mano (1) y el envido no querido (1). Dos puntos sin pelear.',
 }
 
-/** Te canto truco, el envido va primero, real envido querido y se dicen los tantos. */
+/** Te grito truco, el envido va primero, real envido querido y se dicen los tantos. */
 const ENVIDO_VA_PRIMERO: ManoGuiada = {
   mano: 'rival',
   muestra: MUESTRA_ENVIDO,
@@ -340,7 +340,7 @@ const ENVIDO_VA_PRIMERO: ManoGuiada = {
   guion: [
     { rival: TRUCO },
     {
-      pide: '¡Truco! Pero vos tenés el 6 y el 5 de espadas: 31 de tanto. Estamos en la primera y el truco está sin contestar: ¡el envido va primero! Cantá envido.',
+      pide: '¡Truco! Pero vos tenés el 6 y el 5 de espadas: 31 de tanto. Estamos en la primera y el truco está sin contestar: ¡el envido va primero! Tocá envido.',
       espera: ENVIDO,
       botones: [QUIERO, NO_QUIERO, ENVIDO],
       mal: (m) =>
@@ -348,7 +348,7 @@ const ENVIDO_VA_PRIMERO: ManoGuiada = {
           ? 'Si querés el truco, el envido ya no se puede cantar. Primero el envido.'
           : m.tipo === 'noQuiero'
             ? 'Si no querés, se termina la mano y perdés el envido. ¡El envido va primero!'
-            : 'Primero hay que contestar el truco… o cantar envido, que va primero.',
+            : 'Primero hay que contestar el truco… o tocar envido, que va primero.',
     },
     { rival: REAL_ENVIDO },
     {
@@ -413,13 +413,13 @@ function envidoEnJuego(): Paso[] {
     mano(ENVIDO_NO_QUERIDO),
     {
       tipo: 'dice',
-      texto: 'Y algo importante: el envido va primero. Si en la primera vuelta te cantan truco, antes de contestarlo podés cantar envido. Se arregla el envido y después contestás el truco. Pero si el truco ya se quiso, el envido no va más.',
+      texto: 'Y algo importante: el envido va primero. Si en la primera vuelta te gritan truco, antes de contestarlo podés tocar envido. Se arregla el envido y después contestás el truco. Pero si el truco ya se quiso, el envido no va más.',
       pizarra: { dibujo: '☝️', leyenda: 'El envido va primero' },
     },
     mano(ENVIDO_VA_PRIMERO, 'A ver si te acordás. Soy mano yo…'),
     {
       tipo: 'pregunta',
-      pregunta: 'Canto envido, me contestás real envido y no te lo quiero. ¿Cuántos puntos te llevás?',
+      pregunta: 'Toco envido, me contestás real envido y no te lo quiero. ¿Cuántos puntos te llevás?',
       opciones: ['1', '2', '5'],
       correcta: 1,
       bien: '¡Eso! Sin querer, te llevás lo que sumaban los cantos antes del último: el envido, 2.',
@@ -435,7 +435,7 @@ function envidoEnJuego(): Paso[] {
     },
     {
       tipo: 'pregunta',
-      pregunta: 'Vamos 9 a 6, voy ganando yo. Cantás falta envido, te la quiero y la ganás. ¿Cuántos puntos te llevás?',
+      pregunta: 'Vamos 9 a 6, voy ganando yo. Tocás falta envido, te la quiero y la ganás. ¿Cuántos puntos te llevás?',
       opciones: ['6', '21', '9'],
       correcta: 0,
       bien: '¡Justo! El que va ganando soy yo, con 9: me faltan 6 para salir de las malas. Eso vale la falta.',
@@ -443,7 +443,7 @@ function envidoEnJuego(): Paso[] {
     },
     {
       tipo: 'pregunta',
-      pregunta: 'Ya tiraste tu carta de la primera vuelta. ¿Podés cantar envido?',
+      pregunta: 'Ya tiraste tu carta de la primera vuelta. ¿Podés tocar envido?',
       opciones: ['No: es antes de tirar', 'Sí, mientras dure la primera', 'Sí, en cualquier vuelta'],
       correcta: 0,
       bien: 'Así es: el envido se canta antes de tirar tu carta de la primera.',

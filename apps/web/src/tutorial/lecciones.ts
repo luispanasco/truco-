@@ -81,7 +81,7 @@ function baraja(azar: Azar): Paso[] {
 const ESCALONES: Paso[] = ESCALERA.map((e, i) => ({
   tipo: 'dice' as const,
   texto: [
-    'Arriba de todo, las matas: el 1 de espadas (el macho), el 1 de bastos, el 7 de espadas y el 7 de oros. En ese orden.',
+    'Arriba de todo, las matas: el 1 de espadas (la espadilla), el 1 de bastos (el bastillo), el 7 de espadas y el 7 de oros. En ese orden.',
     'Después vienen los tres. Todos los tres valen lo mismo, sean del palo que sean.',
     'Después, los dos.',
     'Después, los anchos falsos: el 1 de oros y el 1 de copas. Parecen grandes, pero no son matas.',

@@ -2048,3 +2048,9 @@ Pedido del usuario: que no se pueda ver lo bloqueado, solo lo disponible.
 - **Tienda:** se sacan los estantes con todo el catálogo por categoría. Quedan "¿Cómo gano monedas?", la destacada y la vitrina de hoy, y tu colección. Se borran `Estante` y `Ficha`; `armarEstantes` y `cuandoVuelve` siguen en `tienda/estantes.ts`, y el probador usa `cuandoVuelve` para lo de tu colección.
 - **Avatar › Mazo y Paño:** los carruseles muestran solo lo que tenés. No aparecen las mesas de la tienda sin comprar ni los mazos y mesas del modo historia sin ganar. Los beta y la tienda de prueba siguen viendo todo. Un grupo que queda vacío no se muestra.
 - **Tests:** mesas, tienda y tienda de prueba, ajustados a lo nuevo.
+
+## Lecciones: respuestas desde el alumno y el vocabulario de acá — 2026-11-11
+
+Pedidos del usuario:
+- **"¿De quién es la mano?" se entendía al revés:** las opciones decían "Tuya / Mía" desde Don Queiroz, pero las elige el alumno. Ahora van desde el alumno, nombrando a Don Queiroz: "Mía / De Don Queiroz", "Yo, que soy mano / Don Queiroz" y "Yo, que lo quise / Don Queiroz, que lo gritó". Un test cuida que ninguna opción arranque con "Tuya" o "Vos".
+- **Vocabulario:** la flor se canta, el envido se **toca** y el truco se **grita**. El 1 de espadas es la **espadilla** (no "el macho") y el 1 de bastos, el **bastillo**. Corregido en todas las lecciones y en cuatro frases de personajes.

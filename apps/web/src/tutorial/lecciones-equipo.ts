@@ -45,7 +45,7 @@ export const EQUIPOS: Paso[] = [
   { tipo: 'gesto', consigna: 'Un beso es el 4 de la muestra.', senia: 'pieza4' },
   { tipo: 'gesto', consigna: 'Guiñar el ojo derecho es el perico: el 11 de la muestra.', senia: 'perico' },
   { tipo: 'gesto', consigna: 'Y el ojo izquierdo, la perica: el 10 de la muestra.', senia: 'perica' },
-  { tipo: 'gesto', consigna: 'La pera para la derecha es el macho o el 1 de bastos: una mata grande.', senia: 'unoBravo' },
+  { tipo: 'gesto', consigna: 'La pera para la derecha es la espadilla o el bastillo: una mata grande.', senia: 'unoBravo' },
   { tipo: 'gesto', consigna: 'Morderse el labio de abajo es un 3.', senia: 'tres' },
   { tipo: 'gesto', consigna: 'Y si inflás los cachetes como un sapo, tenés flor.', senia: 'flor' },
   { tipo: 'senias', consigna: 'A ver si me entendés. ¿Qué seña te hizo tu compañero?', rondas: 6 },
@@ -67,7 +67,7 @@ export const EQUIPOS: Paso[] = [
   },
   {
     tipo: 'dice',
-    texto: 'Tocar es cantar el envido; gritar es cantar el truco. El toque casi siempre es del pie: es el que sabe cuánto tiene el equipo.',
+    texto: 'La flor se canta, el envido se toca y el truco se grita. El toque casi siempre es del pie: es el que sabe cuánto tiene el equipo.',
     pizarra: { dibujo: '📣', leyenda: 'Tocar: envido · Gritar: truco' },
   },
   {
@@ -80,7 +80,7 @@ export const EQUIPOS: Paso[] = [
   },
   {
     tipo: 'pregunta',
-    pregunta: 'En equipo, ¿quién suele tocar (cantar el envido)?',
+    pregunta: 'En equipo, ¿quién suele tocar (el envido)?',
     opciones: ['El pie', 'El que es mano', 'Cualquiera, a los gritos'],
     correcta: 0,
     bien: 'Así es: el toque es del pie, que ya sabe cuánto tiene el equipo.',

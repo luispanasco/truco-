@@ -11,7 +11,7 @@ const c = (numero: Carta['numero'], palo: Carta['palo']): Carta => ({ numero, pa
 
 export function envido(): Paso[] {
   return [
-    { tipo: 'dice', texto: 'Ahora el envido, que es el tanto. Se canta en la primera vuelta, antes de jugar la carta, y gana el que tiene más.', pizarra: { dibujo: '🗣️', leyenda: '¡Envido!' } },
+    { tipo: 'dice', texto: 'Ahora el envido, que es el tanto. Se toca en la primera vuelta, antes de jugar la carta, y gana el que tiene más.', pizarra: { dibujo: '🗣️', leyenda: '¡Envido!' } },
     {
       tipo: 'dice',
       texto: 'Si tenés dos cartas del mismo palo, contás 20 más el número de las dos. Acá: 20 + 6 + 5 = 31.',

@@ -197,7 +197,7 @@ const ARTIGAS = historia(
         { texto: 'Nuestro carnaval tiene mucho del samba de Brasil: la frontera se nota hasta en el tambor.', fuente: 'https://es.wikipedia.org/wiki/Turismo_en_Uruguay' },
         { texto: 'El desfile de las escuelas de samba es de lo más nuestro que hay en la ciudad.', fuente: 'https://www.artigas.gub.uy/division-turismo/' },
       ],
-      frases: ['¡Llegaste justo para el carnaval!', 'Beto vino a tocar con la escola. Y a jugar, de paso.', 'Acá se canta truco con plumas y lentejuelas.'],
+      frases: ['¡Llegaste justo para el carnaval!', 'Beto vino a tocar con la escola. Y a jugar, de paso.', 'Acá se grita truco con plumas y lentejuelas.'],
     },
     {
       lugar: 'Piedra Pintada',

@@ -163,3 +163,14 @@ describe('las cartas de los ejercicios', () => {
     expect(screen.queryByRole('group', { name: '¿Cuál gana?' })).toBeNull()
   })
 })
+
+describe('las preguntas', () => {
+  it('las respuestas las dice el alumno: "mía" y "yo" son suyas, y a Don Queiroz se lo nombra', () => {
+    for (const l of LECCIONES) {
+      for (const p of pasosDe(l.id) ?? []) {
+        if (p.tipo !== 'pregunta') continue
+        for (const o of p.opciones) expect(o, `${l.id}: "${o}"`).not.toMatch(/^(Tuya|Vos)\b/)
+      }
+    }
+  })
+})
