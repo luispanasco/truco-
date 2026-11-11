@@ -1,6 +1,8 @@
 import { esPieza, type Carta } from '@truco/engine'
 import type { IdLeccion } from '@truco/shared'
 import { cartasConPalo, cartasConPiezas, ESCALERA, muestraAlAzar, muestraPieza, type Azar } from './cartas'
+import type { ManoGuiada } from './guion'
+import { PASOS_MANO } from './lecciones-mano'
 
 /**
  * Lo que dice Don Queiroz en cada lección y los ejercicios, paso a paso. Las cartas de los
@@ -24,6 +26,8 @@ export type Paso =
   | { tipo: 'comparar'; consigna: string; rondas: number; conMuestra: boolean }
   /** Rondas de ordenar tres cartas de la mejor a la peor, con muestra. */
   | { tipo: 'ordenar'; consigna: string; rondas: number }
+  /** Una mano jugada con el motor y las cartas armadas, siguiendo un guion. */
+  | { tipo: 'mano'; consigna: string; mano: ManoGuiada }
 
 const c = (numero: Carta['numero'], palo: Carta['palo']): Carta => ({ numero, palo })
 
@@ -135,6 +139,12 @@ export function pasosDe(id: IdLeccion, azar: Azar = Math.random): Paso[] | null 
       return JERARQUIA
     case 'piezas':
       return piezas(azar)
+    case 'vueltas':
+      return PASOS_MANO.vueltas()
+    case 'cantos':
+      return PASOS_MANO.cantos()
+    case 'envidoEnJuego':
+      return PASOS_MANO.envidoEnJuego()
     default:
       return null
   }

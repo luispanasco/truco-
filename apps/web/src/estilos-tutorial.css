@@ -332,3 +332,164 @@
 .tutorial-pizarra-contenido .tutorial-cartas .carta-grande {
   --ancho: min(18vw, 76px);
 }
+
+/* Las manos guiadas (vueltas, truco y envido en juego): Don Queiroz arriba, las vueltas, lo que
+   vale la mano y tus cartas abajo. */
+.guiada {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+.guiada-jugador {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+}
+/* Arriba: el nombre, sus cartas tapadas con lo que dijo abajo, y la muestra al costado. */
+.guiada-jugador.rival {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 64px;
+}
+.guiada-centro {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+.guiada-jugador.rival .tutorial-muestra .carta {
+  --ancho: 38px;
+}
+.guiada-nombre {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  font-size: 0.9rem;
+}
+.guiada-jugador.vos .guiada-nombre {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.guiada-es-mano {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--acento);
+  color: var(--tinta);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.guiada-dorsos {
+  display: flex;
+  gap: 3px;
+}
+/* Lo que dijo cada uno, en un cartelito que entra. */
+.guiada-dicho {
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--papel);
+  color: var(--tinta);
+  font-weight: 800;
+  font-size: 0.9rem;
+  box-shadow: var(--sombra);
+  animation: guiada-dicho 0.25s ease;
+}
+@keyframes guiada-dicho {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+.guiada-vueltas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.guiada-vuelta {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 6px 2px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.18);
+}
+.guiada-vuelta.gana-vos {
+  box-shadow: inset 0 0 0 2px var(--exito);
+}
+.guiada-vuelta.gana-rival {
+  box-shadow: inset 0 0 0 2px var(--peligro);
+}
+.guiada-vuelta.gana-parda {
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.5);
+}
+.guiada-vuelta small {
+  font-weight: 800;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+/* Los huecos de las cartas: con o sin carta ocupan lo mismo (la vuelta no salta). */
+.guiada-hueco {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  aspect-ratio: 2 / 3;
+  border-radius: 6px;
+  outline: 1px dashed rgb(255 255 255 / 0.18);
+}
+.guiada-hueco .carta {
+  --ancho: 42px;
+}
+.guiada-marcador {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgb(0 0 0 / 0.28);
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: center;
+}
+.guiada-marcador.fin {
+  background: var(--acento);
+  color: var(--tinta);
+}
+.guiada-mano {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  min-height: calc(min(19vw, 76px) * 1.5);
+}
+.guiada-mano .carta-grande {
+  --ancho: min(19vw, 76px);
+}
+.guiada-botones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+}
+.guiada-botones .boton {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  padding-inline: 8px;
+}
+.guiada-botones .guiada-mal {
+  box-shadow: 0 0 0 3px var(--peligro);
+  animation: tutorial-no 0.3s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .guiada-dicho,
+  .guiada-botones .guiada-mal {
+    animation: none;
+  }
+}
