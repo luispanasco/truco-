@@ -2015,3 +2015,19 @@ Para el lanzamiento de hoy. Las etapas 2 a 4 del tutorial se hicieron en paralel
   - servidor publicado en Fly (una máquina, `api/estado` bien);
   - develop pasa a main.
 - **Tests:** web 442, server 139, y los e2e de recorrido, menú, local, online, tutorial y modo historia.
+
+## Reel del lanzamiento — 2026-11-11
+
+Pedido del usuario: un video como el reel anterior, presentando el juego para el lanzamiento: modo historia, grupos, tutorial, tienda, paños, mazos.
+
+- **`promo/src/lanzamiento.tsx`:** 57,8 s, 1080×1920, la misma música y marca. Scripts `render:lanzamiento`, `render:lanzamiento:sin-musica` y `portada:lanzamiento`. Usan el puerto 3131, porque en el 3123 hay otro proyecto.
+- **Guion:**
+  - apertura con "¡Ya salió!" en el primer cuadro;
+  - muestra, piezas y flor, y los cantos;
+  - "Don Queiroz te enseña": la ruta, cargar el envido y el diploma;
+  - "Recorré Uruguay" y "Arrancá en Rocha… y se vienen más": el mapa, el camino punteado, la previa de La Pedrera y la mesa nueva de Rocha;
+  - mazos y mesas, la tienda y los grupos;
+  - online o contra la compu, 1v1, 2v2 y 3v3, y las señas;
+  - cierre: "¡Ya salió la beta!", "Gratis para Android", "En iPhone, jugá desde la web", @truco_uruguayo.
+- **Clips nuevos:** 11, grabados con Playwright (CDP screencast, 1170×2532) contra la web y un servidor locales con PGlite y login de prueba, no contra producción. Los del reparto, los cantos y las señas son del reel anterior (mesa Cantina).
+- **Salidas:** en Descargas, `Truco-lanzamiento.mp4`, `Truco-lanzamiento-sin-musica.mp4` y `Truco-lanzamiento-portada.png`. Los clips y la música no van a git.
