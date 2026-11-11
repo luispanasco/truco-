@@ -319,15 +319,25 @@
 }
 
 [data-mesa='rocha']:is(:root, .muestra-mesa) {
-  --tapete: #365764;
-  --tapete-oscuro: #21363e;
+  --tapete: #093e5d;
+  --tapete-oscuro: #052030;
   --tapete-textura:
-    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #21363e 85%, transparent)),
-    url('/departamentos/rocha-emblema.webp') center / 55% auto no-repeat,
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #052030 85%, transparent)),
+    url('/departamentos/rocha-bordado.webp') center / 55% auto no-repeat,
     url('/departamentos/rocha-pano.webp') center / 512px repeat;
-  --madera: #35251c;
-  --madera-clara: #805a3d;
-  --fondo-claro: #805a3d;
+  --tapete-marco: url('/departamentos/rocha-marco.webp') 160 / 22px round;
+  --madera: #493829;
+  --madera-clara: #c1a27a;
+  --fondo-claro: #c1a27a;
+}
+/* En vertical la mesa es angosta: el bordado más grande, para que se vea entre las cartas. */
+@media (orientation: portrait) {
+  [data-mesa='rocha']:is(:root, .muestra-mesa) {
+    --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #052030 85%, transparent)),
+    url('/departamentos/rocha-bordado.webp') center / 85% auto no-repeat,
+    url('/departamentos/rocha-pano.webp') center / 512px repeat;
+  }
 }
 
 [data-fondo='rocha'],

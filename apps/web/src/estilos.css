@@ -7,6 +7,8 @@
   --tapete-oscuro: #154d29;
   /* Dibujo del paño (arpillera, cuadros) encima del color; cada mesa pone el suyo (estilos-mesas.css). */
   --tapete-textura: none;
+  /* El marco de madera tallada (una imagen para `border-image`), en las mesas que lo tienen. */
+  --tapete-marco: none;
   /*
    * La paleta de la app fuera de la mesa (menú, pantallas, grupos): noche y dorado. No depende de
    * la mesa elegida: el paño y la madera quedan para la partida.
@@ -847,6 +849,8 @@ input {
     var(--tapete-textura),
     radial-gradient(ellipse at center, var(--tapete), var(--tapete-oscuro));
   border: 6px solid var(--madera-clara);
+  /* El marco tallado se dibuja más grueso que el borde, hacia adentro del paño. */
+  border-image: var(--tapete-marco);
   box-shadow:
     inset 0 0 0 2px rgb(0 0 0 / 0.18),
     inset 0 0 36px rgb(0 0 0 / 0.45),

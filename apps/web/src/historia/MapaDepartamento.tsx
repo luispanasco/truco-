@@ -31,8 +31,8 @@ function puntosDe(niveles: readonly NivelHistoria[], minimo: number): [number, n
 
 /**
  * El mapa de un departamento: su contorno (con los vecinos apagados alrededor), un punto por nivel
- * donde queda su lugar y el camino que los une en orden, lleno en los tramos ya ganados y punteado
- * en los que faltan. Cada punto se toca para elegir el nivel.
+ * donde queda su lugar y el camino que los une en orden, punteado: dorado en los tramos ya ganados
+ * y más claro en los que faltan. Cada punto se toca para elegir el nivel.
  */
 export function MapaDepartamento({
   departamento,
@@ -73,9 +73,10 @@ export function MapaDepartamento({
           y1={t.desde[1]}
           x2={t.hasta[0]}
           y2={t.hasta[1]}
-          style={{ strokeWidth: radio * 0.28, strokeDasharray: t.hecho ? 'none' : `${radio * 0.05} ${radio * 0.55}` }}
-          initial={sinMovimiento ? false : { pathLength: 0, opacity: 0 }}
-          animate={{ pathLength: 1, opacity: 1 }}
+          // Sin animar el largo (pathLength pisa el punteado): aparece de a un tramo.
+          style={{ strokeWidth: radio * 0.28, strokeDasharray: `${radio * 0.05} ${radio * 0.55}` }}
+          initial={sinMovimiento ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ delay: 0.3 + i * 0.25, duration: 0.4 }}
         />
       ))}

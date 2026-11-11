@@ -1948,3 +1948,17 @@ Entrega de arte (zip "Mazos-12-y-pano-Rocha", forma A del instructivo: objetos s
   - PNG RGBA de 24 bits (los de paleta traslucen un poco: el script lo corrige);
   - el lazo del 3 de bastos, que no vino.
 - **Pendiente:** faltan 7 mazos (Río Negro, Rivera, Salto, San José, Soriano, Tacuarembó y Treinta y Tres) y los 18 paños. Probar una partida 3 contra 3 con el paño.
+
+## Mesa de Rocha nueva, dorsos de Artigas y Salto, y el camino punteado del mapa — 2026-11-11
+
+Para el lanzamiento (MVP): la mesa de Rocha y dos dorsos de las muestras que mandó el agente de arte (INSTRUCTIVO-MESAS.md e INSTRUCTIVO-MAZOS.md). El resto de las mesas y de los dorsos, después.
+
+- **Mesa de Rocha:**
+  - el paño azul atlántico con faros, olas y butiá;
+  - al centro, el faro de Cabo Polonio bordado (en vertical, más grande);
+  - el marco de madera de barco con sogas y nudos, como `border-image`;
+  - sus colores nuevos. El emblema viejo se va: lo reemplaza el bordado.
+- **Script:** `departamentos.py --panos` ahora reconoce las mesas nuevas (con `bordado.png`, `marco.png` y `colores.json`). Arma la regla de la mesa de nuevo y se puede correr dos veces. El paño con dibujo va a calidad 85 (280 KB en vez de 660).
+- **CSS:** `--tapete-marco` (por defecto `none`) en la mesa, en la mesa en perspectiva y en las muestras de mesa.
+- **Dorsos:** Artigas y Salto, con una moneda grande al centro.
+- **Mapa del departamento:** el camino entre los niveles ahora es punteado, dorado en los tramos ganados y claro en los que faltan. Antes salía sólido porque la animación del largo pisaba el punteado.

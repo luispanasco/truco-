@@ -27,7 +27,7 @@ export const BARRA_MESA: Record<IdMesa, string> = {
   paysandu: '#303525',
   'rio-negro': '#30322d',
   rivera: '#22362f',
-  rocha: '#21363e',
+  rocha: '#052030',
   salto: '#3f2f20',
   'san-jose': '#30372f',
   soriano: '#323a28',

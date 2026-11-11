@@ -17,8 +17,16 @@ departamento que tenga, con pano.webp (1024 × 1024) y, si hay, emblema.png (102
 claro sobre transparente). Deja <id>-pano.webp y <id>-emblema.webp, y suma el emblema a la mesa de
 ese departamento en el CSS: centrado, al 55 % del ancho, abajo de la viñeta y arriba del paño. La
 opacidad del 10 % va ya en la imagen (una capa de fondo no tiene opacidad propia).
+
+Las mesas nuevas (INSTRUCTIVO-MESAS.md) traen además bordado.png (el bordado del centro, en color),
+marco.png (la madera tallada, banda de 160 px, para `border-image`) y colores.json (pano, panoOscuro,
+madera, maderaClara). Con eso la regla de la mesa se arma de nuevo: el bordado reemplaza al emblema
+(al 55 % del ancho y, en vertical, al 85 %, con su opacidad ya en la imagen), el marco va en
+`--tapete-marco` y los colores salen del json.
 """
 
+import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -54,6 +62,12 @@ DEPARTAMENTOS = [
 # El emblema: su opacidad en la mesa y su lado (se ve al 55 % del ancho de la mesa: sobra para pantallas densas).
 OPACIDAD_EMBLEMA = 0.10
 LADO_EMBLEMA = 768
+# El bordado del centro: casi entero (se ve el hilo), un poco transparente para que no compita con las cartas.
+OPACIDAD_BORDADO = 0.8
+LADO_BORDADO = 900
+# El marco: la banda de madera mide 160 px en la imagen y se ve de 22 px en la mesa.
+CORTE_MARCO = 160
+ANCHO_MARCO = '22px'
 
 ENCABEZADO = """/*
  * Los 19 departamentos del modo historia: la mesa de cada uno (el paño repetido, con una viñeta
@@ -122,12 +136,68 @@ def emblema(origen, destino):
     imagen.save(destino, 'WEBP', lossless=True, method=6)
 
 
+def con_opacidad(origen, destino, lado, opacidad):
+    imagen = Image.open(origen).convert('RGBA')
+    imagen.thumbnail((lado, lado), Image.LANCZOS)
+    if opacidad < 1:
+        imagen.putalpha(imagen.getchannel('A').point(lambda a: round(a * opacidad)))
+    imagen.save(destino, 'WEBP', quality=92, method=6)
+
+
+def regla_mesa(id, c):
+    """La mesa nueva: paño, bordado al centro, marco tallado y sus colores."""
+    textura = lambda tam: f"""
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, {c['panoOscuro']} 85%, transparent)),
+    url('/departamentos/{id}-bordado.webp') center / {tam} auto no-repeat,
+    url('/departamentos/{id}-pano.webp') center / 512px repeat;"""
+    return f"""[data-mesa='{id}']:is(:root, .muestra-mesa) {{
+  --tapete: {c['pano']};
+  --tapete-oscuro: {c['panoOscuro']};
+  --tapete-textura:{textura('55%')}
+  --tapete-marco: url('/departamentos/{id}-marco.webp') {CORTE_MARCO} / {ANCHO_MARCO} round;
+  --madera: {c['madera']};
+  --madera-clara: {c['maderaClara']};
+  --fondo-claro: {c['maderaClara']};
+}}
+/* En vertical la mesa es angosta: el bordado más grande, para que se vea entre las cartas. */
+@media (orientation: portrait) {{
+  [data-mesa='{id}']:is(:root, .muestra-mesa) {{
+    --tapete-textura:{textura('85%')}
+  }}
+}}
+"""
+
+
+def importar_mesa(carpeta, id, css):
+    """Una mesa nueva completa: copia las imágenes y reemplaza su regla en el CSS."""
+    c = json.loads((carpeta / 'colores.json').read_text(encoding='utf-8'))
+    # El paño nuevo tiene dibujo (no solo grano): a calidad 85 pesa un tercio y no se nota.
+    Image.open(carpeta / 'pano.webp').convert('RGB').save(DESTINO / f'{id}-pano.webp', 'WEBP', quality=85, method=6)
+    con_opacidad(carpeta / 'bordado.png', DESTINO / f'{id}-bordado.webp', LADO_BORDADO, OPACIDAD_BORDADO)
+    Image.open(carpeta / 'marco.png').convert('RGBA').save(DESTINO / f'{id}-marco.webp', 'WEBP', quality=92, method=6)
+    (DESTINO / f'{id}-emblema.webp').unlink(missing_ok=True)
+    # La regla vieja (con su media query de mesa, si ya era nueva) sale entera.
+    vieja = re.compile(
+        rf"\[data-mesa='{id}'\]:is\(:root, \.muestra-mesa\) \{{.*?\n\}}\n"
+        rf"(/\* En vertical.*?\n@media \(orientation: portrait\) \{{\n  \[data-mesa='{id}'\].*?\n  \}}\n\}}\n)?",
+        re.S,
+    )
+    css, n = vieja.subn(lambda _: regla_mesa(id, c), css, count=1)
+    if n != 1:
+        raise SystemExit(f'{id}: no encontré su regla en el CSS')
+    return css
+
+
 def importar_panos(carpeta):
     css = CSS.read_text(encoding='utf-8')
     for id in DEPARTAMENTOS:
         if not (carpeta / id / 'pano.webp').exists():
             continue
         pano(carpeta / id / 'pano.webp', DESTINO / f'{id}-pano.webp')
+        if all((carpeta / id / f).exists() for f in ('bordado.png', 'marco.png', 'colores.json')):
+            css = importar_mesa(carpeta / id, id, css)
+            print(f'{id}: mesa nueva (paño, bordado, marco y colores)')
+            continue
         hay_emblema = (carpeta / id / 'emblema.png').exists()
         if hay_emblema:
             emblema(carpeta / id / 'emblema.png', DESTINO / f'{id}-emblema.webp')
