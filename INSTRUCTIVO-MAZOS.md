@@ -176,3 +176,42 @@ Hay dos formas. Recomiendo la A.
 - Que, puesta al lado de la misma carta del Fournier, el palo se vea del mismo tamaño o más grande.
 - Que el 1 de espadas sea la carta más impactante del mazo.
 - Que el marco, la pinta y los números no se hayan movido. Esto lo puedo medir con un script en las 40 cartas de cada mazo.
+
+## Dorsos nuevos (15 mazos)
+
+Los dorsos de Rocha (`costa-uruguaya`), Montevideo (`grabado-nocturno`), Colonia (`colonial`) y Tacuarembó (`oriental`) están bien: un motivo central fuerte, simétrico, con ornamento alrededor. Los otros 15 son dos medallones con paisajes, uno arriba y otro abajo, y se ven recargados y chiquitos en la mesa. Se rehacen con una sola moneda grande al centro.
+
+### Prompt para el agente
+
+> Vamos a rehacer el dorso de 15 mazos del Truco Uruguayo. Hoy tienen dos medallones con paisajes (uno arriba y otro abajo) y en la mesa se ven recargados. Queremos el estilo de los dorsos que ya funcionan (te paso de referencia los de Rocha y Montevideo): un solo motivo central fuerte y ornamento alrededor.
+>
+> **Cada dorso:** `dorso.png`, 800 × 1200 px (se achica a 400 × 600), RGB sin transparencia, con las esquinas rectas (el juego las redondea).
+> - **Al centro, una sola moneda grande**, de oro viejo grabado, que ocupe entre el 55 y el 65 % del ancho. En la moneda, en relieve, el símbolo del departamento (ver la tabla), con una corona de hojas o un filete alrededor. Sin letras ni números.
+> - **Alrededor, el ornamento:** un campo con un estampado chico y parejo en el color del mazo (filigrana, arabescos o motivos del departamento, de 2 o 3 tonos), y un marco de un filete doble a unos 40 px del borde, con un adorno en cada esquina.
+> - **Simétrico:** girado 180° tiene que verse igual (es el dorso de un naipe: no puede tener arriba ni abajo). Por eso nada de paisajes ni escenas: motivos que se puedan espejar.
+> - Que se lea de lejos: en la mesa el dorso se ve de 30 a 90 px de ancho. Contraste claro entre la moneda y el fondo, formas grandes.
+> - Colores: los del mazo de hoy (los mismos que sus cartas), con el dorado de la moneda.
+>
+> | Mazo (carpeta) | Departamento | Color del campo | Símbolo de la moneda |
+> |---|---|---|---|
+> | artigas | Artigas | violeta | una geoda de amatista |
+> | canelones | Canelones | bordó | un racimo de uva |
+> | cerro-largo | Cerro Largo | verde | una espiga de arroz |
+> | durazno | Durazno | verde oscuro | un durazno con su hoja |
+> | flores | Flores | marrón | las columnas de las Grutas del Palacio |
+> | florida | Florida | azul petróleo | la Piedra Alta |
+> | lavalleja | Lavalleja | verde azulado | sierras con una cascada |
+> | maldonado | Maldonado | azul | los dedos de La Brava |
+> | paysandu | Paysandú | ámbar | una espiga de cebada con lúpulo |
+> | rio-negro | Río Negro | verde oliva | un girasol |
+> | rivera | Rivera | verde palma | el Cerro del Marco |
+> | salto | Salto | naranja tostado | una naranja con hojas |
+> | san-jose | San José | gris azulado | las piedras de Mahoma |
+> | soriano | Soriano | dorado oscuro | una espiga de trigo |
+> | treinta-y-tres | Treinta y Tres | verde bosque | un bombo |
+>
+> Entregá un zip con una carpeta por mazo (los nombres de la tabla) y adentro `dorso.png`. Sumá una `muestra.jpg` con los 15 dorsos chicos (90 px de ancho) uno al lado del otro, para ver cómo se leen en la mesa. Arrancá por dos (Artigas y Salto) y mandalos solos primero, para ajustar antes de hacer el resto.
+
+### Cuando llegue el zip
+
+Cada `dorso.png` se pasa a WebP de 400 × 600 en `apps/web/public/barajas/<mazo>/dorso.webp`. Revisarlos en la mesa (el mazo y las manos de los rivales) y en el visor.
