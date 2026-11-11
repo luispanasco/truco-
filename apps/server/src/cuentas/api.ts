@@ -30,6 +30,7 @@ import {
   salirDeGrupo,
 } from './grupos'
 import { invitarAlGrupo, muroDeGrupo, repeticion } from './muro'
+import { borrarDelChat, chatDeGrupo, LimiteChatGrupo, mandarAlChat } from './chatGrupo'
 import { cobrarMision, MisionRechazo, misiones } from './misiones'
 import { recibirse } from './tutorial'
 import { guardarReporte, LimiteReportes, listarReportes, reporteCompleto, ReporteRechazo, repeticionDeReporte } from './reportes'
@@ -56,7 +57,7 @@ export function rutasCuentas(c: Cuentas | null): Router {
     res.set({
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'authorization, content-type',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Max-Age': '86400',
     })
     if (req.method === 'OPTIONS') return void res.sendStatus(204)
@@ -287,6 +288,34 @@ export function rutasCuentas(c: Cuentas | null): Router {
   rutaGrupo('renovar-codigo', (b, c, u) => renovarCodigo(c.base, u.id, b.id))
   rutaGrupo('borrar', (b, c, u) => borrarGrupo(c.base, u.id, b.id))
   rutaGrupo('sacar-foto', (b, c, u) => guardarFotoGrupo(c.base, u.id, b.id, null))
+  // El chat del grupo: los últimos mensajes (o los que vinieron después de `desde`), mandar un
+  // texto o un emote (con un límite por cuenta) y borrar uno.
+  const limiteChat = new LimiteChatGrupo()
+  r.get(
+    '/grupos/:id/chat',
+    conSesion(
+      conRechazo(async (req, res, c, u) => {
+        res.json(await chatDeGrupo(c.base, u.id, req.params.id, req.query.desde))
+      }),
+    ),
+  )
+  r.post(
+    '/grupos/:id/chat',
+    conSesion(
+      conRechazo(async (req, res, c, u) => {
+        if (!limiteChat.permitir(u.id)) return void res.status(429).json({ motivo: 'Más despacio: esperá un momento antes de mandar otro.' })
+        res.json(await mandarAlChat(c.base, u.id, req.params.id, enGrupo(req)))
+      }),
+    ),
+  )
+  r.delete(
+    '/grupos/:id/chat/:mensaje',
+    conSesion(
+      conRechazo(async (req, res, c, u) => {
+        res.json(await borrarDelChat(c.base, u.id, req.params.id, req.params.mensaje))
+      }),
+    ),
+  )
   // La foto viaja tal cual (ya achicada por la app), no en JSON.
   r.put(
     '/grupos/:id/foto',

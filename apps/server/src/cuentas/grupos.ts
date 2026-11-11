@@ -21,7 +21,7 @@ import type { Presencia } from './presencia'
 export class GruposRechazo extends Error {
   constructor(
     mensaje: string,
-    readonly estado: 404 | 409 = 409,
+    readonly estado: 400 | 403 | 404 | 409 | 429 = 409,
   ) {
     super(mensaje)
   }
@@ -125,7 +125,7 @@ async function nombreLibre(b: Base, nombre: string, salvo: string | null) {
 export async function listaDeGrupos(base: Base, yo: string, presencia?: Presencia) {
   const filas = await base.consultar<FilaGrupo>(`${SELECT_GRUPOS} order by g.creado`, [yo])
   const tuyos = filas.filter((f) => f.rol).map(resumen)
-  // En los tuyos, además: cuántos de los demás están conectados y la última novedad del muro.
+  // En los tuyos, además: cuántos de los demás están conectados y la última novedad del muro y del chat.
   const ids = tuyos.map((g) => g.id)
   if (ids.length > 0) {
     const miembros = await base.consultar<{ grupo_id: string; cuenta_id: string }>(
@@ -136,11 +136,17 @@ export async function listaDeGrupos(base: Base, yo: string, presencia?: Presenci
       'select grupo_id, max(id)::int as ultimo from grupo_muro where grupo_id = any($1) group by grupo_id',
       [ids],
     )
+    // Del chat, el último mensaje de otro (los tuyos no son novedad).
+    const chats = await base.consultar<{ grupo_id: string; ultimo: number }>(
+      'select grupo_id, max(id)::int as ultimo from grupo_chat where grupo_id = any($1) and cuenta_id <> $2 group by grupo_id',
+      [ids, yo],
+    )
     for (const g of tuyos) {
       g.conectados = presencia
         ? miembros.filter((m) => m.grupo_id === g.id && presencia.estado(m.cuenta_id).estado !== 'desconectado').length
         : 0
       g.ultimoMuro = ultimos.find((u) => u.grupo_id === g.id)?.ultimo ?? null
+      g.ultimoChat = chats.find((u) => u.grupo_id === g.id)?.ultimo ?? null
     }
   }
   return {

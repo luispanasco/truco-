@@ -8,7 +8,7 @@ import { MensajeError } from '../componentes/Online'
 import { useCuenta } from '../cuenta/cuenta'
 import { IconoGrupos } from './Iconos'
 import '../estilos-grupos.css'
-import { cancelarPedido, cargarGrupos, crearGrupo, entrarAGrupo, entrarConCodigo, subirFoto, tieneNovedades, useGrupos } from '../cuenta/grupos'
+import { cancelarPedido, cargarGrupos, crearGrupo, entrarAGrupo, entrarConCodigo, subirFoto, tieneMensajesNuevos, tieneNovedades, useGrupos } from '../cuenta/grupos'
 
 /** "3 miembros", "1 miembro", "4 de 10". */
 export function textoMiembros(g: Pick<ResumenGrupo, 'miembros' | 'cupo'>): string {
@@ -42,6 +42,7 @@ export function PanelGrupos({ alEntrar }: { alEntrar: () => void }) {
   const estado = useCuenta((s) => s.estado)
   const lista = useGrupos((s) => s.lista)
   const vistos = useGrupos((s) => s.vistos)
+  const chatVisto = useGrupos((s) => s.chatVisto)
   const [codigo, setCodigo] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
@@ -102,6 +103,7 @@ export function PanelGrupos({ alEntrar }: { alEntrar: () => void }) {
                   <FilaGrupo grupo={g} detalle={`${NOMBRE_ROL[g.rol!]} · ${textoMiembros(g)}`} />
                   <span className="grupo-fila-chips">
                     {tieneNovedades(g, vistos) && <span className="grupo-chip-novedad">Novedades</span>}
+                    {tieneMensajesNuevos(g, chatVisto) && <span className="grupo-chip-novedad">Mensajes</span>}
                     {(g.conectados ?? 0) > 0 && <span className="grupo-chip-conectados">● {g.conectados}</span>}
                   </span>
                   <span className="grupo-fila-ir" aria-hidden="true">
