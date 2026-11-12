@@ -2075,3 +2075,10 @@ Pedido del usuario: chat en los grupos y emotes, que son las señas hechas por t
   - Lo nuevo se pide cada 3,5 s, y cada 35 s se trae todo de nuevo para que desaparezca lo borrado.
   - El aviso se suma al puntito de Grupos, al chip "Mensajes" de la lista y al puntito de la pestaña.
 - **Tests:** server 147 (7 nuevos), web 473 (4 nuevos).
+
+## Dorsos de 13 departamentos — 2026-11-12
+
+Llegaron del agente de arte los dorsos que quedaban con dos medallones: Canelones, Cerro Largo, Durazno, Flores, Florida, Lavalleja, Maldonado, Paysandú, Río Negro, Rivera, San José, Soriano y Treinta y Tres. Ahora cada uno lleva un medallón grande con el motivo del departamento y los adornos alrededor, como los de Rocha, Montevideo, Artigas y Salto.
+
+- Venían en PNG de 800 × 1200 y se llevaron a WebP de 400 × 600 (calidad 85, entre 70 y 87 KB), en `public/barajas/<departamento>/dorso.webp`.
+- Siguen pendientes los 7 mazos a rehacer, el lazo del 3 de bastos y los bastos cortos de Colonial.
