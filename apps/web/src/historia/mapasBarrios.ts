@@ -1,7 +1,7 @@
 /**
- * El mapa de cada barrio (scripts/mapas-barrios.py, con teselas de OpenStreetMap): su zoom, su
- * esquina de arriba a la izquierda en píxeles del mundo a ese zoom y su tamaño. La imagen está en
- * public/departamentos/<departamento>/<barrio>/mapa.webp.
+ * El mapa de cada barrio (scripts/mapas-barrios.py, dibujado con los datos de OpenStreetMap): su
+ * zoom, su esquina de arriba a la izquierda en píxeles del mundo a ese zoom y su tamaño. El dibujo
+ * está en public/departamentos/<departamento>/<barrio>/mapa.svg.
  *
  * Generado por scripts/mapas-barrios.py: no editar a mano.
  */

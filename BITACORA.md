@@ -2208,3 +2208,12 @@ Llegaron del agente de arte las mesas de cinco barrios (`Rocha-barrios-mesas.zip
 - **Coordenadas:** se verificaron las 32 con Nominatim (OpenStreetMap) y mirando cada mapa.
   - Corregidas: Los Botes (estaba del lado del puerto y queda al oeste, pasando La Balconada), el monte de ombúes (estaba 6 km corrido), el Cerro de la Buena Vista, La Calavera, La Viuda y varias más por unos metros.
   - Movidas de lugar: la Laguna de Rocha (estaba en el medio del agua y pasó a la orilla), la Puerta del Polonio (estaba en el bañado y pasó a la Ruta 10), las dunas (estaban en el monte de pinos y pasaron a la arena), el Desplayado, la lobería y La Moza (estaban apenas sobre el agua).
+- **Mapa en vector y móvil (mismo día):** al usuario el mapa de teselas le resultaba frío y chocaba con los colores del juego. Se pasó a vector y no a una imagen estilizada con IA, porque la IA deforma la geografía y los puntos dejarían de caer en su lugar.
+  - `scripts/mapas-barrios.py` ahora baja de la API de Overpass la costa, el agua, los arroyos, los montes, los bañados, la arena, los pueblos y las rutas (las calles solo con zoom 13 o más).
+  - El mar se arma partiendo el encuadre con la costa: cada pedazo es mar o tierra según de qué lado del tramo de costa más cercano queda, porque en OpenStreetMap la tierra va a la izquierda. Usa shapely.
+  - Se dibuja con la paleta del juego (carta náutica vieja: tierra papel, mar petróleo, arena dorada, monte oliva), sin nombres, en `mapa.svg`, de 5 a 74 KB por barrio. Las teselas `mapa.webp` se borraron.
+  - El SVG se mete adentro del mapa, así las líneas no engordan con el zoom (`vector-effect: non-scaling-stroke`).
+  - **El mapa se mueve:** se arrastra con un dedo o el mouse; se acerca y se aleja con dos dedos, la rueda o los botones + y −; y ⤢ vuelve a mostrar todo el barrio.
+  - **Al tocar un nivel**, el mapa se acerca a él. Los puntos se ven siempre del mismo tamaño.
+  - **Si el nivel elegido queda fuera de lo que se ve**, una flecha en el borde apunta hacia él, con su número, y tocándola te lleva ahí.
+  - **Ojo:** el contenedor del mapa se llamaba `mapa-departamento`, igual que cada departamento del mapa de Uruguay, y esas reglas pintaban de negro los trazos del dibujo. Pasó a llamarse `mapa-lugar`.

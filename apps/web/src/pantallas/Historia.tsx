@@ -352,7 +352,7 @@ function VistaNiveles({ departamento, barrio }: { departamento: IdDepartamento; 
         abiertos={abiertos}
         elegido={n}
         alElegir={setElegido}
-        fondo={mapa && { ...mapa, imagen: `/departamentos/${departamento}/${barrio.id}/mapa.webp` }}
+        fondo={mapa && { ...mapa, imagen: `/departamentos/${departamento}/${barrio.id}/mapa.svg` }}
       />
       <article className={`historia-nivel${ganado ? ' ganado' : ''}${abierto ? '' : ' cerrado'}`} aria-live="polite">
         <span className="historia-nivel-numero" aria-hidden="true">

@@ -294,19 +294,78 @@
 }
 
 /* El mapa de un barrio: OpenStreetMap de fondo, en tonos cálidos para que combine, y el crédito. */
-.mapa-departamento {
+.mapa-lugar {
   margin: 0;
   display: grid;
   gap: 4px;
 }
-.mapa-fondo {
-  filter: sepia(0.45) saturate(0.8) brightness(0.93) contrast(0.95);
+.mapa-marco {
+  position: relative;
 }
-.mapa-departamento.con-fondo .mapa-camino {
+.mapa-lugar.con-fondo .mapa-departamento-svg {
+  background: #4d7b78;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.mapa-lugar.con-fondo .mapa-departamento-svg:active {
+  cursor: grabbing;
+}
+.mapa-fondo-vacio {
+  fill: #eadcbc;
+}
+/* Los botones del zoom, arriba a la derecha del mapa. */
+.mapa-controles {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  gap: 6px;
+}
+.mapa-controles button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #2a1d14;
+  background: var(--acento);
+  color: var(--tinta);
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+}
+.mapa-controles button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+/* La flecha al nivel elegido, cuando queda fuera de lo que se ve. */
+.mapa-flecha {
+  cursor: pointer;
+}
+.mapa-flecha path {
+  fill: var(--acento);
+  stroke: #2a1d14;
+  stroke-width: 0.5px;
+  vector-effect: non-scaling-stroke;
+}
+.mapa-flecha circle {
+  fill: #2a1d14;
+  stroke: var(--acento);
+}
+.mapa-flecha text {
+  fill: #fff6c8;
+  font-weight: 800;
+  pointer-events: none;
+}
+.mapa-flecha:focus {
+  outline: none;
+}
+.mapa-lugar.con-fondo .mapa-camino {
   stroke: #5a3d22;
   opacity: 0.9;
 }
-.mapa-departamento.con-fondo .mapa-camino.hecho {
+.mapa-lugar.con-fondo .mapa-camino.hecho {
   stroke: #b8741a;
 }
 .mapa-creditos {
