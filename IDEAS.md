@@ -14,3 +14,7 @@ Cada nivel de un departamento se divide en tres partidas, cada una en un lugar p
   - los fondos (19 departamentos × 5 niveles × 3 lugares);
   - los datos y los diálogos de cada lugar;
   - cómo se guarda el progreso (hoy es por nivel).
+
+## Un mazo por departamento y un paño por barrio — 2026-11-12
+
+Con los barrios, cada uno podría tener su propio paño de premio, y el departamento, su mazo. Por ahora se mantiene como está: piezas y monedas por barrio, y el mazo y el paño al cerrar el departamento.
