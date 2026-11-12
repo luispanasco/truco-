@@ -30,9 +30,9 @@ export async function progresoHistoria(base: Base, cuentaId: string): Promise<Pr
 /**
  * Ganaste un nivel: queda anotado y, la primera vez, sus recompensas van al inventario (como si las
  * hubieras comprado, a precio 0); las monedas (`monedas:<n>`), al saldo. El departamento tiene que
- * estar publicado y abierto (la mitad de un vecino ganada, o el inicial), salvo con `todoAbierto`
- * (el admin). Hay que tener abierto el barrio (el anterior completo) y el nivel (el anterior
- * ganado). Las partidas contra bots corren en el navegador, así que el servidor confía en que
+ * estar publicado y abierto (la mitad de un vecino ganada, o el inicial), tener abierto el barrio
+ * (el anterior completo) y el nivel (el anterior ganado), salvo con `todoAbierto` (el admin), que
+ * tiene todo abierto. Las partidas contra bots corren en el navegador, así que el servidor confía en que
  * ganaste: las recompensas son cosméticas.
  */
 export async function ganarNivel(
@@ -53,8 +53,8 @@ export async function ganarNivel(
     const progreso = await progresoHistoria(b, cuentaId)
     if (!todoAbierto && !departamentoPublicado(dep)) throw new HistoriaRechazo('Ese departamento todavía no está abierto: muy pronto')
     if (!departamentoAbierto(progreso, dep, todoAbierto)) throw new HistoriaRechazo('Ese departamento todavía está cerrado: ganá la mitad de uno de sus vecinos')
-    if (!barrioAbierto(progreso, dep, enBarrio)) throw new HistoriaRechazo('Primero completá el barrio anterior')
-    if (!nivelAbierto(progreso, dep, numero, enBarrio)) throw new HistoriaRechazo('Primero ganá el nivel anterior')
+    if (!barrioAbierto(progreso, dep, enBarrio, todoAbierto)) throw new HistoriaRechazo('Primero completá el barrio anterior')
+    if (!nivelAbierto(progreso, dep, numero, enBarrio, todoAbierto)) throw new HistoriaRechazo('Primero ganá el nivel anterior')
     const primera = await b.consultar<{ nivel: number }>(
       'insert into historia (cuenta_id, departamento, barrio, nivel) values ($1, $2, $3, $4) on conflict do nothing returning nivel',
       [cuentaId, dep, enBarrio, numero],

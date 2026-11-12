@@ -38,8 +38,7 @@ async function cuenta(): Promise<{ id: string; token: string; email: string }> {
 describe('modo historia', () => {
   it('los niveles se abren de a uno, barrio por barrio; la primera vez da sus recompensas, después ya no', async () => {
     const { id } = await cuenta()
-    // Para el admin (todo abierto).
-    await expect(ganarNivel(base, id, 'rocha', 2, true, 'la-paloma')).rejects.toThrow('Primero ganá el nivel anterior')
+    await expect(ganarNivel(base, id, 'rocha', 2, false, 'la-paloma')).rejects.toThrow('Primero ganá el nivel anterior')
     await expect(ganarNivel(base, id, 'rocha', 9, true, 'la-paloma')).rejects.toThrow('Ese nivel no existe')
     await expect(ganarNivel(base, id, 'narnia', 1)).rejects.toThrow('Ese nivel no existe')
 

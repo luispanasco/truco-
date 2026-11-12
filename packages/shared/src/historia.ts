@@ -169,21 +169,26 @@ export function barrioCompleto(progreso: ProgresoHistoria, departamento: IdDepar
   return barrio.niveles.length > 0 && barrio.niveles.every((_, i) => ganados.includes(i + 1))
 }
 
-/** Un barrio se juega si es el primero del departamento o si completaste el anterior. */
-export function barrioAbierto(progreso: ProgresoHistoria, departamento: IdDepartamento, barrio = ''): boolean {
+/**
+ * Un barrio se juega si es el primero del departamento o si completaste el anterior. Con
+ * `todoAbierto` (el admin), todos los que existen.
+ */
+export function barrioAbierto(progreso: ProgresoHistoria, departamento: IdDepartamento, barrio = '', todoAbierto = false): boolean {
   const historia = HISTORIAS[departamento]
   if (!historia) return false
   const barrios = barriosDe(historia)
   const i = barrios.findIndex((b) => b.id === barrio)
-  return i === 0 || (i > 0 && barrioCompleto(progreso, departamento, barrios[i - 1]!))
+  return i === 0 || (i > 0 && (todoAbierto || barrioCompleto(progreso, departamento, barrios[i - 1]!)))
 }
 
 /**
  * Dentro de un barrio abierto, un nivel se juega si es el primero o si ya ganaste el anterior (los
- * ganados se repiten).
+ * ganados se repiten). Con `todoAbierto` (el admin), todos los que existen.
  */
-export function nivelAbierto(progreso: ProgresoHistoria, departamento: IdDepartamento, n: number, barrio = ''): boolean {
-  return barrioAbierto(progreso, departamento, barrio) && (n === 1 || ganadosDelBarrio(progreso, departamento, barrio).includes(n - 1))
+export function nivelAbierto(progreso: ProgresoHistoria, departamento: IdDepartamento, n: number, barrio = '', todoAbierto = false): boolean {
+  if (!barrioAbierto(progreso, departamento, barrio, todoAbierto)) return false
+  if (todoAbierto) return !!buscarBarrio(departamento, barrio)?.niveles[n - 1]
+  return n === 1 || ganadosDelBarrio(progreso, departamento, barrio).includes(n - 1)
 }
 
 /** Cuántos niveles tiene un departamento, sumando sus barrios. */

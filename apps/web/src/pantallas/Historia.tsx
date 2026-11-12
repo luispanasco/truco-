@@ -212,7 +212,7 @@ export function BarrioHistoria() {
   const barrio = dep && buscarBarrio(dep.id, segundo)
   if (!adentro) return cargando ? <Cargando /> : <SinCuenta />
   if (!dep || !barrio || !barrio.id) return <EnPreparacion />
-  if (progreso && (!departamentoAbierto(progreso, dep.id, admin) || !barrioAbierto(progreso, dep.id, barrio.id))) return <EnPreparacion />
+  if (progreso && (!departamentoAbierto(progreso, dep.id, admin) || !barrioAbierto(progreso, dep.id, barrio.id, admin))) return <EnPreparacion />
   if (presentando)
     return (
       <PresentacionDepartamento
@@ -234,13 +234,13 @@ export function BarrioHistoria() {
  */
 function VistaBarrios({ departamento }: { departamento: IdDepartamento }) {
   const navegar = useNavigate()
-  const { progreso } = useHistoriaDeLaCuenta()
+  const { admin, progreso } = useHistoriaDeLaCuenta()
   const [elegido, setElegido] = useState<number | null>(null)
   const dep = buscarDepartamento(departamento)!
   const historia = HISTORIAS[departamento]!
   const barrios = barriosDe(historia)
   const completos = progreso ? barrios.flatMap((b, i) => (barrioCompleto(progreso, departamento, b) ? [i + 1] : [])) : []
-  const abiertos = progreso ? barrios.flatMap((b, i) => (barrioAbierto(progreso, departamento, b.id) ? [i + 1] : [])) : []
+  const abiertos = progreso ? barrios.flatMap((b, i) => (barrioAbierto(progreso, departamento, b.id, admin) ? [i + 1] : [])) : []
   const k = elegido ?? abiertos.find((a) => !completos.includes(a)) ?? barrios.length
   const barrio = barrios[k - 1]!
   const jefe = personaje(barrio.jefe)
@@ -311,14 +311,14 @@ function VistaBarrios({ departamento }: { departamento: IdDepartamento }) {
  */
 function VistaNiveles({ departamento, barrio }: { departamento: IdDepartamento; barrio: Barrio }) {
   const navegar = useNavigate()
-  const { progreso } = useHistoriaDeLaCuenta()
+  const { admin, progreso } = useHistoriaDeLaCuenta()
   const [elegido, setElegido] = useState<number | null>(null)
   const dep = buscarDepartamento(departamento)!
   const conBarrio = barrio.id !== ''
   const jefe = personaje(barrio.jefe)
   const ganados = progreso ? ganadosDelBarrio(progreso, departamento, barrio.id) : []
   const numeros = barrio.niveles.map((_, i) => i + 1)
-  const abiertos = progreso ? numeros.filter((n) => nivelAbierto(progreso, departamento, n, barrio.id)) : []
+  const abiertos = progreso ? numeros.filter((n) => nivelAbierto(progreso, departamento, n, barrio.id, admin)) : []
   const n = elegido ?? abiertos.find((a) => !ganados.includes(a)) ?? barrio.niveles.length
   const nivel = barrio.niveles[n - 1]!
   const ganado = ganados.includes(n)
@@ -403,7 +403,7 @@ export function PreviaNivel() {
   if (!adentro) return cargando ? <Cargando /> : <SinCuenta />
   if (!dep || !barrio || !nivel) return <EnPreparacion />
   // Sin el departamento abierto o el anterior ganado no se juega (si el progreso todavía no llegó, se espera).
-  if (progreso && (!departamentoAbierto(progreso, dep.id, admin) || !nivelAbierto(progreso, dep.id, n, barrio.id))) return <EnPreparacion />
+  if (progreso && (!departamentoAbierto(progreso, dep.id, admin) || !nivelAbierto(progreso, dep.id, n, barrio.id, admin))) return <EnPreparacion />
 
   const dialogo = dialogoDelNivel(nivel, n)
   const turno = dialogo[paso]!

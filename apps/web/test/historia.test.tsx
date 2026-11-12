@@ -323,7 +323,7 @@ describe('pantallas', () => {
 
   it('Rocha: un punto por barrio; al entrar, el que sigue; los que faltan, cerrados', async () => {
     servidorFalso(rochaCompleta(1))
-    comoAdmin()
+    comoAdmin(false)
     app('/historia/rocha')
     // Completaste La Paloma: sigue La Pedrera.
     await waitFor(() => expect((screen.getByRole('button', { name: 'Entrar a La Pedrera' }) as HTMLButtonElement).disabled).toBe(false))
@@ -343,7 +343,7 @@ describe('pantallas', () => {
 
   it('un barrio: un punto por nivel en el mapa; se elige y se ve qué es, su premio y si se juega', async () => {
     servidorFalso({ 'rocha/la-paloma': [1] })
-    comoAdmin()
+    comoAdmin(false)
     app('/historia/rocha/la-paloma')
     // Al entrar, el que sigue.
     await waitFor(() => expect((screen.getByRole('button', { name: 'Jugar el nivel 2' }) as HTMLButtonElement).disabled).toBe(false))
@@ -415,9 +415,21 @@ describe('pantallas', () => {
     expect(conexion.historia).toEqual({ departamento: 'rocha', barrio: 'la-paloma', nivel: 2 })
   })
 
-  it('un nivel o un barrio cerrado no se puede abrir por la dirección', async () => {
+  it('el admin tiene todos los barrios y niveles abiertos', async () => {
     servidorFalso({})
     comoAdmin()
+    app('/historia/rocha')
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Entrar a La Paloma' }) as HTMLButtonElement).disabled).toBe(false))
+    fireEvent.click(screen.getByRole('button', { name: 'Barrio 6 · Santa Teresa y Chuy' }))
+    expect((screen.getByRole('button', { name: 'Entrar a Santa Teresa y Chuy' }) as HTMLButtonElement).disabled).toBe(false)
+    cleanup()
+    app('/historia/rocha/santa-teresa-y-chuy/6')
+    expect(await screen.findByRole('heading', { name: ULTIMO.niveles[5]!.lugar })).toBeTruthy()
+  })
+
+  it('un nivel o un barrio cerrado no se puede abrir por la dirección', async () => {
+    servidorFalso({})
+    comoAdmin(false)
     app('/historia/rocha/la-paloma/3')
     await waitFor(() => expect(screen.getByText(/Se está armando/)).toBeTruthy())
     cleanup()

@@ -136,6 +136,16 @@ describe('Rocha por barrios: el progreso', () => {
     expect(barrioAbierto({ rocha: hasta(5) }, 'rocha', 'la-pedrera')).toBe(false)
   })
 
+  it('el admin tiene todos los barrios y niveles abiertos (los que existen)', async () => {
+    expect(barrioAbierto({}, 'rocha', 'santa-teresa-y-chuy', true)).toBe(true)
+    expect(nivelAbierto({}, 'rocha', 6, 'santa-teresa-y-chuy', true)).toBe(true)
+    expect(nivelAbierto({}, 'rocha', 7, 'santa-teresa-y-chuy', true)).toBe(false)
+    expect(barrioAbierto({}, 'rocha', 'narnia', true)).toBe(false)
+    const id = await cuenta()
+    const r = await ganarNivel(base, id, 'rocha', 6, true, 'santa-teresa-y-chuy')
+    expect(r.nuevas).toContain(idMesa('rocha'))
+  })
+
   it('el servidor anota cada nivel con su barrio y respeta el orden', async () => {
     const id = await cuenta()
     await expect(ganarNivel(base, id, 'rocha', 1, false, 'la-pedrera')).rejects.toThrow('Primero completá el barrio anterior')
