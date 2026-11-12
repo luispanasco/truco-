@@ -1323,6 +1323,11 @@ button.selector-modo-detalle:hover {
   color: var(--menu-oro);
   min-height: 1.2em;
 }
+.visor-dorso {
+  display: grid;
+  justify-items: center;
+  padding: 8px 0 16px;
+}
 
 /* ── Hojas del menú (cuenta, ajustes y perfil) ────────────────── */
 

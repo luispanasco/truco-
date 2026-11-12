@@ -2082,3 +2082,4 @@ Llegaron del agente de arte los dorsos que quedaban con dos medallones: Canelone
 
 - Venían en PNG de 800 × 1200 y se llevaron a WebP de 400 × 600 (calidad 85, entre 70 y 87 KB), en `public/barajas/<departamento>/dorso.webp`.
 - Siguen pendientes los 7 mazos a rehacer, el lazo del 3 de bastos y los bastos cortos de Colonial.
+- En el Avatar, "Ver cartas" suma la pestaña **Dorso** al lado de los palos: muestra el dorso de tu baraja en grande.

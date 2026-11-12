@@ -53,12 +53,11 @@ export function cartasDelPalo(palo: Palo, soloLasQueMandan: boolean): CartaDelVi
   return todas.filter((c) => c.etiqueta !== null).sort((a, b) => fuerza(b.carta, muestra) - fuerza(a.carta, muestra))
 }
 
-/** Para ver las cartas de la baraja que usás, de a un palo (pestañas arriba). */
+/** Para ver las cartas de la baraja que usás, de a un palo (pestañas arriba), o el dorso. */
 export function VisorMazo({ baraja, alCerrar }: { baraja: Baraja; alCerrar: () => void }) {
-  const [palo, setPalo] = useState<Palo>('espada')
+  const [palo, setPalo] = useState<Palo | 'dorso'>('espada')
   const [soloLasQueMandan, setSoloLasQueMandan] = useState(false)
   const datos = BARAJAS.find((b) => b.id === baraja)
-  const cartas = cartasDelPalo(palo, soloLasQueMandan)
   return (
     <Hoja titulo="Las cartas del mazo" alCerrar={alCerrar} clase="hoja-menu hoja-visor-mazo" claseFondo="hoja-fija">
       <div className="hoja-menu-contenido visor-mazo">
@@ -79,23 +78,52 @@ export function VisorMazo({ baraja, alCerrar }: { baraja: Baraja; alCerrar: () =
               {p.nombre}
             </button>
           ))}
+          <button type="button" role="radio" aria-checked={palo === 'dorso'} className={palo === 'dorso' ? 'elegido' : ''} onClick={() => setPalo('dorso')}>
+            Dorso
+          </button>
         </div>
-        <Interruptor
-          activo={soloLasQueMandan}
-          alCambiar={setSoloLasQueMandan}
-          titulo="Solo las que mandan"
-          detalle="Las piezas y las matas del palo, de la más alta a la más baja"
-        />
-        <ul className="visor-cartas" aria-label={`Cartas de ${PALOS_VISOR.find((p) => p.id === palo)!.nombre.toLowerCase()}`}>
-          {cartas.map(({ carta, etiqueta }) => (
-            <li key={`${carta.numero}-${carta.palo}`} className="visor-carta">
-              <Carta carta={carta} tam="normal" baraja={baraja} />
-              <span className={`visor-etiqueta${etiqueta ? '' : ' vacia'}`}>{etiqueta ?? ' '}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="nota">Las piezas mandan cuando la muestra es de este palo; si la muestra es una pieza, el 12 toma su lugar.</p>
+        {palo === 'dorso' ? (
+          <div className="visor-dorso">
+            <Carta oculta tam="grande" baraja={baraja} />
+          </div>
+        ) : (
+          <VisorPalo palo={palo} baraja={baraja} soloLasQueMandan={soloLasQueMandan} alCambiarSolo={setSoloLasQueMandan} />
+        )}
       </div>
     </Hoja>
+  )
+}
+
+/** Las cartas de un palo, con el interruptor de "solo las que mandan". */
+function VisorPalo({
+  palo,
+  baraja,
+  soloLasQueMandan,
+  alCambiarSolo,
+}: {
+  palo: Palo
+  baraja: Baraja
+  soloLasQueMandan: boolean
+  alCambiarSolo: (v: boolean) => void
+}) {
+  const cartas = cartasDelPalo(palo, soloLasQueMandan)
+  return (
+    <>
+      <Interruptor
+        activo={soloLasQueMandan}
+        alCambiar={alCambiarSolo}
+        titulo="Solo las que mandan"
+        detalle="Las piezas y las matas del palo, de la más alta a la más baja"
+      />
+      <ul className="visor-cartas" aria-label={`Cartas de ${PALOS_VISOR.find((p) => p.id === palo)!.nombre.toLowerCase()}`}>
+        {cartas.map(({ carta, etiqueta }) => (
+          <li key={`${carta.numero}-${carta.palo}`} className="visor-carta">
+            <Carta carta={carta} tam="normal" baraja={baraja} />
+            <span className={`visor-etiqueta${etiqueta ? '' : ' vacia'}`}>{etiqueta ?? ' '}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="nota">Las piezas mandan cuando la muestra es de este palo; si la muestra es una pieza, el 12 toma su lugar.</p>
+    </>
   )
 }

@@ -224,6 +224,10 @@ describe('pantalla Avatar', () => {
     fireEvent.click(visor.getByRole('radio', { name: 'Espada' }))
     expect(cartas()).toEqual(['2', '4', '5', '11', '10', '1', '7'].map((n) => `${n} de espadas`))
     expect(visor.getByText('Perico')).toBeTruthy()
+    // El dorso: una carta grande boca abajo, sin el interruptor.
+    fireEvent.click(visor.getByRole('radio', { name: 'Dorso' }))
+    expect(visor.getByLabelText('carta boca abajo')).toBeTruthy()
+    expect(visor.queryByRole('switch', { name: /Solo las que mandan/ })).toBeNull()
     // Solo se ve la baraja que usás (no hay selector de barajas).
     expect(visor.queryByRole('radiogroup', { name: 'Baraja que mirás' })).toBeNull()
     // Sin ser admin no están los personajes.
