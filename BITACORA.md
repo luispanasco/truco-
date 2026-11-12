@@ -2178,3 +2178,5 @@ Llegó `Rocha-barrios-fondos.zip` del agente de arte: 31 niveles en horizontal (
   - Server 158; web 475, con `historia.test.tsx` reescrito para los barrios y un caso nuevo para la despedida del barrio.
   - E2E del cooperativo, en La Paloma 2.
   - Capturas revisadas a mano: los barrios en el celular y la compu, el barrio y la previa.
+- **Fondos corregidos (mismo día):** llegó `Rocha-barrios-fondos(2).zip` con los tres que había que rehacer. En La Paloma 2, el Cristo de Lucho ahora es una figura de piedra parada que mira al mar; en el Arinos se ve el casco; en el monte de ombúes ya no está el castillo. Se copiaron solo esos seis archivos, porque Santa Teresa y Chuy viene con la numeración de antes de la Laguna Negra.
+- **Para probar sin tocar producción:** el servidor se levanta con `DATABASE_URL` y `SUPABASE_URL` vacías y `TRUCO_DIR_BASE=datos/base-barrios`, así usa una base local y el login de prueba. La web va con `PUERTO_SERVIDOR`, y `cloudflared tunnel --url` da el link temporal. `pnpm compartir` tal cual usaría la base de producción, porque el `.env` del servidor la tiene puesta.
