@@ -27,7 +27,8 @@ export interface DatosMisiones {
   ganadasHoy: number
   /** Partidas de hoy en las que jugó alguien de uno de tus grupos (con su cuenta). */
   conGrupoHoy: number
-  nivelesHistoria: { departamento: string; nivel: number }[]
+  /** Los niveles ganados (`barrio` vacío en los departamentos sin barrios). */
+  nivelesHistoria: { departamento: string; barrio: string; nivel: number }[]
   amigos: number
   grupos: number
   compras: number

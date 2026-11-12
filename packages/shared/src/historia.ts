@@ -4,6 +4,11 @@
  * niveles según su tamaño, cada uno más difícil. Cada nivel tiene su formato (1v1, 2v2 o 3v3), su
  * dificultad, sus recompensas fijas y lo que dice el rival antes de empezar.
  *
+ * Un departamento puede dividirse en barrios (ver `Barrio`): cada uno con su personaje y sus
+ * niveles, que se juegan en orden. Los que no tienen barrios se manejan como uno solo, sin nombre
+ * (`barriosDe`). El progreso se guarda por barrio: así se le pueden sumar niveles a uno sin correr
+ * la numeración de los otros.
+ *
  * Se publica de a poco: cualquiera juega los de `DEPARTAMENTOS_PUBLICADOS` y el admin, todos. Rocha
  * está acá (fue el primero); los demás, en historias.ts.
  */
@@ -86,8 +91,30 @@ export interface HistoriaDepartamento {
   /** El personaje del departamento: el rival de todos sus niveles. */
   jefe: string
   presentacion: string
+  /** Los niveles, si el departamento no tiene barrios (si tiene, van en cada barrio y esto queda vacío). */
   niveles: readonly NivelHistoria[]
   /** Lo que dice el rival cuando completás el departamento y te vas: una frase por globo. */
+  despedida: readonly string[]
+  /** Los barrios, en el orden en que se abren. */
+  barrios?: readonly Barrio[]
+}
+
+/**
+ * Un barrio de un departamento: una localidad con su personaje y sus niveles, cada uno en un lugar
+ * puntual. Se abre cuando completás el anterior (el primero, desde que se abre el departamento).
+ */
+export interface Barrio {
+  /** Para el progreso y las rutas: no cambia nunca (es parte de lo que se guarda). */
+  id: string
+  nombre: string
+  /** El personaje del barrio: el rival principal de sus niveles. */
+  jefe: string
+  /** Lo que se cuenta al entrar al barrio. */
+  presentacion: string
+  /** Dónde queda (latitud, longitud): para ubicarlo en el mapa del departamento. */
+  donde: readonly [number, number]
+  niveles: readonly NivelHistoria[]
+  /** Lo que dice el personaje cuando completás el barrio: una frase por globo. */
   despedida: readonly string[]
 }
 
@@ -233,18 +260,97 @@ export function buscarDepartamento(id: unknown): (typeof DEPARTAMENTOS)[number] 
   return DEPARTAMENTOS.find((d) => d.id === id)
 }
 
-/** El nivel `n` (desde 1) de un departamento jugable, o undefined. */
-export function nivelDeHistoria(departamento: unknown, n: unknown): NivelHistoria | undefined {
-  const historia = HISTORIAS[departamento as IdDepartamento]
-  return typeof n === 'number' && Number.isInteger(n) ? historia?.niveles[n - 1] : undefined
+/**
+ * Los barrios de un departamento, en orden. Si no tiene, uno solo sin id (`''`) con todos sus
+ * niveles, su personaje y su despedida.
+ */
+export function barriosDe(historia: HistoriaDepartamento): readonly Barrio[] {
+  if (historia.barrios) return historia.barrios
+  const nombre = buscarDepartamento(historia.departamento)?.nombre ?? historia.departamento
+  const donde = historia.niveles[0]?.donde ?? [0, 0]
+  return [{ id: '', nombre, jefe: historia.jefe, presentacion: historia.presentacion, donde, niveles: historia.niveles, despedida: historia.despedida }]
 }
 
-/** Progreso: los niveles ganados de cada departamento (los números, desde 1). */
-export type ProgresoHistoria = Partial<Record<IdDepartamento, number[]>>
+/** Un barrio de un departamento jugable (`''`, el único de los que no tienen barrios), o undefined. */
+export function buscarBarrio(departamento: unknown, barrio: unknown = ''): Barrio | undefined {
+  const historia = HISTORIAS[departamento as IdDepartamento]
+  return historia && typeof barrio === 'string' ? barriosDe(historia).find((b) => b.id === barrio) : undefined
+}
 
-/** Dentro de un departamento, un nivel se juega si es el primero o si ya ganaste el anterior (los ganados se repiten). */
-export function nivelAbierto(progreso: ProgresoHistoria, departamento: IdDepartamento, n: number): boolean {
-  return n === 1 || (progreso[departamento] ?? []).includes(n - 1)
+/** El nivel `n` (desde 1) de un barrio de un departamento jugable (sin barrio: el único), o undefined. */
+export function nivelDeHistoria(departamento: unknown, n: unknown, barrio: unknown = ''): NivelHistoria | undefined {
+  return typeof n === 'number' && Number.isInteger(n) ? buscarBarrio(departamento, barrio)?.niveles[n - 1] : undefined
+}
+
+/**
+ * Progreso: los niveles ganados (los números, desde 1) por clave (`claveProgreso`): el departamento,
+ * o `departamento/barrio` en los que tienen barrios.
+ */
+export type ProgresoHistoria = Partial<Record<string, number[]>>
+
+/** Dónde se anota un barrio en el progreso: el departamento solo, o `departamento/barrio`. */
+export function claveProgreso(departamento: IdDepartamento, barrio = ''): string {
+  return barrio ? `${departamento}/${barrio}` : departamento
+}
+
+/** Los niveles ganados de un barrio (sin barrio: los del departamento). */
+export function ganadosDelBarrio(progreso: ProgresoHistoria, departamento: IdDepartamento, barrio = ''): number[] {
+  return progreso[claveProgreso(departamento, barrio)] ?? []
+}
+
+/** Si ganaste todos los niveles de un barrio. */
+export function barrioCompleto(progreso: ProgresoHistoria, departamento: IdDepartamento, barrio: Barrio): boolean {
+  const ganados = ganadosDelBarrio(progreso, departamento, barrio.id)
+  return barrio.niveles.length > 0 && barrio.niveles.every((_, i) => ganados.includes(i + 1))
+}
+
+/** Un barrio se juega si es el primero del departamento o si completaste el anterior. */
+export function barrioAbierto(progreso: ProgresoHistoria, departamento: IdDepartamento, barrio = ''): boolean {
+  const historia = HISTORIAS[departamento]
+  if (!historia) return false
+  const barrios = barriosDe(historia)
+  const i = barrios.findIndex((b) => b.id === barrio)
+  return i === 0 || (i > 0 && barrioCompleto(progreso, departamento, barrios[i - 1]!))
+}
+
+/**
+ * Dentro de un barrio abierto, un nivel se juega si es el primero o si ya ganaste el anterior (los
+ * ganados se repiten).
+ */
+export function nivelAbierto(progreso: ProgresoHistoria, departamento: IdDepartamento, n: number, barrio = ''): boolean {
+  return barrioAbierto(progreso, departamento, barrio) && (n === 1 || ganadosDelBarrio(progreso, departamento, barrio).includes(n - 1))
+}
+
+/** Cuántos niveles tiene un departamento, sumando sus barrios. */
+export function nivelesDelDepartamento(historia: HistoriaDepartamento): number {
+  return barriosDe(historia).reduce((s, b) => s + b.niveles.length, 0)
+}
+
+/** Cuántos niveles distintos ganaste en un departamento, sumando sus barrios. */
+export function nivelesGanados(progreso: ProgresoHistoria, departamento: IdDepartamento): number {
+  const historia = HISTORIAS[departamento]
+  if (!historia) return 0
+  return barriosDe(historia).reduce((s, b) => s + b.niveles.filter((_, i) => ganadosDelBarrio(progreso, departamento, b.id).includes(i + 1)).length, 0)
+}
+
+/**
+ * Los departamentos que antes de tener barrios se jugaban como una lista de niveles, con cuántos
+ * tenían: el que los había ganado todos (lo que queda anotado sin barrio) sigue con los vecinos
+ * abiertos.
+ */
+const RECORRIDOS_ANTERIORES: Partial<Record<IdDepartamento, number>> = { rocha: 5 }
+
+/**
+ * Si un departamento ya abre a sus vecinos: con la mitad de sus niveles ganados (o el recorrido de
+ * antes de los barrios completo).
+ */
+export function abreVecinos(progreso: ProgresoHistoria, departamento: IdDepartamento): boolean {
+  const historia = HISTORIAS[departamento]
+  if (!historia) return false
+  const anterior = RECORRIDOS_ANTERIORES[departamento]
+  if (historia.barrios && anterior && (progreso[departamento]?.length ?? 0) >= anterior) return true
+  const total = nivelesDelDepartamento(historia)
+  return total > 0 && nivelesGanados(progreso, departamento) * 2 >= total
 }
 
 /**
@@ -261,13 +367,13 @@ export function departamentoPublicado(departamento: IdDepartamento): boolean {
 }
 
 /**
- * Un departamento se abre cuando completás uno de sus vecinos (el inicial, desde el principio), si
- * ya está publicado. Con `todoAbierto` (el admin), están todos abiertos.
+ * Un departamento se abre cuando ganaste la mitad de uno de sus vecinos (el inicial, desde el
+ * principio), si ya está publicado. Con `todoAbierto` (el admin), están todos abiertos.
  */
 export function departamentoAbierto(progreso: ProgresoHistoria, departamento: IdDepartamento, todoAbierto = false): boolean {
   if (todoAbierto) return true
   if (!departamentoPublicado(departamento)) return false
-  return departamento === DEPARTAMENTO_INICIAL || VECINOS[departamento].some((v) => departamentoCompleto(progreso, v))
+  return departamento === DEPARTAMENTO_INICIAL || VECINOS[departamento].some((v) => abreVecinos(progreso, v))
 }
 
 /**
@@ -293,7 +399,8 @@ export function mesaDeDepartamento(departamento: IdDepartamento): IdMesa | undef
  * ella (como en la mesa del lugar): la vas conociendo y al final te la llevás.
  */
 export function barajaDeDepartamento(departamento: IdDepartamento): IdBaraja | undefined {
-  const premio = HISTORIAS[departamento]?.niveles.at(-1)?.recompensas.find((r) => r.startsWith('baraja:'))
+  const historia = HISTORIAS[departamento]
+  const premio = historia && barriosDe(historia).at(-1)?.niveles.at(-1)?.recompensas.find((r) => r.startsWith('baraja:'))
   return BARAJAS.find((b) => `baraja:${b.id}` === premio)?.id
 }
 
@@ -379,9 +486,18 @@ export function escenaDelFinal(nivel: NivelHistoria, n: number, ganaste: boolean
   ]
 }
 
-/** Los del departamento: los que juegan de rivales en sus niveles, el personaje del departamento primero. */
+/**
+ * Los del departamento: los que juegan de rivales en sus niveles, el personaje del departamento
+ * primero y después los de cada barrio.
+ */
 export function elencoDelDepartamento(historia: HistoriaDepartamento): string[] {
-  return [...new Set([historia.jefe, ...historia.niveles.flatMap((n) => n.rivales)])]
+  const barrios = barriosDe(historia)
+  return [...new Set([historia.jefe, ...barrios.map((b) => b.jefe), ...barrios.flatMap((b) => b.niveles.flatMap((n) => n.rivales))])]
+}
+
+/** Los del barrio: los que juegan de rivales en sus niveles, el personaje del barrio primero. */
+export function elencoDelBarrio(barrio: Barrio): string[] {
+  return [...new Set([barrio.jefe, ...barrio.niveles.flatMap((n) => n.rivales)])]
 }
 
 /** Lo que te dicen los demás del departamento cuando te vas (uno cada uno, en orden). */
@@ -397,26 +513,34 @@ const ADIOSES = [
  * departamento te desean buen viaje y el rival cierra con el resto.
  */
 export function despedidaDelDepartamento(historia: HistoriaDepartamento): TurnoEscena[] {
-  const [primera, ...resto] = historia.despedida
-  const jefe = historia.jefe
+  return despedida(historia.jefe, historia.despedida, elencoDelDepartamento(historia))
+}
+
+/** La despedida al completar un barrio: como la del departamento, con los del barrio. */
+export function despedidaDelBarrio(barrio: Barrio): TurnoEscena[] {
+  return despedida(barrio.jefe, barrio.despedida, elencoDelBarrio(barrio))
+}
+
+function despedida(jefe: string, frases: readonly string[], elenco: readonly string[]): TurnoEscena[] {
+  const [primera, ...resto] = frases
   return [
     { quien: jefe, texto: primera! },
-    ...elencoDelDepartamento(historia)
-      .slice(1)
+    ...elenco
+      .filter((quien) => quien !== jefe)
       .map((quien, i) => ({ quien, texto: ADIOSES[i % ADIOSES.length]! })),
     ...resto.map((texto) => ({ quien: jefe, texto })),
   ]
 }
 
-/** Todo lo que se gana en un departamento, nivel por nivel. */
+/** Todo lo que se gana en un departamento, barrio por barrio y nivel por nivel. */
 export function recompensasDelDepartamento(historia: HistoriaDepartamento): string[] {
-  return historia.niveles.flatMap((n) => n.recompensas)
+  return barriosDe(historia).flatMap((b) => b.niveles.flatMap((n) => n.recompensas))
 }
 
-/** Si ganaste todos los niveles de un departamento. */
+/** Si ganaste todos los niveles de un departamento (todos sus barrios). */
 export function departamentoCompleto(progreso: ProgresoHistoria, departamento: IdDepartamento): boolean {
-  const niveles = HISTORIAS[departamento]?.niveles.length ?? 0
-  return niveles > 0 && (progreso[departamento]?.length ?? 0) >= niveles
+  const historia = HISTORIAS[departamento]
+  return !!historia && barriosDe(historia).every((b) => barrioCompleto(progreso, departamento, b))
 }
 
 /** Cuántos departamentos completaste. */
@@ -430,7 +554,7 @@ export function departamentosCompletos(progreso: ProgresoHistoria): number {
  */
 export function departamentoSiguiente(progreso: ProgresoHistoria, todoAbierto = false): IdDepartamento | null {
   const pendientes = DEPARTAMENTOS.filter((d) => departamentoAbierto(progreso, d.id, todoAbierto) && !departamentoCompleto(progreso, d.id))
-  const empezado = pendientes.find((d) => (progreso[d.id]?.length ?? 0) > 0)
+  const empezado = pendientes.find((d) => nivelesGanados(progreso, d.id) > 0)
   if (empezado) return empezado.id
   if (pendientes.some((d) => d.id === DEPARTAMENTO_INICIAL)) return DEPARTAMENTO_INICIAL
   return pendientes[0]?.id ?? null

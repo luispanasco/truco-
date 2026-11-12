@@ -31,5 +31,7 @@ export interface Conexion {
 /** Un nivel del modo historia en juego. */
 export interface NivelJugado {
   departamento: IdDepartamento
+  /** El barrio, en los departamentos que tienen. */
+  barrio?: string
   nivel: number
 }

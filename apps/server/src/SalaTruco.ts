@@ -297,11 +297,11 @@ export class SalaTruco extends Room {
     } else {
       // Un nivel del modo historia: el nivel manda cómo se juega (y no se cambia en la espera).
       const pedido = opciones.historia
-      const nivel = pedido && nivelDeHistoria(pedido.departamento, pedido.nivel)
+      const nivel = pedido && nivelDeHistoria(pedido.departamento, pedido.nivel, pedido.barrio ?? '')
       if (pedido && !nivel) throw new Error('Ese nivel no existe')
       if (nivel && nivel.formato === '1v1') throw new Error('Ese nivel es mano a mano: no se juega de a dos')
       if (nivel) {
-        this.historia = { departamento: pedido!.departamento, nivel: pedido!.nivel }
+        this.historia = { departamento: pedido!.departamento, ...(pedido!.barrio ? { barrio: pedido!.barrio } : {}), nivel: pedido!.nivel }
         this.aplicarConfiguracion({
           ...opciones,
           config: { formato: nivel.formato, puntosPartida: nivel.puntos, picaPica: false },
@@ -713,7 +713,7 @@ export class SalaTruco extends Room {
     if (libres.length > 0 && !completarConBots) throw new Rechazo('Faltan jugadores')
     // En un nivel del modo historia, los bots son su elenco, cada uno en su lugar. Si la sala la
     // armó un admin, también son personajes.
-    const nivel = this.historia && nivelDeHistoria(this.historia.departamento, this.historia.nivel)
+    const nivel = this.historia && nivelDeHistoria(this.historia.departamento, this.historia.nivel, this.historia.barrio ?? '')
     const elenco = nivel ? elencoDelNivel(nivel) : null
     const personajes = this.delAnfitrion()?.admin ? personajesParaBots(this.roomId, libres.length) : []
     let numeroBot = 0
@@ -753,7 +753,7 @@ export class SalaTruco extends Room {
     })
     this.vencidos.clear()
     // En el modo historia, la charla de la mesa: los bots son el elenco (las personas no hablan solas).
-    const nivel = this.historia && nivelDeHistoria(this.historia.departamento, this.historia.nivel)
+    const nivel = this.historia && nivelDeHistoria(this.historia.departamento, this.historia.nivel, this.historia.barrio ?? '')
     const elenco = nivel ? elencoDelNivel(nivel) : null
     this.charla = elenco
       ? new CharlaDeMesa(
@@ -1263,7 +1263,7 @@ export class SalaTruco extends Room {
     for (const l of this.lugares) {
       if (l.tipo !== 'humano' || !l.cuentaId || l.sessionId === null) continue
       try {
-        const r = await ganarNivel(this.cuentas.base, l.cuentaId, this.historia.departamento, this.historia.nivel, l.admin)
+        const r = await ganarNivel(this.cuentas.base, l.cuentaId, this.historia.departamento, this.historia.nivel, l.admin, this.historia.barrio ?? '')
         this.enviarA(l.asiento, 'historia', { nuevas: r.nuevas, anotado: true, saldo: r.saldo })
       } catch (e) {
         if (!(e instanceof HistoriaRechazo)) console.error('No se pudo anotar el nivel:', e)

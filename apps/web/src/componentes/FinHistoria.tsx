@@ -47,14 +47,14 @@ export function FinHistoria({
   useEffect(() => {
     if (!ganamos || online) return
     let vigente = true
-    ganarNivelHistoria(jugado.departamento, jugado.nivel).then(
+    ganarNivelHistoria(jugado.departamento, jugado.nivel, jugado.barrio ?? '').then(
       (nuevas) => vigente && setAnotado({ estado: 'listo', nuevas }),
       (e: unknown) => vigente && setAnotado({ estado: 'error', motivo: e instanceof Error ? e.message : 'No se pudo anotar' }),
     )
     return () => {
       vigente = false
     }
-  }, [ganamos, online, jugado.departamento, jugado.nivel])
+  }, [ganamos, online, jugado.departamento, jugado.barrio, jugado.nivel])
 
   const ir = (a: string) => {
     useJuego.getState().salir()

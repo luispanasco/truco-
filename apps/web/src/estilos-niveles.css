@@ -214,3 +214,355 @@
     --fondo-lugar: url('/departamentos/rocha/nivel-5-vertical.webp');
   }
 }
+
+[data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='1'],
+:root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='1'] body {
+  --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-1-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='1'],
+  :root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='1'] body {
+    --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-1-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='2'],
+:root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='2'] body {
+  --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-2-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='2'],
+  :root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='2'] body {
+    --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-2-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='3'],
+:root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='3'] body {
+  --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-3-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='3'],
+  :root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='3'] body {
+    --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-3-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='4'],
+:root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='4'] body {
+  --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-4-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='4'],
+  :root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='4'] body {
+    --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-4-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='5'],
+:root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='5'] body {
+  --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-5-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='5'],
+  :root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='5'] body {
+    --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-5-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='6'],
+:root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='6'] body {
+  --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-6-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='6'],
+  :root[data-lugar='rocha'][data-barrio='aguas-dulces-valizas-castillos'][data-nivel='6'] body {
+    --fondo-lugar: url('/departamentos/rocha/aguas-dulces-valizas-castillos/nivel-6-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='1'],
+:root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='1'] body {
+  --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-1-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='1'],
+  :root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='1'] body {
+    --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-1-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='2'],
+:root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='2'] body {
+  --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-2-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='2'],
+  :root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='2'] body {
+    --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-2-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='3'],
+:root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='3'] body {
+  --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-3-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='3'],
+  :root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='3'] body {
+    --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-3-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='4'],
+:root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='4'] body {
+  --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-4-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='4'],
+  :root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='4'] body {
+    --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-4-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='5'],
+:root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='5'] body {
+  --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-5-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='5'],
+  :root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='5'] body {
+    --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-5-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='6'],
+:root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='6'] body {
+  --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-6-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='cabo-polonio'][data-nivel='6'],
+  :root[data-lugar='rocha'][data-barrio='cabo-polonio'][data-nivel='6'] body {
+    --fondo-lugar: url('/departamentos/rocha/cabo-polonio/nivel-6-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='1'],
+:root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='1'] body {
+  --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-1-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='1'],
+  :root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='1'] body {
+    --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-1-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='2'],
+:root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='2'] body {
+  --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-2-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='2'],
+  :root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='2'] body {
+    --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-2-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='3'],
+:root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='3'] body {
+  --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-3-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='3'],
+  :root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='3'] body {
+    --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-3-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='4'],
+:root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='4'] body {
+  --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-4-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='4'],
+  :root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='4'] body {
+    --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-4-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='5'],
+:root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='5'] body {
+  --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-5-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='5'],
+  :root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='5'] body {
+    --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-5-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='6'],
+:root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='6'] body {
+  --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-6-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='la-paloma'][data-nivel='6'],
+  :root[data-lugar='rocha'][data-barrio='la-paloma'][data-nivel='6'] body {
+    --fondo-lugar: url('/departamentos/rocha/la-paloma/nivel-6-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='la-pedrera'][data-nivel='1'],
+:root[data-lugar='rocha'][data-barrio='la-pedrera'][data-nivel='1'] body {
+  --fondo-lugar: url('/departamentos/rocha/la-pedrera/nivel-1-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='la-pedrera'][data-nivel='1'],
+  :root[data-lugar='rocha'][data-barrio='la-pedrera'][data-nivel='1'] body {
+    --fondo-lugar: url('/departamentos/rocha/la-pedrera/nivel-1-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='la-pedrera'][data-nivel='2'],
+:root[data-lugar='rocha'][data-barrio='la-pedrera'][data-nivel='2'] body {
+  --fondo-lugar: url('/departamentos/rocha/la-pedrera/nivel-2-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='la-pedrera'][data-nivel='2'],
+  :root[data-lugar='rocha'][data-barrio='la-pedrera'][data-nivel='2'] body {
+    --fondo-lugar: url('/departamentos/rocha/la-pedrera/nivel-2-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='la-pedrera'][data-nivel='3'],
+:root[data-lugar='rocha'][data-barrio='la-pedrera'][data-nivel='3'] body {
+  --fondo-lugar: url('/departamentos/rocha/la-pedrera/nivel-3-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='la-pedrera'][data-nivel='3'],
+  :root[data-lugar='rocha'][data-barrio='la-pedrera'][data-nivel='3'] body {
+    --fondo-lugar: url('/departamentos/rocha/la-pedrera/nivel-3-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='la-pedrera'][data-nivel='4'],
+:root[data-lugar='rocha'][data-barrio='la-pedrera'][data-nivel='4'] body {
+  --fondo-lugar: url('/departamentos/rocha/la-pedrera/nivel-4-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='la-pedrera'][data-nivel='4'],
+  :root[data-lugar='rocha'][data-barrio='la-pedrera'][data-nivel='4'] body {
+    --fondo-lugar: url('/departamentos/rocha/la-pedrera/nivel-4-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='punta-del-diablo'][data-nivel='1'],
+:root[data-lugar='rocha'][data-barrio='punta-del-diablo'][data-nivel='1'] body {
+  --fondo-lugar: url('/departamentos/rocha/punta-del-diablo/nivel-1-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='punta-del-diablo'][data-nivel='1'],
+  :root[data-lugar='rocha'][data-barrio='punta-del-diablo'][data-nivel='1'] body {
+    --fondo-lugar: url('/departamentos/rocha/punta-del-diablo/nivel-1-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='punta-del-diablo'][data-nivel='2'],
+:root[data-lugar='rocha'][data-barrio='punta-del-diablo'][data-nivel='2'] body {
+  --fondo-lugar: url('/departamentos/rocha/punta-del-diablo/nivel-2-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='punta-del-diablo'][data-nivel='2'],
+  :root[data-lugar='rocha'][data-barrio='punta-del-diablo'][data-nivel='2'] body {
+    --fondo-lugar: url('/departamentos/rocha/punta-del-diablo/nivel-2-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='punta-del-diablo'][data-nivel='3'],
+:root[data-lugar='rocha'][data-barrio='punta-del-diablo'][data-nivel='3'] body {
+  --fondo-lugar: url('/departamentos/rocha/punta-del-diablo/nivel-3-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='punta-del-diablo'][data-nivel='3'],
+  :root[data-lugar='rocha'][data-barrio='punta-del-diablo'][data-nivel='3'] body {
+    --fondo-lugar: url('/departamentos/rocha/punta-del-diablo/nivel-3-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='punta-del-diablo'][data-nivel='4'],
+:root[data-lugar='rocha'][data-barrio='punta-del-diablo'][data-nivel='4'] body {
+  --fondo-lugar: url('/departamentos/rocha/punta-del-diablo/nivel-4-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='punta-del-diablo'][data-nivel='4'],
+  :root[data-lugar='rocha'][data-barrio='punta-del-diablo'][data-nivel='4'] body {
+    --fondo-lugar: url('/departamentos/rocha/punta-del-diablo/nivel-4-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='1'],
+:root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='1'] body {
+  --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-1-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='1'],
+  :root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='1'] body {
+    --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-1-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='2'],
+:root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='2'] body {
+  --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-2-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='2'],
+  :root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='2'] body {
+    --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-2-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='3'],
+:root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='3'] body {
+  --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-3-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='3'],
+  :root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='3'] body {
+    --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-3-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='4'],
+:root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='4'] body {
+  --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-4-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='4'],
+  :root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='4'] body {
+    --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-4-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='5'],
+:root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='5'] body {
+  --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-5-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='5'],
+  :root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='5'] body {
+    --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-5-vertical.webp');
+  }
+}
+
+[data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='6'],
+:root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='6'] body {
+  --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-6-horizontal.webp');
+}
+@media (orientation: portrait) {
+  [data-fondo='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='6'],
+  :root[data-lugar='rocha'][data-barrio='santa-teresa-y-chuy'][data-nivel='6'] body {
+    --fondo-lugar: url('/departamentos/rocha/santa-teresa-y-chuy/nivel-6-vertical.webp');
+  }
+}

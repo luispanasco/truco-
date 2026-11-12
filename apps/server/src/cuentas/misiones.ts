@@ -42,7 +42,10 @@ async function datosDe(base: Base, cuentaId: string, desde: Date): Promise<Datos
      from partidas_jugadas where cuenta_id = $1`,
     [cuentaId, desde.toISOString()],
   )
-  const niveles = await base.consultar<{ departamento: string; nivel: number }>('select departamento, nivel from historia where cuenta_id = $1', [cuentaId])
+  const niveles = await base.consultar<{ departamento: string; barrio: string; nivel: number }>(
+    'select departamento, barrio, nivel from historia where cuenta_id = $1',
+    [cuentaId],
+  )
   const [a] = await base.consultar<{ n: number }>(
     `select count(*)::int as n from amistades where estado = 'aceptada' and (de = $1 or a = $1)`,
     [cuentaId],

@@ -41,6 +41,19 @@ export const PLANTILLAS: Record<3 | 4 | 5, readonly Plantilla[]> = {
   5: [nivel('1v1', 'facil', 20), nivel('2v2', 'medio', 20), nivel('1v1', 'dificil', 30), nivel('3v3', 'muyDificil', 30), nivel('1v1', 'master', 30)],
 }
 
+/** El orden de las dificultades de los bots, de la más fácil a la más difícil. */
+const DIFICULTADES: readonly Nivel[] = ['facil', 'medio', 'dificil', 'muyDificil', 'master']
+
+/**
+ * La dificultad de cada uno de los `n` niveles de un barrio, subiendo pareja de `desde` hasta
+ * `hasta`. Entre barrios va en serrucho: cada uno arranca más abajo de donde terminó el anterior.
+ */
+export function dificultadesDelBarrio(desde: Nivel, hasta: Nivel, n: number): Nivel[] {
+  const a = DIFICULTADES.indexOf(desde)
+  const b = DIFICULTADES.indexOf(hasta)
+  return Array.from({ length: n }, (_, i) => DIFICULTADES[n === 1 ? b : Math.round(a + ((b - a) * i) / (n - 1))]!)
+}
+
 interface Etapa {
   lugar: string
   donde: readonly [number, number]

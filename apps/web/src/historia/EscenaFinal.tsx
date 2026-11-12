@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, useReducedMotion } from 'motion/react'
-import { buscarDepartamento, escenaDelFinal, HISTORIAS, nombreRecompensa } from '@truco/shared'
+import { buscarDepartamento, escenaDelFinal, nivelDeHistoria, nombreRecompensa } from '@truco/shared'
 import type { NivelJugado } from '../conexion/tipos'
 import { alMedio, FiguraDe, FiguraVos, Globo, nombreDe } from './Escena'
 
@@ -16,7 +16,7 @@ export type Premio = { estado: 'anotando' } | { estado: 'listo'; nuevas: string[
  */
 export function EscenaFinal({ jugado, ganamos, premio, botones }: { jugado: NivelJugado; ganamos: boolean; premio: Premio; botones: ReactNode }) {
   const sinMovimiento = useReducedMotion() ?? false
-  const nivel = HISTORIAS[jugado.departamento]!.niveles[jugado.nivel - 1]!
+  const nivel = nivelDeHistoria(jugado.departamento, jugado.nivel, jugado.barrio ?? '')!
   const dialogo = escenaDelFinal(nivel, jugado.nivel, ganamos)
   const [paso, setPaso] = useState(0)
   const alFinal = paso >= dialogo.length - 1

@@ -228,6 +228,8 @@ export interface OpcionesCrearSala extends OpcionesUnirse {
 /** Un nivel del modo historia que se está jugando. */
 export interface NivelHistoriaJugado {
   departamento: IdDepartamento
+  /** El barrio, en los departamentos que tienen (si no, no va). */
+  barrio?: string
   nivel: number
 }
 
@@ -394,6 +396,7 @@ export * from './personajes'
 export * from './historia'
 export * from './misiones'
 export * from './historias'
+export * from './barrios-rocha'
 export * from './vecinos'
 export * from './cargadas'
 export * from './repeticion'

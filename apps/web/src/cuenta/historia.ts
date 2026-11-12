@@ -29,9 +29,10 @@ export async function cargarHistoria(): Promise<void> {
  * Ganaste un nivel: el servidor lo anota y te da sus recompensas (la primera vez). Devuelve las
  * nuevas (ids de la tienda), que ya quedan en tu inventario.
  */
-export async function ganarNivelHistoria(departamento: IdDepartamento, nivel: number): Promise<string[]> {
+export async function ganarNivelHistoria(departamento: IdDepartamento, nivel: number, barrio = ''): Promise<string[]> {
   const r = await pedir<{ progreso: ProgresoHistoria; nuevas: string[]; inventario: string[]; saldo: number }>('POST', '/historia/ganar', {
     departamento,
+    ...(barrio ? { barrio } : {}),
     nivel,
   })
   useHistoria.setState({ progreso: r.progreso })

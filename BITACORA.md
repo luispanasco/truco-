@@ -2093,3 +2093,63 @@ Llegó el segundo paquete del agente de arte (forma A, objetos sueltos):
 - **Colonial:** los bastos cortos nuevos reemplazan a los que parecían gotas.
 - Para volver a armar los 19 se juntaron los objetos del paquete anterior (12 mazos) con los de este.
 - Con esto, los 19 mazos ilustrados tienen cartas y dorso nuevos.
+
+## Modo historia por barrios: relevamiento de Rocha — 2026-11-12
+
+Idea anotada el 2026-11-11 en `IDEAS.md`, ahora ampliada por el usuario: cada departamento se divide en barrios (de 3 a 5 o más, se van sumando de a poco) y cada barrio tiene de 3 a 5 niveles, cada uno en un lugar puntual. Cada barrio tiene un personaje principal, y en las partidas de 2 o de 3 se suman personajes de la zona. Se arranca por Rocha, dejando todo listo para los demás.
+
+- **Etapa 1, relevamiento (sin código):** seis agentes en paralelo, uno por barrio: Punta del Diablo, La Paloma, Cabo Polonio, La Pedrera, Aguas Dulces y Santa Teresa y Chuy. El resultado está en `apps/web/public/departamentos/rocha/relevamiento.md`.
+- De cada lugar hay datos en palabras propias con su fuente (Turismo Rocha, Uruguay Natural, Ministerio de Ambiente, IMPO, prensa uruguaya) y dos fotos: una **real** de Wikimedia Commons con licencia libre, comprobada en la API, para mostrar tal cual, y una **de referencia** de Uruguay Natural o Turismo Rocha, que no se publica y sirve para hacer la ilustración, como los fondos actuales.
+- Uruguay Natural casi no tiene fotos de estos lugares; la mayoría de las referencias son de Turismo Rocha.
+- Pendiente de revisión del usuario: los barrios, los lugares de cada uno, los personajes (hay nombres repetidos entre barrios) y los lugares que se pisan entre barrios. Después viene la etapa 2: cómo se arma en el código (departamento → barrios → niveles), el mapa y el progreso.
+- **Selección (mismo día):** el usuario eligió en una página con base de datos (https://claude.ai/artifact/TR5Z7kDNkt7UYRxq8D4DSN) qué lugares quedan y qué foto usar en cada uno. Quedó anotado en la tabla "Selección del usuario" de `relevamiento.md`. Aguas Dulces se une con Valizas y Castillos en un solo barrio. Quedan 30 lugares, uno sale (las cárcavas de Punta Rubia) y Playa Grande pasa a Santa Teresa. Casi todo va ilustrado: solo la Laguna Negra usa la foto de Commons tal cual.
+- **Fondos para ilustrar:** en `arte/rocha-barrios/` (fuera de git, porque las fotos de Turismo Rocha tienen derechos) y en el zip `arte/Rocha-barrios-para-ilustrar.zip` va una carpeta por nivel con la foto de la que parte la ilustración (31 niveles), un fondo actual como ejemplo de estilo y el instructivo, que también quedó en `INSTRUCTIVO-FONDOS-BARRIOS.md`. Se pide de vuelta `Rocha-barrios-fondos.zip`, con la versión horizontal (1920 × 1080) y la vertical (1080 × 1920) de cada nivel y los créditos por barrio.
+
+## Modo historia por barrios: etapas 2A y 2B (datos, progreso y personajes) — 2026-11-12
+
+Decidido con el usuario:
+- **Progreso por barrio.**
+- **Barrios de a uno, de sur a norte:** La Paloma → La Pedrera → Cabo Polonio → Aguas Dulces, Valizas y Castillos → Punta del Diablo → Santa Teresa y Chuy.
+- **Dificultad en serrucho:** La Paloma va de fácil a difícil, La Pedrera de medio a muy difícil, Cabo Polonio de difícil a master y los demás de muy difícil a master.
+- **Vecinos:** se abren con la mitad del departamento ganada (vale para todos los departamentos).
+- **Progreso de antes:** el que ganó niveles de la Rocha anterior conserva los premios, y el que la había completado sigue con los vecinos abiertos.
+- **Personajes:** Julio pasa a ser el de Punta del Diablo.
+- **Premios:** monedas y piezas en los niveles; al cerrar el barrio, una pieza y monedas; al cerrar Rocha, la baraja Costa y la mesa, como antes.
+
+- **Shared (`historia.ts`):**
+  - Tipo `Barrio` y `HistoriaDepartamento.barrios`. Los departamentos sin barrios se manejan como uno solo, sin id (`barriosDe`).
+  - El progreso va por clave: `rocha/la-paloma`, o el departamento solo (`claveProgreso`).
+  - Funciones nuevas o cambiadas: `buscarBarrio`, `barrioAbierto`, `barrioCompleto`, `nivelAbierto` con barrio, `nivelesGanados`, `nivelesDelDepartamento`, `abreVecinos` (la mitad, o el recorrido anterior completo: `RECORRIDOS_ANTERIORES`), `elencoDelBarrio` y `despedidaDelBarrio`.
+  - `nivelDeHistoria(dep, n, barrio)`.
+  - `NivelHistoriaJugado.barrio`.
+  - `dificultadesDelBarrio`, en historias.ts.
+- **Datos (`barrios-rocha.ts`):**
+  - `ROCHA_POR_BARRIOS`: 6 barrios y 32 niveles, cada uno con 2 datos con fuente en la voz del personaje, 3 frases, elenco y premios.
+  - Todavía **no está en `HISTORIAS`**: entra en la etapa 2C, con las pantallas. Hasta entonces Rocha sigue con sus 5 niveles.
+- **Personajes:** 22 nuevos:
+  - La Paloma: Toto, Doña Marta y Vale.
+  - La Pedrera: Nilda, Héctor y Rosana.
+  - Cabo Polonio: Celeste, Washington, Rosina y Rubén.
+  - Aguas Dulces, Valizas y Castillos: Celestino, Doña Nelly, Nacho, Don Lalo y Coca.
+  - Punta del Diablo: Marisol y Bruno.
+  - Santa Teresa y Chuy: Cleusa (cambista, para no repetir a la del free shop de Rivera), Gerardo, Jandira, Arnaldo y Graciela.
+  - Sin nombres repetidos: un test lo controla. Nico, Julio, Luna, el Hincha y Doña Rosa se suman donde corresponde.
+- **Servidor:**
+  - Migración 16: la columna `barrio` en `historia`, que pasa a formar parte de la clave.
+  - `ganarNivel(…, barrio)`, con el aviso "Primero completá el barrio anterior". La clave de las monedas lleva el barrio.
+  - La ruta y la sala cooperativa pasan el barrio. Las misiones leen el barrio.
+- **Web:** pasa el barrio al anotar y al buscar el nivel. Las pantallas siguen iguales hasta la 2C.
+- **Ojo con los fondos:** en Santa Teresa y Chuy, la carpeta de arte numera sin la Laguna Negra (va con foto real). En el código es el nivel 3. Al importar, la 2D tiene que ubicar cada fondo por lugar, no por número.
+- **Tests:** server 158 (11 nuevos en `barrios.test.ts`); web 473.
+
+## Modo historia por barrios: etapa 2D, fondos de los barrios de Rocha — 2026-11-12
+
+Llegó `Rocha-barrios-fondos.zip` del agente de arte: 31 niveles en horizontal (1920 × 1080) y vertical (1080 × 1920), con el estilo de los fondos actuales y un `CREDITOS.md` por barrio.
+
+- **`scripts/fondos-niveles.py --barrios-de rocha`:** cada carpeta del paquete es un barrio. Los fondos van a `public/departamentos/rocha/<barrio>/nivel-<n>-*.webp` y el CSS suma `[data-barrio]` a los selectores. Hay 51 niveles con fondo propio: 19 de los departamentos y 32 de los barrios.
+- **Santa Teresa y Chuy:** se corrió la numeración del paquete (La Moza, San Miguel y la Fortaleza pasan a ser los niveles 4, 5 y 6) para que entre la **Laguna Negra como nivel 3**, con la foto real de Commons (Ubirajara Buddin Cruz, CC BY-SA 3.0) recortada a los dos formatos. En el vertical, el recorte se corrió para que se vea el rancho. Quedó en sus créditos.
+- Hasta la 2C nadie pone `data-barrio`, así que estos fondos todavía no se ven. Los 5 fondos de la Rocha anterior siguen en su lugar.
+- **Para revisar con el usuario:**
+  - En La Paloma 2, el Cristo de Lucho salió como un crucifijo; el real es una figura de piedra que mira al mar.
+  - En el Monte de Ombúes, al fondo, del otro lado de la laguna, aparece una construcción que parece un castillo.
+  - En el Arinos casi no se ve el casco del barco.

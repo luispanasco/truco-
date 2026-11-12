@@ -131,7 +131,7 @@ function Lugares({ sala }: { sala: InfoSala }) {
   const enviar = useJuego((s) => s.enviar)
   const ocupados = sala.lugares.filter((l) => l.tipo !== 'libre').length
   const equipos = [0, 1].map((e) => sala.lugares.filter((l) => l.asiento % 2 === e))
-  const nivel = sala.historia && nivelDeHistoria(sala.historia.departamento, sala.historia.nivel)
+  const nivel = sala.historia && nivelDeHistoria(sala.historia.departamento, sala.historia.nivel, sala.historia.barrio ?? '')
   const elenco = nivel ? elencoDelNivel(nivel) : null
   const rival = (asiento: number) => (elenco && asiento % 2 === 1 ? elenco[asiento - 1]?.nombre : undefined)
   return (
@@ -177,7 +177,7 @@ function Lugares({ sala }: { sala: InfoSala }) {
 
 /** Un nivel del modo historia en cooperativo: dónde, contra quién y cómo, y que el amigo va de tu lado. */
 function NivelDeLaSala({ sala }: { sala: InfoSala }) {
-  const nivel = nivelDeHistoria(sala.historia!.departamento, sala.historia!.nivel)
+  const nivel = nivelDeHistoria(sala.historia!.departamento, sala.historia!.nivel, sala.historia!.barrio ?? '')
   const departamento = buscarDepartamento(sala.historia!.departamento)
   if (!nivel || !departamento) return null
   const rivales = elencoDelNivel(nivel)

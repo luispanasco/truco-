@@ -44,7 +44,7 @@ function conexionContraLaCompuOpciones(perfil: Perfil): OpcionesLocal {
  * así cada personaje queda en su lugar.
  */
 export function conexionHistoria(perfil: Perfil, jugado: NivelJugado): ConexionLocal {
-  const nivel = nivelDeHistoria(jugado.departamento, jugado.nivel)
+  const nivel = nivelDeHistoria(jugado.departamento, jugado.nivel, jugado.barrio ?? '')
   if (!nivel) throw new Error('Ese nivel no existe')
   const base = conexionContraLaCompuOpciones(perfil)
   return new ConexionLocal({

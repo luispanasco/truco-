@@ -244,4 +244,11 @@ export const MIGRACIONES: string[] = [
   create index grupo_chat_grupo on grupo_chat (grupo_id, id desc);
   alter table grupo_chat enable row level security;
   `,
+  // 16. Modo historia por barrios: cada nivel ganado se anota con su barrio ('' en los
+  //     departamentos sin barrios y en lo que se ganó antes de que los hubiera).
+  `
+  alter table historia add column barrio text not null default '';
+  alter table historia drop constraint historia_pkey;
+  alter table historia add primary key (cuenta_id, departamento, barrio, nivel);
+  `,
 ]

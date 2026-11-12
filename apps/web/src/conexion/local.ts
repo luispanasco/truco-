@@ -269,7 +269,7 @@ export class ConexionLocal implements Conexion {
   private iniciar() {
     const n = cantidadJugadores(this.config.formato)
     this.terminada = false
-    const nivel = this.op.historia && nivelDeHistoria(this.op.historia.departamento, this.op.historia.nivel)
+    const nivel = this.op.historia && nivelDeHistoria(this.op.historia.departamento, this.op.historia.nivel, this.op.historia.barrio ?? '')
     // Cada partida (y cada revancha), la charla de nuevo: las frases vuelven a la bolsa.
     this.charla = nivel ? new CharlaDeMesa([null, ...elencoDelNivel(nivel).map((p) => p.id)], this.config.puntosPartida, this.op.azar) : null
     if (this.nombres.length !== n) {
