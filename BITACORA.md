@@ -2083,3 +2083,13 @@ Llegaron del agente de arte los dorsos que quedaban con dos medallones: Canelone
 - Venían en PNG de 800 × 1200 y se llevaron a WebP de 400 × 600 (calidad 85, entre 70 y 87 KB), en `public/barajas/<departamento>/dorso.webp`.
 - Siguen pendientes los 7 mazos a rehacer, el lazo del 3 de bastos y los bastos cortos de Colonial.
 - En el Avatar, "Ver cartas" suma la pestaña **Dorso** al lado de los palos: muestra el dorso de tu baraja en grande.
+
+## Los 7 mazos que faltaban, el lazo del 3 de bastos y los bastos de Colonial — 2026-11-12
+
+Llegó el segundo paquete del agente de arte (forma A, objetos sueltos):
+
+- **7 mazos rehechos:** Oriental, Río Negro, Rivera, Salto, San José, Soriano y Treinta y Tres. Ya están armados con los mismos objetos y medidas que los demás.
+- **Lazo del 3 de bastos** para los 19 mazos ilustrados. `barajas-propias-armar.py` lo usa si viene `lazo.png`: lo pone en el cruce de los tres bastos (centro (200, 300), 120 de ancho).
+- **Colonial:** los bastos cortos nuevos reemplazan a los que parecían gotas.
+- Para volver a armar los 19 se juntaron los objetos del paquete anterior (12 mazos) con los de este.
+- Con esto, los 19 mazos ilustrados tienen cartas y dorso nuevos.

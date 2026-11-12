@@ -9,7 +9,8 @@ Uso (desde apps/web, con Python 3, Pillow y numpy), con el zip descomprimido:
 Sin mazos, arma todos los que tengan carpeta en el zip y en public/barajas. En cada carpeta del zip
 van los 14 PNG transparentes: as-espada, as-basto, as-oro, as-copa (640 × 760), oro (600 × 600),
 copa (480 × 600), espada-larga-a/b (220 × 1200), espada-corta-a/b (180 × 700), basto-largo-a/b
-(260 × 1200) y basto-corto-a/b (220 × 700), con la punta o la cabeza arriba.
+(260 × 1200) y basto-corto-a/b (220 × 700), con la punta o la cabeza arriba. Si viene lazo.png
+(300 × 220), ata los tres bastos del 3 en el cruce.
 
 Cómo arma cada carta:
 - Conserva el marco con sus cortes y los dos números; todo lo demás de adentro del marco se
@@ -49,6 +50,8 @@ ZONA = (40, 110, 360, 490)
 # tapaba la carta y se pegaba a los números). Ocupan más o menos lo que en una baraja de verdad.
 ZONA_AS = (85, 150, 315, 450)
 CENTRO = (200, 300)
+# El lazo del 3 de bastos: en el cruce, de punta a punta de las orejas (x, y, ancho).
+LAZO = (200, 300, 120)
 
 PALOS = ('oro', 'copa', 'espada', 'basto')
 
@@ -251,6 +254,8 @@ def capa_de(objetos, palo, n):
         variante, lista = (espadas if palo == 'espada' else bastos)(n)
         for x, y, largo, giro, color in lista:
             poner(capa, objetos[f'{palo}-{variante}-{color}'], x, y, largo, giro)
+        if palo == 'basto' and n == 3 and 'lazo' in objetos:
+            poner(capa, objetos['lazo'], *LAZO, medida='lado')
     return achicar(capa)
 
 
