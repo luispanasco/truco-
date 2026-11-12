@@ -31,7 +31,7 @@ import { Amigos } from './pantallas/Amigos'
 import { Grupo } from './pantallas/Grupo'
 import { Repeticion } from './pantallas/Repeticion'
 import { AdminReportes } from './pantallas/AdminReportes'
-import { DepartamentoHistoria, DespedidaDepartamento, Historia, PreviaNivel } from './pantallas/Historia'
+import { DepartamentoHistoria, DespedidaBarrio, DespedidaDepartamento, Historia, PreviaNivel, SegundoTramoHistoria } from './pantallas/Historia'
 import { Aprender, LeccionTutorial } from './pantallas/Aprender'
 import { Diploma } from './tutorial/Diploma'
 import { vigilarDiploma } from './tutorial/cobroDiploma'
@@ -82,7 +82,10 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/historia" element={<Historia />} />
           <Route path="/historia/:departamento" element={<DepartamentoHistoria />} />
           <Route path="/historia/:departamento/despedida" element={<DespedidaDepartamento />} />
-          <Route path="/historia/:departamento/:nivel" element={<PreviaNivel />} />
+          {/* Lo segundo es un nivel (departamentos sin barrios) o un barrio. */}
+          <Route path="/historia/:departamento/:segundo" element={<SegundoTramoHistoria />} />
+          <Route path="/historia/:departamento/:barrio/despedida" element={<DespedidaBarrio />} />
+          <Route path="/historia/:departamento/:barrio/:nivel" element={<PreviaNivel />} />
         </Routes>
       </BrowserRouter>
     </MotionConfig>

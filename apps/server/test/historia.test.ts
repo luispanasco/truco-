@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { ColyseusTestServer } from '@colyseus/testing'
-import { HISTORIAS, idBaraja, idMesa, idMonedas } from '@truco/shared'
+import { barriosDe, HISTORIAS, idBaraja, idMesa, idMonedas, nivelDeHistoria } from '@truco/shared'
 import { baseLocal, type Base } from '../src/cuentas/base'
 import { verificadorDePrueba } from '../src/cuentas/auth'
 import { entrar } from '../src/cuentas/cuentas'
@@ -36,33 +36,34 @@ async function cuenta(): Promise<{ id: string; token: string; email: string }> {
 }
 
 describe('modo historia', () => {
-  it('los niveles se abren de a uno; la primera vez da sus recompensas, después ya no', async () => {
+  it('los niveles se abren de a uno, barrio por barrio; la primera vez da sus recompensas, después ya no', async () => {
     const { id } = await cuenta()
     // Para el admin (todo abierto).
-    await expect(ganarNivel(base, id, 'rocha', 2, true)).rejects.toThrow('Primero ganá el nivel anterior')
-    await expect(ganarNivel(base, id, 'rocha', 9)).rejects.toThrow('Ese nivel no existe')
+    await expect(ganarNivel(base, id, 'rocha', 2, true, 'la-paloma')).rejects.toThrow('Primero ganá el nivel anterior')
+    await expect(ganarNivel(base, id, 'rocha', 9, true, 'la-paloma')).rejects.toThrow('Ese nivel no existe')
     await expect(ganarNivel(base, id, 'narnia', 1)).rejects.toThrow('Ese nivel no existe')
 
-    const rocha = HISTORIAS.rocha!
-    const r1 = await ganarNivel(base, id, 'rocha', 1, true)
-    expect(r1.nuevas).toEqual(rocha.niveles[0]!.recompensas)
-    expect(r1.progreso).toEqual({ rocha: [1] })
+    const barrios = barriosDe(HISTORIAS.rocha!)
+    const r1 = await ganarNivel(base, id, 'rocha', 1, true, 'la-paloma')
+    expect(r1.nuevas).toEqual(barrios[0]!.niveles[0]!.recompensas)
+    expect(r1.progreso).toEqual({ 'rocha/la-paloma': [1] })
     // Repetir un nivel ganado se puede, pero no vuelve a dar nada.
-    expect((await ganarNivel(base, id, 'rocha', 1, true)).nuevas).toEqual([])
+    expect((await ganarNivel(base, id, 'rocha', 1, true, 'la-paloma')).nuevas).toEqual([])
 
-    for (let nivel = 2; nivel <= rocha.niveles.length; nivel++) await ganarNivel(base, id, 'rocha', nivel, true)
-    expect(await progresoHistoria(base, id)).toEqual({ rocha: [1, 2, 3, 4, 5] })
+    for (const b of barrios) for (let nivel = 1; nivel <= b.niveles.length; nivel++) await ganarNivel(base, id, 'rocha', nivel, true, b.id)
+    expect(Object.keys(await progresoHistoria(base, id))).toHaveLength(barrios.length)
     const tiene = await inventario(base, id)
-    expect(tiene).toEqual(expect.arrayContaining([idBaraja('costa'), idMesa('rocha'), ...rocha.niveles.flatMap((x) => x.recompensas)]))
+    const piezas = barrios.flatMap((b) => b.niveles.flatMap((x) => x.recompensas)).filter((r) => !r.startsWith('monedas:'))
+    expect(tiene).toEqual(expect.arrayContaining([idBaraja('costa'), idMesa('rocha'), ...piezas]))
   })
 
   it('se arranca en Rocha; los departamentos sin publicar, solo el admin', async () => {
     const { id } = await cuenta()
     await expect(ganarNivel(base, id, 'montevideo', 1)).rejects.toThrow('Ese departamento todavía no está abierto')
-    for (let nivel = 1; nivel <= HISTORIAS.rocha!.niveles.length; nivel++) await ganarNivel(base, id, 'rocha', nivel)
-    // Completar Rocha no abre a sus vecinos mientras no estén publicados.
+    for (let nivel = 1; nivel <= 6; nivel++) await ganarNivel(base, id, 'rocha', nivel, false, 'la-paloma')
+    // Ganar en Rocha no abre a sus vecinos mientras no estén publicados.
     await expect(ganarNivel(base, id, 'maldonado', 1)).rejects.toThrow('Ese departamento todavía no está abierto')
-    expect((await ganarNivel(base, id, 'maldonado', 1, true)).progreso).toEqual({ maldonado: [1], rocha: [1, 2, 3, 4, 5] })
+    expect((await ganarNivel(base, id, 'maldonado', 1, true)).progreso).toEqual({ maldonado: [1], 'rocha/la-paloma': [1, 2, 3, 4, 5, 6] })
   })
 
   it('los niveles que dan monedas las suman al saldo, una sola vez', async () => {
@@ -91,14 +92,15 @@ describe('modo historia', () => {
       }
     }
     expect((await pedir('/historia')).data).toEqual({ progreso: {} })
-    const r = await pedir('/historia/ganar', { departamento: 'rocha', nivel: 1 })
-    expect((r.data as { progreso: unknown }).progreso).toEqual({ rocha: [1] })
-    expect((await pedir('/historia/ganar', { departamento: 'rocha', nivel: 3 })).status).toBe(409)
+    const r = await pedir('/historia/ganar', { departamento: 'rocha', barrio: 'la-paloma', nivel: 1 })
+    expect((r.data as { progreso: unknown }).progreso).toEqual({ 'rocha/la-paloma': [1] })
+    expect((await pedir('/historia/ganar', { departamento: 'rocha', barrio: 'la-paloma', nivel: 3 })).status).toBe(409)
+    expect((await pedir('/historia/ganar', { departamento: 'rocha', barrio: 'la-pedrera', nivel: 1 })).status).toBe(409)
     expect((await pedir('/historia/ganar', { departamento: 'artigas', nivel: 1 })).status).toBe(409)
 
     process.env.ADMINS = yo.email
     const admin = await pedir('/historia/ganar', { departamento: 'artigas', nivel: 1 })
-    expect((admin.data as { progreso: unknown }).progreso).toEqual({ artigas: [1], rocha: [1] })
+    expect((admin.data as { progreso: unknown }).progreso).toEqual({ artigas: [1], 'rocha/la-paloma': [1] })
   })
 })
 
@@ -109,16 +111,17 @@ describe('modo historia en cooperativo', () => {
     process.env.ADMINS = admin.email
     // Sin ser admin, un departamento sin publicar no se abre; y sin cuenta, ninguno.
     await expect(Jugador.crear(colyseus, { token: amigo.token, historia: { departamento: 'canelones', nivel: 2 } })).rejects.toThrow()
-    await expect(Jugador.crear(colyseus, { historia: { departamento: 'rocha', nivel: 2 } })).rejects.toThrow()
+    await expect(Jugador.crear(colyseus, { historia: { departamento: 'rocha', barrio: 'la-paloma', nivel: 2 } })).rejects.toThrow()
     // Un nivel mano a mano no es para jugar de a dos.
-    await expect(Jugador.crear(colyseus, { token: admin.token, historia: { departamento: 'rocha', nivel: 1 } })).rejects.toThrow()
+    await expect(Jugador.crear(colyseus, { token: admin.token, historia: { departamento: 'rocha', barrio: 'la-paloma', nivel: 1 } })).rejects.toThrow()
 
-    const a = await Jugador.crear(colyseus, { token: admin.token, historia: { departamento: 'rocha', nivel: 4 }, config: { formato: '1v1' } })
+    const enLaPaloma = { departamento: 'rocha' as const, barrio: 'la-paloma', nivel: 4 }
+    const a = await Jugador.crear(colyseus, { token: admin.token, historia: enLaPaloma, config: { formato: '1v1' } })
     await a.esperar(() => a.sala?.yo === 0)
     const sala = a.sala!
-    // El nivel manda: 3v3, muy difícil, a 30, en la mesa de Rocha (aunque se pida otra cosa).
-    expect([sala.formato, sala.nivelBots, sala.config.puntosPartida, sala.mesa, sala.baraja]).toEqual(['3v3', 'muyDificil', 30, 'rocha', 'costa'])
-    expect(sala.historia).toEqual({ departamento: 'rocha', nivel: 4 })
+    // El nivel manda: 3v3, medio, a 30, en la mesa de Rocha (aunque se pida otra cosa).
+    expect([sala.formato, sala.nivelBots, sala.config.puntosPartida, sala.mesa, sala.baraja]).toEqual(['3v3', 'medio', 30, 'rocha', 'costa'])
+    expect(sala.historia).toEqual(enLaPaloma)
 
     const b = await Jugador.unirse(colyseus, sala.codigo!, undefined, 'Amigo', { token: amigo.token })
     await b.esperar(() => b.sala?.yo != null)
@@ -128,16 +131,17 @@ describe('modo historia en cooperativo', () => {
 
     a.enviar('iniciar', {})
     await a.esperar(() => a.sala?.fase === 'jugando')
-    const elenco = elencoDelNivel(HISTORIAS.rocha!.niveles[3]!)
+    const nivel4 = nivelDeHistoria('rocha', 4, 'la-paloma')!
+    const elenco = elencoDelNivel(nivel4)
     for (const l of a.sala!.lugares) {
       if (l.tipo === 'bot') expect(l.apodo).toBe(elenco[l.asiento - 1]!.nombre)
     }
 
     // Al ganar, a cada uno se le anota si tenía abierto el nivel (el amigo, que no tiene Rocha abierto ni el 3, no).
-    for (let nivel = 1; nivel <= 3; nivel++) await ganarNivel(base, admin.id, 'rocha', nivel, true)
+    for (let nivel = 1; nivel <= 3; nivel++) await ganarNivel(base, admin.id, 'rocha', nivel, true, 'la-paloma')
     await (salaEnServidor(colyseus, a.room.roomId) as unknown as { anotarHistoria(g: 0 | 1): Promise<void> }).anotarHistoria(0)
     await a.esperar(() => a.de('historia').length > 0)
-    expect(a.de('historia')[0]).toEqual({ nuevas: HISTORIAS.rocha!.niveles[3]!.recompensas, anotado: true, saldo: expect.any(Number) })
+    expect(a.de('historia')[0]).toEqual({ nuevas: nivel4.recompensas, anotado: true, saldo: expect.any(Number) })
     await b.esperar(() => b.de('historia').length > 0)
     expect(b.de('historia')[0]).toEqual({ nuevas: [], anotado: false })
   })

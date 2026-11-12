@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { buscarDepartamento, buscarMesa, elencoDelNivel, nivelDeHistoria, type InfoSala, type LugarPublico } from '@truco/shared'
+import { buscarBarrio, buscarDepartamento, buscarMesa, elencoDelNivel, nivelDeHistoria, type InfoSala, type LugarPublico } from '@truco/shared'
 import { BARAJAS } from '../baraja'
 import { FormularioSala, opcionesDeSala, opcionesParaServidor, resumenSala, type OpcionesSala } from '../componentes/FormularioSala'
 import { avatarDeLugar } from '../componentes/Asiento'
@@ -186,7 +186,8 @@ function NivelDeLaSala({ sala }: { sala: InfoSala }) {
   return (
     <section className="tarjeta" aria-labelledby="sala-nivel">
       <h2 id="sala-nivel">
-        {departamento.nombre} · Nivel {sala.historia!.nivel}
+        {sala.historia!.barrio ? `${departamento.nombre} · ${buscarBarrio(departamento.id, sala.historia!.barrio)?.nombre ?? ''}` : departamento.nombre} · Nivel{' '}
+        {sala.historia!.nivel}
       </h2>
       <p className="nota-izq">
         {nivel.lugar}: {rivales.slice(0, -1).join(', ')}

@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, useReducedMotion } from 'motion/react'
-import { buscarDepartamento, escenaDelFinal, nivelDeHistoria, nombreRecompensa } from '@truco/shared'
+import { buscarBarrio, buscarDepartamento, escenaDelFinal, nivelDeHistoria, nombreRecompensa } from '@truco/shared'
 import type { NivelJugado } from '../conexion/tipos'
 import { alMedio, FiguraDe, FiguraVos, Globo, nombreDe } from './Escena'
 
@@ -40,7 +40,7 @@ export function EscenaFinal({ jugado, ganamos, premio, botones }: { jugado: Nive
       )}
       <header className="historia-previa-titulo">
         <small>
-          {dep.nombre} · Nivel {jugado.nivel}
+          {jugado.barrio ? `${dep.nombre} · ${buscarBarrio(jugado.departamento, jugado.barrio)?.nombre ?? ''}` : dep.nombre} · Nivel {jugado.nivel}
         </small>
         <h1>{ganamos ? '¡Ganaste!' : 'Perdiste'}</h1>
         <p>{nivel.lugar}</p>

@@ -639,10 +639,7 @@ const SANTA_TERESA = barrio(
   ],
 )
 
-/**
- * Rocha por barrios, en el orden en que se abren (de sur a norte, por la costa). Todavía no está en
- * `HISTORIAS`: entra cuando estén las pantallas de los barrios.
- */
+/** Rocha por barrios, en el orden en que se abren (de sur a norte, por la costa). */
 export const ROCHA_POR_BARRIOS: HistoriaDepartamento = {
   departamento: 'rocha',
   jefe: 'pescador',

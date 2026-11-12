@@ -10,18 +10,18 @@
  * la numeración de los otros.
  *
  * Se publica de a poco: cualquiera juega los de `DEPARTAMENTOS_PUBLICADOS` y el admin, todos. Rocha
- * está acá (fue el primero); los demás, en historias.ts.
+ * (el primero, por barrios) está en barrios-rocha.ts; los demás, en historias.ts.
  */
 
 import type { Formato, LARGOS_PARTIDA } from '@truco/engine'
 import type { Nivel } from '@truco/bots'
-import { buscarItem, idBaraja, idMesa, idPieza } from './tienda'
-import { PERSONAJES, piezaPorNombre, type Personaje } from './personajes'
+import { buscarItem } from './tienda'
+import { PERSONAJES, type Personaje } from './personajes'
 import { BARAJAS, type IdBaraja } from './barajas'
 import { MESAS, type IdMesa } from './mesas'
-import type { CapaAvatar } from './avatar'
 import { HISTORIAS_DEPARTAMENTOS, monedasDeRecompensa } from './historias'
 import { VECINOS } from './vecinos'
+import { ROCHA_POR_BARRIOS } from './barrios-rocha'
 
 export interface Departamento {
   id: string
@@ -118,143 +118,8 @@ export interface Barrio {
   despedida: readonly string[]
 }
 
-const pieza = (capa: CapaAvatar, nombre: string) => idPieza(capa, piezaPorNombre(capa, nombre))
-
-const ROCHA: HistoriaDepartamento = {
-  departamento: 'rocha',
-  jefe: 'pescador',
-  presentacion: 'Costa, faros y lobos marinos. Julio te espera en Punta del Diablo, con la red remendada y el mazo bajo el brazo.',
-  despedida: [
-    'Bueno, gurí… llegó la hora. Ganaste en toda la costa.',
-    'Te llevás el mazo, el paño y un pedacito del mar de Rocha.',
-    'Que el viento del este te empuje. ¡Buen viaje, y que te toquen buenas cartas!',
-  ],
-  niveles: [
-    {
-      lugar: 'Punta del Diablo',
-      donde: [-34.045, -53.545],
-      resumen: 'Pueblo de pescadores artesanales sobre el Atlántico, cerca de la frontera con Brasil.',
-      formato: '1v1',
-      nivelBots: 'facil',
-      puntos: 20,
-      rivales: ['pescador'],
-      companieros: [],
-      recompensas: [pieza('sombrero', 'Gorro de pescador')],
-      datos: [
-        { texto: 'Mirá las barcas sobre la arena: en la Playa de los Pescadores descansan cuando vuelven del mar.', fuente: 'https://turismorocha.gub.uy/atractivos/playas/playa-de-los-pescadores' },
-        { texto: 'Y para sacarlas del agua no hay máquina: las arrastramos entre todos hasta la playa. A pulmón, gurí.', fuente: 'https://turismorocha.gub.uy/atractivos/playas/playa-de-los-pescadores' },
-      ],
-      frases: [
-        '¡Epa! ¿Vos sos el gurí que vino de la capital?',
-        'Acá el truco se juega con olor a pescado y viento del este.',
-        'Sentate, que la red no se remienda sola… ni el truco se gana solo.',
-      ],
-      alFinal: {
-        ganaste: 'Mirá vos, el gurí de la capital sabe jugar. Te ganaste el gorro.',
-        perdiste: 'Volvé mañana temprano, que el mar y el truco se aprenden de a poco.',
-      },
-    },
-    {
-      lugar: 'La Paloma',
-      donde: [-34.66, -54.16],
-      resumen: 'Balneario de olas y surf, con el faro del cabo Santa María.',
-      formato: '2v2',
-      nivelBots: 'medio',
-      puntos: 20,
-      rivales: ['pescador', 'surfista'],
-      companieros: ['hincha'],
-      recompensas: [pieza('ropa', 'Impermeable amarillo')],
-      datos: [
-        { texto: 'El faro de Cabo Santa María se prendió el 1 de septiembre de 1874, y ese día se cuenta como la fundación de La Paloma.', fuente: 'https://turismorocha.gub.uy/atractivos/faros/faro-cabo-santa-maria' },
-        { texto: 'Los materiales para hacerlo los trajeron en barco desde Montevideo. ¡Imaginate el viaje!', fuente: 'https://turismorocha.gub.uy/atractivos/faros/faro-cabo-santa-maria' },
-      ],
-      frases: [
-        'Te traje a Nico, que vino surfeando desde La Paloma.',
-        'Dice que lee las cartas como lee las olas. Yo no le creo nada.',
-        '¿Trajiste compañero? Mejor: así pierden de a dos.',
-      ],
-      alFinal: {
-        ganaste: 'Nico, nos revolcó la ola. Llevate el impermeable, por si llueve.',
-        perdiste: '¡Les dije! De a dos se pierde más rápido.',
-      },
-    },
-    {
-      lugar: 'La Pedrera',
-      donde: [-34.59, -54.125],
-      resumen: 'Balneario sobre las rocas, frente al mar abierto.',
-      formato: '1v1',
-      nivelBots: 'dificil',
-      puntos: 30,
-      rivales: ['pescador'],
-      companieros: [],
-      recompensas: [pieza('accesorio', 'Caña de pescar')],
-      datos: [
-        { texto: 'La Pedrera está arriba de un acantilado de piedra, mirando de frente al Atlántico.', fuente: 'https://turismorocha.gub.uy/destinos/la-pedrera' },
-        { texto: 'Abajo está el Desplayado, una bahía chiquita entre las rocas. Y la playa del Barco es la de los surfistas, como Nico.', fuente: 'https://turismorocha.gub.uy/destinos/la-pedrera' },
-      ],
-      frases: [
-        'Ayer saqué una corvina de cuarenta kilos. Bueno… de cuatro.',
-        'Ahora va en serio: a treinta, mano a mano.',
-        'Si me cantás flor, te contesto con la red.',
-      ],
-      alFinal: {
-        ganaste: 'A treinta y mano a mano… y me ganaste. Llevate la caña, que es tuya.',
-        perdiste: 'Desde estas rocas vi perder a muchos. No sos el primero.',
-      },
-    },
-    {
-      lugar: 'Cabo Polonio',
-      donde: [-34.4, -53.78],
-      resumen: 'Pueblo sin luz eléctrica entre dunas, con su faro y los lobos marinos.',
-      formato: '3v3',
-      nivelBots: 'muyDificil',
-      puntos: 30,
-      rivales: ['pescador', 'surfista', 'hippie'],
-      companieros: ['hincha', 'dona'],
-      recompensas: [pieza('accesorio', 'Tabla de surf')],
-      datos: [
-        { texto: '¿Sabés cuántos escalones tiene la escalera del faro? Ciento treinta y dos.', fuente: 'https://turismorocha.gub.uy/atractivos/faros/faro-de-cabo-polonio' },
-        { texto: 'Desde arriba se ve todo: el pueblo, las islas y las dunas alrededor del cabo.', fuente: 'https://turismorocha.gub.uy/atractivos/faros/faro-de-cabo-polonio' },
-      ],
-      frases: [
-        'Se vino Luna desde Cabo Polonio, a la luz del faro.',
-        'Tres contra tres, como en la barra del boliche.',
-        'Acá no hay luz eléctrica, pero señas hay de sobra.',
-      ],
-      alFinal: {
-        ganaste: 'Ni con Luna y Nico pudimos. Los lobos marinos te aplauden.',
-        perdiste: 'El faro alumbra a todos, pero hoy nos alumbró a nosotros.',
-      },
-    },
-    {
-      lugar: 'La Fortaleza de Santa Teresa',
-      donde: [-33.97, -53.55],
-      resumen: 'Fortaleza del siglo XVIII en medio del Parque Nacional Santa Teresa.',
-      formato: '1v1',
-      nivelBots: 'master',
-      puntos: 30,
-      rivales: ['pescador'],
-      companieros: [],
-      recompensas: [idBaraja('costa'), idMesa('rocha')],
-      datos: [
-        { texto: 'Esta fortaleza la empezaron los portugueses en 1762, y al año siguiente la siguieron los españoles.', fuente: 'https://turismorocha.gub.uy/atractivos/historicos/fortaleza-de-santa-teresa' },
-        { texto: 'Tiene forma de pentágono, con cinco baluartes y 642 metros de muralla alrededor.', fuente: 'https://turismorocha.gub.uy/atractivos/historicos/fortaleza-de-santa-teresa' },
-      ],
-      frases: [
-        'Llegaste lejos, gurí. Pero el mar siempre gana.',
-        'Esta es la última: el que pierde paga las brótolas.',
-        'Si me ganás, te llevás el mazo de la costa. Si no, a remar.',
-      ],
-      alFinal: {
-        ganaste: 'Ganaste en la fortaleza. El mazo de la costa es tuyo, gurí.',
-        perdiste: 'Estos muros aguantaron siglos. Uno más no les hace nada.',
-      },
-    },
-  ],
-}
-
 /** Los departamentos que ya se pueden jugar. */
-export const HISTORIAS: Partial<Record<IdDepartamento, HistoriaDepartamento>> = { rocha: ROCHA, ...HISTORIAS_DEPARTAMENTOS }
+export const HISTORIAS: Partial<Record<IdDepartamento, HistoriaDepartamento>> = { rocha: ROCHA_POR_BARRIOS, ...HISTORIAS_DEPARTAMENTOS }
 
 export function buscarDepartamento(id: unknown): (typeof DEPARTAMENTOS)[number] | undefined {
   return DEPARTAMENTOS.find((d) => d.id === id)
@@ -487,12 +352,12 @@ export function escenaDelFinal(nivel: NivelHistoria, n: number, ganaste: boolean
 }
 
 /**
- * Los del departamento: los que juegan de rivales en sus niveles, el personaje del departamento
- * primero y después los de cada barrio.
+ * Los del departamento: el personaje del departamento primero y, si tiene barrios, el de cada
+ * barrio (los demás ya te despidieron en su barrio); si no, los que juegan de rivales en sus niveles.
  */
 export function elencoDelDepartamento(historia: HistoriaDepartamento): string[] {
-  const barrios = barriosDe(historia)
-  return [...new Set([historia.jefe, ...barrios.map((b) => b.jefe), ...barrios.flatMap((b) => b.niveles.flatMap((n) => n.rivales))])]
+  if (historia.barrios) return [...new Set([historia.jefe, ...historia.barrios.map((b) => b.jefe)])]
+  return [...new Set([historia.jefe, ...historia.niveles.flatMap((n) => n.rivales)])]
 }
 
 /** Los del barrio: los que juegan de rivales en sus niveles, el personaje del barrio primero. */

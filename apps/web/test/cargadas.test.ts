@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CharlaDeMesa, elencoDelNivel, HISTORIAS } from '@truco/shared'
+import { CharlaDeMesa, elencoDelNivel, nivelDeHistoria, type IdDepartamento } from '@truco/shared'
 
 /** Un azar fijo que va dando vueltas por los valores (repetible). */
 function azarFijo(valores: number[]) {
@@ -7,11 +7,11 @@ function azarFijo(valores: number[]) {
   return () => valores[i++ % valores.length]!
 }
 
-const elenco = (dep: keyof typeof HISTORIAS, n: number) => [null, ...elencoDelNivel(HISTORIAS[dep]!.niveles[n - 1]!).map((p) => p.id)]
+const elenco = (dep: IdDepartamento, n: number, barrio = '') => [null, ...elencoDelNivel(nivelDeHistoria(dep, n, barrio)!).map((p) => p.id)]
 
 describe('la charla de la mesa (modo historia)', () => {
   it('el rival cancherea cuando te viene ganando, y no en todas las manos', () => {
-    const charla = new CharlaDeMesa(elenco('rocha', 1), 30, azarFijo([0.1]))
+    const charla = new CharlaDeMesa(elenco('rocha', 1, 'la-paloma'), 30, azarFijo([0.1]))
     // Mano 1: nada que comentar (va 0 a 1).
     expect(charla.alTerminarMano([0, 1])).toBeNull()
     // Mano 2: el rival ya saca 6 de ventaja.
@@ -23,7 +23,7 @@ describe('la charla de la mesa (modo historia)', () => {
   })
 
   it('no repite frases en la misma partida hasta agotarlas', () => {
-    const charla = new CharlaDeMesa(elenco('rocha', 1), 99, azarFijo([0.3, 0.7, 0.1, 0.9, 0.45]))
+    const charla = new CharlaDeMesa(elenco('rocha', 1, 'la-paloma'), 99, azarFijo([0.3, 0.7, 0.1, 0.9, 0.45]))
     const dichas: string[] = []
     let rival = 0
     // El rival se escapa de a 1 punto por mano (sin manos grandes): siempre "te viene ganando".
@@ -51,9 +51,9 @@ describe('la charla de la mesa (modo historia)', () => {
   })
 
   it('en los niveles de equipo a veces habla otro: un compañero del rival o uno tuyo (que alienta o festeja)', () => {
-    const nivel = HISTORIAS.rocha!.niveles[3]! // 3v3: Julio, Nico y Luna contra vos, Cacho y Doña Rosa
+    const nivel = nivelDeHistoria('rocha', 4, 'la-paloma')! // 3v3: Nico, Toto y Doña Marta contra vos, Vale y Doña Rosa
     const quien = (azar: number, puntos: [number, number]) => {
-      const charla = new CharlaDeMesa(elenco('rocha', 4), nivel.puntos, azarFijo([0.1, azar, 0]))
+      const charla = new CharlaDeMesa(elenco('rocha', 4, 'la-paloma'), nivel.puntos, azarFijo([0.1, azar, 0]))
       charla.alTerminarMano([0, 0])
       return charla.alTerminarMano(puntos)
     }

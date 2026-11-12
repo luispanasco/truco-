@@ -6,7 +6,6 @@ import {
   departamentoCompleto,
   dificultadesDelBarrio,
   elencoDelNivel,
-  HISTORIAS,
   idBaraja,
   idMesa,
   idMonedas,
@@ -15,7 +14,6 @@ import {
   nombreRecompensa,
   PERSONAJES,
   ROCHA_POR_BARRIOS,
-  type HistoriaDepartamento,
   type ProgresoHistoria,
 } from '@truco/shared'
 import { baseLocal, type Base } from '../src/cuentas/base'
@@ -83,18 +81,13 @@ describe('Rocha por barrios: los datos', () => {
 })
 
 describe('Rocha por barrios: el progreso', () => {
-  let anterior: HistoriaDepartamento | undefined
   let base: Base
   let n = 0
 
   beforeAll(async () => {
-    // Las pantallas de los barrios todavía no están: para probar, Rocha pasa a tener barrios acá.
-    anterior = HISTORIAS.rocha
-    HISTORIAS.rocha = ROCHA_POR_BARRIOS
     base = await baseLocal()
   })
   afterAll(async () => {
-    HISTORIAS.rocha = anterior
     await base.cerrar()
   })
 

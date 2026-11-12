@@ -2153,3 +2153,28 @@ Llegó `Rocha-barrios-fondos.zip` del agente de arte: 31 niveles en horizontal (
   - En La Paloma 2, el Cristo de Lucho salió como un crucifijo; el real es una figura de piedra que mira al mar.
   - En el Monte de Ombúes, al fondo, del otro lado de la laguna, aparece una construcción que parece un castillo.
   - En el Arinos casi no se ve el casco del barco.
+
+## Modo historia por barrios: etapa 2C, las pantallas (Rocha ya se juega por barrios) — 2026-11-12
+
+- **Rocha pasa a `ROCHA_POR_BARRIOS` en `HISTORIAS`.** Se borró la lista vieja de 5 niveles, junto con sus fondos, sus créditos y su `datos.md`. El CSS de los niveles se regeneró: 46 niveles con fondo propio.
+- **Rutas:**
+  - `/historia/<dep>` muestra los barrios (o los niveles, en los departamentos sin barrios).
+  - `/historia/<dep>/<segundo>` es un nivel si es un número y un barrio si no (`SegundoTramoHistoria`).
+  - `/historia/<dep>/<barrio>/<n>` es la previa del nivel.
+  - `/historia/<dep>/<barrio>/despedida` es la despedida del barrio.
+  - `rutaBarrio` y `rutaNivel`, en `historia/rutas.ts`.
+- **Departamento con barrios (`VistaBarrios`):** el mapa tiene un punto por barrio, unidos en orden (`MapaDepartamento` acepta barrios, con `etiqueta="Barrio"`). Al entrar está elegido el barrio que sigue. Su tarjeta lleva la cara del personaje, la presentación, "k de n niveles" y "Entrar"; los cerrados dicen que se abren al completar el anterior. De fondo va el primer nivel del barrio elegido.
+- **Barrio (`VistaNiveles`):** es la vista de niveles de siempre, ahora por barrio, con "Volver" al departamento. La primera vez que se entra (sin niveles ganados) aparece su presentación. `PresentacionDepartamento` quedó genérica: sirve para departamentos, barrios y niveles.
+- **Previa:** muestra "Rocha · La Paloma · Nivel 2", lleva `data-barrio` y el nivel jugado lleva el barrio. La mesa y la sala también ponen `data-barrio` en `<html>` (`temaSala.ts`), para el fondo.
+- **Final del nivel:** "Siguiente nivel" va dentro del barrio. Al completarlo por primera vez aparece "Despedirte de <barrio>"; si no, "Volver a <barrio>". La escena final y la sala de espera dicen el barrio.
+- **Despedidas:**
+  - Una escena común (`EscenaDespedida`).
+  - La del barrio: te despiden los del barrio, ves lo que te llevás y el barrio que sigue ("Seguir a La Pedrera"). Si era el último barrio, sigue la despedida del departamento.
+  - La del departamento con barrios: despiden solo los jefes de cada barrio (antes iban a ser unos 30 personajes).
+  - Las monedas se suman en un solo renglón.
+- **Mapa de Uruguay:** cuenta "k de 32 niveles" con `nivelesGanados` y `nivelesDelDepartamento`. Al departamento cerrado le pone "ganá la mitad de un departamento vecino".
+- **Charla de la mesa:** frases propias para Nico, Nilda, Celeste, Celestino y Cleusa.
+- **Tests:**
+  - Server 158; web 475, con `historia.test.tsx` reescrito para los barrios y un caso nuevo para la despedida del barrio.
+  - E2E del cooperativo, en La Paloma 2.
+  - Capturas revisadas a mano: los barrios en el celular y la compu, el barrio y la previa.

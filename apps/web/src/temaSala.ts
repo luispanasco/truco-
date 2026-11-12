@@ -11,16 +11,19 @@ import './estilos-niveles.css'
  * baraja son las del lugar (que todavía no ganaste) y de fondo va el lugar: el del nivel si tiene,
  * si no el del departamento.
  */
-export function aplicarTemaDeSala(sala: Pick<InfoSala, 'mesa' | 'baraja'>, lugar?: { departamento: string; nivel: number }) {
+export function aplicarTemaDeSala(sala: Pick<InfoSala, 'mesa' | 'baraja'>, lugar?: { departamento: string; barrio?: string; nivel: number }) {
   aplicarMesa(sala.mesa, TODO_PERMITIDO)
   mostrarBaraja(sala.baraja)
-  // data-lugar y data-nivel en <html>: ver estilos-historia.css y estilos-niveles.css.
+  // data-lugar, data-barrio y data-nivel en <html>: ver estilos-historia.css y estilos-niveles.css.
   const html = document.documentElement.dataset
   if (lugar) {
     html.lugar = lugar.departamento
     html.nivel = String(lugar.nivel)
+    if (lugar.barrio) html.barrio = lugar.barrio
+    else delete html.barrio
   } else {
     delete html.lugar
+    delete html.barrio
     delete html.nivel
   }
 }
@@ -31,5 +34,6 @@ export function aplicarTemaPropio() {
   aplicarMesa(perfil.mesa, TODO_PERMITIDO)
   mostrarBaraja(perfil.baraja)
   delete document.documentElement.dataset.lugar
+  delete document.documentElement.dataset.barrio
   delete document.documentElement.dataset.nivel
 }

@@ -103,6 +103,12 @@ const DEL_PERSONAJE: Record<string, { gana: readonly string[]; pierde: readonly 
   maragato: { gana: ['Los maragatos no se achican, ¿viste?', 'Esto es de San José.'], pierde: ['Un maragato no se rinde.', 'Ya vas a ver el rebenque.'] },
   chacarero: { gana: ['La cosecha viene buena.', 'Se viene lluvia… de puntos para mí.'], pierde: ['Esto es una sequía.', 'Hay que esperar que cambie el tiempo.'] },
   olimar: { gana: ['¡Pum, pum! Al ritmo del bombo.', 'Esto suena lindo, como el Olimar.'], pierde: ['Se me desafinó la guitarra.', 'Ya agarro el compás, ya.'] },
+  // Los de los barrios de Rocha.
+  surfista: { gana: ['Viene la serie buena, loco.', 'Estoy arriba de la ola.'], pierde: ['Me revolcó la espuma…', 'Hay que esperar la próxima ola.'] },
+  ballenera: { gana: ['Anotado en el cuaderno, m\'hijo.', 'Te veo venir desde lejos.'], pierde: ['Esa no la vi venir…', 'Dejame limpiar los binoculares.'] },
+  farera: { gana: ['El faro me alumbra a mí.', 'Ciento treinta y dos escalones arriba tuyo.'], pierde: ['Se me apagó la linterna…', 'Ya le doy cuerda al faro, ya.'] },
+  palafito: { gana: ['Despacito, como se arregla el techo de paja.', 'El mar es testigo, botija.'], pierde: ['Se me vuela la paja…', 'Viene temporal, pero aguanto.'] },
+  cambista: { gana: ['En pesos o en reales, voy ganando.', 'Esto cotiza alto, meu amor.'], pierde: ['¡Bah! Se me cayó el cambio.', 'Esto no cierra ni en reales.'] },
 }
 
 /** Las que dicen que el rival va bien (para sumar las propias de "gana") y las que no. */

@@ -50,7 +50,7 @@ describe('misiones', () => {
     expect(estado.deUnaVez.every((m) => m.avance === 0 && !m.cobrada)).toBe(true)
     await expect(cobrarMision(base, id, 'rocha-1', MEDIODIA)).rejects.toThrow('Todavía no la cumpliste')
 
-    await ganarNivel(base, id, 'rocha', 1)
+    await ganarNivel(base, id, 'rocha', 1, false, 'la-paloma')
     estado = await misiones(base, id, MEDIODIA)
     expect(estado.deUnaVez.find((m) => m.id === 'rocha-1')!.avance).toBe(1)
     const antes = await saldo(base, id)

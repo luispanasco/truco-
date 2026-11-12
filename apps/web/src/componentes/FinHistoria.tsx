@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { buscarDepartamento, HISTORIAS, nombreRecompensa } from '@truco/shared'
+import { buscarBarrio, buscarDepartamento, nombreRecompensa } from '@truco/shared'
 import type { NivelJugado } from '../conexion/tipos'
 import { ganarNivelHistoria } from '../cuenta/historia'
 import { useJuego } from '../estado'
 import { EscenaFinal, type Premio } from '../historia/EscenaFinal'
+import { rutaBarrio, rutaNivel } from '../historia/rutas'
 import '../estilos-historia.css'
 
 /**
  * El final de un nivel del modo historia, en el cartel del final: al ganar se anota (una sola vez)
  * y se ven las recompensas. "Seguir" abre la escena del final (el rival y tu compañero dicen lo
  * suyo) y ahí están los botones: al siguiente nivel, a la despedida (si con este completaste el
- * departamento), la revancha (la de siempre) o de vuelta al departamento.
+ * barrio o el departamento), la revancha (la de siempre) o de vuelta al barrio (o al departamento).
  */
 export function FinHistoria({
   jugado,
@@ -38,11 +39,15 @@ export function FinHistoria({
       : delServidor.anotado
         ? { estado: 'listo', nuevas: delServidor.nuevas }
         : { estado: 'error', motivo: 'No se te anotó: primero ganá el nivel anterior' }
-  const historia = HISTORIAS[jugado.departamento]
-  const hayOtro = !!historia && jugado.nivel < historia.niveles.length
-  const departamento = buscarDepartamento(jugado.departamento)?.nombre ?? 'el mapa'
-  // Con este nivel completaste el departamento (la primera vez: hay premios nuevos): toca despedirse.
+  const idBarrio = jugado.barrio ?? ''
+  const barrio = buscarBarrio(jugado.departamento, idBarrio)
+  const hayOtro = !!barrio && jugado.nivel < barrio.niveles.length
+  // A dónde se vuelve: el barrio o, sin barrios, el departamento.
+  const volverA = rutaBarrio(jugado.departamento, idBarrio)
+  const lugar = (idBarrio ? barrio?.nombre : buscarDepartamento(jugado.departamento)?.nombre) ?? 'el mapa'
+  // Con este nivel completaste el barrio o el departamento (la primera vez: hay premios nuevos): toca despedirse.
   const completaste = ganamos && !hayOtro && premio.estado === 'listo' && premio.nuevas.length > 0
+  const despedida = idBarrio ? `${volverA}/despedida` : `/historia/${jugado.departamento}/despedida`
 
   useEffect(() => {
     if (!ganamos || online) return
@@ -90,8 +95,8 @@ export function FinHistoria({
         <button type="button" className="boton boton-grande" onClick={() => setEscena(true)}>
           Seguir
         </button>
-        <button type="button" className="boton boton-secundario" onClick={() => ir(`/historia/${jugado.departamento}`)}>
-          Volver a {departamento}
+        <button type="button" className="boton boton-secundario" onClick={() => ir(volverA)}>
+          Volver a {lugar}
         </button>
       </div>
       {escena && (
@@ -102,11 +107,11 @@ export function FinHistoria({
           botones={
             <>
               {completaste ? (
-                <button type="button" className="boton boton-grande" onClick={() => ir(`/historia/${jugado.departamento}/despedida`)}>
-                  Despedirte de {departamento}
+                <button type="button" className="boton boton-grande" onClick={() => ir(despedida)}>
+                  Despedirte de {lugar}
                 </button>
               ) : ganamos && hayOtro ? (
-                <button type="button" className="boton boton-grande" onClick={() => ir(`/historia/${jugado.departamento}/${jugado.nivel + 1}`)}>
+                <button type="button" className="boton boton-grande" onClick={() => ir(rutaNivel(jugado.departamento, idBarrio, jugado.nivel + 1))}>
                   Siguiente nivel
                 </button>
               ) : !ganamos ? (
@@ -117,9 +122,9 @@ export function FinHistoria({
               <button
                 type="button"
                 className={`boton ${ganamos && !hayOtro && !completaste ? 'boton-grande' : 'boton-secundario'}`}
-                onClick={() => ir(`/historia/${jugado.departamento}`)}
+                onClick={() => ir(volverA)}
               >
-                Volver a {departamento}
+                Volver a {lugar}
               </button>
             </>
           }

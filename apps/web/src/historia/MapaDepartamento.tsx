@@ -1,12 +1,18 @@
 import { motion, useReducedMotion } from 'motion/react'
-import { DEPARTAMENTOS, type IdDepartamento, type NivelHistoria } from '@truco/shared'
+import { DEPARTAMENTOS, type IdDepartamento } from '@truco/shared'
 import { MAPA_URUGUAY, proyectar } from './geografia'
 
+/** Un punto del mapa: un nivel (su lugar) o un barrio (su nombre). */
+interface Punto {
+  lugar: string
+  donde: readonly [number, number]
+}
+
 /**
- * Dónde va cada nivel en el plano: su lugar proyectado. Los que quedan casi encima de otro (en una
+ * Dónde va cada punto en el plano: su lugar proyectado. Los que quedan casi encima de otro (en una
  * misma ciudad) se separan un poco, así se puede tocar cada uno.
  */
-function puntosDe(niveles: readonly NivelHistoria[], minimo: number): [number, number][] {
+function puntosDe(niveles: readonly Punto[], minimo: number): [number, number][] {
   const puntos = niveles.map((n) => proyectar(n.donde))
   for (let vuelta = 0; vuelta < 40; vuelta++) {
     let movio = false
@@ -31,8 +37,8 @@ function puntosDe(niveles: readonly NivelHistoria[], minimo: number): [number, n
 
 /**
  * El mapa de un departamento: su contorno (con los vecinos apagados alrededor), un punto por nivel
- * donde queda su lugar y el camino que los une en orden, punteado: dorado en los tramos ya ganados
- * y más claro en los que faltan. Cada punto se toca para elegir el nivel.
+ * (o por barrio) donde queda su lugar y el camino que los une en orden, punteado: dorado en los
+ * tramos ya ganados y más claro en los que faltan. Cada punto se toca para elegirlo.
  */
 export function MapaDepartamento({
   departamento,
@@ -41,14 +47,18 @@ export function MapaDepartamento({
   abiertos,
   elegido,
   alElegir,
+  etiqueta = 'Nivel',
 }: {
   departamento: IdDepartamento
-  niveles: readonly NivelHistoria[]
+  niveles: readonly Punto[]
+  /** Los ganados (desde 1): los niveles, o los barrios completos. */
   ganados: readonly number[]
-  /** Los niveles que se pueden jugar (desde 1). */
+  /** Los que se pueden jugar (desde 1). */
   abiertos: readonly number[]
   elegido: number
   alElegir: (n: number) => void
+  /** Cómo se llama cada punto para el lector de pantalla ("Nivel" o "Barrio"). */
+  etiqueta?: string
 }) {
   const sinMovimiento = useReducedMotion() ?? false
   const [x, y, w, h] = MAPA_URUGUAY[departamento].caja
@@ -90,7 +100,7 @@ export function MapaDepartamento({
             className={`mapa-nivel${ganado ? ' ganado' : ''}${abierto ? '' : ' cerrado'}${n === elegido ? ' elegido' : ''}`}
             role="button"
             tabIndex={0}
-            aria-label={`Nivel ${n} · ${niveles[i]!.lugar}`}
+            aria-label={`${etiqueta} ${n} · ${niveles[i]!.lugar}`}
             aria-pressed={n === elegido}
             onClick={() => alElegir(n)}
             onKeyDown={(e) => {

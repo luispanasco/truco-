@@ -7,6 +7,8 @@ import {
   departamentoPublicado,
   departamentoSiguiente,
   HISTORIAS,
+  nivelesDelDepartamento,
+  nivelesGanados,
   type IdDepartamento,
   type ProgresoHistoria,
   VECINOS,
@@ -64,8 +66,9 @@ export function MapaUruguay({
         aria-label="Mapa de Uruguay"
       >
         {DEPARTAMENTOS.map((d) => {
-          const ganados = progreso[d.id]?.length ?? 0
-          const niveles = HISTORIAS[d.id]?.niveles.length ?? 0
+          const ganados = nivelesGanados(progreso, d.id)
+          const historia = HISTORIAS[d.id]
+          const niveles = historia ? nivelesDelDepartamento(historia) : 0
           const completo = departamentoCompleto(progreso, d.id)
           const abierto = departamentoAbierto(progreso, d.id, todoAbierto)
           const estado = completo ? 'completo' : abierto ? 'abierto' : 'cerrado'
@@ -76,7 +79,7 @@ export function MapaUruguay({
               role="button"
               tabIndex={abierto ? 0 : -1}
               aria-disabled={!abierto || undefined}
-              aria-label={`${d.nombre} · ${abierto ? `${ganados} de ${niveles} niveles` : departamentoPublicado(d.id) ? 'cerrado: completá un departamento vecino' : 'próximamente'}`}
+              aria-label={`${d.nombre} · ${abierto ? `${ganados} de ${niveles} niveles` : departamentoPublicado(d.id) ? 'cerrado: ganá la mitad de un departamento vecino' : 'próximamente'}`}
               onClick={() => abierto && elegir(d.id)}
               onKeyDown={(e) => {
                 if (abierto && (e.key === 'Enter' || e.key === ' ')) {

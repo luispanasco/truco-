@@ -2,8 +2,8 @@ import { expect, persona, test, unirse } from './ayudantes'
 
 /**
  * Modo historia en cooperativo: el admin (el de los e2e, ver playwright.config.ts) gana el
- * nivel 1 de Rocha, arma la sala del nivel 2 desde la previa y un amigo entra con el código: van
- * del mismo lado, contra Julio y Nico, en la mesa de Rocha.
+ * nivel 1 de La Paloma, arma la sala del nivel 2 desde la previa y un amigo entra con el código: van
+ * del mismo lado, contra Nico y Toto, en la mesa de Rocha.
  */
 test('un nivel de Rocha con un amigo', async ({ browser }) => {
   const luis = await persona(browser, 'Luis')
@@ -18,13 +18,13 @@ test('un nivel de Rocha con un amigo', async ({ browser }) => {
     const r = await fetch('/juego/api/historia/ganar', {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-      body: JSON.stringify({ departamento: 'rocha', nivel: 1 }),
+      body: JSON.stringify({ departamento: 'rocha', barrio: 'la-paloma', nivel: 1 }),
     })
     return r.status
   })
   expect(estado).toBe(200)
 
-  await luis.goto('/historia/rocha/2')
+  await luis.goto('/historia/rocha/la-paloma/2')
   // La charla de la previa: "Seguir" hasta el final y, cuando le toca, contesta.
   const amigo = luis.getByRole('button', { name: 'Jugar con un amigo' })
   while (!(await amigo.isVisible())) {
@@ -34,17 +34,17 @@ test('un nivel de Rocha con un amigo', async ({ browser }) => {
   }
   await amigo.click()
   await expect(luis).toHaveURL(/\/sala$/)
-  await expect(luis.getByRole('heading', { name: 'Rocha · Nivel 2' })).toBeVisible()
+  await expect(luis.getByRole('heading', { name: 'Rocha · La Paloma · Nivel 2' })).toBeVisible()
   const codigo = ((await luis.locator('.codigo-sala').first().textContent()) ?? '').trim()
 
   const beto = await persona(browser, 'Beto')
   await unirse(beto, codigo)
   await expect(luis.getByRole('group', { name: 'Equipo 1' }).getByText('Beto')).toBeVisible()
-  await expect(luis.getByLabel('Lugar 2: Julio, rival del nivel')).toBeVisible()
+  await expect(luis.getByLabel('Lugar 2: Nico, rival del nivel')).toBeVisible()
 
   await luis.getByRole('button', { name: 'Empezar' }).click()
   await expect(beto).toHaveURL(/\/mesa$/)
-  await expect(beto.locator('.asiento').filter({ hasText: 'Julio' })).toBeVisible()
   await expect(beto.locator('.asiento').filter({ hasText: 'Nico' })).toBeVisible()
+  await expect(beto.locator('.asiento').filter({ hasText: 'Toto' })).toBeVisible()
   expect(await beto.evaluate(() => document.documentElement.dataset.mesa)).toBe('rocha')
 })

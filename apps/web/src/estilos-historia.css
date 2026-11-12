@@ -374,6 +374,23 @@
 .historia-nivel.cerrado .historia-nivel-numero {
   background: rgb(255 255 255 / 0.15);
 }
+/* En los barrios, en vez del número va la cara de su personaje (un poco más grande). */
+.historia-barrio {
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+}
+.historia-nivel-numero.historia-barrio-avatar {
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+}
+.historia-barrio-avatar > * {
+  width: 100%;
+  height: 100%;
+}
+.historia-nivel.cerrado .historia-barrio-avatar {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
 .historia-nivel-texto {
   display: grid;
   gap: 2px;
