@@ -11,6 +11,9 @@ En el paquete hay una carpeta por departamento con nivel-<n>-horizontal.webp y
 nivel-<n>-vertical.webp (1920 × 1080 y 1080 × 1920), más su CREDITOS.md y datos.md, que se
 guardan junto a los fondos. Con --barrios-de, cada carpeta del paquete es un barrio de ese
 departamento y va a public/departamentos/<departamento>/<barrio>/ (en el CSS, con `data-barrio`).
+
+De cada fondo de un barrio se hace además `nivel-<n>-mini.webp` (un cuadrado de 200 px del centro del
+horizontal): las fotos que van pasando en el redondel de cada barrio, en el mapa del departamento.
 """
 
 import re
@@ -49,6 +52,22 @@ def regla(dep, barrio, n):
 """
 
 
+def minis():
+    """Las miniaturas de los fondos de los barrios (las que falten o estén viejas)."""
+    from PIL import Image
+    hechas = 0
+    for horizontal in DESTINO.glob('*/*/nivel-*-horizontal.webp'):
+        mini = horizontal.with_name(horizontal.name.replace('-horizontal', '-mini'))
+        if mini.exists() and mini.stat().st_mtime >= horizontal.stat().st_mtime:
+            continue
+        imagen = Image.open(horizontal).convert('RGB')
+        lado = min(imagen.size)
+        x = (imagen.width - lado) // 2
+        imagen.crop((x, 0, x + lado, lado)).resize((200, 200), Image.LANCZOS).save(mini, 'WEBP', quality=80, method=6)
+        hechas += 1
+    print(f'{hechas} miniaturas')
+
+
 def main():
     args = sys.argv[1:]
     barrios_de = None
@@ -82,6 +101,7 @@ def main():
     reglas.sort()
     CSS.write_text(ENCABEZADO + ''.join(regla(d, b, n) for d, b, n in reglas), encoding='utf-8', newline='\n')
     print(f'{len(reglas)} niveles con fondo propio')
+    minis()
 
 
 if __name__ == '__main__':

@@ -49,6 +49,7 @@ import { MapaDepartamento } from '../historia/MapaDepartamento'
 import { PresentacionDepartamento } from '../historia/PresentacionDepartamento'
 import { Nubes } from '../historia/Nubes'
 import { rutaBarrio, rutaNivel } from '../historia/rutas'
+import { MAPAS_BARRIOS } from '../historia/mapasBarrios'
 import { alMedio, FiguraDe, FiguraVos, Globo, nombreDe } from '../historia/Escena'
 import '../estilos-historia.css'
 import '../estilos-niveles.css'
@@ -270,6 +271,7 @@ function VistaBarrios({ departamento }: { departamento: IdDepartamento }) {
         elegido={k}
         alElegir={setElegido}
         etiqueta="Barrio"
+        fotos={barrios.map((b) => b.niveles.map((_, i) => `/departamentos/${departamento}/${b.id}/nivel-${i + 1}-mini.webp`))}
       />
       <article className={`historia-nivel historia-barrio${completo ? ' ganado' : ''}${abierto ? '' : ' cerrado'}`} aria-live="polite">
         <span className="historia-nivel-numero historia-barrio-avatar" aria-hidden="true">
@@ -324,6 +326,8 @@ function VistaNiveles({ departamento, barrio }: { departamento: IdDepartamento; 
   const ganado = ganados.includes(n)
   const abierto = abiertos.includes(n)
   const completo = !!progreso && barrioCompleto(progreso, departamento, barrio)
+  // El mapa del barrio (OpenStreetMap), si ya está armado; si no, el contorno del departamento.
+  const mapa = conBarrio ? MAPAS_BARRIOS[`${departamento}/${barrio.id}`] : undefined
   return (
     <main className="historia historia-lugar" data-fondo={departamento} {...(conBarrio ? { 'data-barrio': barrio.id } : {})} data-nivel={n}>
       <Volver a={conBarrio ? rutaBarrio(departamento) : '/historia'} texto={conBarrio ? dep.nombre : 'Mapa'} />
@@ -341,7 +345,15 @@ function VistaNiveles({ departamento, barrio }: { departamento: IdDepartamento; 
           </p>
         </div>
       </header>
-      <MapaDepartamento departamento={departamento} niveles={barrio.niveles} ganados={ganados} abiertos={abiertos} elegido={n} alElegir={setElegido} />
+      <MapaDepartamento
+        departamento={departamento}
+        niveles={barrio.niveles}
+        ganados={ganados}
+        abiertos={abiertos}
+        elegido={n}
+        alElegir={setElegido}
+        fondo={mapa && { ...mapa, imagen: `/departamentos/${departamento}/${barrio.id}/mapa.webp` }}
+      />
       <article className={`historia-nivel${ganado ? ' ganado' : ''}${abierto ? '' : ' cerrado'}`} aria-live="polite">
         <span className="historia-nivel-numero" aria-hidden="true">
           {ganado ? '✓' : abierto ? n : '🔒'}

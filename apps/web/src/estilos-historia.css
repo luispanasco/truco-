@@ -292,6 +292,61 @@
 .mapa-nivel:focus-visible circle {
   stroke: #fff;
 }
+
+/* El mapa de un barrio: OpenStreetMap de fondo, en tonos cálidos para que combine, y el crédito. */
+.mapa-departamento {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+.mapa-fondo {
+  filter: sepia(0.45) saturate(0.8) brightness(0.93) contrast(0.95);
+}
+.mapa-departamento.con-fondo .mapa-camino {
+  stroke: #5a3d22;
+  opacity: 0.9;
+}
+.mapa-departamento.con-fondo .mapa-camino.hecho {
+  stroke: #b8741a;
+}
+.mapa-creditos {
+  justify-self: end;
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+.mapa-creditos a {
+  color: inherit;
+}
+
+/* Los barrios en el mapa del departamento: un redondel con las fotos de sus niveles pasando. */
+.mapa-nivel.con-fotos circle.mapa-foto-fondo {
+  fill: #2a1d14;
+}
+.mapa-nivel.con-fotos circle.mapa-foto-borde {
+  fill: none;
+  stroke: var(--acento);
+}
+.mapa-nivel.con-fotos.ganado circle.mapa-foto-borde {
+  stroke: var(--exito);
+}
+.mapa-nivel.con-fotos.cerrado circle.mapa-foto-borde {
+  stroke: #6f675e;
+}
+.mapa-nivel.con-fotos.elegido circle.mapa-foto-borde,
+.mapa-nivel.con-fotos:focus-visible circle.mapa-foto-borde {
+  stroke: #fff;
+}
+.mapa-foto {
+  transition: opacity 0.9s ease;
+}
+.mapa-nivel.cerrado .mapa-foto {
+  filter: grayscale(1) brightness(0.7);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mapa-foto {
+    transition: none;
+  }
+}
 .historia-nivel-resumen {
   font-style: italic;
 }

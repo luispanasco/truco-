@@ -83,7 +83,7 @@ const LA_PALOMA = barrio(
   [
     {
       lugar: 'La Playa del Faro',
-      donde: [-34.666, -54.159],
+      donde: [-34.6667, -54.1606],
       resumen: 'Rocas y piletas naturales al pie del faro, a pocas cuadras del centro.',
       formato: '1v1',
       puntos: 20,
@@ -96,7 +96,7 @@ const LA_PALOMA = barrio(
     },
     {
       lugar: 'La Playa Los Botes',
-      donde: [-34.662, -54.145],
+      donde: [-34.6624, -54.176],
       resumen: 'La playa de los pescadores artesanales, con el Cristo de Lucho mirando al mar.',
       formato: '2v2',
       puntos: 20,
@@ -111,7 +111,7 @@ const LA_PALOMA = barrio(
     },
     {
       lugar: 'El puerto de La Paloma',
-      donde: [-34.659, -54.137],
+      donde: [-34.6545, -54.1439],
       resumen: 'Puerto pesquero y deportivo en la bahía, donde desembarcan los pescadores al caer la tarde.',
       formato: '1v1',
       puntos: 30,
@@ -124,7 +124,7 @@ const LA_PALOMA = barrio(
     },
     {
       lugar: 'La Laguna de Rocha',
-      donde: [-34.64, -54.27],
+      donde: [-34.6527, -54.2518],
       resumen: 'Laguna costera protegida, con flamencos, cisnes de cuello negro y pescadores en la barra.',
       formato: '3v3',
       puntos: 30,
@@ -139,7 +139,7 @@ const LA_PALOMA = barrio(
     },
     {
       lugar: 'El faro del Cabo Santa María',
-      donde: [-34.666, -54.156],
+      donde: [-34.6682, -54.1529],
       resumen: 'El faro donde nació La Paloma: lo prendieron el 1 de setiembre de 1874.',
       formato: '2v2',
       puntos: 30,
@@ -154,7 +154,7 @@ const LA_PALOMA = barrio(
     },
     {
       lugar: 'La Balconada',
-      donde: [-34.66, -54.168],
+      donde: [-34.6647, -54.1653],
       resumen: 'La playa del atardecer, donde se aplaude cuando el sol se esconde en el mar.',
       formato: '1v1',
       puntos: 30,
@@ -200,7 +200,7 @@ const LA_PEDRERA = barrio(
     },
     {
       lugar: 'El Desplayado',
-      donde: [-34.586, -54.119],
+      donde: [-34.5863, -54.1195],
       resumen: 'La bahía chica entre rocas, al norte del pueblo, mirando hacia el Cabo Polonio.',
       formato: '2v2',
       puntos: 30,
@@ -265,7 +265,7 @@ const CABO_POLONIO = barrio(
   [
     {
       lugar: 'La Puerta del Polonio',
-      donde: [-34.36, -53.83],
+      donde: [-34.3826, -53.8418],
       resumen: 'La terminal de la Ruta 10 donde se suben los camiones que cruzan las dunas.',
       formato: '1v1',
       puntos: 20,
@@ -278,7 +278,7 @@ const CABO_POLONIO = barrio(
     },
     {
       lugar: 'La playa La Calavera',
-      donde: [-34.392, -53.785],
+      donde: [-34.3963, -53.7823],
       resumen: 'La playa del norte del cabo, con las barcas de pesca sobre la arena.',
       formato: '2v2',
       puntos: 30,
@@ -293,7 +293,7 @@ const CABO_POLONIO = barrio(
     },
     {
       lugar: 'La Playa Sur',
-      donde: [-34.405, -53.8],
+      donde: [-34.4038, -53.7983],
       resumen: 'La playa de los atardeceres y el surf, por donde entran los camiones.',
       formato: '1v1',
       puntos: 30,
@@ -306,7 +306,7 @@ const CABO_POLONIO = barrio(
     },
     {
       lugar: 'Las dunas',
-      donde: [-34.37, -53.8],
+      donde: [-34.3846, -53.7888],
       resumen: 'Dunas móviles de más de veinte metros entre el pueblo y Valizas.',
       formato: '3v3',
       puntos: 30,
@@ -321,7 +321,7 @@ const CABO_POLONIO = barrio(
     },
     {
       lugar: 'La lobería',
-      donde: [-34.406, -53.776],
+      donde: [-34.4044, -53.7769],
       resumen: 'Las rocas al pie del faro donde descansan los lobos y los leones marinos.',
       formato: '2v2',
       puntos: 30,
@@ -369,7 +369,7 @@ const AGUAS_DULCES = barrio(
   [
     {
       lugar: 'La Terraza',
-      donde: [-34.2761, -53.7785],
+      donde: [-34.2766, -53.7815],
       resumen: 'La bajada central del balneario, con bancos frente al mar.',
       formato: '1v1',
       puntos: 30,
@@ -410,7 +410,7 @@ const AGUAS_DULCES = barrio(
     },
     {
       lugar: 'La Barra de Valizas',
-      donde: [-34.3361, -53.7944],
+      donde: [-34.337, -53.7928],
       resumen: 'Pueblo de ranchos en la desembocadura del arroyo, con dunas de hasta cuarenta metros.',
       formato: '2v2',
       puntos: 30,
@@ -425,7 +425,7 @@ const AGUAS_DULCES = barrio(
     },
     {
       lugar: 'El monte de ombúes',
-      donde: [-34.3, -53.87],
+      donde: [-34.3551, -53.8651],
       resumen: 'El bosque de ombúes más grande de la región, a orillas de la Laguna de Castillos.',
       formato: '3v3',
       puntos: 30,
@@ -440,7 +440,7 @@ const AGUAS_DULCES = barrio(
     },
     {
       lugar: 'El Cerro de la Buena Vista',
-      donde: [-34.36, -53.8],
+      donde: [-34.3532, -53.7726],
       resumen: 'El punto más alto de las dunas, entre Valizas y el Polonio.',
       formato: '1v1',
       puntos: 30,
@@ -473,7 +473,7 @@ const PUNTA_DEL_DIABLO = barrio(
   [
     {
       lugar: 'La Playa de los Pescadores',
-      donde: [-34.0447, -53.5373],
+      donde: [-34.0445, -53.5378],
       resumen: 'La playa del centro del pueblo, con las barcas de pesca artesanal sobre la arena.',
       formato: '1v1',
       puntos: 30,
@@ -486,7 +486,7 @@ const PUNTA_DEL_DIABLO = barrio(
     },
     {
       lugar: 'La Playa del Rivero',
-      donde: [-34.039, -53.539],
+      donde: [-34.0398, -53.5396],
       resumen: 'La bahía chica del norte del pueblo, con rocas grandes y el mirador con forma de pez.',
       formato: '2v2',
       puntos: 30,
@@ -501,7 +501,7 @@ const PUNTA_DEL_DIABLO = barrio(
     },
     {
       lugar: 'La playa de la Viuda',
-      donde: [-34.055, -53.548],
+      donde: [-34.0576, -53.55],
       resumen: 'La playa de las olas más bravas, con el faro de Punta Palmar al fondo.',
       formato: '3v3',
       puntos: 30,
@@ -549,7 +549,7 @@ const SANTA_TERESA = barrio(
   [
     {
       lugar: 'La avenida Brasil',
-      donde: [-33.6975, -53.457],
+      donde: [-33.6927, -53.4556],
       resumen: 'La avenida que separa Chuy de Chuí, llena de free shops.',
       formato: '1v1',
       puntos: 30,
@@ -562,7 +562,7 @@ const SANTA_TERESA = barrio(
     },
     {
       lugar: 'La Barra del Chuy',
-      donde: [-33.7556, -53.3889],
+      donde: [-33.7551, -53.389],
       resumen: 'La desembocadura del arroyo Chuy, el punto más al este de la costa uruguaya.',
       formato: '2v2',
       puntos: 30,
@@ -577,7 +577,7 @@ const SANTA_TERESA = barrio(
     },
     {
       lugar: 'La Laguna Negra',
-      donde: [-34.0098, -53.5945],
+      donde: [-34.0109, -53.5946],
       resumen: 'La Laguna de los Difuntos: la más grande de las lagunas de la costa, de agua oscura.',
       formato: '2v2',
       puntos: 30,
@@ -592,7 +592,7 @@ const SANTA_TERESA = barrio(
     },
     {
       lugar: 'El Parque Santa Teresa',
-      donde: [-33.96, -53.515],
+      donde: [-33.9559, -53.5226],
       resumen: 'El monte, el invernáculo y la playa La Moza, en el parque nacional.',
       formato: '3v3',
       puntos: 30,
@@ -607,7 +607,7 @@ const SANTA_TERESA = barrio(
     },
     {
       lugar: 'El Fuerte San Miguel',
-      donde: [-33.689, -53.5396],
+      donde: [-33.6894, -53.5389],
       resumen: 'Fuerte colonial de piedra sobre un cerrito, con el museo criollo al lado.',
       formato: '2v2',
       puntos: 30,
@@ -622,7 +622,7 @@ const SANTA_TERESA = barrio(
     },
     {
       lugar: 'La Fortaleza de Santa Teresa',
-      donde: [-33.9716, -53.5496],
+      donde: [-33.9727, -53.5488],
       resumen: 'La fortaleza de cinco baluartes, empezada en 1762, en medio del parque.',
       formato: '1v1',
       puntos: 30,

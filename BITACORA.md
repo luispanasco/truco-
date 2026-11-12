@@ -2194,3 +2194,17 @@ Llegaron del agente de arte las mesas de cinco barrios (`Rocha-barrios-mesas.zip
   - La pieza que daba ese nivel pasa al nivel anterior, en lugar de sus monedas: la tabla de surf, el saco, el collar, la pajita y la caña.
   - La Fortaleza da la mesa de Santa Teresa, la baraja Costa y la mesa de Rocha.
   - Las frases y las despedidas que nombraban esas piezas ahora hablan del paño.
+
+## Modo historia: el admin con todo abierto, los barrios con fotos y el mapa de cada barrio — 2026-11-12
+
+- **Admin:** `barrioAbierto` y `nivelAbierto` reciben `todoAbierto`. El admin tiene abiertos todos los barrios y niveles que existen (antes solo los departamentos), en el servidor y en la web. No se le marca nada como ganado: los premios y las despedidas se ven la primera vez.
+- **Departamento con barrios:** cada barrio es un redondel con las fotos de sus niveles pasando, con un fundido cada 3,2 s. Cada redondel arranca en otro momento y, con movimiento reducido, queda una foto fija. El borde marca el estado (dorado, verde si está completo, gris y en blanco y negro si está cerrado) y un circulito abajo lleva la marca (número, ✓ o candado). Las miniaturas (`nivel-<n>-mini.webp`, de 200 px) las hace `fondos-niveles.py`.
+- **Mapa de cada barrio:** sale de OpenStreetMap (ODbL, con "© colaboradores de OpenStreetMap" abajo del mapa), no de Google Maps, que tiene derechos.
+  - `scripts/mapas-barrios.py` arma una imagen por barrio con las teselas que cubren sus lugares con margen. Aguas Dulces, Valizas y Castillos, y Santa Teresa y Chuy van más abiertos, como pidió el usuario.
+  - La imagen queda en `public/departamentos/rocha/<barrio>/mapa.webp`, y su zoom y esquina en `src/historia/mapasBarrios.ts`.
+  - Los puntos se ubican con la misma proyección (Web Mercator).
+  - El mapa va con un filtro cálido para que combine con el juego.
+  - `MapaDepartamento` acepta `fondo`, para el mapa de un barrio, y `fotos`, para los redondeles.
+- **Coordenadas:** se verificaron las 32 con Nominatim (OpenStreetMap) y mirando cada mapa.
+  - Corregidas: Los Botes (estaba del lado del puerto y queda al oeste, pasando La Balconada), el monte de ombúes (estaba 6 km corrido), el Cerro de la Buena Vista, La Calavera, La Viuda y varias más por unos metros.
+  - Movidas de lugar: la Laguna de Rocha (estaba en el medio del agua y pasó a la orilla), la Puerta del Polonio (estaba en el bañado y pasó a la Ruta 10), las dunas (estaban en el monte de pinos y pasaron a la arena), el Desplayado, la lobería y La Moza (estaban apenas sobre el agua).
