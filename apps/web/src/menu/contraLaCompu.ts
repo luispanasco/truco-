@@ -1,4 +1,4 @@
-import { barajaDeDepartamento, mesaDeDepartamento, nivelDeHistoria, PESCAR_SENIAS_DISPONIBLE } from '@truco/shared'
+import { barajaDeDepartamento, mesaDelNivel, nivelDeHistoria, PESCAR_SENIAS_DISPONIBLE } from '@truco/shared'
 import { ConexionLocal, type OpcionesLocal } from '../conexion/local'
 import type { NivelJugado } from '../conexion/tipos'
 import { useCuenta } from '../cuenta/cuenta'
@@ -53,7 +53,7 @@ export function conexionHistoria(perfil: Perfil, jugado: NivelJugado): ConexionL
     nivelBots: nivel.nivelBots,
     config: { ...base.config, picaPica: false, puntosPartida: nivel.puntos },
     tirarReyes: 'no',
-    mesa: mesaDeDepartamento(jugado.departamento) ?? base.mesa,
+    mesa: mesaDelNivel(jugado.departamento, jugado.barrio ?? '') ?? base.mesa,
     baraja: barajaDeDepartamento(jugado.departamento) ?? base.baraja,
     personajes: false,
     historia: jugado,

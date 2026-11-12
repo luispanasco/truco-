@@ -260,6 +260,13 @@ export function mesaDeDepartamento(departamento: IdDepartamento): IdMesa | undef
 }
 
 /**
+ * La mesa donde se juega un nivel: la de su barrio, si tiene; si no, la del departamento.
+ */
+export function mesaDelNivel(departamento: IdDepartamento, barrio = ''): IdMesa | undefined {
+  return MESAS.find((m) => barrio !== '' && m.id === barrio)?.id ?? mesaDeDepartamento(departamento)
+}
+
+/**
  * La baraja del departamento: la que se gana en su último nivel. Todos sus niveles se juegan con
  * ella (como en la mesa del lugar): la vas conociendo y al final te la llevás.
  */

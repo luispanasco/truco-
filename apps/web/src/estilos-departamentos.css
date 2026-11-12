@@ -319,22 +319,22 @@
 }
 
 [data-mesa='rocha']:is(:root, .muestra-mesa) {
-  --tapete: #093e5d;
-  --tapete-oscuro: #052030;
+  --tapete: #34325d;
+  --tapete-oscuro: #151425;
   --tapete-textura:
-    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #052030 85%, transparent)),
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #151425 85%, transparent)),
     url('/departamentos/rocha-bordado.webp') center / 55% auto no-repeat,
     url('/departamentos/rocha-pano.webp') center / 512px repeat;
   --tapete-marco: url('/departamentos/rocha-marco.webp') 160 / 22px round;
-  --madera: #493829;
-  --madera-clara: #c1a27a;
-  --fondo-claro: #c1a27a;
+  --madera: #241b21;
+  --madera-clara: #a68b65;
+  --fondo-claro: #a68b65;
 }
 /* En vertical la mesa es angosta: el bordado más grande, para que se vea entre las cartas. */
 @media (orientation: portrait) {
   [data-mesa='rocha']:is(:root, .muestra-mesa) {
     --tapete-textura:
-    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #052030 85%, transparent)),
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #151425 85%, transparent)),
     url('/departamentos/rocha-bordado.webp') center / 85% auto no-repeat,
     url('/departamentos/rocha-pano.webp') center / 512px repeat;
   }
@@ -470,5 +470,137 @@
   [data-fondo='treinta-y-tres'],
   :root[data-lugar='treinta-y-tres'] body {
     --fondo-lugar: url('/departamentos/treinta-y-tres-vertical.webp');
+  }
+}
+
+[data-mesa='cabo-polonio']:is(:root, .muestra-mesa) {
+  --tapete: #093e5d;
+  --tapete-oscuro: #052030;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #052030 85%, transparent)),
+    url('/departamentos/cabo-polonio-bordado.webp') center / 55% auto no-repeat,
+    url('/departamentos/cabo-polonio-pano.webp') center / 512px repeat;
+  --tapete-marco: url('/departamentos/cabo-polonio-marco.webp') 160 / 22px round;
+  --madera: #493829;
+  --madera-clara: #c1a27a;
+  --fondo-claro: #c1a27a;
+}
+/* En vertical la mesa es angosta: el bordado más grande, para que se vea entre las cartas. */
+@media (orientation: portrait) {
+  [data-mesa='cabo-polonio']:is(:root, .muestra-mesa) {
+    --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #052030 85%, transparent)),
+    url('/departamentos/cabo-polonio-bordado.webp') center / 85% auto no-repeat,
+    url('/departamentos/cabo-polonio-pano.webp') center / 512px repeat;
+  }
+}
+
+[data-mesa='aguas-dulces-valizas-castillos']:is(:root, .muestra-mesa) {
+  --tapete: #656e38;
+  --tapete-oscuro: #282c16;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #282c16 85%, transparent)),
+    url('/departamentos/aguas-dulces-valizas-castillos-bordado.webp') center / 55% auto no-repeat,
+    url('/departamentos/aguas-dulces-valizas-castillos-pano.webp') center / 512px repeat;
+  --tapete-marco: url('/departamentos/aguas-dulces-valizas-castillos-marco.webp') 160 / 22px round;
+  --madera: #59462d;
+  --madera-clara: #b79a69;
+  --fondo-claro: #b79a69;
+}
+/* En vertical la mesa es angosta: el bordado más grande, para que se vea entre las cartas. */
+@media (orientation: portrait) {
+  [data-mesa='aguas-dulces-valizas-castillos']:is(:root, .muestra-mesa) {
+    --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #282c16 85%, transparent)),
+    url('/departamentos/aguas-dulces-valizas-castillos-bordado.webp') center / 85% auto no-repeat,
+    url('/departamentos/aguas-dulces-valizas-castillos-pano.webp') center / 512px repeat;
+  }
+}
+
+[data-mesa='la-paloma']:is(:root, .muestra-mesa) {
+  --tapete: #267b77;
+  --tapete-oscuro: #0f3130;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #0f3130 85%, transparent)),
+    url('/departamentos/la-paloma-bordado.webp') center / 55% auto no-repeat,
+    url('/departamentos/la-paloma-pano.webp') center / 512px repeat;
+  --tapete-marco: url('/departamentos/la-paloma-marco.webp') 160 / 22px round;
+  --madera: #8b765c;
+  --madera-clara: #d6b98f;
+  --fondo-claro: #d6b98f;
+}
+/* En vertical la mesa es angosta: el bordado más grande, para que se vea entre las cartas. */
+@media (orientation: portrait) {
+  [data-mesa='la-paloma']:is(:root, .muestra-mesa) {
+    --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #0f3130 85%, transparent)),
+    url('/departamentos/la-paloma-bordado.webp') center / 85% auto no-repeat,
+    url('/departamentos/la-paloma-pano.webp') center / 512px repeat;
+  }
+}
+
+[data-mesa='la-pedrera']:is(:root, .muestra-mesa) {
+  --tapete: #8d5b4e;
+  --tapete-oscuro: #38241f;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #38241f 85%, transparent)),
+    url('/departamentos/la-pedrera-bordado.webp') center / 55% auto no-repeat,
+    url('/departamentos/la-pedrera-pano.webp') center / 512px repeat;
+  --tapete-marco: url('/departamentos/la-pedrera-marco.webp') 160 / 22px round;
+  --madera: #837768;
+  --madera-clara: #ded5bf;
+  --fondo-claro: #ded5bf;
+}
+/* En vertical la mesa es angosta: el bordado más grande, para que se vea entre las cartas. */
+@media (orientation: portrait) {
+  [data-mesa='la-pedrera']:is(:root, .muestra-mesa) {
+    --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #38241f 85%, transparent)),
+    url('/departamentos/la-pedrera-bordado.webp') center / 85% auto no-repeat,
+    url('/departamentos/la-pedrera-pano.webp') center / 512px repeat;
+  }
+}
+
+[data-mesa='punta-del-diablo']:is(:root, .muestra-mesa) {
+  --tapete: #9a4944;
+  --tapete-oscuro: #3e1d1b;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #3e1d1b 85%, transparent)),
+    url('/departamentos/punta-del-diablo-bordado.webp') center / 55% auto no-repeat,
+    url('/departamentos/punta-del-diablo-pano.webp') center / 512px repeat;
+  --tapete-marco: url('/departamentos/punta-del-diablo-marco.webp') 160 / 22px round;
+  --madera: #674134;
+  --madera-clara: #d7ae8e;
+  --fondo-claro: #d7ae8e;
+}
+/* En vertical la mesa es angosta: el bordado más grande, para que se vea entre las cartas. */
+@media (orientation: portrait) {
+  [data-mesa='punta-del-diablo']:is(:root, .muestra-mesa) {
+    --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #3e1d1b 85%, transparent)),
+    url('/departamentos/punta-del-diablo-bordado.webp') center / 85% auto no-repeat,
+    url('/departamentos/punta-del-diablo-pano.webp') center / 512px repeat;
+  }
+}
+
+[data-mesa='santa-teresa-y-chuy']:is(:root, .muestra-mesa) {
+  --tapete: #315b42;
+  --tapete-oscuro: #13241b;
+  --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #13241b 85%, transparent)),
+    url('/departamentos/santa-teresa-y-chuy-bordado.webp') center / 55% auto no-repeat,
+    url('/departamentos/santa-teresa-y-chuy-pano.webp') center / 512px repeat;
+  --tapete-marco: url('/departamentos/santa-teresa-y-chuy-marco.webp') 160 / 22px round;
+  --madera: #3c3427;
+  --madera-clara: #ad9063;
+  --fondo-claro: #ad9063;
+}
+/* En vertical la mesa es angosta: el bordado más grande, para que se vea entre las cartas. */
+@media (orientation: portrait) {
+  [data-mesa='santa-teresa-y-chuy']:is(:root, .muestra-mesa) {
+    --tapete-textura:
+    radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, #13241b 85%, transparent)),
+    url('/departamentos/santa-teresa-y-chuy-bordado.webp') center / 85% auto no-repeat,
+    url('/departamentos/santa-teresa-y-chuy-pano.webp') center / 512px repeat;
   }
 }

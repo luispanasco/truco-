@@ -9,6 +9,7 @@ import {
   idBaraja,
   idMesa,
   idMonedas,
+  mesaDelNivel,
   nivelAbierto,
   nivelesDelDepartamento,
   nombreRecompensa,
@@ -69,9 +70,16 @@ describe('Rocha por barrios: los datos', () => {
     }
   })
 
-  it('los premios existen; el último barrio cierra con la baraja y la mesa de Rocha', () => {
+  it('los premios existen; cada barrio da su mesa y el último, además, la baraja y la mesa de Rocha', () => {
     for (const r of barrios.flatMap((b) => b.niveles.flatMap((n) => n.recompensas))) expect(nombreRecompensa(r), r).not.toBe(r)
-    expect(barrios.at(-1)!.niveles.at(-1)!.recompensas).toEqual([idBaraja('costa'), idMesa('rocha')])
+    for (const b of barrios) {
+      expect(b.niveles.at(-1)!.recompensas, b.id).toContain(idMesa(b.id as never))
+      // Cada barrio se juega en su mesa.
+      expect(mesaDelNivel('rocha', b.id), b.id).toBe(b.id)
+    }
+    expect(barrios.at(-1)!.niveles.at(-1)!.recompensas).toEqual([idMesa('santa-teresa-y-chuy'), idBaraja('costa'), idMesa('rocha')])
+    // Sin barrio, la del departamento.
+    expect(mesaDelNivel('artigas')).toBe('artigas')
   })
 
   it('los personajes no repiten nombre', () => {

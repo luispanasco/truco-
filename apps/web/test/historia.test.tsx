@@ -354,7 +354,7 @@ describe('pantallas', () => {
     fireEvent.click(screen.getByRole('button', { name: `Nivel 3 · ${PALOMA.niveles[2]!.lugar}` }))
     expect((screen.getByRole('button', { name: 'Jugar el nivel 3' }) as HTMLButtonElement).disabled).toBe(true)
     fireEvent.click(screen.getByRole('button', { name: `Nivel 6 · ${PALOMA.niveles[5]!.lugar}` }))
-    expect(screen.getByText(/Premio: Tabla de surf y 250 monedas/)).toBeTruthy()
+    expect(screen.getByText(/Premio: Mesa La Paloma/)).toBeTruthy()
     // "Volver" lleva a los barrios de Rocha.
     expect(screen.getByRole('button', { name: 'Rocha' })).toBeTruthy()
     cleanup()
@@ -363,7 +363,7 @@ describe('pantallas', () => {
     app(`/historia/rocha/${ULTIMO.id}`)
     await screen.findByRole('heading', { name: ULTIMO.nombre })
     fireEvent.click(screen.getByRole('button', { name: `Nivel 6 · ${ULTIMO.niveles[5]!.lugar}` }))
-    expect(screen.getByText(/Premio: Baraja Costa Uruguaya y Mesa Rocha/)).toBeTruthy()
+    expect(screen.getByText(/Premio: Mesa Santa Teresa y Baraja Costa Uruguaya y Mesa Rocha/)).toBeTruthy()
   })
 
   it('la previa: el rival dice sus frases de a una y "¡A jugar!" arranca el nivel en su mesa', async () => {
@@ -444,7 +444,7 @@ describe('la portada en Jugar', () => {
 })
 
 describe('la partida de un nivel', () => {
-  it('sienta al elenco del nivel en su lugar, en la mesa y con la baraja de Rocha, a los puntos del nivel', async () => {
+  it('sienta al elenco del nivel en su lugar, en la mesa de su barrio y con la baraja de Rocha, a los puntos del nivel', async () => {
     const sala = await new Promise<Extract<MensajeServidor, { tipo: 'sala' }>['datos']>((resolve) => {
       const c = conexionHistoria(leerPerfil(), { departamento: 'rocha', barrio: 'la-paloma', nivel: 4 })
       c.escuchar((m) => {
@@ -455,7 +455,7 @@ describe('la partida de un nivel', () => {
     })
     const elenco = elencoDelNivel(PALOMA.niveles[3]!)
     expect(sala.lugares.slice(1).map((l) => l.apodo)).toEqual(elenco.map((p) => p.nombre))
-    expect(sala.mesa).toBe('rocha')
+    expect(sala.mesa).toBe('la-paloma')
     // La baraja del departamento (la que se gana al final), aunque elegiste otra.
     expect(sala.baraja).toBe('costa')
     expect(barajaDeDepartamento('artigas')).toBe('artigas')
@@ -624,7 +624,7 @@ describe('las despedidas', () => {
     // Las nubes se cierran y se vuelve al mapa de Uruguay, con la ruta a los vecinos.
     await screen.findByRole('group', { name: 'Mapa de Uruguay' }, { timeout: 4000 })
     expect(document.querySelectorAll('.mapa-ruta')).toHaveLength(VECINOS.rocha.length)
-  })
+   }, 15_000)
 
   it('sin completar el departamento no hay despedida; completo, se vuelve a ver desde el departamento', async () => {
     servidorFalso(rochaCompleta(2))

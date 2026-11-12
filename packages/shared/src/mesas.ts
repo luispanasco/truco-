@@ -43,12 +43,20 @@ export const MESAS = conRarezas(
   { id: 'paysandu', nombre: 'Paysandú', detalle: 'Oliva del río Uruguay', precio: 0, recompensa: 'Paysandú' },
   { id: 'rio-negro', nombre: 'Río Negro', detalle: 'Gris del Anglo', precio: 0, recompensa: 'Río Negro' },
   { id: 'rivera', nombre: 'Rivera', detalle: 'Verde del Lunarejo', precio: 0, recompensa: 'Rivera' },
-  { id: 'rocha', nombre: 'Rocha', detalle: 'Azul petróleo de la costa', precio: 0, recompensa: 'Rocha' },
+  { id: 'rocha', nombre: 'Rocha', detalle: 'Medianoche de toda la costa', precio: 0, recompensa: 'Rocha' },
   { id: 'salto', nombre: 'Salto', detalle: 'Cobre de las termas', precio: 0, recompensa: 'Salto' },
   { id: 'san-jose', nombre: 'San José', detalle: 'Verde de tambo maragato', precio: 0, recompensa: 'San José' },
   { id: 'soriano', nombre: 'Soriano', detalle: 'Verde de chacra', precio: 0, recompensa: 'Soriano' },
   { id: 'tacuarembo', nombre: 'Tacuarembó', detalle: 'Cuero gaucho', precio: 0, recompensa: 'Tacuarembó' },
   { id: 'treinta-y-tres', nombre: 'Treinta y Tres', detalle: 'Verde del Olimar', precio: 0, recompensa: 'Treinta y Tres' },
+  // Los barrios de Rocha: cada uno se juega en su mesa y la da al completarlo (la de Rocha, la de
+  // toda la costa, es la del último). La de Cabo Polonio es la que antes era de Rocha.
+  { id: 'la-paloma', nombre: 'La Paloma', detalle: 'Turquesa de ola', precio: 0, recompensa: 'La Paloma (Rocha)' },
+  { id: 'la-pedrera', nombre: 'La Pedrera', detalle: 'Piedra de la rambla', precio: 0, recompensa: 'La Pedrera (Rocha)' },
+  { id: 'cabo-polonio', nombre: 'Cabo Polonio', detalle: 'Azul petróleo del faro', precio: 0, recompensa: 'Cabo Polonio (Rocha)' },
+  { id: 'aguas-dulces-valizas-castillos', nombre: 'Aguas Dulces', detalle: 'Verde ombú', precio: 0, recompensa: 'Aguas Dulces (Rocha)' },
+  { id: 'punta-del-diablo', nombre: 'Punta del Diablo', detalle: 'Rojo de barca', precio: 0, recompensa: 'Punta del Diablo (Rocha)' },
+  { id: 'santa-teresa-y-chuy', nombre: 'Santa Teresa', detalle: 'Verde del monte', precio: 0, recompensa: 'Santa Teresa y Chuy (Rocha)' },
   ] as const satisfies readonly Mesa[]
 )
 

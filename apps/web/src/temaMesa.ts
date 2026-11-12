@@ -27,12 +27,18 @@ export const BARRA_MESA: Record<IdMesa, string> = {
   paysandu: '#303525',
   'rio-negro': '#30322d',
   rivera: '#22362f',
-  rocha: '#052030',
+  rocha: '#151425',
   salto: '#3f2f20',
   'san-jose': '#30372f',
   soriano: '#323a28',
   tacuarembo: '#363026',
   'treinta-y-tres': '#253630',
+  'la-paloma': '#0f3130',
+  'la-pedrera': '#38241f',
+  'cabo-polonio': '#052030',
+  'aguas-dulces-valizas-castillos': '#282c16',
+  'punta-del-diablo': '#3e1d1b',
+  'santa-teresa-y-chuy': '#13241b',
 }
 
 /**

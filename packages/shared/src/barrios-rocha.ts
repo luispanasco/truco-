@@ -6,8 +6,9 @@
  * Los barrios se abren de a uno. La dificultad va en serrucho: cada barrio sube de nivel en nivel y
  * el siguiente arranca un poco más abajo de donde terminó el anterior (La Paloma de fácil a
  * difícil, La Pedrera de medio a muy difícil, Cabo Polonio de difícil a master y los demás de muy
- * difícil a master). En los niveles del medio se ganan monedas y piezas del avatar; al cerrar cada
- * barrio, una pieza y monedas; al cerrar el último, la baraja y la mesa de Rocha.
+ * difícil a master). En los niveles del medio se ganan monedas y piezas del avatar; cada barrio
+ * se juega en su mesa y la da al completarlo; el último da además la baraja y la mesa de Rocha (la
+ * de toda la costa).
  */
 
 import type { Formato, LARGOS_PARTIDA } from '@truco/engine'
@@ -76,7 +77,7 @@ const LA_PALOMA = barrio(
   ['facil', 'dificil'],
   [
     'Bueno, loco, te ganaste La Paloma. Ni la Balconada te aplaudió tanto.',
-    'Llevate la tabla, que ya sabés leer las olas… y las cartas.',
+    'Llevate el paño, que ya sabés leer las olas… y las cartas.',
     'Seguí por la costa: en La Pedrera te espera Nilda, y esa ve todo.',
   ],
   [
@@ -144,7 +145,7 @@ const LA_PALOMA = barrio(
       puntos: 30,
       con: ['bizcochos'],
       companieros: ['guardavidas'],
-      recompensas: [idMonedas(200)],
+      recompensas: [pieza('accesorio', 'Tabla de surf')],
       datos: [
         { texto: 'Este faro se vino abajo una vez, antes de que lo inauguraran. Lo volvieron a levantar y lo prendieron en 1874: ese día se cuenta como el nacimiento de La Paloma.', fuente: `${TR}/en/attractions/lighthouses/cabo-santa-maria-lighthouse-in-la-paloma-rocha-uruguay-visiting-hours-and-cost` },
         { texto: 'Arriba se sube por una escalera caracol de ciento cuarenta y tres escalones. Yo los subo corriendo. Bueno… caminando.', fuente: `${TR}/en/attractions/lighthouses/cabo-santa-maria-lighthouse-in-la-paloma-rocha-uruguay-visiting-hours-and-cost` },
@@ -157,14 +158,14 @@ const LA_PALOMA = barrio(
       resumen: 'La playa del atardecer, donde se aplaude cuando el sol se esconde en el mar.',
       formato: '1v1',
       puntos: 30,
-      recompensas: [pieza('accesorio', 'Tabla de surf'), idMonedas(250)],
+      recompensas: [idMesa('la-paloma')],
       datos: [
         { texto: 'Acá es costumbre quedarse hasta que el sol se esconde del todo… y aplaudirlo. Como al que gana.', fuente: `${TR}/en/attractions/beaches/la-balconada-beach-in-la-paloma-one-of-the-most-famous-and-popular-in-uruguay` },
         { texto: 'Y entre las dos puntas de roca se arma una izquierda de las buenas. Mi ola favorita.', fuente: `${TR}/en/attractions/sports/ideal-beaches-for-surfing-in-la-paloma-rocha-uruguay` },
       ],
-      frases: ['Llegamos a la Balconada. Acá se termina el día… y la partida.', 'Si me ganás, te llevás la tabla.', 'Y si no, aplaudís igual, como todos.'],
+      frases: ['Llegamos a la Balconada. Acá se termina el día… y la partida.', 'Si me ganás, te llevás el paño de La Paloma.', 'Y si no, aplaudís igual, como todos.'],
       alFinal: {
-        ganaste: '¡Aplauso para vos, loco! La tabla es tuya.',
+        ganaste: '¡Aplauso para vos, loco! El paño es tuyo.',
         perdiste: 'El sol se fue y vos también. Mañana hay otra ola.',
       },
     },
@@ -180,7 +181,7 @@ const LA_PEDRERA = barrio(
   ['medio', 'muyDificil'],
   [
     'Te vi ganar desde mi banco, m\'hijo. Lo anoté en el cuaderno, al lado de las ballenas.',
-    'Llevate el saco, que en la rambla sopla.',
+    'Llevate el paño, y abrigate, que en la rambla sopla.',
     'Seguí para el norte: en el Polonio te espera Celeste, la del faro.',
   ],
   [
@@ -220,7 +221,7 @@ const LA_PEDRERA = barrio(
       puntos: 30,
       con: ['surfista'],
       companieros: ['desplayado'],
-      recompensas: [idMonedas(200)],
+      recompensas: [pieza('ropa', 'Saco de lana tejido')],
       datos: [
         { texto: 'Ese barco es el Cathay VIII, un pesquero que encalló el 15 de setiembre de 1977. Se salvaron los veintiún tripulantes.', fuente: `${TR}/en/attractions/historical/shipwreck-cathay-viii-in-del-barco-beach-in-la-pedrera-rocha-uruguay` },
         { texto: 'Al verano siguiente lo quisieron sacar con un remolcador y no hubo caso. El mar se fue comiendo el resto: hoy queda la proa.', fuente: `${TR}/en/attractions/historical/shipwreck-cathay-viii-in-del-barco-beach-in-la-pedrera-rocha-uruguay` },
@@ -235,14 +236,14 @@ const LA_PEDRERA = barrio(
       puntos: 30,
       con: ['espuma', 'desplayado'],
       companieros: ['surfista', 'hincha'],
-      recompensas: [pieza('ropa', 'Saco de lana tejido'), idMonedas(250)],
+      recompensas: [idMesa('la-pedrera')],
       datos: [
         { texto: 'El carnaval se hace acá, sobre la avenida. Llega tanta gente que la Intendencia tiene que poner vallas y cámaras.', fuente: 'https://www.elobservador.com.uy/nota/carnaval-de-la-pedrera-controlado-habra-300-funcionarios-y-13-camaras-de-vigilancia-20182811140' },
         { texto: 'Y en invierno, el club hace los Fuegos de San Juan: tambores por la avenida y una escultura que arman los vecinos y se quema.', fuente: 'https://www.montevideo.com.uy/Tiempo-libre/Los-vecinos-de-La-Pedrera-celebran-un-ano-mas-los-Fuegos-de-San-Juan-uc891844' },
       ],
       frases: ['¡Carnaval en La Pedrera! Rosana trajo la espuma.', 'Tres contra tres, en medio del desfile.', 'Y la flor la canto bien fuerte, para que la oiga toda la avenida.'],
       alFinal: {
-        ganaste: 'Te ganaste el carnaval, m\'hijo. Y el saco, para cuando refresque.',
+        ganaste: 'Te ganaste el carnaval, m\'hijo. Y el paño de La Pedrera.',
         perdiste: 'En carnaval nadie se salva de la espuma. Ni de perder.',
       },
     },
@@ -258,7 +259,7 @@ const CABO_POLONIO = barrio(
   ['dificil', 'master'],
   [
     'Subiste los ciento treinta y dos escalones y ganaste arriba. Eso no lo hace cualquiera.',
-    'Llevate el collar, que acá todo se hace con las manos.',
+    'Llevate el paño, que acá todo se hace con las manos.',
     'Seguí por las dunas: en Aguas Dulces te espera Celestino, en su palafito.',
   ],
   [
@@ -326,7 +327,7 @@ const CABO_POLONIO = barrio(
       puntos: 30,
       con: ['hippie'],
       companieros: ['bunuelos'],
-      recompensas: [idMonedas(250)],
+      recompensas: [pieza('bufanda', 'Collar de cuentas')],
       datos: [
         { texto: 'Estas rocas tienen la única colonia de lobo fino en tierra firme de todo el país.', fuente: 'https://www.gub.uy/ministerio-ambiente/politicas-y-gestion/parque-nacional-cabo-polonio-rocha' },
         { texto: 'Al león marino macho le dicen "peluca", por la melena. Llega a pesar trescientos cuarenta kilos.', fuente: `${TR}/en/attractions/nature/natural-reserve-of-sea-lions-in-cabo-polonio-rocha-uruguay` },
@@ -339,12 +340,12 @@ const CABO_POLONIO = barrio(
       resumen: 'El faro sobre la punta rocosa, Monumento Histórico Nacional.',
       formato: '1v1',
       puntos: 30,
-      recompensas: [pieza('bufanda', 'Collar de cuentas'), idMonedas(300)],
+      recompensas: [idMesa('cabo-polonio')],
       datos: [
         { texto: 'Para llegar arriba hay que subir ciento treinta y dos escalones. Desde ahí se ve todo: el pueblo, las islas, la lobería y las dunas.', fuente: `${TR}/atractivos/faros/faro-de-cabo-polonio` },
         { texto: 'Al principio las lámparas quemaban grasa, y el farero subía cada tres horas a darle cuerda. Mi abuelo me lo contaba.', fuente: `${TR}/atractivos/faros/faro-de-cabo-polonio` },
       ],
-      frases: ['Arriba del faro, de noche. Esta es la última.', 'Si me ganás, te llevás el collar.', 'Y si no, bajás los escalones de a uno, pensando.'],
+      frases: ['Arriba del faro, de noche. Esta es la última.', 'Si me ganás, te llevás el paño del Polonio.', 'Y si no, bajás los escalones de a uno, pensando.'],
       alFinal: {
         ganaste: 'Ganaste arriba del faro. Eso se cuenta en todo el Polonio.',
         perdiste: 'El faro alumbra a todos, pero hoy me alumbró a mí.',
@@ -362,7 +363,7 @@ const AGUAS_DULCES = barrio(
   ['muyDificil', 'master'],
   [
     'Desde el cerro se ve todo, y vos lo ganaste todo. Mi abuelo estaría orgulloso.',
-    'Llevate la pajita, que acá todo se hace sin apuro.',
+    'Llevate el paño, que acá todo se hace sin apuro.',
     'Seguí para el norte: en Punta del Diablo te espera Julio, con las barcas.',
   ],
   [
@@ -430,7 +431,7 @@ const AGUAS_DULCES = barrio(
       puntos: 30,
       con: ['lanchero', 'baqueana'],
       companieros: ['duna', 'araza'],
-      recompensas: [idMonedas(250)],
+      recompensas: [pieza('enBoca', 'Pajita de pasto')],
       datos: [
         { texto: 'Los ombúes ocupan una franja de veinte kilómetros. Se llega en bote por el arroyo, como vinimos nosotros.', fuente: `${TR}/en/attractions/nature/monte-de-ombues-the-largest-grouping-of-ombu-trees-of-the-region-over-laguna-de-castillos-in-uruguay` },
         { texto: 'En esta laguna anotaron doscientas cincuenta y seis clases de pájaros. Más que cartas tiene el mazo.', fuente: `${TR}/en/attractions/lagoons/castillos-lagoon-wetlands-ocean-stream-bush-forest-and-palm-groves-in-rocha-uruguay` },
@@ -443,14 +444,14 @@ const AGUAS_DULCES = barrio(
       resumen: 'El punto más alto de las dunas, entre Valizas y el Polonio.',
       formato: '1v1',
       puntos: 30,
-      recompensas: [pieza('enBoca', 'Pajita de pasto'), idMonedas(300)],
+      recompensas: [idMesa('aguas-dulces-valizas-castillos')],
       datos: [
         { texto: 'Desde acá arriba se ven las islas, el Cabo Polonio, la Laguna de Castillos y el arroyo. Todo el pago.', fuente: `${TR}/en/attractions/nature/cerro-de-la-buena-vista-the-highest-point-of-the-dunes-of-cabo-polonio-and-barra-de-valizas-in-uruguay` },
         { texto: 'Al pie había un mojón de 1750, de cuando España y Portugal se repartían esto. Hoy lo guardan en la Fortaleza de Santa Teresa.', fuente: `${TR}/en/attractions/nature/cerro-de-la-buena-vista-the-highest-point-of-the-dunes-of-cabo-polonio-and-barra-de-valizas-in-uruguay` },
       ],
       frases: ['Llegamos arriba del cerro. Mirá lo que es esto.', 'La última, al atardecer.', 'El que gana se queda con la vista.'],
       alFinal: {
-        ganaste: 'Te ganaste la Buena Vista, botija. Y la pajita, para el camino.',
+        ganaste: 'Te ganaste la Buena Vista, botija. Y el paño, para el camino.',
         perdiste: 'Bajá despacito, que la arena resbala. Y volvé.',
       },
     },
@@ -466,7 +467,7 @@ const PUNTA_DEL_DIABLO = barrio(
   ['muyDificil', 'master'],
   [
     'Bueno, gurí… ganaste en la punta. Artigas te vio.',
-    'Llevate la caña, que ya tenés paciencia de pescador.',
+    'Llevate el paño, que ya tenés paciencia de pescador.',
     'Te falta lo último: Santa Teresa y el Chuy. Cleusa te espera en la frontera.',
   ],
   [
@@ -491,7 +492,7 @@ const PUNTA_DEL_DIABLO = barrio(
       puntos: 30,
       con: ['caracolera'],
       companieros: ['tubo'],
-      recompensas: [idMonedas(250)],
+      recompensas: [pieza('accesorio', 'Caña de pescar')],
       datos: [
         { texto: 'Ese mirador de madera tiene forma de pez. De julio a octubre se suben a ver las ballenas.', fuente: `${TR}/atractivos/aire-libre/mirador-pez` },
         { texto: 'Cruzando esas rocas se llega al Parque Nacional Santa Teresa. Caminando, despacito.', fuente: `${TR}/atractivos/playas/playa-del-rivero` },
@@ -519,14 +520,14 @@ const PUNTA_DEL_DIABLO = barrio(
       resumen: 'La estatua de Artigas sobre las rocas de la punta, que de noche hace de faro.',
       formato: '1v1',
       puntos: 30,
-      recompensas: [pieza('accesorio', 'Caña de pescar'), idMonedas(300)],
+      recompensas: [idMesa('punta-del-diablo')],
       datos: [
         { texto: 'Al lado de Artigas hay un pilar blanco que de noche hace de faro: un destello cada cinco segundos, para las barcas.', fuente: 'https://ibiblio.org/lighthouse/uru.htm' },
         { texto: 'El pueblo empezó hacia 1942, con pescadores de tiburón. Mi abuelo era uno.', fuente: `${TR}/destinos/punta-del-diablo` },
       ],
-      frases: ['Llegaste a la punta, gurí. Artigas nos mira.', 'Esta es la última, mano a mano.', 'Si me ganás, te llevás la caña. Si no, a remar.'],
+      frases: ['Llegaste a la punta, gurí. Artigas nos mira.', 'Esta es la última, mano a mano.', 'Si me ganás, te llevás el paño de la punta. Si no, a remar.'],
       alFinal: {
-        ganaste: 'Mirá vos, el gurí sabe jugar. La caña es tuya.',
+        ganaste: 'Mirá vos, el gurí sabe jugar. El paño es tuyo.',
         perdiste: 'Volvé mañana temprano, que el mar y el truco se aprenden de a poco.',
       },
     },
@@ -625,7 +626,7 @@ const SANTA_TERESA = barrio(
       resumen: 'La fortaleza de cinco baluartes, empezada en 1762, en medio del parque.',
       formato: '1v1',
       puntos: 30,
-      recompensas: [idBaraja('costa'), idMesa('rocha')],
+      recompensas: [idMesa('santa-teresa-y-chuy'), idBaraja('costa'), idMesa('rocha')],
       datos: [
         { texto: 'La empezaron los portugueses en 1762 y al año siguiente la siguieron los españoles. Tiene cinco baluartes y seiscientos cuarenta y dos metros de muralla.', fuente: `${TR}/atractivos/historicos/fortaleza-de-santa-teresa` },
         { texto: 'El 31 de diciembre de 1825 la tomaron los patriotas de Leonardo Olivera. Y hoy, a ver quién la toma.', fuente: `${TR}/atractivos/historicos/fortaleza-de-santa-teresa` },

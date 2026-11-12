@@ -2180,3 +2180,17 @@ Llegó `Rocha-barrios-fondos.zip` del agente de arte: 31 niveles en horizontal (
   - Capturas revisadas a mano: los barrios en el celular y la compu, el barrio y la previa.
 - **Fondos corregidos (mismo día):** llegó `Rocha-barrios-fondos(2).zip` con los tres que había que rehacer. En La Paloma 2, el Cristo de Lucho ahora es una figura de piedra parada que mira al mar; en el Arinos se ve el casco; en el monte de ombúes ya no está el castillo. Se copiaron solo esos seis archivos, porque Santa Teresa y Chuy viene con la numeración de antes de la Laguna Negra.
 - **Para probar sin tocar producción:** el servidor se levanta con `DATABASE_URL` y `SUPABASE_URL` vacías y `TRUCO_DIR_BASE=datos/base-barrios`, así usa una base local y el login de prueba. La web va con `PUERTO_SERVIDOR`, y `cloudflared tunnel --url` da el link temporal. `pnpm compartir` tal cual usaría la base de producción, porque el `.env` del servidor la tiene puesta.
+
+## Mesas de los barrios de Rocha y la mesa de toda la costa — 2026-11-12
+
+Llegaron del agente de arte las mesas de cinco barrios (`Rocha-barrios-mesas.zip`, primero La Paloma sola para ajustar y después las demás) y la mesa nueva de Rocha (`Rocha-mesa.zip`). Instructivos: `INSTRUCTIVO-PANOS-BARRIOS.md` e `INSTRUCTIVO-MESA-ROCHA.md`.
+
+- **Decidido con el usuario:** cada barrio se juega en su mesa y la da al completarlo. La mesa de Rocha es especial: junta a los seis barrios (azul medianoche, un medallón con el mapa de la costa y un marco con un barrio en cada esquina) y es el premio de completar el departamento.
+- **Catálogo (`mesas.ts`):** suma `la-paloma`, `la-pedrera`, `cabo-polonio`, `aguas-dulces-valizas-castillos`, `punta-del-diablo` y `santa-teresa-y-chuy`. `cabo-polonio` es la mesa que antes era de Rocha (los mismos archivos y colores). `mesa:rocha` pasa a ser la nueva: el que la había ganado se queda con la nueva. `BARRA_MESA`, con el paño oscuro de cada una.
+- **`scripts/departamentos.py --mesas <carpeta>`:** importa mesas con cualquier id (una carpeta por id). Si ya tienen regla en `estilos-departamentos.css` la reemplaza, y si no la agrega.
+- **`mesaDelNivel(departamento, barrio)`:** la mesa del barrio si existe; si no, la del departamento. La usan la partida contra la compu y la sala cooperativa.
+- **Premios:**
+  - El último nivel de cada barrio da su mesa.
+  - La pieza que daba ese nivel pasa al nivel anterior, en lugar de sus monedas: la tabla de surf, el saco, el collar, la pajita y la caña.
+  - La Fortaleza da la mesa de Santa Teresa, la baraja Costa y la mesa de Rocha.
+  - Las frases y las despedidas que nombraban esas piezas ahora hablan del paño.

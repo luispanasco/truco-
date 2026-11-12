@@ -5,6 +5,7 @@ arma src/estilos-departamentos.css. Los mazos van aparte (ver barajas-propias-co
 Uso (desde apps/web, con Python 3 y Pillow), con el paquete descomprimido:
     python scripts/departamentos.py <carpeta del paquete>
     python scripts/departamentos.py --panos <carpeta de los paños>
+    python scripts/departamentos.py --mesas <carpeta de las mesas>
 
 En la carpeta hay una por departamento (artigas, cerro-largo, …) con pano.webp (1024 × 1024, se
 repite sin estirar), fondo-horizontal.webp (1920 × 1080), fondo-vertical.webp (1080 × 1920) y
@@ -23,6 +24,11 @@ marco.png (la madera tallada, banda de 160 px, para `border-image`) y colores.js
 madera, maderaClara). Con eso la regla de la mesa se arma de nuevo: el bordado reemplaza al emblema
 (al 55 % del ancho y, en vertical, al 85 %, con su opacidad ya en la imagen), el marco va en
 `--tapete-marco` y los colores salen del json.
+
+Con --mesas importa mesas completas con cualquier id (las de los barrios: INSTRUCTIVO-PANOS-BARRIOS.md):
+en la carpeta, una por mesa, con el nombre de su id en el catálogo (mesas.ts), y adentro pano.webp,
+bordado.png, marco.png y colores.json. Si la mesa ya tiene regla en el CSS se reemplaza; si no, se
+agrega al final.
 """
 
 import json
@@ -168,8 +174,8 @@ def regla_mesa(id, c):
 """
 
 
-def importar_mesa(carpeta, id, css):
-    """Una mesa nueva completa: copia las imágenes y reemplaza su regla en el CSS."""
+def importar_mesa(carpeta, id, css, agregar=False):
+    """Una mesa nueva completa: copia las imágenes y reemplaza su regla en el CSS (o la agrega, con `agregar`)."""
     c = json.loads((carpeta / 'colores.json').read_text(encoding='utf-8'))
     # El paño nuevo tiene dibujo (no solo grano): a calidad 85 pesa un tercio y no se nota.
     Image.open(carpeta / 'pano.webp').convert('RGB').save(DESTINO / f'{id}-pano.webp', 'WEBP', quality=85, method=6)
@@ -184,8 +190,19 @@ def importar_mesa(carpeta, id, css):
     )
     css, n = vieja.subn(lambda _: regla_mesa(id, c), css, count=1)
     if n != 1:
-        raise SystemExit(f'{id}: no encontré su regla en el CSS')
+        if not agregar:
+            raise SystemExit(f'{id}: no encontré su regla en el CSS')
+        css += '\n' + regla_mesa(id, c)
     return css
+
+
+def importar_mesas(carpeta):
+    css = CSS.read_text(encoding='utf-8')
+    for sub in sorted(p for p in carpeta.iterdir() if p.is_dir()):
+        if all((sub / f).exists() for f in ('pano.webp', 'bordado.png', 'marco.png', 'colores.json')):
+            css = importar_mesa(sub, sub.name, css, agregar=True)
+            print(f'{sub.name}: mesa (paño, bordado, marco y colores)')
+    CSS.write_text(css, encoding='utf-8', newline='\n')
 
 
 def importar_panos(carpeta):
@@ -212,6 +229,9 @@ def importar_panos(carpeta):
 def main():
     if sys.argv[1] == '--panos':
         importar_panos(Path(sys.argv[2]))
+        return
+    if sys.argv[1] == '--mesas':
+        importar_mesas(Path(sys.argv[2]))
         return
     paquete = Path(sys.argv[1])
     DESTINO.mkdir(parents=True, exist_ok=True)
