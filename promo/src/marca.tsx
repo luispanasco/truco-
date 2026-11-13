@@ -3,11 +3,15 @@ import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } fr
 import { loadFont as cargarAlfa } from '@remotion/google-fonts/AlfaSlabOne'
 import { loadFont as cargarNunito } from '@remotion/google-fonts/Nunito'
 
-/** Los colores y las letras de la app (apps/web/src/estilos.css) y el logo de public/icono.svg. */
+/**
+ * Los colores y las letras de la app (apps/web/src/estilos.css) y el logo de public/icono.svg. El
+ * fondo es la madera de un mostrador de boliche, no un paño verde: el verde es de las barajas
+ * francesas y del casino, no del truco de acá.
+ */
 export const COLOR = {
-  panoClaro: '#2a8048',
-  pano: '#1f6b3a',
-  panoOscuro: '#154d29',
+  fondoClaro: '#8a5530',
+  fondo: '#5e351b',
+  fondoOscuro: '#2f190b',
   madera: '#6b4226',
   maderaClara: '#8a5a36',
   dorso: '#8b1e1e',
@@ -21,15 +25,22 @@ export const COLOR = {
 export const LETRA_TITULO = cargarAlfa().fontFamily
 export const LETRA_TEXTO = cargarNunito('normal', { weights: ['700', '800', '900'] }).fontFamily
 
-/** El paño de la mesa, con una viñeta de madera en los bordes. */
+/** La veta de la madera: franjas finas y desparejas, apenas marcadas. */
+const VETA = [
+  'repeating-linear-gradient(92deg, rgb(255 220 170 / 0.05) 0 3px, transparent 3px 41px)',
+  'repeating-linear-gradient(88deg, rgb(20 8 0 / 0.10) 0 2px, transparent 2px 67px)',
+  'repeating-linear-gradient(90deg, rgb(20 8 0 / 0.06) 0 18px, transparent 18px 113px)',
+].join(', ')
+
+/** El mostrador de madera, con la luz de una lamparita en el medio y los bordes en penumbra. */
 export function Pano({ children, oscuro = 0 }: { children?: ReactNode; oscuro?: number }) {
   return (
     <AbsoluteFill
       style={{
-        background: `radial-gradient(ellipse 85% 60% at 50% 42%, ${COLOR.panoClaro}, ${COLOR.pano} 55%, ${COLOR.panoOscuro} 100%)`,
+        background: `${VETA}, radial-gradient(ellipse 85% 60% at 50% 40%, ${COLOR.fondoClaro}, ${COLOR.fondo} 55%, ${COLOR.fondoOscuro} 100%)`,
       }}
     >
-      <AbsoluteFill style={{ boxShadow: `inset 0 0 220px 40px rgb(30 15 5 / 0.55)` }} />
+      <AbsoluteFill style={{ boxShadow: `inset 0 0 240px 60px rgb(20 8 0 / 0.6)` }} />
       {oscuro > 0 && <AbsoluteFill style={{ background: `rgb(0 0 0 / ${oscuro})` }} />}
       {children}
     </AbsoluteFill>
@@ -41,7 +52,7 @@ const RAYOS =
   'M61.8,-5.4L205.0,0.0L61.8,5.4ZM61.1,10.8L144.9,38.8L58.3,21.2ZM56.2,26.2L177.5,102.5L50.8,35.6ZM47.5,39.9L106.1,106.1L39.9,47.5ZM35.6,50.8L102.5,177.5L26.2,56.2ZM21.2,58.3L38.8,144.9L10.8,61.1ZM5.4,61.8L0.0,205.0L-5.4,61.8ZM-10.8,61.1L-38.8,144.9L-21.2,58.3ZM-26.2,56.2L-102.5,177.5L-35.6,50.8ZM-39.9,47.5L-106.1,106.1L-47.5,39.9ZM-50.8,35.6L-177.5,102.5L-56.2,26.2ZM-58.3,21.2L-144.9,38.8L-61.1,10.8ZM-61.8,5.4L-205.0,0.0L-61.8,-5.4ZM-61.1,-10.8L-144.9,-38.8L-58.3,-21.2ZM-56.2,-26.2L-177.5,-102.5L-50.8,-35.6ZM-47.5,-39.9L-106.1,-106.1L-39.9,-47.5ZM-35.6,-50.8L-102.5,-177.5L-26.2,-56.2ZM-21.2,-58.3L-38.8,-144.9L-10.8,-61.1ZM-5.4,-61.8L-0.0,-205.0L5.4,-61.8ZM10.8,-61.1L38.8,-144.9L21.2,-58.3ZM26.2,-56.2L102.5,-177.5L35.6,-50.8ZM39.9,-47.5L106.1,-106.1L47.5,-39.9ZM50.8,-35.6L177.5,-102.5L56.2,-26.2ZM58.3,-21.2L144.9,-38.8L61.1,-10.8Z'
 
 /** Degradés compartidos: van una sola vez por SVG que los use. */
-function Degrades() {
+export function Degrades() {
   return (
     <defs>
       <radialGradient id="degrade-sol" cx="50%" cy="50%" r="50%">

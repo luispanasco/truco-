@@ -15,15 +15,15 @@ import { pulso } from './ritmo'
 export const DURACION_LANZAMIENTO = pulso(110) // ≈ 57,9 s
 
 /** Lo que se ve arriba de los títulos: Instagram tapa los primeros ~220 px y los últimos ~400. */
-const ARRIBA = 215
+export const ARRIBA = 215
 
-type Tramo = { clip: string; recorte?: number; velocidad?: number; pulsos: number }
+export type Tramo = { clip: string; recorte?: number; velocidad?: number; pulsos: number }
 
 /**
  * Un celular que pasa por varios clips sin salir de cuadro: cada tramo dura `pulsos` y corta en
  * un pulso. Entra una sola vez, como `Celular`.
  */
-function CelularTramos({ tramos, alto = 1060, inclinacion = 0, style }: { tramos: Tramo[]; alto?: number; inclinacion?: number; style?: CSSProperties }) {
+export function CelularTramos({ tramos, alto = 1060, inclinacion = 0, style }: { tramos: Tramo[]; alto?: number; inclinacion?: number; style?: CSSProperties }) {
   const e = useEntrada(0, { damping: 14, stiffness: 120 })
   const ancho = (alto * 390) / 844
   const marco = alto * 0.022
@@ -75,7 +75,7 @@ function Pantalla({ clip, recorte = 0, velocidad = 1 }: Tramo) {
 }
 
 /** Un título que cambia a mitad de escena: el primero hasta `cambia`, el segundo desde ahí. */
-function TitulosQueCambian({ antes, despues, cambia, tam = 88 }: { antes: string[]; despues: string[]; cambia: number; tam?: number }) {
+export function TitulosQueCambian({ antes, despues, cambia, tam = 88 }: { antes: string[]; despues: string[]; cambia: number; tam?: number }) {
   const cuadro = useCurrentFrame()
   return cuadro < cambia ? (
     <Titulo renglones={antes} desde={1} paso={pulso(1)} tam={tam} y={ARRIBA} />
@@ -85,7 +85,7 @@ function TitulosQueCambian({ antes, despues, cambia, tam = 88 }: { antes: string
 }
 
 /** Un globo que se va a los `hasta` cuadros (para los que acompañan un solo tramo). */
-function GloboTramo({ desde, hasta, ...resto }: { desde: number; hasta: number } & Omit<Parameters<typeof Globo>[0], 'desde'>) {
+export function GloboTramo({ desde, hasta, ...resto }: { desde: number; hasta: number } & Omit<Parameters<typeof Globo>[0], 'desde'>) {
   const cuadro = useCurrentFrame()
   if (cuadro >= hasta) return null
   return <Globo desde={desde} {...resto} />
@@ -315,7 +315,7 @@ const EFECTOS: { en: number; sonido: string; volumen?: number }[] = [
 /** `conMusica` en false deja solo los ruidos de cartas, para ponerle un tema de Instagram encima. */
 export function Lanzamiento({ conMusica = true }: { conMusica?: boolean }) {
   return (
-    <AbsoluteFill style={{ background: '#154d29' }}>
+    <AbsoluteFill style={{ background: COLOR.fondoOscuro }}>
       {ESCENAS.map(({ desde, hasta, Escena }) => (
         <Sequence key={desde} from={desde} durationInFrames={hasta - desde}>
           <Escena />

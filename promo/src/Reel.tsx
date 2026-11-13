@@ -1,6 +1,7 @@
 import { AbsoluteFill, Html5Audio, Sequence, staticFile } from 'remotion'
 import { Cantos, Cierre, Cosmeticos, Gancho, Modos, Presentacion, Reparto, Salas, Senias } from './escenas'
 import { Destello } from './piezas'
+import { COLOR } from './marca'
 import { DURACION, pulso } from './ritmo'
 
 /** Las escenas, cada una desde un pulso de la música (ver ritmo.ts); el reel dura 57 pulsos. */
@@ -35,7 +36,7 @@ const EFECTOS: { en: number; sonido: string; volumen?: number }[] = [
 /** `conMusica` en false deja solo los ruidos de cartas, para ponerle un tema de Instagram encima. */
 export function Reel({ conMusica = true }: { conMusica?: boolean }) {
   return (
-    <AbsoluteFill style={{ background: '#154d29' }}>
+    <AbsoluteFill style={{ background: COLOR.fondoOscuro }}>
       {ESCENAS.map(({ desde, hasta, Escena }) => (
         <Sequence key={desde} from={desde} durationInFrames={hasta - desde}>
           <Escena />

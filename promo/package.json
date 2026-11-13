@@ -10,6 +10,9 @@
     "portada": "remotion still src/index.ts Reel salida/truco-portada.png --frame=880 --port=3123",
     "render:lanzamiento": "remotion render src/index.ts Lanzamiento salida/truco-lanzamiento.mp4 --codec h264 --crf 16 --audio-bitrate 320k --port=3131",
     "render:lanzamiento:sin-musica": "remotion render src/index.ts LanzamientoSinMusica salida/truco-lanzamiento-sin-musica.mp4 --codec h264 --crf 16 --audio-bitrate 320k --port=3131",
+    "render:completo": "remotion render src/index.ts Completo salida/truco-completo.mp4 --codec h264 --crf 16 --audio-bitrate 320k --port=3141",
+    "render:completo:sin-musica": "remotion render src/index.ts CompletoSinMusica salida/truco-completo-sin-musica.mp4 --codec h264 --crf 16 --audio-bitrate 320k --port=3141",
+    "portada:completo": "remotion still src/index.ts Completo salida/truco-completo-portada.png --frame=1680 --port=3141",
     "portada:lanzamiento": "remotion still src/index.ts Lanzamiento salida/truco-lanzamiento-portada.png --frame=1700 --port=3131"
   },
   "dependencies": {

@@ -2231,4 +2231,37 @@ Crítica que recibió el usuario: había mucho de hombre y poco de mujer en lo q
 - **Pasan a gratis 8 peinados largos o recogidos** (`PELOS_LARGOS_GRATIS` en avatar.ts): Lacio largo, Melena con flequillo, Melena ondulada, Rulos al viento, Carré con flequillo, Carré ondulado, Cola larga y Rodete alto. Van por nombre, porque el orden del catálogo no se puede cambiar. Ahora son 20 gratis: 12 cortos y 8 largos o recogidos.
 - En la tienda siguen otros de mujer (Dos rodetes, Moño despeinado, Cola al viento, Largo despeinado, Melena salvaje, Rodete desarmado…), para que haya qué comprar.
 - `NOMBRES-PIEZAS.md`, actualizado.
-- Pendiente: si alguien había comprado alguno de esos 8, pagó por algo que ahora es gratis. Se puede devolver con `pnpm beta monedas`.
+- Nadie había comprado ninguno de esos 8, así que no hubo que devolver monedas.
+- **Publicado** el mismo día: servidor en Fly y `main` en feeb138.
+
+## Reel con todo, sin paño verde y bien uruguayo — 2026-11-13
+
+El pedido del usuario: un último reel que muestre todo. Tenía que incluir el modo historia, los paños, los mazos, los amigos y los grupos. También pidió dos cosas más:
+- revisar el color, porque en Uruguay el verde no es tan típico, es de las barajas francesas;
+- remarcar que es truco uruguayo y no argentino.
+
+- **El fondo de todos los reels pasa a madera.** Es un mostrador de boliche con veta y la luz de una lamparita, en lugar del paño verde (`Pano` en `promo/src/marca.tsx`; los colores `fondoClaro`, `fondo` y `fondoOscuro`). Afecta también a `Reel` y `Lanzamiento` si se vuelven a renderizar.
+- **Composiciones `Completo` y `CompletoSinMusica`** (`promo/src/completo.tsx`). Duran 110 pulsos (unos 58 s) y usan la música del lanzamiento. Scripts: `render:completo`, `render:completo:sin-musica` y `portada:completo`, en el puerto 3141.
+- **Lo uruguayo:**
+  - La cinta "Truco uruguayo" aparece desde el primer cuadro.
+  - La bajada dice "El truco uruguayo, en tu celular".
+  - Hay una escena "El truco de acá", con Muestra, Piezas, Flor y Señas, más "Con baraja española de 40 cartas" y "Como se juega de este lado del río".
+  - En el reparto, "La muestra manda".
+  - Antes del cierre, la bandera flameando con "Hecho en Uruguay, para los de acá".
+- **Orden:**
+  1. Gancho y logo.
+  2. El truco de acá.
+  3. Reparto y cantos.
+  4. Don Queiroz.
+  5. Modo historia: el mapa de Uruguay, los barrios de Rocha en redondeles, el mapa de Cabo Polonio con la flecha, la previa con Celeste la Farera y la mesa del Cabo con envido y truco.
+  6. Paños de los barrios y mazos.
+  7. Avatar con los peinados nuevos.
+  8. Tienda.
+  9. Amigos y el chat de "Los del Boliche".
+  10. Online o contra la compu.
+  11. Señas.
+  12. Hecho en Uruguay.
+  13. Cierre: "¡Jugalo gratis!", "En Android y en la web" y @truco_uruguayo.
+- **Clips nuevos** en `promo/public/clips`: historia-barrios, historia-mapa-barrio, historia-previa, panos, mazos, avatar-peinados, amigos y grupo-chat.
+  - Se grabaron con Playwright y CDP screencast, a 390 × 844 y 3×, contra el entorno de prueba local (servidor en el 3568 con base local).
+  - En esa base quedaron las cuentas de prueba de Marta, Beto, Gonza y Lucía, y el grupo "Los del Boliche".

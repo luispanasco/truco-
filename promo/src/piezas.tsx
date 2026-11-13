@@ -116,7 +116,7 @@ function Renglon({ texto, desde, tam }: { texto: string; desde: number; tam: num
         fontSize: tam,
         lineHeight: 1.05,
         color: resaltado ? COLOR.acento : COLOR.papel,
-        textShadow: `0 6px 0 ${COLOR.panoOscuro}, 0 14px 30px rgb(0 0 0 / 0.45)`,
+        textShadow: `0 6px 0 ${COLOR.fondoOscuro}, 0 14px 30px rgb(0 0 0 / 0.45)`,
         transform: `scale(${0.4 + 0.6 * e}) translateY(${(1 - e) * 40}px)`,
         opacity: Math.min(1, e * 1.6),
         textWrap: 'balance',
