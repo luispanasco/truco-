@@ -2223,3 +2223,12 @@ Llegaron del agente de arte las mesas de cinco barrios (`Rocha-barrios-mesas.zip
 - **Servidor:** `fly deploy --app truco-uy --ha=false` (una sola máquina), cerca de las 21:45 de Uruguay. Arrancó con PostgreSQL y Supabase y aplicó la migración 16 (la columna `barrio` en `historia`). Lo ganado antes en Rocha queda anotado sin barrio.
 - **Web:** `main` se adelantó a `develop` (cc55e6e) y Cloudflare la publicó sola. Fueron los 12 commits de develop: los barrios de Rocha y también los dorsos de 13 departamentos, la pestaña Dorso, los 7 mazos rehechos y el instructivo de mazos.
 - Se publicaron juntos porque la web nueva necesita el servidor nuevo, y la web vieja no anda con el servidor nuevo en el modo historia.
+
+## Más peinados de mujer gratis en el avatar — 2026-11-13
+
+Crítica que recibió el usuario: había mucho de hombre y poco de mujer en lo que viene gratis. Los 12 peinados gratis eran casi todos cortos; los largos y recogidos estaban todos en la tienda.
+
+- **Pasan a gratis 8 peinados largos o recogidos** (`PELOS_LARGOS_GRATIS` en avatar.ts): Lacio largo, Melena con flequillo, Melena ondulada, Rulos al viento, Carré con flequillo, Carré ondulado, Cola larga y Rodete alto. Van por nombre, porque el orden del catálogo no se puede cambiar. Ahora son 20 gratis: 12 cortos y 8 largos o recogidos.
+- En la tienda siguen otros de mujer (Dos rodetes, Moño despeinado, Cola al viento, Largo despeinado, Melena salvaje, Rodete desarmado…), para que haya qué comprar.
+- `NOMBRES-PIEZAS.md`, actualizado.
+- Pendiente: si alguien había comprado alguno de esos 8, pagó por algo que ahora es gratis. Se puede devolver con `pnpm beta monedas`.

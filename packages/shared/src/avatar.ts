@@ -66,6 +66,22 @@ function conNombres(nombres: readonly string[], libres: number, nivel: number): 
   return nombres.map((n, i) => (i < libres ? gratis(n) : paga(n, nivel)))
 }
 
+/**
+ * Peinados largos y recogidos que también son gratis (los primeros del catálogo son casi todos
+ * cortos): así el set básico tiene para todos. Van por nombre porque el orden del catálogo no se
+ * puede cambiar (el avatar guarda la posición).
+ */
+const PELOS_LARGOS_GRATIS: readonly string[] = [
+  'Lacio largo',
+  'Carré con flequillo',
+  'Rulos al viento',
+  'Carré ondulado',
+  'Cola larga',
+  'Melena ondulada',
+  'Rodete alto',
+  'Melena con flequillo',
+]
+
 /** Colores de piel: todos gratis, siempre. */
 export const PIELES = ['#f6d3b3', '#efc19a', '#d9a066', '#b97a4a', '#8d5524', '#5c3a21'] as const
 /** Colores de pelo: los naturales gratis; los de fantasía, en la tienda. */
@@ -144,7 +160,7 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     ],
     12,
     100,
-  ),
+  ).map((p) => (PELOS_LARGOS_GRATIS.includes(p.nombre) ? gratis(p.nombre) : p)),
   colorPelo: [
     'Negro',
     'Castaño oscuro',

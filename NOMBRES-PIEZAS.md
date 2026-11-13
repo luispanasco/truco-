@@ -42,16 +42,16 @@ Las que no están acá (barba, pecas, ropa, sombreros, accesorios, bufandas, en 
 | 11 | Peinado 12 | Flequillo de costado | gratis |
 | 12 | Peinado 13 | Melena desprolija | Rara |
 | 13 | Peinado 14 | Rodete con flequillo | Rara |
-| 14 | Peinado 15 | Lacio largo | Rara |
+| 14 | Peinado 15 | Lacio largo | gratis |
 | 15 | Peinado 16 | Largo con antena | Rara |
 | 16 | Peinado 17 | Carré revuelto | Rara |
 | 17 | Peinado 18 | Ondas sueltas | Rara |
-| 18 | Peinado 19 | Carré con flequillo | Rara |
+| 18 | Peinado 19 | Carré con flequillo | gratis |
 | 19 | Peinado 20 | Rebelde | Rara |
 | 20 | Peinado 21 | Melena salvaje | Rara |
 | 21 | Peinado 22 | Tupé enrulado | Rara |
 | 22 | Peinado 23 | Flequillo y lacio | Rara |
-| 23 | Peinado 24 | Rulos al viento | Rara |
+| 23 | Peinado 24 | Rulos al viento | gratis |
 | 24 | Peinado 25 | Pelado con estilo | Rara |
 | 25 | Peinado 26 | Dos rodetes | Rara |
 | 26 | Peinado 27 | Cresta punk | Rara |
@@ -59,15 +59,15 @@ Las que no están acá (barba, pecas, ropa, sombreros, accesorios, bufandas, en 
 | 28 | Peinado 29 | Ondas de costado | Rara |
 | 29 | Peinado 30 | Corto con mechas | Rara |
 | 30 | Peinado 31 | Cola al viento | Rara |
-| 31 | Peinado 32 | Carré ondulado | Rara |
-| 32 | Peinado 33 | Cola larga | Rara |
+| 31 | Peinado 32 | Carré ondulado | gratis |
+| 32 | Peinado 33 | Cola larga | gratis |
 | 33 | Peinado 34 | Pelado con mechón | Rara |
-| 34 | Peinado 35 | Melena ondulada | Rara |
+| 34 | Peinado 35 | Melena ondulada | gratis |
 | 35 | Peinado 36 | Colita parada | Rara |
 | 36 | Peinado 37 | Raya y ondas | Rara |
-| 37 | Peinado 38 | Rodete alto | Rara |
+| 37 | Peinado 38 | Rodete alto | gratis |
 | 38 | Peinado 39 | Motas | Rara |
-| 39 | Peinado 40 | Melena con flequillo | Rara |
+| 39 | Peinado 40 | Melena con flequillo | gratis |
 | 40 | Peinado 41 | Largo despeinado | Rara |
 | 41 | Peinado 42 | Mechón al costado | Rara |
 | 42 | Peinado 43 | Corto con remolino | Rara |
