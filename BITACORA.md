@@ -2217,3 +2217,9 @@ Llegaron del agente de arte las mesas de cinco barrios (`Rocha-barrios-mesas.zip
   - **Al tocar un nivel**, el mapa se acerca a él. Los puntos se ven siempre del mismo tamaño.
   - **Si el nivel elegido queda fuera de lo que se ve**, una flecha en el borde apunta hacia él, con su número, y tocándola te lleva ahí.
   - **Ojo:** el contenedor del mapa se llamaba `mapa-departamento`, igual que cada departamento del mapa de Uruguay, y esas reglas pintaban de negro los trazos del dibujo. Pasó a llamarse `mapa-lugar`.
+
+## Publicado: el modo historia por barrios en producción — 2026-11-12
+
+- **Servidor:** `fly deploy --app truco-uy --ha=false` (una sola máquina), cerca de las 21:45 de Uruguay. Arrancó con PostgreSQL y Supabase y aplicó la migración 16 (la columna `barrio` en `historia`). Lo ganado antes en Rocha queda anotado sin barrio.
+- **Web:** `main` se adelantó a `develop` (cc55e6e) y Cloudflare la publicó sola. Fueron los 12 commits de develop: los barrios de Rocha y también los dorsos de 13 departamentos, la pestaña Dorso, los 7 mazos rehechos y el instructivo de mazos.
+- Se publicaron juntos porque la web nueva necesita el servidor nuevo, y la web vieja no anda con el servidor nuevo en el modo historia.
