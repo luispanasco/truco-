@@ -2292,3 +2292,24 @@ Al usuario no le gustó la primera por dos motivos: parecía hecha por una IA y 
 - **Clips nuevos:**
   - `online.mp4`: dos cuentas de prueba contra el servidor local.
   - `cuenta-google.mp4`: grabado en la web publicada, sin entrar a ninguna cuenta; la app solo hizo lecturas.
+
+### Tercera versión del reel — 2026-11-16
+
+La segunda no le gustó al usuario: prefería el estilo de la primera, con más animación y el celular centrado. Además pidió no comparar con el truco argentino ("pierde aura"); alcanza con que diga "Truco uruguayo".
+
+- **Vuelve el estilo de la primera:** el celular centrado con su marco y la entrada con rebote, los títulos grandes con el renglón amarillo, los globos y los destellos en los cortes.
+- **Duración:** 12 escenas, de 5 a 9 s salvo el gancho y el logo. Los clips van a velocidad real o hasta 1,6×.
+- **Escenas:**
+  1. Gancho con la cinta "Truco uruguayo".
+  2. Logo: "El truco uruguayo, en tu celular".
+  3. Con muestra, piezas y flor.
+  4. Cantá como en el boliche.
+  5. Jugá online con gente de verdad.
+  6. Don Queiroz.
+  7. Recorré Uruguay, y después Rocha barrio por barrio.
+  8. Paños y mazos de cada rincón.
+  9. Armá tu avatar.
+  10. Sumá amigos, y después Jugá con tu barra.
+  11. Entrá con tu cuenta de Google.
+  12. ¡Jugalo gratis!
+- **Lo que no dice:** ninguna mención a Argentina ni "de este lado del río". Tampoco lista los formatos online, porque el 2 vs 2 y el 3 vs 3 con desconocidos todavía se están haciendo.

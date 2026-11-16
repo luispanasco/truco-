@@ -1,286 +1,282 @@
 import type { ReactNode } from 'react'
-import { AbsoluteFill, Html5Audio, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig } from 'remotion'
-import { COLOR, LETRA_TEXTO, Logo, Pano } from './marca'
+import { AbsoluteFill, Html5Audio, Sequence, staticFile, useCurrentFrame } from 'remotion'
+import { CLIPS, Gancho } from './escenas'
+import { ARRIBA, CelularTramos, GloboTramo, TitulosQueCambian } from './lanzamiento'
+import { COLOR, LETRA_TEXTO, LETRA_TITULO, Logo, Pano } from './marca'
+import { Bajada, Celular, Destello, Globo, Titulo, useEntrada } from './piezas'
 import { pulso } from './ritmo'
 
 /**
- * El reel con todo, segunda versión (2026-11-16). La primera parecía hecha por una máquina: cada
- * escena era la misma plantilla (título amarillo, celular inclinado, globos que rebotan) y los
- * clips iban a ×3. Esta va como la editaría alguien a mano: la grabación de la app grande y
- * derecha, cortes secos en los pulsos, textos tipo subtítulo con un fundido corto y nada que
- * rebote. Diez escenas de 4 a 8 s, sobre la madera del boliche. Misma música (58 s).
+ * El reel con todo, tercera versión (2026-11-16). Vuelve al estilo de la primera (celular
+ * centrado con su marco, entradas con rebote, títulos grandes, globos y destellos), que al
+ * usuario le gustaba más que la segunda, pero con menos escenas y más tiempo para cada una: los
+ * clips van a velocidad real o hasta 1,6×. Truco uruguayo, sin compararlo con nada. Suma el
+ * online y la entrada con Google. Sobre la madera del boliche; misma música (58 s).
  */
 export const DURACION_COMPLETO = pulso(110) // ≈ 57,9 s
 
-/** La grabación de la app (390 × 844) va a 1560 px de alto, centrada, con las puntas redondeadas. */
-const ALTO = 1560
-const ANCHO = (ALTO * 390) / 844
-const ARRIBA = 330
-
-type Tramo = { clip: string; recorte: number; velocidad?: number; pulsos: number }
-
-/** Un fundido corto (6 cuadros) a la entrada y a la salida. */
-function useFundido(desde: number, hasta: number) {
+/** La apertura del primero, con la cinta de "Truco uruguayo" arriba desde el cuadro 0. */
+function GanchoCompleto() {
   const cuadro = useCurrentFrame()
-  return interpolate(cuadro, [desde, desde + 6, hasta - 6, hasta], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-}
-
-/**
- * La pantalla de la app, que pasa por varios clips con cortes secos. Se acerca apenas (4 %) a lo
- * largo de la escena, para que no quede quieta.
- */
-function Pantalla({ tramos, duracion }: { tramos: Tramo[]; duracion: number }) {
-  const cuadro = useCurrentFrame()
-  const { fps } = useVideoConfig()
-  const acerca = interpolate(cuadro, [0, duracion], [1, 1.04])
-  let desde = 0
+  const latido = 1 + 0.03 * Math.sin(cuadro / 4)
   return (
-    <div
-      style={{
-        position: 'absolute',
-        top: ARRIBA,
-        left: (1080 - ANCHO) / 2,
-        width: ANCHO,
-        height: ALTO,
-        borderRadius: 34,
-        overflow: 'hidden',
-        background: '#000',
-        boxShadow: '0 30px 70px rgb(0 0 0 / 0.55)',
-      }}
-    >
-      <div style={{ position: 'absolute', inset: 0, transform: `scale(${acerca})`, transformOrigin: '50% 40%' }}>
-        {tramos.map((t, i) => {
-          const de = pulso(desde)
-          desde += t.pulsos
-          return (
-            <Sequence key={i} from={de} durationInFrames={pulso(desde) - de} layout="none">
-              <OffthreadVideo
-                src={staticFile(`clips/${t.clip}`)}
-                muted
-                trimBefore={Math.round(t.recorte * fps)}
-                playbackRate={t.velocidad ?? 1}
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            </Sequence>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-/**
- * Un subtítulo arriba de la pantalla, en una franja oscura: el renglón grande y, si hay, uno más
- * chico. Lo que va entre `*asteriscos*` sale en amarillo.
- */
-function Leyenda({ grande, chico, desde, hasta }: { grande: string; chico?: string; desde: number; hasta: number }) {
-  const o = useFundido(desde, hasta)
-  if (o <= 0) return null
-  return (
-    <div style={{ position: 'absolute', top: 228, left: 0, right: 0, display: 'flex', justifyContent: 'center', opacity: o, zIndex: 2 }}>
-      <div
-        style={{
-          maxWidth: 900,
-          padding: '20px 34px 22px',
-          borderRadius: 22,
-          background: 'rgb(24 12 4 / 0.82)',
-          textAlign: 'center',
-          fontFamily: LETRA_TEXTO,
-          color: COLOR.papel,
-          boxShadow: '0 10px 30px rgb(0 0 0 / 0.35)',
-          textWrap: 'balance',
-        }}
-      >
-        <div style={{ fontWeight: 900, fontSize: 58, lineHeight: 1.12 }}>
-          <Resaltado texto={grande} />
+    <AbsoluteFill>
+      <Gancho />
+      <div style={{ position: 'absolute', top: 245, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
+        <div
+          style={{
+            fontFamily: LETRA_TITULO,
+            fontSize: 70,
+            color: COLOR.tinta,
+            background: COLOR.acento,
+            border: `6px solid ${COLOR.tinta}`,
+            borderRadius: 999,
+            padding: '14px 50px',
+            boxShadow: '0 12px 0 rgb(0 0 0 / 0.3)',
+            transform: `rotate(-3deg) scale(${latido})`,
+          }}
+        >
+          Truco uruguayo
         </div>
-        {chico && (
-          <div style={{ fontWeight: 800, fontSize: 38, lineHeight: 1.2, marginTop: 8, opacity: 0.92 }}>
-            <Resaltado texto={chico} />
-          </div>
-        )}
       </div>
-    </div>
+    </AbsoluteFill>
   )
 }
 
-function Resaltado({ texto }: { texto: string }) {
-  return (
-    <>
-      {texto.split('*').map((parte, i) =>
-        i % 2 === 1 ? (
-          <span key={i} style={{ color: COLOR.acento }}>
-            {parte}
-          </span>
-        ) : (
-          parte
-        ),
-      )}
-    </>
-  )
-}
-
-type Texto = { grande: string; chico?: string; desde: number; hasta: number }
-
-/** Una escena: la pantalla con sus clips y los subtítulos, en pulsos contados desde su principio. */
-function escena(tramos: Tramo[], textos: Texto[]) {
-  const duracion = pulso(tramos.reduce((s, t) => s + t.pulsos, 0))
-  return function Escena() {
-    return (
-      <Pano>
-        <Pantalla tramos={tramos} duracion={duracion} />
-        {textos.map((t, i) => (
-          <Leyenda key={i} {...t} desde={pulso(t.desde)} hasta={Math.min(duracion, pulso(t.hasta))} />
-        ))}
-      </Pano>
-    )
-  }
-}
-
-/** Una mano de verdad: el reparto con la muestra y la pieza, y después truco, retruco y vale cuatro. */
-const Partida = escena(
-  [
-    { clip: 'reparto.mp4', recorte: 1.8, pulsos: 6 },
-    { clip: 'cantos-truco.mp4', recorte: 0.5, velocidad: 1.2, pulsos: 8 },
-  ],
-  [
-    { grande: 'Truco *uruguayo*, no argentino', chico: 'Con muestra, piezas y flor', desde: 0, hasta: 6 },
-    { grande: 'Truco, retruco y *vale cuatro*', chico: 'Como se canta en el boliche', desde: 6, hasta: 14 },
-  ],
-)
-
-const Online = escena(
-  [
-    // El Lobby: "Buscar rival" y "Buscando rival…".
-    { clip: 'online.mp4', recorte: 1.5, velocidad: 1.2, pulsos: 6 },
-    // La mesa contra Marta, otra persona: ¡Truco! y ¡Quiero!
-    { clip: 'online.mp4', recorte: 14.6, pulsos: 5 },
-  ],
-  [
-    { grande: 'Jugá *online* con gente de verdad', chico: 'O contra la compu, cuando quieras', desde: 0, hasta: 6 },
-    { grande: 'Buscá rival al toque', chico: 'O armá sala para 2 vs 2 y 3 vs 3', desde: 6, hasta: 11 },
-  ],
-)
-
-const Aprender = escena(
-  [
-    { clip: 'aprender-ruta.mp4', recorte: 1.2, velocidad: 1.3, pulsos: 4 },
-    { clip: 'aprender-envido.mp4', recorte: 2.5, velocidad: 1.2, pulsos: 5 },
-  ],
-  [{ grande: '¿No sabés jugar?', chico: 'Don Queiroz te enseña desde cero', desde: 0, hasta: 9 }],
-)
-
-const Historia = escena(
-  [
-    // Los barrios de Rocha en redondeles con las fotos, y tocar Cabo Polonio.
-    { clip: 'historia-barrios.mp4', recorte: 8.6, pulsos: 8 },
-    // El mapa de Cabo Polonio: la flecha al nivel 1, volar hasta él y tocar el nivel 3.
-    { clip: 'historia-mapa-barrio.mp4', recorte: 4, velocidad: 1.4, pulsos: 8 },
-  ],
-  [
-    { grande: '*Modo historia*', chico: 'Rocha, barrio por barrio', desde: 0, hasta: 8 },
-    { grande: '32 lugares de verdad', chico: 'Del faro de La Paloma a la Fortaleza de Santa Teresa', desde: 8, hasta: 16 },
-  ],
-)
-
-const Previa = escena(
-  [
-    // Celeste la Farera habla antes de jugar.
-    { clip: 'historia-previa.mp4', recorte: 3, velocidad: 1.3, pulsos: 5 },
-    // La mesa del Cabo (el faro y los lobos): envido, quiero y 31.
-    { clip: 'historia-previa.mp4', recorte: 14.8, velocidad: 1.6, pulsos: 7 },
-  ],
-  [
-    { grande: 'En cada lugar te espera *alguien de ahí*', desde: 0, hasta: 5 },
-    { grande: 'Y cada barrio tiene *su mesa*', desde: 5, hasta: 12 },
-  ],
-)
-
-const PanosYMazos = escena(
-  [
-    // La Paloma, La Pedrera y Cabo Polonio.
-    { clip: 'panos.mp4', recorte: 6, velocidad: 2, pulsos: 5 },
-    // Oriental, Costa Uruguaya, Colonial y Grabado Nocturno.
-    { clip: 'mazos.mp4', recorte: 3.5, velocidad: 2.2, pulsos: 4 },
-  ],
-  [{ grande: 'Paños y mazos *de todo el país*', desde: 0, hasta: 9 }],
-)
-
-const Avatar = escena(
-  [{ clip: 'avatar-peinados.mp4', recorte: 2.3, velocidad: 2, pulsos: 8 }],
-  [{ grande: 'Armá *tu avatar*', chico: 'Pelo, cara, ropa, gorro…', desde: 0, hasta: 8 }],
-)
-
-const Amigos = escena(
-  [
-    // Aceptar a Lucía y unirse a la sala de Beto.
-    { clip: 'amigos.mp4', recorte: 5, velocidad: 1.6, pulsos: 5 },
-    // "¿Un truquito a la noche?" y "¡De una!".
-    { clip: 'grupo-chat.mp4', recorte: 3.8, velocidad: 1.8, pulsos: 7 },
-  ],
-  [
-    { grande: 'Sumá *amigos*', chico: 'Y entrá a su mesa con un toque', desde: 0, hasta: 5 },
-    { grande: 'Armá el grupo *de la barra*', chico: 'Con su chat y sus partidas', desde: 5, hasta: 12 },
-  ],
-)
-
-const Google = escena(
-  [{ clip: 'cuenta-google.mp4', recorte: 1.9, pulsos: 9 }],
-  [{ grande: 'Entrá con tu cuenta de *Google*', chico: 'Y tu progreso te sigue a cualquier celular', desde: 0, hasta: 9 }],
-)
-
-/** El cierre: el logo quieto, a dónde bajarla y la cuenta. */
-function Cierre() {
-  const linea = (desde: number) => useFundido(desde, pulso(20))
-  const a = linea(pulso(2))
-  const b = linea(pulso(3.5))
+function Presentacion() {
   return (
     <Pano>
-      <Logo desde={-60} girar={false} style={{ position: 'absolute', left: 150, top: 300, width: 780 }} />
-      <div style={{ position: 'absolute', top: 960, left: 0, right: 0, textAlign: 'center', fontFamily: LETRA_TEXTO, color: COLOR.papel }}>
-        <div style={{ fontWeight: 900, fontSize: 64, opacity: a }}>Gratis en Android y en la web</div>
-        <div style={{ fontWeight: 900, fontSize: 54, color: COLOR.acento, marginTop: 40, opacity: b }}>@truco_uruguayo</div>
-        <div style={{ fontWeight: 800, fontSize: 38, marginTop: 18, opacity: b }}>El link está en la bio</div>
-      </div>
+      <Logo desde={0} style={{ position: 'absolute', left: 60, top: 420, width: 960 }} />
+      <Bajada desde={pulso(3)} y={1230} tam={54}>
+        El truco uruguayo, en tu celular
+      </Bajada>
     </Pano>
   )
 }
 
-/** Las escenas, cada una desde un pulso de la música; el reel dura 110 pulsos. */
+/** El reparto: la muestra y una pieza en la mano. */
+function Reparto() {
+  return (
+    <Pano>
+      <Titulo renglones={['Con muestra,', '*piezas y flor*']} desde={1} paso={pulso(1)} tam={96} y={ARRIBA} />
+      <Celular clip="reparto.mp4" recorte={1.2} alto={1060} desde={0} inclinacion={-2} style={{ top: 455 }} />
+      <Globo texto="¡Tengo pieza!" desde={pulso(5)} x={560} y={1370} giro={-4} tam={66} />
+    </Pano>
+  )
+}
+
+/** Los cantos a 1,2×: ¡Truco! (0,9 s), retruco (2,7 s), vale cuatro (4,4 s) y ¡Quiero! (5,8 s). */
+function Cantos() {
+  return (
+    <Pano>
+      <Titulo renglones={['Cantá como', '*en el boliche*']} desde={1} paso={pulso(1)} tam={92} y={ARRIBA} />
+      <Celular clip={CLIPS.cantos.clip} recorte={0} velocidad={1.2} alto={1060} desde={0} inclinacion={2} style={{ top: 455 }} />
+      <Globo texto="¡Truco!" desde={pulso(1.5)} x={290} y={1340} giro={-6} />
+      <Globo texto="¡Quiero retruco!" desde={pulso(4.3)} x={700} y={740} giro={5} tam={70} colita="derecha" />
+      <Globo texto="¡Quiero vale cuatro!" desde={pulso(7)} x={560} y={1040} giro={-3} tam={64} />
+    </Pano>
+  )
+}
+
+/** Online: el Lobby y "Buscar rival", y la mesa contra Marta, que es otra persona. */
+function Online() {
+  return (
+    <Pano>
+      <Titulo renglones={['Jugá online', '*con gente de verdad*']} desde={1} paso={pulso(1)} tam={76} y={ARRIBA} />
+      <CelularTramos
+        inclinacion={-2}
+        style={{ top: 455 }}
+        tramos={[
+          { clip: 'online.mp4', recorte: 1.5, velocidad: 1.4, pulsos: 5 },
+          { clip: 'online.mp4', recorte: 14.6, velocidad: 1, pulsos: 6 },
+        ]}
+      />
+      <GloboTramo texto="¡Buscar rival!" desde={pulso(1.5)} hasta={pulso(5)} x={540} y={1390} giro={-3} tam={64} />
+      <GloboTramo texto="¡Quiero!" desde={pulso(8)} hasta={pulso(11)} x={760} y={760} giro={5} tam={72} colita="derecha" />
+    </Pano>
+  )
+}
+
+/** Don Queiroz: la ruta de lecciones y cargar el envido. */
+function Aprender() {
+  return (
+    <Pano>
+      <TitulosQueCambian antes={['¿No sabés jugar?']} despues={['Don Queiroz', '*te enseña*']} cambia={pulso(3)} tam={92} />
+      <CelularTramos
+        inclinacion={2}
+        style={{ top: 455 }}
+        tramos={[
+          { clip: 'aprender-ruta.mp4', recorte: 1.2, velocidad: 1.4, pulsos: 4 },
+          { clip: 'aprender-envido.mp4', recorte: 2.5, velocidad: 1.2, pulsos: 6 },
+        ]}
+      />
+      <GloboTramo texto="¡Cargá el envido!" desde={pulso(5)} hasta={pulso(10)} x={540} y={1390} giro={-4} tam={62} />
+    </Pano>
+  )
+}
+
+/** El modo historia por barrios: Rocha, el mapa de Cabo Polonio, la previa y la mesa del Cabo. */
+function Historia() {
+  return (
+    <Pano>
+      <TitulosQueCambian antes={['Recorré', '*Uruguay*']} despues={['Rocha,', '*barrio por barrio*']} cambia={pulso(5)} tam={88} />
+      <CelularTramos
+        inclinacion={-2}
+        style={{ top: 455 }}
+        tramos={[
+          // Los barrios de Rocha, en redondeles con las fotos que pasan.
+          { clip: 'historia-barrios.mp4', recorte: 8.6, velocidad: 1.4, pulsos: 5 },
+          // El mapa de Cabo Polonio: la flecha al nivel 1 y volar hasta él.
+          { clip: 'historia-mapa-barrio.mp4', recorte: 4.4, velocidad: 1.6, pulsos: 4 },
+          // La previa: Celeste la Farera habla.
+          { clip: 'historia-previa.mp4', recorte: 3, velocidad: 1.4, pulsos: 4 },
+          // La mesa del Cabo (el faro y los lobos): envido y ¡Quiero!
+          { clip: 'historia-previa.mp4', recorte: 14.8, velocidad: 1.6, pulsos: 4 },
+        ]}
+      />
+      <GloboTramo texto="32 lugares de verdad" desde={pulso(1.5)} hasta={pulso(5)} x={540} y={1400} giro={-3} tam={58} />
+      <GloboTramo texto="Cabo Polonio" desde={pulso(5.5)} hasta={pulso(9)} x={360} y={1400} giro={-5} tam={66} />
+      <GloboTramo texto="¡Cada barrio, su mesa!" desde={pulso(13.5)} hasta={pulso(17)} x={540} y={1400} giro={3} tam={58} />
+    </Pano>
+  )
+}
+
+/** Los paños de los barrios y los mazos, de a dos celulares. */
+function PanosYMazos() {
+  return (
+    <Pano>
+      <Titulo renglones={['Paños y mazos', '*de cada rincón*']} desde={0} paso={pulso(1) / 2} tam={88} y={ARRIBA} />
+      <Celular clip="panos.mp4" recorte={5.5} velocidad={1.6} alto={900} desde={0} inclinacion={-7} style={{ top: 520, marginLeft: -490 }} />
+      <Sequence from={3} layout="none">
+        <Celular clip="mazos.mp4" recorte={3.5} velocidad={1.6} alto={900} desde={0} inclinacion={7} style={{ top: 560, marginLeft: -15 }} />
+      </Sequence>
+    </Pano>
+  )
+}
+
+function Avatar() {
+  return (
+    <Pano>
+      <Titulo renglones={['Armá', '*tu avatar*']} desde={1} paso={pulso(1)} tam={96} y={ARRIBA} />
+      <Celular clip="avatar-peinados.mp4" recorte={2.3} velocidad={1.6} alto={1060} desde={0} inclinacion={2} style={{ top: 455 }} />
+    </Pano>
+  )
+}
+
+/** Amigos (aceptar y unirse a su sala) y el chat del grupo. */
+function AmigosYGrupos() {
+  return (
+    <Pano>
+      <TitulosQueCambian antes={['Sumá', '*amigos*']} despues={['Jugá con', '*tu barra*']} cambia={pulso(4)} tam={92} />
+      <CelularTramos
+        inclinacion={-2}
+        style={{ top: 455 }}
+        tramos={[
+          { clip: 'amigos.mp4', recorte: 5, velocidad: 1.6, pulsos: 4 },
+          { clip: 'grupo-chat.mp4', recorte: 4.2, velocidad: 1.6, pulsos: 6 },
+        ]}
+      />
+      <GloboTramo texto="¿Un truquito?" desde={pulso(5)} hasta={pulso(10)} x={330} y={1400} giro={-4} tam={66} />
+    </Pano>
+  )
+}
+
+/** Entrar con Google: la tarjeta de la cuenta con su botón. */
+function Google() {
+  return (
+    <Pano>
+      <Titulo renglones={['Entrá con', '*tu cuenta de Google*']} desde={1} paso={pulso(1)} tam={84} y={ARRIBA} />
+      <Celular clip="cuenta-google.mp4" recorte={1.9} alto={1060} desde={0} inclinacion={2} style={{ top: 455 }} />
+      <Globo texto="¡Tu progreso, en cualquier celular!" desde={pulso(3)} x={540} y={1390} giro={-3} tam={48} />
+    </Pano>
+  )
+}
+
+function Cierre() {
+  const arroba = useEntrada(pulso(5))
+  const cuadro = useCurrentFrame()
+  const brillo = 0.925 + 0.075 * Math.sin(cuadro / 6)
+  return (
+    <Pano>
+      <Logo desde={0} style={{ position: 'absolute', left: 150, top: 230, width: 780 }} />
+      <Titulo renglones={['*¡Jugalo gratis!*']} desde={pulso(2.5)} tam={104} y={890} />
+      <Bajada desde={pulso(3.5)} y={1030} tam={50}>
+        En Android y en la web
+      </Bajada>
+      <div style={{ position: 'absolute', top: 1140, left: 0, right: 0, display: 'flex', justifyContent: 'center', transform: `scale(${arroba})`, opacity: arroba }}>
+        <div
+          style={{
+            fontFamily: LETRA_TEXTO,
+            fontWeight: 900,
+            fontSize: 58,
+            color: COLOR.tinta,
+            background: COLOR.acento,
+            borderRadius: 999,
+            padding: '14px 44px',
+            boxShadow: `0 10px 0 rgb(0 0 0 / 0.3)`,
+            filter: `brightness(${brillo})`,
+          }}
+        >
+          @truco_uruguayo
+        </div>
+      </div>
+      <Bajada desde={pulso(6)} y={1280} tam={44}>
+        El link está en la bio
+      </Bajada>
+    </Pano>
+  )
+}
+
+/** Las escenas, en pulsos de la música; el reel dura 110. */
 const ESCENAS: { pulsos: number; Escena: () => ReactNode }[] = [
-  { pulsos: 14, Escena: Partida },
+  { pulsos: 4, Escena: GanchoCompleto },
+  { pulsos: 6, Escena: Presentacion },
+  { pulsos: 9, Escena: Reparto },
+  { pulsos: 10, Escena: Cantos },
   { pulsos: 11, Escena: Online },
-  { pulsos: 9, Escena: Aprender },
-  { pulsos: 16, Escena: Historia },
-  { pulsos: 12, Escena: Previa },
+  { pulsos: 10, Escena: Aprender },
+  { pulsos: 17, Escena: Historia },
   { pulsos: 9, Escena: PanosYMazos },
-  { pulsos: 8, Escena: Avatar },
-  { pulsos: 12, Escena: Amigos },
-  { pulsos: 9, Escena: Google },
-  { pulsos: 10, Escena: Cierre },
+  { pulsos: 7, Escena: Avatar },
+  { pulsos: 10, Escena: AmigosYGrupos },
+  { pulsos: 8, Escena: Google },
+  { pulsos: 9, Escena: Cierre },
 ]
 
-/** Pocos ruidos de cartas (Kenney, CC0): el reparto, el truco y el cierre. */
+/** Dónde empieza cada escena, en pulsos. */
+const INICIOS = ESCENAS.reduce<number[]>((acc, _e, i) => [...acc, i === 0 ? 0 : acc[i - 1]! + ESCENAS[i - 1]!.pulsos], [])
+const inicio = (Escena: () => ReactNode) => INICIOS[ESCENAS.findIndex((e) => e.Escena === Escena)]!
+
+/** Los ruidos de cartas de la app (Kenney, CC0), en los golpes. */
 const EFECTOS: { en: number; sonido: string; volumen?: number }[] = [
-  { en: 2, sonido: 'repartir.ogg', volumen: 0.6 },
-  { en: pulso(7), sonido: 'carta-1.ogg', volumen: 0.5 },
-  { en: pulso(100) + 4, sonido: 'carta-2.ogg', volumen: 0.6 },
+  { en: 0, sonido: 'carta-1.ogg' },
+  { en: pulso(1), sonido: 'vuelta.ogg' },
+  { en: pulso(4) + 5, sonido: 'repartir.ogg' },
+  { en: pulso(4) + 30, sonido: 'carta-2.ogg' },
+  { en: pulso(inicio(Cantos) + 1.5), sonido: 'carta-1.ogg', volumen: 0.6 },
+  { en: pulso(inicio(Cantos) + 4.3), sonido: 'carta-2.ogg', volumen: 0.6 },
+  { en: pulso(inicio(Cantos) + 7), sonido: 'carta-1.ogg', volumen: 0.6 },
+  { en: pulso(inicio(Aprender) + 5), sonido: 'punto.ogg' },
+  { en: pulso(inicio(Historia) + 13.5), sonido: 'carta-2.ogg', volumen: 0.6 },
+  { en: pulso(inicio(Cierre)) + 5, sonido: 'repartir.ogg' },
+  { en: pulso(inicio(Cierre) + 3), sonido: 'carta-2.ogg' },
 ]
 
 /** `conMusica` en false deja solo los ruidos de cartas, para ponerle un tema de Instagram encima. */
 export function Completo({ conMusica = true }: { conMusica?: boolean }) {
-  let desde = 0
   return (
     <AbsoluteFill style={{ background: COLOR.fondoOscuro }}>
       {ESCENAS.map(({ pulsos, Escena }, i) => {
-        const de = pulso(desde)
-        desde += pulsos
+        const de = pulso(INICIOS[i]!)
         return (
-          <Sequence key={i} from={de} durationInFrames={pulso(desde) - de}>
+          <Sequence key={i} from={de} durationInFrames={pulso(INICIOS[i]! + pulsos) - de}>
             <Escena />
           </Sequence>
         )
       })}
+      {INICIOS.slice(1).map((p) => (
+        <Destello key={p} en={pulso(p)} dura={5} fuerza={0.35} />
+      ))}
       {conMusica && <Html5Audio src={staticFile('musica-lanzamiento.mp3')} volume={0.9} />}
       {EFECTOS.map(({ en, sonido, volumen = 0.8 }, i) => (
         <Sequence key={i} from={en} durationInFrames={45}>
