@@ -2265,3 +2265,30 @@ El pedido del usuario: un último reel que muestre todo. Tenía que incluir el m
 - **Clips nuevos** en `promo/public/clips`: historia-barrios, historia-mapa-barrio, historia-previa, panos, mazos, avatar-peinados, amigos y grupo-chat.
   - Se grabaron con Playwright y CDP screencast, a 390 × 844 y 3×, contra el entorno de prueba local (servidor en el 3568 con base local).
   - En esa base quedaron las cuentas de prueba de Marta, Beto, Gonza y Lucía, y el grupo "Los del Boliche".
+
+### Segunda versión del reel — 2026-11-16
+
+Al usuario no le gustó la primera por dos motivos: parecía hecha por una IA y quedaba apurada. Los colores sí le gustaron. Pidió además que se viera la entrada con Google y que quedara claro que se puede jugar online.
+
+- **Menos "IA":**
+  - Se sacó la plantilla repetida: título amarillo, celular inclinado y globos y pastillas que rebotan.
+  - Ahora la grabación de la app va grande, derecha y sin marco de celular, con un acercamiento lento del 4 %.
+  - Los cortes son secos, en los pulsos, sin fogonazos.
+  - Los textos van tipo subtítulo, en una franja oscura con un fundido de 6 cuadros. Son concretos en lugar de eslóganes, con el amarillo solo en alguna palabra.
+  - Se sacaron la bandera dibujada y las escenas de pura gráfica.
+- **Más tiempo por escena:** son 10 escenas de 4 a 8 s, en lugar de 15. Los clips van a velocidad real o hasta ×2; antes iban a ×3.
+- **Escenas:**
+  1. Partida: "Truco uruguayo, no argentino. Con muestra, piezas y flor"; después truco, retruco y vale cuatro.
+  2. Online: Lobby, "Buscar rival" y la mesa contra Marta.
+  3. Don Queiroz.
+  4. Modo historia: Rocha y Cabo Polonio, con "32 lugares de verdad".
+  5. La previa y la mesa del barrio.
+  6. Paños y mazos.
+  7. Avatar.
+  8. Amigos y grupo.
+  9. "Entrá con tu cuenta de Google".
+  10. Cierre.
+- **Online:** la búsqueda pública solo arma 1 vs 1, así que el texto dice "O armá sala para 2 vs 2 y 3 vs 3".
+- **Clips nuevos:**
+  - `online.mp4`: dos cuentas de prueba contra el servidor local.
+  - `cuenta-google.mp4`: grabado en la web publicada, sin entrar a ninguna cuenta; la app solo hizo lecturas.
