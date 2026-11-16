@@ -204,6 +204,9 @@ export function Mesa() {
   const hayCompanieros = conSenias && enEquipos && !vista.mano.picaPica && vista.ganador === null
   // La cara de señas se cierra sola después de mostrar el gesto.
   const hacerSenia = (s: Senia) => {
+    // La misma seña otra vez en la mano no se manda (el servidor tampoco la reparte): tocarla de
+    // más no llena la mesa de señas. Para que la vuelvan a ver está "repetir las señas".
+    if (hechas.mano === vista.mano.numero && hechas.senias.includes(s)) return mostrarAviso('Ya se la hiciste en esta mano')
     enviar('senia', { senia: s })
     setSeniaHecha({ senia: s, id: Date.now() })
     const numero = vista.mano.numero

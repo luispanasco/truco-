@@ -282,10 +282,11 @@ describe('señas rápidas', () => {
     fireEvent.click(botones.at(-1)!)
     expect(seniasEnviadas(enviados)).toEqual([ultima])
     expect(screen.getByText(new RegExp(`Le hiciste la seña: ${GESTO[ultima].toLowerCase()}`))).toBeTruthy()
-    // Queda marcada, y se puede repetir.
+    // Queda marcada; tocarla de nuevo en la misma mano no la vuelve a mandar.
     expect(botones.at(-1)!.classList.contains('hecha')).toBe(true)
     fireEvent.click(botones.at(-1)!)
-    expect(seniasEnviadas(enviados)).toEqual([ultima, ultima])
+    expect(seniasEnviadas(enviados)).toEqual([ultima])
+    expect(screen.getByText(/Ya se la hiciste en esta mano/)).toBeTruthy()
     expect(enviados.some((e) => e.tipo === 'accion')).toBe(false)
   })
 

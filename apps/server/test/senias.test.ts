@@ -281,3 +281,19 @@ describe('seña de envido', () => {
     // Que un bot tenga 30 de envido puede tardar varias manos.
   }, 30_000)
 })
+
+describe('tocar la seña muchas veces', () => {
+  it('la misma seña en la mano se anota una sola vez, y apurarse con las señas no frena las jugadas', async () => {
+    const { a, sala } = await mesa({ pescar: 'nunca' })
+    for (let i = 0; i < 8; i++) a.enviar('senia', { senia: 'tres' })
+    await esperarMs(300)
+    // El compañero bot (asiento 2) la tiene una vez.
+    expect(sala.seniasParaTests()[2]![0]).toEqual(['tres'])
+    expect(a.de('error').every((e) => e.motivo === 'Más despacio con las señas')).toBe(true)
+    // Y la jugada pasa igual.
+    const carta = a.vista!.mano.misCartas[0]!
+    a.enviar('accion', { accion: { tipo: 'jugarCarta', jugador: 'j0', carta } as Accion })
+    await a.esperar(() => a.vista!.mano.misCartas.length === 2, 5_000, 'que juegue la carta')
+    expect(a.de('error').some((e) => e.motivo.includes('Demasiadas acciones'))).toBe(false)
+  })
+})

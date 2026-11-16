@@ -217,10 +217,11 @@ export function validar(estado: EstadoPartida, accion: Accion): string | null {
     case 'cantarEnvido': {
       if (e.envido.estado === 'anulado' || e.flor.cantadas.length > 0) return 'Con flor no hay envido'
       if (!enPrimera) return 'El envido se canta en la primera vuelta'
-      if (yaJugoPrimera) return 'Ya jugaste tu carta'
       if (debeCantar) return 'Tenés flor: cantala'
       if (florDelEquipo.length > 0) return motivoFlorDelEquipo
       if (e.envido.estado === 'libre') {
+        // Haber tirado la carta impide empezar el envido, no subirlo al contestar.
+        if (yaJugoPrimera) return 'Ya jugaste tu carta'
         if (pend === null) {
           if (e.turno !== a) return 'No es tu turno'
           if (e.truco.valor !== 1) return 'Ya se aceptó el truco'

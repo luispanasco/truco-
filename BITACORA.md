@@ -2338,3 +2338,20 @@ Pedido del usuario: poder jugar 2 vs 2 y 3 vs 3 online con gente que no conocés
   - De punta a punta: `e2e/cola.spec.ts`, con cuatro navegadores (un dúo y dos solos).
 - **Hay que publicar el servidor junto con la web:** la web nueva manda `buscarRivales` y el formato, y el servidor viejo no los conoce.
 - **Publicado** el mismo día: el servidor en Fly (`fly deploy --app truco-uy --ha=false`) y `main` en 133a615. Cloudflare publica la web sola.
+
+## Reportes de los testers: revirar el envido y las señas tocadas de más — 2026-11-16
+
+Se leyeron los 4 reportes de la tabla `reportes` (en producción, con una transacción de solo lectura).
+
+- **#1 (Churros), #2 (Giuli) y #4 (Pepe): "no me dejó revirar".**
+  - En los tres, a quien le cantaban envido ya había tirado su carta de la primera vuelta. La mesa le ofrecía solo Quiero o No quiero.
+  - **Causa:** en `validar` (motor, `cantarEnvido`), el "Ya jugaste tu carta" se miraba antes que el envido pendiente. Esa regla es para *empezar* el envido, no para subirlo al contestar.
+  - **Arreglo:** el chequeo pasó adentro del caso `libre`. Al contestar, el que ya jugó puede subir (envido, real envido o falta), y en equipos lo hace el pie como siempre.
+  - Pruebas nuevas en `cantos.test.ts`: mano a mano y el pie en 2 vs 2.
+- **#3 (Churros): "quedaron bugueadas las señas después de tocarlas 40 veces"** (online, 3 vs 3).
+  - El servidor mandaba y anotaba cada repetición: los compañeros recibían las 40 una atrás de la otra.
+  - Además, las señas compartían con las jugadas el límite de 10 acciones por segundo, y tocar de más podía hacer rechazar una jugada.
+  - **Arreglo:**
+    - La misma seña otra vez en la mano no se manda (servidor) y la app avisa "Ya se la hiciste en esta mano". Para que la vuelvan a ver sigue "repetir las señas".
+    - Las señas tienen su propio límite (3 por segundo, "Más despacio con las señas").
+  - Prueba nueva en `apps/server/test/senias.test.ts`. La de la tira de señas rápidas ahora espera que el segundo toque no mande nada.

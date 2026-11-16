@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { apply, enfrentamientoActual, esperandoA, type Evento } from '../src'
+import { accionesValidas, apply, enfrentamientoActual, esperandoA, type Evento } from '../src'
 import { c, jugar, partidaCon, rechaza } from './helpers'
 
 // Muestra 3 de copas. "a" es mano (equipo 0), "b" es pie (equipo 1).
@@ -183,6 +183,26 @@ describe('envido', () => {
     jugar(estado, ['envido', 'b'])
     const segunda = jugar(estado, ['jugar', 'b', '2e']).estado
     rechaza(segunda, ['envido', 'a'], 'primera vuelta')
+  })
+
+  it('el que ya jugó su carta no puede empezar el envido, pero sí subir el que le cantan', () => {
+    // a es mano y tira; b canta envido y a, que ya jugó, lo sube (como en los reportes de los testers).
+    let { estado } = jugar(sinFlor(), ['jugar', 'a', '1e'], ['envido', 'b'])
+    const subidas = accionesValidas(estado, 'a').filter((x) => x.tipo === 'cantarEnvido').map((x) => x.tipo === 'cantarEnvido' && x.canto)
+    expect(subidas).toEqual(['envido', 'realEnvido', 'faltaEnvido'])
+    ;({ estado } = jugar(estado, ['realEnvido', 'a'], ['noQuiero', 'b'], ['mazo', 'b']))
+    // No querido el real envido, a cobra lo de antes (el envido, 2) y, con b al mazo, el truco (1).
+    expect(estado.puntos).toEqual([3, 0])
+  })
+
+  it('en 2v2, el pie que ya jugó sube el envido que le cantan', () => {
+    // Nadie tiene flor. Juegan a, b y c; d (que todavía no jugó) canta envido y contesta el pie c.
+    const p = partidaCon(['1e 7o 4b', '1b 2e 6o', '7e 5o 12b', '3e 6b 11o'], '3c')
+    const { estado } = jugar(p, ['jugar', 'a', '4b'], ['jugar', 'b', '6o'], ['jugar', 'c', '12b'], ['envido', 'd'])
+    expect(esperandoA(estado)).toEqual([2])
+    jugar(estado, ['envido', 'c'])
+    jugar(estado, ['faltaEnvido', 'c'])
+    rechaza(estado, ['envido', 'a'], 'Contesta el pie')
   })
 
   it('envido va primero en 2v2: lo dice el que no jugó, se juega el envido y después no se quiere el truco', () => {

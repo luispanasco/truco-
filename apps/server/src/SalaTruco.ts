@@ -288,6 +288,8 @@ export class SalaTruco extends Room {
   private limitesAccion = new Map<string, LimiteFrecuencia>()
   private limitesChat = new Map<string, LimiteFrecuencia>()
   private limitesPedirSenias = new Map<string, LimiteFrecuencia>()
+  /** Las señas tienen su propio límite: tocarlas de más no le quita lugar a las jugadas. */
+  private limitesSenias = new Map<string, LimiteFrecuencia>()
   /** Por invitado: asientos que silenció. */
   private silenciados = new Map<string, Set<number>>()
   private historialChat: MensajeChat[] = []
@@ -527,7 +529,7 @@ export class SalaTruco extends Room {
     })
 
     manejar('senia', (client, asiento, { senia }) => {
-      if (!this.limite(this.limitesAccion, client, 10, 1000)) throw new Rechazo('Demasiadas acciones seguidas')
+      if (!this.limite(this.limitesSenias, client, 3, 1000)) throw new Rechazo('Más despacio con las señas')
       if (!(SENIAS as readonly string[]).includes(senia)) throw new Rechazo('Seña inválida')
       if (!this.configSenias.habilitadas) throw new Rechazo(MOTIVO_SIN_SENIAS)
       if (!this.hayCompanieros()) throw new Rechazo('Ahora no hay compañeros a quien hacerle señas')
@@ -538,6 +540,9 @@ export class SalaTruco extends Room {
       }
       // La de envido va sin número: el número lo pone entregarSenias con el tanto real.
       if (senia === 'envido' && envidoDeSenia(this.estado!.mano, asiento) === null) throw new Rechazo(MOTIVO_ENVIDO_CON_FLOR)
+      // La misma seña otra vez en la mano no se manda: los compañeros ya la vieron (para que la
+      // vuelvan a ver está "repetir las señas").
+      if (this.companierosDe(asiento).every((b) => this.senias[b]![asiento]?.includes(senia))) return
       this.entregarSenias(asiento, [senia])
     })
 
