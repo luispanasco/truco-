@@ -251,4 +251,10 @@ export const MIGRACIONES: string[] = [
   alter table historia drop constraint historia_pkey;
   alter table historia add primary key (cuenta_id, departamento, barrio, nivel);
   `,
+  // 17. Borrar la cuenta (lo pide Google Play): los movimientos de monedas siguen sin poder
+  //     cambiarse, y solo se borran dentro de la transacción que borra la cuenta entera (la marca
+  //     `truco.borrando_cuenta`, que vale solo para esa transacción).
+  `
+  create or replace function movimientos_inmutables() returns trigger language plpgsql as $$ begin if tg_op = 'DELETE' and current_setting('truco.borrando_cuenta', true) = 'si' then return old; end if; raise exception 'Los movimientos de monedas no se cambian ni se borran'; end $$;
+  `,
 ]

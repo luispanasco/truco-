@@ -35,6 +35,7 @@ import { cobrarMision, MisionRechazo, misiones } from './misiones'
 import { recibirse } from './tutorial'
 import { guardarReporte, LimiteReportes, listarReportes, reporteCompleto, ReporteRechazo, repeticionDeReporte } from './reportes'
 import { genteEnLinea } from '../salasVivas'
+import { borrarCuenta, borrarUsuarioSupabase } from './borrar'
 
 export interface Cuentas {
   base: Base
@@ -389,6 +390,21 @@ export function rutasCuentas(c: Cuentas | null): Router {
         res.json(await repeticionDeReporte(c.base, req.params.id))
       }),
     ),
+  )
+
+  // Borrar la cuenta y todo lo suyo (desde Ajustes o desde la página /borrar-cuenta).
+  r.delete(
+    '/cuenta',
+    conSesion(async (_req, res, c, u) => {
+      if (!(await borrarCuenta(c.base, u.id))) return void res.status(404).json({ motivo: 'No existe la cuenta' })
+      try {
+        await borrarUsuarioSupabase(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, u.id)
+      } catch (e) {
+        // Los datos ya se borraron; el login que queda se puede borrar a mano desde Supabase.
+        console.error('No se pudo borrar el usuario de Supabase:', e)
+      }
+      res.json({ borrada: true })
+    }),
   )
 
   r.put(

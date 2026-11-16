@@ -64,6 +64,29 @@ describe('tu cuenta', () => {
     expect(useCuenta.getState().token).toBeNull()
   })
 
+  it('se puede borrar la cuenta: pide confirmar, la borra en el servidor y sale', async () => {
+    const pedidos = servidorFalso(false)
+    render(
+      <MemoryRouter>
+        <TarjetaCuenta />
+      </MemoryRouter>,
+    )
+    fireEvent.change(await screen.findByPlaceholderText('vos@ejemplo.com'), { target: { value: 'ana@ejemplo.com' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Borrar mi cuenta' }))
+    // Primero avisa qué se pierde; cancelar no borra nada.
+    expect(screen.getByRole('alertdialog', { name: '¿Borrar tu cuenta?' }).textContent).toContain('No se puede deshacer')
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+    expect(pedidos.some((p) => p.metodo === 'DELETE')).toBe(false)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Borrar mi cuenta' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sí, borrar todo' }))
+    expect(await screen.findByRole('button', { name: 'Entrar' })).toBeTruthy()
+    const borrar = pedidos.find((p) => p.metodo === 'DELETE')!
+    expect(borrar.url).toMatch(/\/cuenta$/)
+    expect(useCuenta.getState().token).toBeNull()
+  })
+
   it('al terminar la partida se ve lo cobrado y el saldo', () => {
     useJuego.setState({
       monedas: {

@@ -553,3 +553,23 @@
   background: var(--tapete);
   border: 3px solid var(--madera-clara);
 }
+
+/* Borrar la cuenta: el enlace en rojo y, al tocarlo, la confirmación con lo que se pierde. */
+.borrar-cuenta {
+  color: var(--peligro);
+  justify-self: center;
+}
+.borrar-cuenta-confirmar {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 2px solid var(--peligro);
+  border-radius: 14px;
+}
+.borrar-cuenta-confirmar h3 {
+  margin: 0;
+}
+.boton-peligro {
+  background: var(--peligro);
+  color: #fff;
+}

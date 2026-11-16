@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { entrarConEmail, entrarConGoogle, iniciarCuenta, salir, useCuenta } from '../cuenta/cuenta'
+import { BorrarCuenta } from './BorrarCuenta'
 import { MensajeError } from './Online'
 
 /**
@@ -43,6 +44,7 @@ export function TarjetaCuenta({ sinEnlaces = false }: { sinEnlaces?: boolean }) 
         <button type="button" className="boton boton-secundario" onClick={() => void salir()}>
           Salir de la cuenta
         </button>
+        <BorrarCuenta />
       </section>
     )
   }

@@ -97,3 +97,5 @@ Es una TWA: abre la web publicada a pantalla completa. **Se actualiza sola** con
   ```
   Sale `app-release-signed.apk` (para instalar directo) y `app-release-bundle.aab` (para Play Store).
 - **Para instalarla:** pasá la APK por WhatsApp o Drive; en el celular, al abrirla, Android pide permitir "instalar apps de orígenes desconocidos".
+- **Google Play:** la ficha (textos, imagen destacada, capturas, clasificación, seguridad de los datos, asset links y prueba cerrada) está en `android/tienda/FICHA-PLAY.md`.
+- **Borrar la usuaria o el usuario de Supabase al borrar una cuenta (opcional):** cargá la llave secreta de Supabase en Fly con `fly secrets set SUPABASE_SECRET_KEY=... --app truco-uy`. Sin ella, se borran todos los datos de la cuenta pero queda el login (si vuelve a entrar, empieza con una cuenta vacía).

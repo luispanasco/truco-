@@ -116,6 +116,23 @@ export async function salir() {
   useCuenta.setState({ estado: 'afuera', cuenta: null, token: null, linkEnviado: null, saldo: null })
 }
 
+/**
+ * Borra la cuenta y todo lo suyo en el servidor (monedas, compras, Elo, amigos, grupos, progreso) y
+ * sale. Devuelve el motivo si no se pudo.
+ */
+export async function borrarCuenta(): Promise<string | null> {
+  const token = useCuenta.getState().token
+  if (!token) return 'Entrá a tu cuenta para borrarla.'
+  try {
+    const r = await fetch(`${direccionApi()}/cuenta`, { method: 'DELETE', headers: { authorization: `Bearer ${token}` } })
+    if (!r.ok) return ((await r.json().catch(() => null)) as { motivo?: string } | null)?.motivo ?? 'No se pudo borrar la cuenta. Probá de nuevo.'
+    await salir()
+    return null
+  } catch {
+    return 'No se pudo borrar la cuenta. Probá de nuevo.'
+  }
+}
+
 /** Compra un cosmético de la vitrina de hoy. Devuelve el motivo si no se pudo. */
 export async function comprarEnTienda(item: string): Promise<string | null> {
   const token = useCuenta.getState().token

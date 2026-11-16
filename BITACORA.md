@@ -2355,3 +2355,25 @@ Se leyeron los 4 reportes de la tabla `reportes` (en producción, con una transa
     - La misma seña otra vez en la mano no se manda (servidor) y la app avisa "Ya se la hiciste en esta mano". Para que la vuelvan a ver sigue "repetir las señas".
     - Las señas tienen su propio límite (3 por segundo, "Más despacio con las señas").
   - Prueba nueva en `apps/server/test/senias.test.ts`. La de la tira de señas rápidas ahora espera que el segundo toque no mande nada.
+
+## Para Google Play: borrar la cuenta y la ficha de la tienda — 2026-11-16
+
+El usuario va a subir la app a Google Play y se encarga de la cuenta de desarrollador. Del lado del código faltaba esto:
+
+- **Borrar la cuenta:** Play lo exige en la app y en un link web.
+  - El servidor tiene `DELETE /api/cuenta` (`cuentas/borrar.ts`), que borra en una transacción todo lo de la cuenta: invitados, monedas, compras, Elo, amigos, historia, partidas, chat de grupos y solicitudes.
+  - En los grupos se va como si saliera: el liderazgo pasa al capitán o al miembro más antiguo, y si no queda nadie el grupo se borra.
+  - Lo que escribió en el muro y los reportes que mandó quedan sin la cuenta.
+  - Si el servidor tiene `SUPABASE_SECRET_KEY`, también borra el usuario de Supabase. Sin ella queda solo el login.
+- **Migración 17:** los movimientos de monedas siguen inmutables. Solo se pueden borrar dentro de la transacción que borra la cuenta, con la marca `truco.borrando_cuenta`.
+- **En la app y en la web:**
+  - "Borrar mi cuenta" en la tarjeta de la cuenta, con una confirmación que dice qué se pierde (`BorrarCuenta.tsx`).
+  - La página `/borrar-cuenta` explica qué se borra y, si no entraste, te deja entrar para borrarla.
+  - La política de privacidad lo menciona.
+- **Ficha de la tienda** en `android/tienda/`:
+  - la imagen destacada (1024 × 500) y 8 capturas (1080 × 1920), sacadas de los clips del reel con las composiciones `Destacada` y `Captura` (`promo/src/tienda.tsx`);
+  - `FICHA-PLAY.md`, con las descripciones, la clasificación, la seguridad de los datos, las asset links y la prueba cerrada.
+- **Pruebas:**
+  - Servidor: `test/borrar.test.ts`, que arma una cuenta con amigos, dos grupos, chat e historia, la borra por la API y revisa que no quede nada.
+  - Web: el borrado con su confirmación, en `cuenta.test.tsx`.
+- **Pendiente:** cuando esté la consola, agregar a `assetlinks.json` la huella SHA-256 de la llave de firma de Play.

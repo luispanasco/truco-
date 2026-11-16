@@ -27,6 +27,7 @@ import { aplicarTipografia } from './temaTipografia'
 import './estilos.css'
 import { Ranking } from './pantallas/Ranking'
 import { Tienda } from './pantallas/Tienda'
+import { BorrarCuentaPagina } from './pantallas/BorrarCuentaPagina'
 import { Amigos } from './pantallas/Amigos'
 import { Grupo } from './pantallas/Grupo'
 import { Repeticion } from './pantallas/Repeticion'
@@ -76,6 +77,7 @@ createRoot(document.getElementById('raiz')!).render(
           <Route path="/admin/reportes" element={<AdminReportes />} />
           <Route path="/admin/reportes/:id/partida" element={<Repeticion deReporte />} />
           {/* Modo historia (cualquiera con cuenta: los departamentos publicados; el admin, todos). */}
+          <Route path="/borrar-cuenta" element={<BorrarCuentaPagina />} />
           <Route path="/aprender" element={<Aprender />} />
           <Route path="/aprender/diploma" element={<Diploma />} />
           <Route path="/aprender/:leccion" element={<LeccionTutorial />} />
