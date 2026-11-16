@@ -2337,3 +2337,4 @@ Pedido del usuario: poder jugar 2 vs 2 y 3 vs 3 online con gente que no conocés
   - Servidor: `test/colaFormatos.test.ts`, con 8 pruebas: formatos separados, cómo se sientan los que llegan solos, los rechazos, dúo contra dos solos, trío contra trío y la reserva que vence.
   - De punta a punta: `e2e/cola.spec.ts`, con cuatro navegadores (un dúo y dos solos).
 - **Hay que publicar el servidor junto con la web:** la web nueva manda `buscarRivales` y el formato, y el servidor viejo no los conoce.
+- **Publicado** el mismo día: el servidor en Fly (`fly deploy --app truco-uy --ha=false`) y `main` en 133a615. Cloudflare publica la web sola.
