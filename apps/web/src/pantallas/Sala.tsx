@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { buscarBarrio, buscarDepartamento, buscarMesa, elencoDelNivel, nivelDeHistoria, type InfoSala, type LugarPublico } from '@truco/shared'
 import { BARAJAS } from '../baraja'
@@ -305,12 +305,20 @@ export function Sala() {
   const sala = useJuego((s) => s.sala)
   const hayConexion = useJuego((s) => s.conexion !== null)
   const enviar = useJuego((s) => s.enviar)
+  const irAPublica = useJuego((s) => s.irAPublica)
+  const formatoAlSalir = useRef(sala?.formato ?? '1v1')
+  if (sala) formatoAlSalir.current = sala.formato
   useIrALaMesa()
   useSalirAlDesmontar()
   useEffect(() => {
     // Recargar la página pierde la conexión: desde el inicio se puede volver a la partida.
-    if (!hayConexion) navegar('/', { replace: true })
-  }, [hayConexion, navegar])
+    if (!hayConexion && !irAPublica) navegar('/', { replace: true })
+  }, [hayConexion, irAPublica, navegar])
+  // El grupo salió a buscar rivales: a la pantalla de búsqueda, que entra a la sala de la cola.
+  // Al dejar esta pantalla se deja también la sala privada.
+  useEffect(() => {
+    if (irAPublica) navegar(`/buscar?formato=${formatoAlSalir.current}`, { replace: true, state: { sumarseA: irAPublica } })
+  }, [irAPublica, navegar])
 
   const salir = () => {
     useJuego.getState().salir()
@@ -330,6 +338,9 @@ export function Sala() {
   const esAnfitrion = sala.yo !== null && sala.lugares[sala.yo]?.anfitrion === true
   const faltan = sala.lugares.some((l) => l.tipo === 'libre')
   const puedeEmpezar = sala.botsEnVacios || !faltan
+  const personas = sala.lugares.filter((l) => l.tipo === 'humano').length
+  // De a dos o de a tres, contra gente que esté buscando: el grupo tiene que entrar en un equipo.
+  const puedeBuscarRivales = !sala.historia && sala.formato !== '1v1' && personas <= sala.lugares.length / 2
 
   return (
     <div className="pantalla-inicio pantalla-online">
@@ -350,6 +361,14 @@ export function Sala() {
             Empezar
           </button>
           {!puedeEmpezar && <p className="nota">Faltan jugadores. Esperá a que lleguen o activá “Completar con bots”.</p>}
+          {puedeBuscarRivales && (
+            <>
+              <button type="button" className="boton boton-grande boton-secundario" onClick={() => enviar('buscarRivales', {})}>
+                Buscar rivales
+              </button>
+              <p className="nota">Salen {personas === 1 ? 'vos solo' : `los ${personas} juntos, del mismo lado,`} contra gente que esté buscando {sala.formato === '2v2' ? '2 vs 2' : '3 vs 3'}.</p>
+            </>
+          )}
         </>
       ) : (
         <p className="esperando-anfitrion" role="status">

@@ -284,7 +284,8 @@ describe('banner de la cuenta', () => {
 
     // Al cambiar de formato en el lobby, el banner muestra el Elo de ese formato.
     fireEvent.click(pestania('Lobby'))
-    fireEvent.click(within(panel('lobby')).getByRole('button', { name: /^Parejas/ }))
+    // El primero es el de buscar online; el de practicar contra la compu usa el mismo formato.
+    fireEvent.click(within(panel('lobby')).getAllByRole('button', { name: /^Parejas/ })[0]!)
     await waitFor(() => expect(eloDelBanner()).toContain('1111'))
     expect(eloDelBanner()).toContain('Elo 2 vs 2')
   })

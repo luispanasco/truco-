@@ -80,6 +80,8 @@ interface EstadoJuego {
   estadoConexion: EstadoConexion
   /** Cola pública: el servidor ofrece jugar contra un bot porque no aparece nadie. */
   ofrecerBot: boolean
+  /** Tu grupo salió a buscar rivales: la sala de la cola pública donde te guardaron lugar. */
+  irAPublica: string | null
   /** Resultado de la mano que acaba de terminar, mientras dura la pausa entre manos. */
   finDeMano: string | null
   /** Cartas que se dieron vuelta al terminar (flor o envido ganado), mientras dura la pausa. */
@@ -385,6 +387,9 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
       case 'ofrecerBot':
         set({ ofrecerBot: true })
         break
+      case 'irAPublica':
+        set({ irAPublica: m.datos.roomId })
+        break
       case 'reyes': {
         // Se tiran en la mesa y la primera mano espera; con movimiento reducido, en un cuadro.
         const enMesa = !movimientoReducido()
@@ -431,6 +436,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     mostradas: [],
     estadoConexion: 'conectada',
     ofrecerBot: false,
+    irAPublica: null,
     reyes: null,
     expulsado: null,
     monedas: null,
@@ -491,6 +497,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         mostradas: [],
         estadoConexion: 'conectada',
         ofrecerBot: false,
+    irAPublica: null,
             reyes: null,
         expulsado: null,
         monedas: null,

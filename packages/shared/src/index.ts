@@ -13,7 +13,7 @@ import type { EstadoVoz, SenalVoz } from './voz'
 export const SALAS = {
   /** Sala privada: se entra con su código de 5 caracteres. */
   privada: 'privada',
-  /** Cola pública 1v1 con desconocidos. */
+  /** Cola pública con desconocidos: una por formato (mano a mano, 2 vs 2 o 3 vs 3). */
   publica: 'publica',
 } as const
 
@@ -196,6 +196,11 @@ export interface OpcionesUnirse {
   /** La mesa y la baraja que tiene elegidas: si es el anfitrión, son las de toda la sala. */
   mesa?: string
   baraja?: string
+  /**
+   * Cola pública: el formato que busca. Sin él es mano a mano (así siguen andando las versiones
+   * viejas de la app, que no lo mandan).
+   */
+  formato?: Formato
 }
 
 /** Un `puedeUsar` que deja todo: lo que se acepta con la tienda de prueba desbloqueada. */
@@ -259,6 +264,11 @@ export interface MensajesCliente {
   iniciar: Record<string, never>
   /** Cola pública: aceptar jugar contra un bot en vez de esperar. */
   jugarContraBot: Record<string, never>
+  /**
+   * Sala privada, solo el anfitrión, en 2 vs 2 o 3 vs 3: salir todos los de la sala juntos, del
+   * mismo lado, a la cola pública contra gente que esté buscando.
+   */
+  buscarRivales: Record<string, never>
   /** Terminada la partida, pedir jugar otra con la misma mesa. */
   revancha: Record<string, never>
   /** Entrar o salir del chat de voz. */
@@ -373,6 +383,11 @@ export interface MensajesServidor {
   error: { motivo: string }
   /** Cola pública: hace rato que no aparece nadie. */
   ofrecerBot: Record<string, never>
+  /**
+   * Tu grupo salió a buscar rivales: andá a esa sala de la cola pública, donde ya tenés lugar
+   * guardado del lado de tu grupo.
+   */
+  irAPublica: { roomId: string }
   /** Quién está en el chat de voz (llega cada vez que cambia algo de la sala). */
   voz: EstadoVoz
   /** Señalización de voz que te manda otra persona (`de` es su número en la voz). */

@@ -54,7 +54,8 @@ export function crearServidor(op: OpcionesServidor = {}) {
     },
     rooms: {
       [SALAS.privada]: defineRoom(SalaPrivada),
-      [SALAS.publica]: defineRoom(SalaPublica),
+      // Una cola por formato: quien busca 2 vs 2 no cae en una sala de mano a mano.
+      [SALAS.publica]: defineRoom(SalaPublica).filterBy(['formato']),
     },
   })
 }

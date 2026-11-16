@@ -2313,3 +2313,27 @@ La segunda no le gustó al usuario: prefería el estilo de la primera, con más 
   11. Entrá con tu cuenta de Google.
   12. ¡Jugalo gratis!
 - **Lo que no dice:** ninguna mención a Argentina ni "de este lado del río". Tampoco lista los formatos online, porque el 2 vs 2 y el 3 vs 3 con desconocidos todavía se están haciendo.
+
+## Online 2 vs 2 y 3 vs 3 con desconocidos, y salir en dúo o trío a buscar rivales — 2026-11-16
+
+Pedido del usuario: poder jugar 2 vs 2 y 3 vs 3 online con gente que no conocés, y armar tu dúo o trío para salir juntos contra desconocidos. Hasta ahora la búsqueda pública era solo mano a mano.
+
+- **Una cola por formato:** la sala `publica` se registra con `filterBy(['formato'])`, así quien busca 2 vs 2 no cae en un mano a mano.
+  - El mano a mano va sin formato, como en las versiones viejas de la app, para que se sigan encontrando con quienes no actualizaron.
+- **Cómo se sienta la gente que llega sola:** completa primero el equipo que tiene menos lugares libres. Así el otro equipo queda entero para un grupo.
+- **Salir en grupo (`buscarRivales`):** lo hace el anfitrión de una sala privada de 2 vs 2 o 3 vs 3. Tienen que estar todos conectados y ser como mucho la mitad de la mesa.
+  - El servidor busca una sala de la cola de ese formato donde entre todo el grupo del mismo lado. Elige la que tiene más gente; si no hay, abre una.
+  - Les guarda los lugares en ese equipo (`reservas`, 20 s) y les manda `irAPublica` con la sala.
+  - Mientras los lugares que quedan están todos guardados, la sala deja de recibir desconocidos (`setPrivate`). Si alguno del grupo no llega, su lugar se libera al vencer.
+  - No es el caso de varias máquinas: las colas se buscan en memoria (`colasPublicas`), y hoy hay una sola máquina en Fly.
+- **El chat de equipo** también anda en la cola pública de 2 vs 2 y 3 vs 3. La voz sigue siendo solo de las salas privadas.
+- **Elo:** cuenta solo si todos los lugares son personas con cuenta (como antes) y se mueve por equipo. Si se completa con bots, no cuenta.
+- **En la app:**
+  - En el Lobby, arriba de "Buscar rival", se elige Mano a mano, Parejas o Tríos. Es el mismo formato del perfil, así el Elo del banner es el de lo que buscás.
+  - `/buscar?formato=2v2` muestra "Buscando gente…" y cuántos van ("Ya están 3 de 4").
+  - La oferta, si no llega nadie, pasa a "Completar con bots".
+  - En la sala de espera, el anfitrión ve "Buscar rivales". Al tocarlo, todos pasan a la búsqueda ("Buscando rivales para tu grupo…") y entran a la sala de la cola (`state.sumarseA`).
+- **Pruebas:**
+  - Servidor: `test/colaFormatos.test.ts`, con 8 pruebas: formatos separados, cómo se sientan los que llegan solos, los rechazos, dúo contra dos solos, trío contra trío y la reserva que vence.
+  - De punta a punta: `e2e/cola.spec.ts`, con cuatro navegadores (un dúo y dos solos).
+- **Hay que publicar el servidor junto con la web:** la web nueva manda `buscarRivales` y el formato, y el servidor viejo no los conoce.

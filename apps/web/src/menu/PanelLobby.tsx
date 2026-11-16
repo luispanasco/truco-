@@ -125,7 +125,15 @@ export function PanelLobby({
           ))}
         </div>
         {!adentro && <p className="nota-izq">Entrá a tu cuenta para tener Elo y aparecer en el ranking.</p>}
-        <button type="button" className="boton-jugar-grande lobby-buscar" onClick={() => conApodo(() => navegar('/buscar'))}>
+        <div className="segmentado lobby-formato" role="group" aria-label="Formato online">
+          {FORMATOS.map(([f, t, sub]) => (
+            <button key={f} type="button" className={perfil.formato === f ? 'elegido' : ''} onClick={() => cambiar({ formato: f })}>
+              <strong>{t}</strong>
+              <small>{sub}</small>
+            </button>
+          ))}
+        </div>
+        <button type="button" className="boton-jugar-grande lobby-buscar" onClick={() => conApodo(() => navegar(`/buscar?formato=${perfil.formato}`))}>
           <IconoBuscar clase="lobby-buscar-icono" /> Buscar rival
         </button>
         {gente && (

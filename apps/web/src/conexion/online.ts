@@ -1,4 +1,5 @@
 import { Client, type Room } from '@colyseus/sdk'
+import type { Formato } from '@truco/engine'
 import { SALAS, type MensajesCliente, type MensajesServidor, type OpcionesCrearSala, type OpcionesUnirse } from '@truco/shared'
 import type { Conexion, EstadoConexion, MensajeServidor } from './tipos'
 
@@ -106,9 +107,18 @@ export class ConexionOnline implements Conexion {
     return new ConexionOnline(room, false)
   }
 
-  /** Cola pública 1v1 con desconocidos. */
-  static async buscarPartida(op: OpcionesUnirse): Promise<ConexionOnline> {
-    const room = await new Client(direccionServidor()).joinOrCreate(SALAS.publica, op)
+  /**
+   * Cola pública con desconocidos, en ese formato. El mano a mano va sin formato, como en las
+   * versiones viejas de la app, así se siguen encontrando con quienes no actualizaron.
+   */
+  static async buscarPartida(op: OpcionesUnirse, formato: Formato = '1v1'): Promise<ConexionOnline> {
+    const room = await new Client(direccionServidor()).joinOrCreate(SALAS.publica, formato === '1v1' ? op : { ...op, formato })
+    return new ConexionOnline(room, true)
+  }
+
+  /** Entrar a la sala de la cola pública donde le guardaron lugar a tu grupo. */
+  static async sumarseALaCola(roomId: string, op: OpcionesUnirse): Promise<ConexionOnline> {
+    const room = await new Client(direccionServidor()).joinById(roomId, op)
     return new ConexionOnline(room, true)
   }
 

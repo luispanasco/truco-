@@ -64,6 +64,7 @@ import {
   TIEMPOS_SALA_DEFAULT,
   yaJugoEnLaMano,
   departamentoPublicado,
+  SALAS,
   type CanalChat,
   type ConfigSenias,
   type ConfigTiempos,
@@ -118,6 +119,8 @@ export interface Tiempos {
   cierreSinHumanosMs: number
   /** Cola pública: a los cuántos ms de esperar solo se ofrece jugar contra un bot. */
   ofrecerBotMs: number
+  /** Cola pública: cuánto se le guarda el lugar a cada uno de un grupo que viene de su sala. */
+  reservaGrupoMs: number
   /** Ventana para reconectarse a la misma sesión tras un corte. */
   reconexionS: number
   /** Espera extra al cerrar una vuelta y al terminar una mano, para que se vea el resultado. */
@@ -137,6 +140,7 @@ export const TIEMPOS_DEFAULT: Tiempos = {
   botMaxMs: 1_800,
   cierreSinHumanosMs: 120_000,
   ofrecerBotMs: 30_000,
+  reservaGrupoMs: 20_000,
   reconexionS: 20,
   pausaVueltaMs: 3_000,
   pausaManoMs: 1_200,
@@ -212,6 +216,9 @@ function texto(x: unknown, max: number): string | null {
 /** Rechazo de una operación con un motivo para el jugador. */
 class Rechazo extends Error {}
 
+/** Las salas de la cola pública que todavía esperan gente (para mandarles un grupo). */
+const colasPublicas = new Set<SalaTruco>()
+
 /**
  * Una partida. El estado del juego nunca se sincroniza entero: cada jugador recibe
  * solo su vista por mensaje. El servidor valida todo con el motor.
@@ -269,6 +276,14 @@ export class SalaTruco extends Room {
   private timerJuego: NodeJS.Timeout | null = null
   private timerCierre: NodeJS.Timeout | null = null
   private timerOfrecer: NodeJS.Timeout | null = null
+  /**
+   * Cola pública: los que vienen con su grupo desde una sala privada y todavía no llegaron, con
+   * el equipo donde se les guarda el lugar y hasta cuándo.
+   */
+  private reservas = new Map<string, { equipo: Equipo; vence: number }>()
+  private timerReservas: NodeJS.Timeout | null = null
+  /** Sala privada: ya salió el grupo a buscar rivales (no se vuelve a mandar). */
+  private grupoEnCamino = false
 
   private limitesAccion = new Map<string, LimiteFrecuencia>()
   private limitesChat = new Map<string, LimiteFrecuencia>()
@@ -291,7 +306,8 @@ export class SalaTruco extends Room {
   override async onCreate(opciones: OpcionesCrearSala = {} as OpcionesCrearSala) {
     this.autoDispose = false
     if (this.publica) {
-      this.config = crearConfig({ formato: '1v1' })
+      const formato = opciones.formato === '2v2' || opciones.formato === '3v3' ? opciones.formato : '1v1'
+      this.config = crearConfig({ formato })
       this.ayudas = false
       this.nivelBots = NIVEL_REEMPLAZO
     } else {
@@ -322,6 +338,7 @@ export class SalaTruco extends Room {
     this.registrarMensajes()
     this.revisarCierre()
     salasVivas.set(this.roomId, this)
+    if (this.publica) colasPublicas.add(this)
   }
 
   /** Las personas conectadas en la sala: en la cola pública esperando, buscan partida; si ya empezó, juegan. */
@@ -379,8 +396,7 @@ export class SalaTruco extends Room {
       // solo el admin (los amigos que invita entran igual).
       if (this.historia && this.anfitrion === null && (!auth || (!auth.admin && !departamentoPublicado(this.historia.departamento))))
         throw new Error('El modo historia todavía no está abierto')
-      // En el modo historia las personas van todas del mismo lado: los rivales son el elenco del nivel.
-      lugar = this.lugares.find((l) => l.tipo === 'libre' && (!this.historia || l.asiento % 2 === 0))
+      lugar = this.lugarParaQuienLlega(invitadoId)
       if (!lugar) throw new Error('La sala está llena')
       lugar.tipo = 'humano'
       lugar.invitadoId = invitadoId
@@ -409,7 +425,10 @@ export class SalaTruco extends Room {
       this.enviar(client, 'vista', vistaPara(this.estado, idJugador(lugar.asiento)))
       this.programar()
     }
-    if (this.publica && this.fase === 'esperando') this.revisarColaPublica()
+    if (this.publica && this.fase === 'esperando') {
+      this.actualizarVisibilidad()
+      this.revisarColaPublica()
+    }
   }
 
   override onDrop(client: Client) {
@@ -442,6 +461,7 @@ export class SalaTruco extends Room {
       this.lugares[lugar.asiento] = lugarLibre(lugar.asiento)
       if (eraAnfitrion) this.anfitrion = this.lugares.find((l) => l.tipo === 'humano')?.invitadoId ?? null
       this.limpiarTimer('timerOfrecer')
+      if (this.publica) this.actualizarVisibilidad()
     } else {
       // Con la partida en curso, el lugar queda guardado y juega un bot hasta que vuelva.
       // Terminada, el lugar también queda (si hay revancha, juega su reemplazo), pero
@@ -458,6 +478,8 @@ export class SalaTruco extends Room {
 
   override onDispose() {
     if (salasVivas.get(this.roomId) === this) salasVivas.delete(this.roomId)
+    colasPublicas.delete(this)
+    if (this.timerReservas) clearTimeout(this.timerReservas)
     for (const l of this.lugares) if (l.cuentaId) this.cuentas?.presencia?.salirDeSala(l.cuentaId, this.enSala)
     this.limpiarTimer('timerJuego')
     this.limpiarTimer('timerCierre')
@@ -618,6 +640,17 @@ export class SalaTruco extends Room {
       this.iniciar(true)
     })
 
+    manejar('buscarRivales', (client, asiento) => {
+      this.exigirAnfitrion(asiento)
+      const humanos = this.validarGrupoParaBuscar()
+      this.grupoEnCamino = true
+      void this.mandarGrupoALaCola(humanos).catch((e: unknown) => {
+        this.grupoEnCamino = false
+        console.error('No se pudo mandar el grupo a la cola pública:', e)
+        this.enviar(client, 'error', { motivo: 'No se pudo buscar rivales. Probá de nuevo.' })
+      })
+    })
+
     manejar('revancha', (_client, asiento) => {
       if (this.fase !== 'terminada') throw new Rechazo('La partida no terminó')
       if (this.pedidosRevancha.has(asiento)) return
@@ -694,6 +727,109 @@ export class SalaTruco extends Room {
     if (this.lugares[asiento]?.invitadoId !== this.anfitrion) throw new Rechazo('Solo el anfitrión puede hacer eso')
   }
 
+  /**
+   * El lugar de quien llega por primera vez. En el modo historia, las personas van todas del
+   * mismo lado (los rivales son el elenco del nivel). En la cola pública, quien viene con su grupo
+   * va al equipo que se le guardó; quien llega solo completa primero el equipo que tiene menos
+   * lugares libres, así el otro queda entero para un grupo que salga a buscar rivales.
+   */
+  private lugarParaQuienLlega(invitadoId: string): Lugar | undefined {
+    const libreEn = (equipo: Equipo | null) => this.lugares.find((l) => l.tipo === 'libre' && (equipo === null || equipoDe(l.asiento) === equipo))
+    if (this.historia) return this.lugares.find((l) => l.tipo === 'libre' && equipoDe(l.asiento) === 0)
+    if (!this.publica) return libreEn(null)
+    this.vencerReservas()
+    const reserva = this.reservas.get(invitadoId)
+    if (reserva) {
+      this.reservas.delete(invitadoId)
+      return libreEn(reserva.equipo)
+    }
+    const equipos = ([0, 1] as const).filter((e) => this.disponibles(e) > 0).sort((x, y) => this.disponibles(x) - this.disponibles(y))
+    return equipos.length > 0 ? libreEn(equipos[0]!) : undefined
+  }
+
+  /** Cola pública: lugares libres de un equipo que no están guardados para nadie. */
+  private disponibles(equipo: Equipo): number {
+    const libres = this.lugares.filter((l) => l.tipo === 'libre' && equipoDe(l.asiento) === equipo).length
+    const guardados = [...this.reservas.values()].filter((r) => r.equipo === equipo).length
+    return libres - guardados
+  }
+
+  /** Cola pública: si entra un grupo de `cantidad` del mismo lado (null si no entra), en qué equipo. */
+  equipoParaGrupo(cantidad: number): Equipo | null {
+    if (!this.publica || this.fase !== 'esperando') return null
+    this.vencerReservas()
+    const equipos = ([0, 1] as const).filter((e) => this.disponibles(e) >= cantidad).sort((x, y) => this.disponibles(x) - this.disponibles(y))
+    return equipos[0] ?? null
+  }
+
+  /** Cola pública: personas que ya están sentadas (para mandar un grupo a la que está más cerca de empezar). */
+  personasEsperando(): number {
+    return this.lugares.filter((l) => l.tipo === 'humano').length
+  }
+
+  /** Cola pública: les guarda lugar del mismo lado a los de un grupo, hasta que lleguen o se venza. */
+  reservarGrupo(invitados: string[], equipo: Equipo) {
+    const vence = Date.now() + this.tiempos.reservaGrupoMs
+    for (const id of invitados) this.reservas.set(id, { equipo, vence })
+    if (this.timerReservas) clearTimeout(this.timerReservas)
+    this.timerReservas = setTimeout(() => {
+      this.timerReservas = null
+      this.vencerReservas()
+      if (this.fase === 'esperando') this.actualizarVisibilidad()
+    }, this.tiempos.reservaGrupoMs + 50)
+    this.actualizarVisibilidad()
+  }
+
+  private vencerReservas() {
+    const ahora = Date.now()
+    for (const [id, r] of this.reservas) if (r.vence <= ahora) this.reservas.delete(id)
+  }
+
+  /**
+   * Cola pública: si los lugares que quedan están todos guardados para un grupo, la sala deja de
+   * recibir desconocidos (si no, el matchmaker la ofrecería y no los podría sentar).
+   */
+  private actualizarVisibilidad() {
+    if (!this.publica || this.fase !== 'esperando') return
+    void this.setPrivate(this.disponibles(0) + this.disponibles(1) <= 0)
+  }
+
+  /** Sala privada: quienes salen juntos a buscar rivales, si se puede. */
+  private validarGrupoParaBuscar(): Lugar[] {
+    if (this.publica) throw new Rechazo('Ya estás buscando partida')
+    if (this.historia) throw new Rechazo('En el modo historia se juega contra el elenco del nivel')
+    if (this.fase !== 'esperando') throw new Rechazo('La partida ya empezó')
+    if (this.grupoEnCamino) throw new Rechazo('Ya están buscando rivales')
+    if (this.config.formato === '1v1') throw new Rechazo('Para salir en grupo, elegí 2 vs 2 o 3 vs 3')
+    const humanos = this.lugares.filter((l) => l.tipo === 'humano')
+    if (humanos.some((l) => !l.conectado)) throw new Rechazo('Esperá a que vuelvan todos a la sala')
+    if (humanos.length > this.lugares.length / 2) throw new Rechazo('Son más que un equipo: para buscar rivales tienen que ser como mucho la mitad de la mesa')
+    return humanos
+  }
+
+  /**
+   * Busca en la cola pública de este formato una sala donde entre todo el grupo del mismo lado (la
+   * que tiene más gente, para empezar antes) o abre una, les guarda el lugar y les avisa adónde ir.
+   */
+  private async mandarGrupoALaCola(humanos: Lugar[]) {
+    const formato = this.config.formato
+    let destino = [...colasPublicas]
+      .filter((s) => s.config.formato === formato && s.equipoParaGrupo(humanos.length) !== null)
+      .sort((x, y) => y.personasEsperando() - x.personasEsperando())[0]
+    if (!destino) {
+      const creada = await matchMaker.createRoom(SALAS.publica, { formato })
+      destino = matchMaker.getLocalRoomById(creada.roomId) as SalaTruco | undefined
+      if (!destino) throw new Error('La sala nueva de la cola no está en este proceso')
+    }
+    const equipo = destino.equipoParaGrupo(humanos.length)
+    if (equipo === null) throw new Error('El grupo ya no entra en esa sala')
+    destino.reservarGrupo(
+      humanos.map((l) => l.invitadoId!),
+      equipo,
+    )
+    for (const l of humanos) this.enviarA(l.asiento, 'irAPublica', { roomId: destino.roomId })
+  }
+
   private revisarColaPublica() {
     const humanos = this.lugares.filter((l) => l.tipo === 'humano').length
     if (humanos === this.lugares.length) {
@@ -762,7 +898,11 @@ export class SalaTruco extends Room {
         )
       : null
     this.fase = 'jugando'
-    if (this.publica) void this.setPrivate(true)
+    if (this.publica) {
+      colasPublicas.delete(this)
+      this.reservas.clear()
+      void this.setPrivate(true)
+    }
     this.inicioMs = Date.now()
     this.registro = {
       sala: this.roomId,
@@ -1203,7 +1343,7 @@ export class SalaTruco extends Room {
   }
 
   private chatEquipo(): boolean {
-    return !this.publica && this.lugares.length > 2
+    return this.lugares.length > 2
   }
 
   private lugarDe(client: Client): Lugar | undefined {
