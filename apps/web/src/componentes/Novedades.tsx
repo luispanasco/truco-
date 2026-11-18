@@ -38,7 +38,9 @@ export function HojaNovedades({ alCerrar }: { alCerrar: () => void }) {
   useEffect(() => marcarNovedadesVistas(), [])
   return (
     <Hoja titulo="Novedades" alCerrar={alCerrar} clase="hoja-menu hoja-novedades" claseFondo="hoja-fija">
-      <ListaNovedades novedades={NOVEDADES} />
+      <div className="hoja-menu-contenido">
+        <ListaNovedades novedades={NOVEDADES} />
+      </div>
     </Hoja>
   )
 }
@@ -67,7 +69,10 @@ export function AvisoNovedades() {
   }
   return (
     <Hoja titulo="¡Novedades!" alCerrar={cerrar} clase="hoja-menu hoja-novedades" claseFondo="hoja-fija">
-      <ListaNovedades novedades={porVer} />
+      {/* Lo largo se desliza adentro; el botón queda siempre a la vista. */}
+      <div className="hoja-menu-contenido">
+        <ListaNovedades novedades={porVer} />
+      </div>
       <button type="button" className="boton boton-grande boton-relieve novedades-listo" onClick={cerrar}>
         ¡Dale!
       </button>

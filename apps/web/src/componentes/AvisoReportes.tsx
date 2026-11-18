@@ -55,25 +55,28 @@ export function AvisoReportes() {
   const premio = avisos.reduce((t, a) => t + a.premio, 0)
   return (
     <Hoja titulo={avisos.length > 1 ? '¡Gracias por tus reportes!' : '¡Gracias por tu reporte!'} alCerrar={cerrar} clase="hoja-menu hoja-aviso-reporte" claseFondo="hoja-fija">
-      <div className="aviso-reporte">
-        {avisos.map((a) => (
-          <div key={a.id} className="aviso-reporte-item">
-            <small>Nos avisaste:</small>
-            <p className="aviso-reporte-cita">“{a.descripcion || textoTipoReporte(a.tipo)}”</p>
-            <p>{a.mensaje}</p>
-          </div>
-        ))}
-        {premio > 0 ? (
-          <span className="aviso-reporte-premio" aria-label={`Ganaste ${premio} monedas`}>
-            +{premio} <Moneda />
-          </span>
-        ) : (
-          !cuentaId && <small>Con una cuenta, la próxima vez te llevás {PREMIO_REPORTE} monedas.</small>
-        )}
-        <button type="button" className="boton boton-grande boton-relieve" onClick={cerrar}>
-          ¡Buenísimo!
-        </button>
+      {/* Con varios reportes no entra: lo largo se desliza adentro y el botón queda a la vista. */}
+      <div className="hoja-menu-contenido">
+        <div className="aviso-reporte">
+          {avisos.map((a) => (
+            <div key={a.id} className="aviso-reporte-item">
+              <small>Nos avisaste:</small>
+              <p className="aviso-reporte-cita">“{a.descripcion || textoTipoReporte(a.tipo)}”</p>
+              <p>{a.mensaje}</p>
+            </div>
+          ))}
+          {premio > 0 ? (
+            <span className="aviso-reporte-premio" aria-label={`Ganaste ${premio} monedas`}>
+              +{premio} <Moneda />
+            </span>
+          ) : (
+            !cuentaId && <small>Con una cuenta, la próxima vez te llevás {PREMIO_REPORTE} monedas.</small>
+          )}
+        </div>
       </div>
+      <button type="button" className="boton boton-grande boton-relieve aviso-reporte-listo" onClick={cerrar}>
+        ¡Buenísimo!
+      </button>
     </Hoja>
   )
 }

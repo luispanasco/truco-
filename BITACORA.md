@@ -2415,3 +2415,10 @@ Pedido: un panel de novedades con fecha y versión, que al usuario le salga cuan
 - **Reportes:** la versión que viaja es "1.0 · commit (día)".
 - **Pruebas:** `novedades.test.tsx` (8): el orden y el formato de la lista, la comparación de versiones, nuevo o viejo, sale una vez, espera a los reportes y a la cuenta, y Ajustes. Se revisó en el navegador.
 - **Publicado** el mismo día en `main` como versión 1.0. Es solo de la web: el servidor no cambió.
+
+## Las hojas de novedades y de reportes no se deslizaban — 2026-11-18
+
+- **Reporte del usuario:** en las novedades y en el aviso de reportes no se podía deslizar.
+- **Causa:** el contenido iba directo en la hoja. Las otras hojas del menú lo ponen en `hoja-menu-contenido`, que se desliza adentro. En pantallas chicas, o con varios reportes, lo de abajo y el botón quedaban fuera de la pantalla.
+- **Arreglo:** las dos hojas usan `hoja-menu-contenido` y el botón ("¡Dale!" o "¡Buenísimo!") queda fijo abajo, siempre a la vista.
+- Se probó con un e2e temporal en 360×480 deslizando con el dedo: con el código anterior no se movía y el botón quedaba afuera; ahora baja y el botón está a la vista.

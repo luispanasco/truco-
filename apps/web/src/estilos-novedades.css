@@ -3,9 +3,7 @@
 .hoja.hoja-novedades {
   width: 100%;
   max-width: 520px;
-  max-height: 88%;
   margin: 0 auto;
-  overflow-y: auto;
 }
 .lista-novedades {
   display: grid;
@@ -70,8 +68,8 @@
   color: var(--texto-claro);
 }
 .novedades-listo {
+  flex: none;
   width: 100%;
-  margin-top: 16px;
 }
 
 /* Ajustes: la versión y el botón. */
