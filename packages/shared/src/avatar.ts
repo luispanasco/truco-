@@ -67,20 +67,38 @@ function conNombres(nombres: readonly string[], libres: number, nivel: number): 
 }
 
 /**
- * Peinados largos y recogidos que también son gratis (los primeros del catálogo son casi todos
- * cortos): así el set básico tiene para todos. Van por nombre porque el orden del catálogo no se
- * puede cambiar (el avatar guarda la posición).
+ * Piezas de la cara y del pelo que también son gratis, además de las primeras de cada capa: el set
+ * básico tiene que alcanzar para armarse una cara parecida (largos y recogidos, pelados, motas,
+ * pestañas, labios…). Lo de lucirse (caras graciosas, peinados llamativos, ropa, sombreros) sigue
+ * en la tienda. Van por nombre porque el orden del catálogo no se puede cambiar (el avatar guarda
+ * la posición).
  */
-const PELOS_LARGOS_GRATIS: readonly string[] = [
-  'Lacio largo',
-  'Carré con flequillo',
-  'Rulos al viento',
-  'Carré ondulado',
-  'Cola larga',
-  'Melena ondulada',
-  'Rodete alto',
-  'Melena con flequillo',
-]
+const TAMBIEN_GRATIS: Partial<Record<CapaAvatar, readonly string[]>> = {
+  pelo: [
+    'Lacio largo',
+    'Carré con flequillo',
+    'Rulos al viento',
+    'Carré ondulado',
+    'Cola larga',
+    'Melena ondulada',
+    'Rodete alto',
+    'Melena con flequillo',
+    'Rapado',
+    'Pelado con estilo',
+    'Corte milico',
+    'Motas',
+    'Trenzas pegadas',
+    'Dos rodetes',
+    'Corto con mechas',
+  ],
+  cejas: ['Cejas arqueadas', 'Cejas rectas', 'Ceño fruncido'],
+  ojos: ['Pestañas largas', 'Ojos grandotes', 'Delineado gatuno', 'Mirada profunda', 'Ojos risueños', 'Ojitos de punto', 'Ojos coquetos', 'Mirada canchera'],
+  boca: ['Boca seria', 'Sonrisita', 'Boca chiquita', 'Labios carnosos', 'Sonrisa de oreja a oreja', 'Cara de póker', 'Piquito', 'Boca torcida'],
+  barba: ['Bigote'],
+  lentes: ['Lentes finos'],
+  aros: ['Arito'],
+  ropa: ['Remera verde', 'Buzo gris'],
+}
 
 /** Colores de piel: todos gratis, siempre. */
 export const PIELES = ['#f6d3b3', '#efc19a', '#d9a066', '#b97a4a', '#8d5524', '#5c3a21'] as const
@@ -103,7 +121,7 @@ export const COLORES_PELO = [
  * Catálogo de piezas por capa. Las capas opcionales empiezan con "Sin …". Los precios son
  * provisorios: se ajustan en la fase 2 con la economía.
  */
-export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
+const CATALOGO_BASE: Record<CapaAvatar, readonly PiezaAvatar[]> = {
   piel: ['Piel muy clara', 'Piel clara', 'Piel trigueña', 'Piel morena', 'Piel oscura', 'Piel muy oscura'].map(gratis),
   cabeza: conNombres(['Cara angulosa', 'Cara redonda', 'Cara cuadrada', 'Cara alargada'], 4, 0),
   pelo: conNombres(
@@ -160,7 +178,7 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     ],
     12,
     100,
-  ).map((p) => (PELOS_LARGOS_GRATIS.includes(p.nombre) ? gratis(p.nombre) : p)),
+  ),
   colorPelo: [
     'Negro',
     'Castaño oscuro',
@@ -317,8 +335,8 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
   sombrero: [
     gratis('Sin sombrero'),
     paga('Boina', 200),
-    paga('Gorro de lana', 150),
-    paga('Gorra', 150),
+    paga('Gorro de lana', 50),
+    paga('Gorra', 50),
     paga('Sombrero de paja', 250),
     paga('Sombrero de gaucho', 300),
     paga('Vincha hippie', 150),
@@ -363,24 +381,30 @@ export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = {
     premio('Espigas de trigo', 250, 'Soriano'),
     premio('Bombo legüero', 400, 'Treinta y Tres'),
   ],
-  // Con los colores de las camisetas (sin escudos ni nombres de clubes).
+  // Con los colores de las camisetas (sin escudos ni nombres de clubes). Bufandas y pañuelos son
+  // comunes: cosas chicas y baratas para la primera compra (y para que la vitrina tenga comunes).
   bufanda: [
     gratis('Sin bufanda'),
-    paga('Celeste y blanca', 150),
-    paga('Aurinegra', 150),
-    paga('Tricolor', 150),
-    paga('Violeta y blanca', 150),
-    paga('Blanca y negra', 150),
-    paga('Verde y blanca', 150),
-    paga('Roja y azul', 150),
+    paga('Celeste y blanca', 50),
+    paga('Aurinegra', 50),
+    paga('Tricolor', 50),
+    paga('Violeta y blanca', 50),
+    paga('Blanca y negra', 50),
+    paga('Verde y blanca', 50),
+    paga('Roja y azul', 50),
     // Pañuelos de gaucho, anudados al cuello.
-    paga('Pañuelo rojo', 150),
-    paga('Pañuelo celeste', 150),
-    paga('Pañuelo blanco', 150),
+    paga('Pañuelo rojo', 50),
+    paga('Pañuelo celeste', 50),
+    paga('Pañuelo blanco', 50),
     paga('Collar de cuentas', 150),
   ],
   // Lo que se tiene en la boca: aparte del accesorio, así se puede tener pipa y mate a la vez.
-  enBoca: [gratis('Nada en la boca'), paga('Pipa', 300), paga('Pajita de pasto', 100), paga('Escarbadientes', 100)],
+  enBoca: [gratis('Nada en la boca'), paga('Pipa', 300), paga('Pajita de pasto', 50), paga('Escarbadientes', 50)],
+}
+
+export const CATALOGO_AVATAR: Record<CapaAvatar, readonly PiezaAvatar[]> = { ...CATALOGO_BASE }
+for (const capa of CAPAS_AVATAR) {
+  CATALOGO_AVATAR[capa] = CATALOGO_BASE[capa].map((p) => (TAMBIEN_GRATIS[capa]?.includes(p.nombre) ? gratis(p.nombre) : p))
 }
 
 /** Capas que se pueden dejar vacías (su pieza 0 es "sin …"). */

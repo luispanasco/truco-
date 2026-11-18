@@ -52,12 +52,12 @@ Las que no están acá (barba, pecas, ropa, sombreros, accesorios, bufandas, en 
 | 21 | Peinado 22 | Tupé enrulado | Rara |
 | 22 | Peinado 23 | Flequillo y lacio | Rara |
 | 23 | Peinado 24 | Rulos al viento | gratis |
-| 24 | Peinado 25 | Pelado con estilo | Rara |
-| 25 | Peinado 26 | Dos rodetes | Rara |
+| 24 | Peinado 25 | Pelado con estilo | gratis |
+| 25 | Peinado 26 | Dos rodetes | gratis |
 | 26 | Peinado 27 | Cresta punk | Rara |
-| 27 | Peinado 28 | Rapado | Rara |
+| 27 | Peinado 28 | Rapado | gratis |
 | 28 | Peinado 29 | Ondas de costado | Rara |
-| 29 | Peinado 30 | Corto con mechas | Rara |
+| 29 | Peinado 30 | Corto con mechas | gratis |
 | 30 | Peinado 31 | Cola al viento | Rara |
 | 31 | Peinado 32 | Carré ondulado | gratis |
 | 32 | Peinado 33 | Cola larga | gratis |
@@ -66,15 +66,15 @@ Las que no están acá (barba, pecas, ropa, sombreros, accesorios, bufandas, en 
 | 35 | Peinado 36 | Colita parada | Rara |
 | 36 | Peinado 37 | Raya y ondas | Rara |
 | 37 | Peinado 38 | Rodete alto | gratis |
-| 38 | Peinado 39 | Motas | Rara |
+| 38 | Peinado 39 | Motas | gratis |
 | 39 | Peinado 40 | Melena con flequillo | gratis |
 | 40 | Peinado 41 | Largo despeinado | Rara |
 | 41 | Peinado 42 | Mechón al costado | Rara |
 | 42 | Peinado 43 | Corto con remolino | Rara |
-| 43 | Peinado 44 | Trenzas pegadas | Rara |
+| 43 | Peinado 44 | Trenzas pegadas | gratis |
 | 44 | Peinado 45 | Rodete desarmado | Rara |
 | 45 | Peinado 46 | Moño despeinado | Rara |
-| 46 | Peinado 47 | Corte milico | Rara |
+| 46 | Peinado 47 | Corte milico | gratis |
 | 47 | Peinado 48 | Corte rockero | Rara |
 
 ## Color de pelo
@@ -103,13 +103,13 @@ Las que no están acá (barba, pecas, ropa, sombreros, accesorios, bufandas, en 
 | 3 | Cejas 4 | Cejas pobladas | gratis |
 | 4 | Cejas 5 | Cejas redondas | gratis |
 | 5 | Cejas 6 | Cejas despeinadas | gratis |
-| 6 | Cejas 7 | Cejas arqueadas | Común |
+| 6 | Cejas 7 | Cejas arqueadas | gratis |
 | 7 | Cejas 8 | Cejas de punto | Común |
 | 8 | Cejas 9 | Cejas preocupadas | Común |
 | 9 | Cejas 10 | Cejas de galán | Común |
 | 10 | Cejas 11 | Cejas desafiantes | Común |
-| 11 | Cejas 12 | Cejas rectas | Común |
-| 12 | Cejas 13 | Ceño fruncido | Común |
+| 11 | Cejas 12 | Cejas rectas | gratis |
+| 12 | Cejas 13 | Ceño fruncido | gratis |
 
 ## Ojos
 
@@ -124,20 +124,20 @@ Las que no están acá (barba, pecas, ropa, sombreros, accesorios, bufandas, en 
 | 6 | Ojos 7 | Ojos curiosos | gratis |
 | 7 | Ojos 8 | Ojos de siesta | gratis |
 | 8 | Ojos 9 | Ojos enamorados | Común |
-| 9 | Ojos 10 | Mirada profunda | Común |
-| 10 | Ojos 11 | Pestañas largas | Común |
-| 11 | Ojos 12 | Ojos coquetos | Común |
-| 12 | Ojos 13 | Ojitos de punto | Común |
-| 13 | Ojos 14 | Ojos grandotes | Común |
+| 9 | Ojos 10 | Mirada profunda | gratis |
+| 10 | Ojos 11 | Pestañas largas | gratis |
+| 11 | Ojos 12 | Ojos coquetos | gratis |
+| 12 | Ojos 13 | Ojitos de punto | gratis |
+| 13 | Ojos 14 | Ojos grandotes | gratis |
 | 14 | Ojos 15 | Guiñada | Común |
 | 15 | Ojos 16 | Ojos de dibujito | Común |
-| 16 | Ojos 17 | Mirada canchera | Común |
+| 16 | Ojos 17 | Mirada canchera | gratis |
 | 17 | Ojos 18 | Guiño pícaro | Común |
-| 18 | Ojos 19 | Ojos risueños | Común |
+| 18 | Ojos 19 | Ojos risueños | gratis |
 | 19 | Ojos 20 | Mirada sobradora | Común |
 | 20 | Ojos 21 | Ojos de cachorro | Común |
 | 21 | Ojos 22 | Ojos pícaros | Común |
-| 22 | Ojos 23 | Delineado gatuno | Común |
+| 22 | Ojos 23 | Delineado gatuno | gratis |
 | 23 | Ojos 24 | Ojos bien abiertos | Común |
 
 ## Nariz
@@ -164,20 +164,20 @@ Las que no están acá (barba, pecas, ropa, sombreros, accesorios, bufandas, en 
 | 6 | Boca 7 | Colmillos | gratis |
 | 7 | Boca 8 | Boquita de sorpresa | gratis |
 | 8 | Boca 9 | Lengua afuera | Común |
-| 9 | Boca 10 | Boca seria | Común |
+| 9 | Boca 10 | Boca seria | gratis |
 | 10 | Boca 11 | Boca fruncida | Común |
 | 11 | Boca 12 | Se le cae la baba | Común |
-| 12 | Boca 13 | Sonrisita | Común |
-| 13 | Boca 14 | Boca chiquita | Común |
+| 12 | Boca 13 | Sonrisita | gratis |
+| 13 | Boca 14 | Boca chiquita | gratis |
 | 14 | Boca 15 | Boca nerviosa | Común |
-| 15 | Boca 16 | Sonrisa de oreja a oreja | Común |
-| 16 | Boca 17 | Piquito | Común |
-| 17 | Boca 18 | Labios carnosos | Común |
+| 15 | Boca 16 | Sonrisa de oreja a oreja | gratis |
+| 16 | Boca 17 | Piquito | gratis |
+| 17 | Boca 18 | Labios carnosos | gratis |
 | 18 | Boca 19 | Boca de grito | Común |
-| 19 | Boca 20 | Boca torcida | Común |
+| 19 | Boca 20 | Boca torcida | gratis |
 | 20 | Boca 21 | Boca desganada | Común |
 | 21 | Boca 22 | Trompa | Común |
-| 22 | Boca 23 | Cara de póker | Común |
+| 22 | Boca 23 | Cara de póker | gratis |
 | 23 | Boca 24 | Dientes apretados | Común |
 | 24 | Boca 25 | Sonrisa sobradora | Común |
 | 25 | Boca 26 | Lengua de costado | Común |

@@ -53,9 +53,9 @@ describe('formato del avatar', () => {
       ['Guitarra criolla', 800],
     ])
     expect(precios('bufanda', 'Pañuelo rojo', 3)).toEqual([
-      ['Pañuelo rojo', 150],
-      ['Pañuelo celeste', 150],
-      ['Pañuelo blanco', 150],
+      ['Pañuelo rojo', 60],
+      ['Pañuelo celeste', 60],
+      ['Pañuelo blanco', 60],
     ])
     expect(precios('sombrero', 'Sombrero de gaucho', 1)).toEqual([['Sombrero de gaucho', 350]])
     expect(precios('ropa', 'Poncho', 2)).toEqual([
@@ -65,8 +65,8 @@ describe('formato del avatar', () => {
     expect(CATALOGO_AVATAR.enBoca.map((p) => [p.nombre, p.precio])).toEqual([
       ['Nada en la boca', 0],
       ['Pipa', 350],
-      ['Pajita de pasto', 150],
-      ['Escarbadientes', 150],
+      ['Pajita de pasto', 60],
+      ['Escarbadientes', 60],
     ])
     // Lo que estaba antes no se movió.
     expect(CATALOGO_AVATAR.accesorio[9]!.nombre).toBe('Café')
@@ -131,8 +131,21 @@ describe('formato del avatar', () => {
     for (const [capa, lista] of Object.entries(nombres) as [keyof typeof nombres, readonly string[]][]) {
       const piezas = ultimas(capa, lista.length)
       expect(piezas.map((p) => p.nombre)).toEqual(lista)
-      for (const p of piezas) expect(p.precio, p.nombre).toBeGreaterThan(0)
+      // El bigote pasó al set gratis (la cara se arma gratis).
+      for (const p of piezas) if (p.nombre !== 'Bigote') expect(p.precio, p.nombre).toBeGreaterThan(0)
     }
+  })
+
+  it('la cara se arma gratis: pelados, largos, pestañas, labios y más; las caras graciosas siguen pagas', () => {
+    const gratis = (capa: keyof typeof CATALOGO_AVATAR, nombre: string) => CATALOGO_AVATAR[capa].find((p) => p.nombre === nombre)?.precio === 0
+    for (const n of ['Rapado', 'Pelado con estilo', 'Motas', 'Trenzas pegadas', 'Lacio largo', 'Rodete alto']) expect(gratis('pelo', n), n).toBe(true)
+    for (const n of ['Pestañas largas', 'Ojos grandotes', 'Delineado gatuno']) expect(gratis('ojos', n), n).toBe(true)
+    for (const n of ['Boca seria', 'Labios carnosos', 'Boca chiquita']) expect(gratis('boca', n), n).toBe(true)
+    expect(gratis('aros', 'Arito')).toBe(true)
+    expect(gratis('barba', 'Bigote')).toBe(true)
+    for (const [capa, n] of [['boca', 'Lengua afuera'], ['ojos', 'Guiñada'], ['pelo', 'Cresta punk'], ['colorPelo', 'Azul eléctrico'], ['barba', 'Bigote gaucho']] as const)
+      expect(gratis(capa, n), n).toBe(false)
+    for (const capa of ['ojos', 'boca'] as const) expect(CATALOGO_AVATAR[capa].filter((p) => p.precio === 0).length).toBe(16)
   })
 
   it('rechaza códigos rotos, piezas que no existen y emojis viejos', () => {

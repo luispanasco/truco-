@@ -2423,3 +2423,19 @@ Pedido: un panel de novedades con fecha y versión, que al usuario le salga cuan
 - **Arreglo:** las dos hojas usan `hoja-menu-contenido` y el botón ("¡Dale!" o "¡Buenísimo!") queda fijo abajo, siempre a la vista.
 - Se probó con un e2e temporal en 360×480 deslizando con el dedo: con el código anterior no se movía y el botón quedaba afuera; ahora baja y el botón está a la vista.
 - **Publicado** el mismo día en `main` como versión 1.1.
+
+## La cara, gratis: más ojos, bocas, cejas y peinados en el set básico — 2026-11-18
+
+- **Pedido:** al usuario le llegaron muchas quejas de que armarse la cara salía caro. Su decisión: la cara tiene que tener un buen abanico gratis (largos, pelados, cortos, de mujer…) y el resto sigue pago, lo mismo con los colores.
+- **Antes:** la cara era casi toda paga. Gratis había 8 ojos de 24 y 8 bocas de 27, ningún pelado ni rapado, ningún aro y un solo par de lentes.
+- **Pasan a gratis 31 piezas** (`TAMBIEN_GRATIS` en `avatar.ts`, por nombre, que reemplaza a `PELOS_LARGOS_GRATIS`):
+  - **Pelo (+7):** Rapado, Pelado con estilo, Corte milico, Motas, Trenzas pegadas, Dos rodetes y Corto con mechas. Quedan 27 gratis.
+  - **Cejas (+3):** arqueadas, rectas y ceño fruncido.
+  - **Ojos (+8):** pestañas largas, ojos grandotes, delineado gatuno, mirada profunda, ojos risueños, ojitos de punto, ojos coquetos y mirada canchera. Quedan 16 gratis.
+  - **Boca (+8):** boca seria, sonrisita, boca chiquita, labios carnosos, sonrisa de oreja a oreja, cara de póker, piquito y boca torcida. Quedan 16 gratis.
+  - **Además:** el bigote, los lentes finos, el arito, la remera verde y el buzo gris.
+  - Las piezas gratis del avatar pasan de 81 a 112.
+- **Siguen pagas:** las caras graciosas (lengua afuera, baba, guiñadas…), los peinados llamativos, los colores de pelo de fantasía, la ropa, los sombreros, lo que va en la mano o en la boca y los paños.
+- **Bajan a común (60):** las 7 bufandas, los 3 pañuelos, el gorro de lana, la gorra, la pajita y el escarbadientes. Todas las comunes eran de la cara: sin esto, a la vitrina (3 comunes por día) le quedaban unas 20 y se repetían seguido. Ahora hay 37 comunes, 32 raras, 45 épicas y 15 legendarias en la tienda.
+- **Devolución** (migración 19): a quien compró alguna de las 31 se le devuelve lo que pagó, con un movimiento `ajuste` por pieza (partida `devolucion:<item>`, una sola vez). La pieza queda en su inventario. Corre sola al arrancar el servidor publicado.
+- `NOMBRES-PIEZAS.md`, actualizado.
