@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
+import { create } from 'zustand'
 import { PREMIO_REPORTE, textoTipoReporte, type AvisoReporte } from '@truco/shared'
 import { useCuenta } from '../cuenta/cuenta'
 import { avisosDeReportes, marcarAvisosVistos } from '../reportes'
 import { Moneda } from '../tienda/Probador'
 import { Hoja } from './Hoja'
 import '../estilos-reportes.css'
+
+/** Si ya no hay (o ya se cerró) el aviso de reportes: las novedades esperan a que termine. */
+export const useAvisoReportes = create<{ terminado: boolean }>(() => ({ terminado: false }))
+const terminar = () => useAvisoReportes.setState({ terminado: true })
 
 /** Para quién ya se pidieron los avisos en esta visita (la cuenta o el invitado): al volver al inicio no se piden de nuevo. */
 let pedidosPara: string | null = null
@@ -21,14 +26,19 @@ export function AvisoReportes() {
 
   useEffect(() => {
     // Sin servidor de cuentas no hay reportes guardados.
-    if (!listo || estado === 'apagadas') return
+    if (!listo) return
+    if (estado === 'apagadas') return terminar()
     const quien = cuentaId ?? 'invitado'
     if (pedidosPara === quien) return
     pedidosPara = quien
     let vigente = true
     avisosDeReportes().then(
-      (a) => vigente && setAvisos(a),
-      () => {},
+      (a) => {
+        // Si ya se fue del inicio, el aviso sale la próxima vez que abra la app.
+        if (a.length === 0 || !vigente) terminar()
+        else setAvisos(a)
+      },
+      terminar,
     )
     return () => {
       vigente = false
@@ -38,6 +48,7 @@ export function AvisoReportes() {
   const cerrar = useCallback(() => {
     void marcarAvisosVistos(avisos.map((a) => a.id)).catch(() => {})
     setAvisos([])
+    terminar()
   }, [avisos])
 
   if (avisos.length === 0) return null
@@ -70,4 +81,5 @@ export function AvisoReportes() {
 /** Para los tests: que se vuelvan a pedir. */
 export function olvidarAvisosPedidos() {
   pedidosPara = null
+  useAvisoReportes.setState({ terminado: false })
 }

@@ -6,9 +6,11 @@ import { useCuenta } from '../cuenta/cuenta'
 import { AjustesSonido } from '../componentes/AjustesSonido'
 import { SelectorCartasJugadas } from '../componentes/FormularioSala'
 import { Interruptor } from '../componentes/Interruptor'
+import { HojaNovedades } from '../componentes/Novedades'
 import { InstalarApp } from '../componentes/Pwa'
 import { SelectorVistaMesa } from '../componentes/SelectorVistaMesa'
 import { TarjetaCuenta } from '../componentes/TarjetaCuenta'
+import { fechaNovedad, NOVEDADES, VERSION_ACTUAL } from '../novedades'
 import { cosmeticosPermitidos, type Perfil } from '../perfil'
 import { VerRecorrido } from '../recorrido/VerRecorrido'
 
@@ -23,6 +25,7 @@ export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Part
   const cambiarTienda = (tiendaDesbloqueada: boolean) =>
     cambiar({ tiendaDesbloqueada, ...cosmeticosPermitidos({ ...perfil, tiendaDesbloqueada }) })
   const [reportando, setReportando] = useState(false)
+  const [novedades, setNovedades] = useState(false)
   const admin = useCuenta((s) => s.cuenta?.admin === true)
   const navegar = useNavigate()
 
@@ -107,6 +110,20 @@ export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Part
         </section>
       )}
 
+      {/* Lo que cambió en cada versión (también sale solo al abrir la app, una vez por versión). */}
+      <section className="tarjeta ajustes-novedades" aria-labelledby="ajustes-novedades">
+        <h2 id="ajustes-novedades">
+          <span aria-hidden="true">📣</span> Novedades
+        </h2>
+        <p>
+          Versión {VERSION_ACTUAL} · {fechaNovedad(NOVEDADES[0]!.fecha)}
+        </p>
+        <button type="button" className="boton boton-secundario" onClick={() => setNovedades(true)}>
+          Ver las novedades
+        </button>
+      </section>
+      {novedades && <HojaNovedades alCerrar={() => setNovedades(false)} />}
+
       {/* Para los testers: lo que pase fuera de una partida (en la mesa, está en el menú de la ✕). */}
       <section className="tarjeta ajustes-ayuda" aria-labelledby="ajustes-ayuda">
         <h2 id="ajustes-ayuda">
@@ -128,7 +145,7 @@ export function Ajustes({ perfil, cambiar }: { perfil: Perfil; cambiar: (p: Part
       <VerRecorrido />
       <InstalarApp />
       <p className="inicio-pie">
-        Truco uruguayo · versión beta · <a href="/privacidad.html">Privacidad</a>
+        Truco uruguayo · versión {VERSION_ACTUAL} (beta) · <a href="/privacidad.html">Privacidad</a>
       </p>
     </div>
   )

@@ -2401,3 +2401,16 @@ El usuario va a subir la app a Google Play y se encarga de la cuenta de desarrol
     - **Arreglo:** en esos dos casos va a la esquina del que reparte, en la mesa de siempre y en la de perspectiva. Así el mazo queda siempre a la izquierda del mano. En el paño ancho ya iba al medio del costado, entre los dos.
     - Prueba nueva en `cartasEnMesa.test.tsx`. Se revisó en el navegador con la vista del reporte.
     - Publicado en `main` el mismo día y marcado solucionado, con 100 monedas para Pepe.
+
+## Novedades: qué cambió en cada versión — 2026-11-18
+
+Pedido: un panel de novedades con fecha y versión, que al usuario le salga cuando hay una nueva. Se decidió que la versión es 1.0, 1.1… (2.0 para un cambio grande) y que los textos los escribe Claude al publicar, en lenguaje de jugador, y se muestran antes de publicar.
+
+- **Datos** (`apps/web/src/novedades.ts`): `NOVEDADES`, de la más nueva a la más vieja. Cada una tiene versión, fecha, título y cambios marcados Nuevo, Mejora o Arreglo. La primera define `VERSION_ACTUAL`. Se agrega una entrada en el mismo commit con el que se publica algo que el jugador nota (los push a `develop` no). La 1.0 resume lo de esta semana.
+- **Al abrir la app** (`AvisoNovedades` en el inicio):
+  - Si hay una versión que no viste, aparece la hoja "¡Novedades!" con lo nuevo desde la última que viste (hasta 3 versiones) y "¡Dale!". Se anota en el dispositivo (`truco.novedades`) y no vuelve hasta la próxima.
+  - Espera al aviso de reportes solucionados (`useAvisoReportes.terminado`) y a saber si tenés la cuenta abierta.
+  - A quien es nuevo (sin cuenta y sin señales de haber usado la app, como en el recorrido) no le sale: se anota la versión actual.
+- **Ajustes:** la tarjeta "Novedades", con la versión y la fecha, y "Ver las novedades" (todas). El pie dice "versión 1.0 (beta)".
+- **Reportes:** la versión que viaja es "1.0 · commit (día)".
+- **Pruebas:** `novedades.test.tsx` (8): el orden y el formato de la lista, la comparación de versiones, nuevo o viejo, sale una vez, espera a los reportes y a la cuenta, y Ajustes. Se revisó en el navegador.

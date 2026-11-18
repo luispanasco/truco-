@@ -1,0 +1,84 @@
+/* ── Novedades: el panel de Ajustes y la hoja al abrir la app ─────────── */
+
+.hoja.hoja-novedades {
+  width: 100%;
+  max-width: 520px;
+  max-height: 88%;
+  margin: 0 auto;
+  overflow-y: auto;
+}
+.lista-novedades {
+  display: grid;
+  gap: 18px;
+}
+.novedad {
+  display: grid;
+  gap: 8px;
+}
+.novedad + .novedad {
+  padding-top: 14px;
+  border-top: 1px solid rgb(255 255 255 / 0.15);
+}
+.novedad-cabeza {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.novedad-cabeza small {
+  opacity: 0.75;
+}
+.novedad-titulo {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.novedad-cambios {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.novedad-cambios li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.35;
+}
+.novedad-tipo {
+  flex: none;
+  min-width: 6.4em;
+  margin-top: 1px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.novedad-tipo.nuevo {
+  background: var(--acento);
+  color: var(--tinta);
+}
+.novedad-tipo.mejora {
+  background: #7fb8e6;
+  color: var(--tinta);
+}
+.novedad-tipo.arreglo {
+  background: rgb(255 255 255 / 0.18);
+  color: var(--texto-claro);
+}
+.novedades-listo {
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* Ajustes: la versión y el botón. */
+.ajustes-novedades {
+  display: grid;
+  gap: 8px;
+}
+.ajustes-novedades p {
+  margin: 0;
+}

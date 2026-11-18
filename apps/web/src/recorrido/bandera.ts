@@ -34,7 +34,7 @@ let automatico = import.meta.env.MODE !== 'test'
 export const recorridoAutomatico = (si: boolean) => void (automatico = si)
 
 /** Señales de que ya usó la app antes: puso su apodo, hizo lecciones o tiene una partida a medias. */
-function yaUsoLaApp(): boolean {
+export function yaUsoLaApp(): boolean {
   try {
     const perfil = JSON.parse(localStorage.getItem('truco.perfil') ?? 'null') as { apodo?: unknown } | null
     if (typeof perfil?.apodo === 'string' && perfil.apodo.trim()) return true

@@ -2,12 +2,14 @@ import type { AvisoReporte, ContextoReporte, RepeticionPartida, ReporteEnviado, 
 import type { ConexionOnline } from './conexion/online'
 import { direccionApi, useCuenta } from './cuenta/cuenta'
 import { useJuego } from './estado'
+import { VERSION_ACTUAL } from './novedades'
 import { leerPerfil } from './perfil'
 
 /** Cuántas líneas del registro de la mesa van en el reporte. */
 const LINEAS_REGISTRO = 50
 
-export const VERSION_APP = typeof __VERSION_APP__ === 'string' ? __VERSION_APP__ : 'desconocida'
+/** La versión de las novedades y el build (commit y día): "1.0 · a4da7cf (2026-11-18)". */
+export const VERSION_APP = `${VERSION_ACTUAL} · ${typeof __VERSION_APP__ === 'string' ? __VERSION_APP__ : 'desconocida'}`
 
 /**
  * Lo que se adjunta solo: el navegador y, si estás en una partida, la partida. Contra la compu va
