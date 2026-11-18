@@ -22,14 +22,16 @@ const POSICIONES: Record<number, [number, number][]> = {
     // Bien abajo: más arriba pisa las cartas del de la izquierda (en escritorio el paño es bajito).
     [16, 83],
   ],
-  // En 3 contra 3, siempre en una esquina (del lado del mano): el medio de arriba y de abajo es
-  // de los asientos y del registro, y en el medio de los costados la muestra pisaba las pilas.
+  // En 3 contra 3, siempre en una esquina: el medio de arriba y de abajo es de los asientos y del
+  // registro, y en el medio de los costados la muestra pisaba las pilas. Si reparte uno de los
+  // costados, en su esquina; el de abajo o el de arriba, en la del lado del mano. Así queda
+  // siempre a la izquierda del mano (en la del mano, el de un costado lo tenía a su derecha).
   6: [
     [84, 89],
-    [80, 8],
+    [84, 89],
     [80, 8],
     [22, 9],
-    [16, 89],
+    [22, 9],
     [16, 89],
   ],
 }
@@ -49,14 +51,15 @@ const POSICIONES_PERSPECTIVA: Record<number, [number, number][]> = {
     [13, 19],
     [12, 86],
   ],
-  // En 3 contra 3, siempre en una esquina (del lado del mano): a los costados, entre las dos
-  // pilas de cada lado, no entra. Las de cerca, bien en la punta y arriba del registro.
+  // En 3 contra 3, siempre en una esquina (como en la mesa de siempre: la del que reparte si está
+  // en un costado): a los costados, entre las dos pilas de cada lado, no entra. Las de cerca, bien
+  // en la punta y arriba del registro.
   6: [
     [91, 91],
-    [86, 12],
+    [91, 91],
     [86, 12],
     [14, 12],
-    [9, 91],
+    [14, 12],
     [9, 91],
   ],
 }

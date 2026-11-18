@@ -2395,4 +2395,9 @@ El usuario va a subir la app a Google Play y se encarga de la cuenta de desarrol
 - **Publicado** el mismo día: el servidor en Fly (con la migración 18) y `main` en 7c6ba18. Se marcaron solucionados el #2, el #4 y el #5 (100 monedas cada uno) y el #3 (invitado, sin monedas). El #1 es del usuario y quedó sin marcar.
 - **Llegaron del #6 al #10, de Pepe, todos del 17/11 con la versión 9833308:**
   - Del #7 al #10 ("me dice unas cartas y juega una que no tiene", "Rubén marca 4 cartas o 4 señas", "Luna me dijo que tenía el 2") son este mismo bug: partidas que venían después de otra en el modo historia.
-  - El #6 ("Luna es mano: debería tener el mazo a su izquierda") es otra cosa. Queda para revisar.
+  - Se marcaron solucionados sin monedas, porque el premio va una vez por bug y Pepe ya lo cobró con el #5. El mensaje dice que era el mismo problema.
+  - **#6 ("Luna es mano: debería tener el mazo a su izquierda"):**
+    - En 3 vs 3 el mazo iba siempre a la esquina del lado del mano. Cuando reparte uno de los costados, esa esquina queda a la derecha del mano: pasaba cuando reparte el de abajo a la derecha o el de arriba a la izquierda.
+    - **Arreglo:** en esos dos casos va a la esquina del que reparte, en la mesa de siempre y en la de perspectiva. Así el mazo queda siempre a la izquierda del mano. En el paño ancho ya iba al medio del costado, entre los dos.
+    - Prueba nueva en `cartasEnMesa.test.tsx`. Se revisó en el navegador con la vista del reporte.
+    - Publicado en `main` el mismo día y marcado solucionado, con 100 monedas para Pepe.

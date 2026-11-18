@@ -141,10 +141,21 @@ describe('la carta tirada y el mazo', () => {
     }
   })
 
+  it('en 3 contra 3 queda a la izquierda del mano: si reparte uno de los costados, en su esquina (reporte #6)', () => {
+    // Reparte el de abajo a la derecha y es mano el de arriba a la derecha: abajo a la derecha.
+    expect(lugarMazo(6, 1)).toEqual(lugarMazo(6, 0))
+    expect(lugarMazo(6, 1, true)).toEqual(lugarMazo(6, 0, true))
+    // Reparte el de arriba a la izquierda y es mano el de abajo a la izquierda: arriba a la izquierda.
+    expect(lugarMazo(6, 4)).toEqual(lugarMazo(6, 3))
+    expect(lugarMazo(6, 4, true)).toEqual(lugarMazo(6, 3, true))
+    expect(lugarMazo(6, 1)[1]).toBeGreaterThan(50)
+    expect(lugarMazo(6, 4)[1]).toBeLessThan(50)
+  })
+
   it('el lugar va en variables: uno para el paño angosto y otro para el bajito y ancho', () => {
     const estilo = posicionMazo(6, 4) as Record<string, string>
-    expect(estilo['--mazo-x']).toBe('16%')
-    expect(estilo['--mazo-y']).toBe('89%')
+    expect(estilo['--mazo-x']).toBe('22%')
+    expect(estilo['--mazo-y']).toBe('9%')
     // En el paño ancho los de los costados van acostados: el medio del costado está libre.
     expect(estilo['--mazo-x-ancha']).toBe('14%')
     expect(estilo['--mazo-y-ancha']).toBe('50%')
