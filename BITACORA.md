@@ -2414,3 +2414,4 @@ Pedido: un panel de novedades con fecha y versión, que al usuario le salga cuan
 - **Ajustes:** la tarjeta "Novedades", con la versión y la fecha, y "Ver las novedades" (todas). El pie dice "versión 1.0 (beta)".
 - **Reportes:** la versión que viaja es "1.0 · commit (día)".
 - **Pruebas:** `novedades.test.tsx` (8): el orden y el formato de la lista, la comparación de versiones, nuevo o viejo, sale una vez, espera a los reportes y a la cuenta, y Ajustes. Se revisó en el navegador.
+- **Publicado** el mismo día en `main` como versión 1.0. Es solo de la web: el servidor no cambió.
