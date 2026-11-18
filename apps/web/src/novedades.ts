@@ -17,6 +17,14 @@ export interface Novedad {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: '1.1',
+    fecha: '2026-11-18',
+    titulo: 'Más cómodo en pantallas chicas',
+    cambios: [
+      { tipo: 'arreglo', texto: 'Las novedades y el aviso de reportes arreglados ahora se pueden deslizar, y el botón para cerrarlos queda siempre a la vista.' },
+    ],
+  },
+  {
     version: '1.0',
     fecha: '2026-11-18',
     titulo: 'Online en equipo y gracias por avisar',
