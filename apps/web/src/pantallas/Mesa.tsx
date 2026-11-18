@@ -59,6 +59,7 @@ export function Mesa() {
     reyes,
     expulsado,
     corte,
+    partida,
     cerrarReyes,
     enviar,
     salir,
@@ -97,6 +98,12 @@ export function Mesa() {
   // (mientras está apilada para ojear, la tira no delata tus cartas).
   const [hechas, setHechas] = useState<{ mano: number; senias: Senia[] }>({ mano: 0, senias: [] })
   const [abiertaEn, setAbiertaEn] = useState<number | null>(null)
+  // En otra partida las manos se cuentan de nuevo: lo anotado por número de mano no sigue.
+  useEffect(() => {
+    setHechas({ mano: 0, senias: [] })
+    setAbiertaEn(null)
+    setPieAbiertoEn(null)
+  }, [partida])
   // Preferencia propia: el resumen de lo que te marcó cada compañero, arriba de su avatar.
   const [conResumen, setConResumen] = useState(() => leerPerfil().resumenSenias)
   const cambiarResumen = (v: boolean) => {

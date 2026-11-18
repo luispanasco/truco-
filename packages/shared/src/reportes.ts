@@ -64,4 +64,23 @@ export interface ReporteListado {
   version: string | null
   donde: string
   conRepeticion: boolean
+  /** Cuándo se marcó solucionado (null si todavía no). */
+  solucionado: string | null
+  /** Las monedas que se le dieron por el reporte (0 sin cuenta o si no se premió). */
+  premio: number
+}
+
+/** Lo que gana quien reportó cuando se arregla (si tiene cuenta). */
+export const PREMIO_REPORTE = 100
+/** El mensaje que ve quien reportó, si el admin no escribe otro. */
+export const MENSAJE_SOLUCIONADO = '¡Gracias por avisarnos! Ya lo arreglamos.'
+export const MAX_MENSAJE_SOLUCIONADO = 300
+
+/** Un reporte tuyo que se arregló y todavía no viste: el aviso del inicio. */
+export interface AvisoReporte {
+  id: number
+  tipo: TipoReporte
+  descripcion: string
+  mensaje: string
+  premio: number
 }

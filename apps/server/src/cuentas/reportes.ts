@@ -1,7 +1,11 @@
 import {
   esTipoReporte,
   MAX_DESCRIPCION_REPORTE,
+  MAX_MENSAJE_SOLUCIONADO,
   MAX_REPORTES_POR_HORA,
+  MENSAJE_SOLUCIONADO,
+  PREMIO_REPORTE,
+  type AvisoReporte,
   type ContextoReporte,
   type RepeticionPartida,
   type ReporteListado,
@@ -85,6 +89,8 @@ interface FilaReporte {
   modo: string | null
   sala: string | null
   con_repeticion: boolean
+  solucionado: Date | string | null
+  premio: number
 }
 
 /** Los últimos reportes, del más nuevo al más viejo (sin el contexto entero: pesa). */
@@ -94,7 +100,8 @@ export async function listarReportes(base: Base, limite = 200): Promise<ReporteL
             r.contexto->>'ruta' as ruta, r.contexto->>'version' as version,
             r.contexto->'local'->>'modo' as modo, r.contexto->'online'->>'sala' as sala,
             (jsonb_typeof(r.contexto->'local'->'repeticion') = 'object'
-              or jsonb_typeof(r.contexto->'repeticionServidor') = 'object') as con_repeticion
+              or jsonb_typeof(r.contexto->'repeticionServidor') = 'object') as con_repeticion,
+            r.solucionado, r.premio
      from reportes r left join cuentas c on c.id = r.cuenta_id
      order by r.id desc limit $1`,
     [limite],
@@ -113,13 +120,20 @@ export async function listarReportes(base: Base, limite = 200): Promise<ReporteL
     version: f.version,
     donde: f.modo ? (MODOS[f.modo] ?? f.modo) : f.sala ? `Online (sala ${f.sala})` : 'Fuera de una partida',
     conRepeticion: f.con_repeticion === true,
+    solucionado: f.solucionado ? new Date(f.solucionado).toISOString() : null,
+    premio: Number(f.premio),
   }))
+}
+
+function idDeReporte(id: unknown): number {
+  const n = typeof id === 'string' ? Number(id) : id
+  if (typeof n !== 'number' || !Number.isSafeInteger(n) || n <= 0) throw new ReporteRechazo('Ese reporte no existe', 404)
+  return n
 }
 
 /** Un reporte entero (con su contexto). */
 export async function reporteCompleto(base: Base, id: unknown): Promise<Record<string, unknown>> {
-  const n = typeof id === 'string' ? Number(id) : id
-  if (typeof n !== 'number' || !Number.isSafeInteger(n) || n <= 0) throw new ReporteRechazo('Ese reporte no existe', 404)
+  const n = idDeReporte(id)
   const [f] = await base.consultar<Record<string, unknown>>('select * from reportes where id = $1', [n])
   if (!f) throw new ReporteRechazo('Ese reporte no existe', 404)
   return f
@@ -131,4 +145,74 @@ export async function repeticionDeReporte(base: Base, id: unknown): Promise<Repe
   const r = contexto.repeticionServidor ?? contexto.local?.repeticion
   if (!r) throw new ReporteRechazo('Ese reporte no trae la partida', 404)
   return r
+}
+
+/**
+ * El admin lo marca solucionado: queda el mensaje para quien reportó y, si tiene cuenta y se
+ * premia, cobra PREMIO_REPORTE (una sola vez: el movimiento lleva el id del reporte).
+ */
+export async function solucionarReporte(
+  base: Base,
+  id: unknown,
+  cuerpo: unknown,
+  ahora = new Date(),
+): Promise<{ solucionado: string; premio: number }> {
+  const n = idDeReporte(id)
+  const b = (cuerpo ?? {}) as Record<string, unknown>
+  if (b.mensaje !== undefined && typeof b.mensaje !== 'string') throw new ReporteRechazo('El mensaje no es válido')
+  if (typeof b.mensaje === 'string' && b.mensaje.length > MAX_MENSAJE_SOLUCIONADO) {
+    throw new ReporteRechazo(`El mensaje es muy largo (hasta ${MAX_MENSAJE_SOLUCIONADO} letras)`)
+  }
+  const mensaje = texto(b.mensaje, MAX_MENSAJE_SOLUCIONADO) || MENSAJE_SOLUCIONADO
+  return base.transaccion(async (t) => {
+    const [f] = await t.consultar<{ cuenta_id: string | null; solucionado: Date | null }>(
+      'select cuenta_id, solucionado from reportes where id = $1 for update',
+      [n],
+    )
+    if (!f) throw new ReporteRechazo('Ese reporte no existe', 404)
+    if (f.solucionado) throw new ReporteRechazo('Ya estaba solucionado', 409)
+    const premio = f.cuenta_id && b.premiar !== false ? PREMIO_REPORTE : 0
+    if (premio > 0) {
+      await t.consultar('select id from cuentas where id = $1 for update', [f.cuenta_id])
+      await t.consultar(`insert into movimientos (cuenta_id, monto, tipo, partida, creado) values ($1, $2, 'reporte', $3, $4) on conflict do nothing`, [
+        f.cuenta_id,
+        premio,
+        `reporte:${n}`,
+        ahora.toISOString(),
+      ])
+    }
+    await t.consultar('update reportes set solucionado = $2, mensaje = $3, premio = $4 where id = $1', [n, ahora.toISOString(), mensaje, premio])
+    return { solucionado: ahora.toISOString(), premio }
+  })
+}
+
+/** Quién pregunta por sus avisos: la cuenta ve los suyos; el invitado, los que mandó sin cuenta. */
+interface QuienReporto {
+  cuentaId: string | null
+  invitadoId: string
+}
+
+const DE_QUIEN = '(cuenta_id = $1 or (cuenta_id is null and invitado_id = $2))'
+
+/** Los reportes tuyos que se arreglaron y todavía no viste. */
+export async function avisosDeReportes(base: Base, q: QuienReporto): Promise<AvisoReporte[]> {
+  if (!q.cuentaId && q.invitadoId.length < 8) return []
+  const filas = await base.consultar<{ id: number; tipo: TipoReporte; descripcion: string; mensaje: string | null; premio: number }>(
+    `select id, tipo, descripcion, mensaje, premio from reportes
+     where solucionado is not null and not aviso_visto and ${DE_QUIEN}
+     order by id`,
+    [q.cuentaId, q.invitadoId],
+  )
+  return filas.map((f) => ({ id: Number(f.id), tipo: f.tipo, descripcion: f.descripcion, mensaje: f.mensaje ?? MENSAJE_SOLUCIONADO, premio: Number(f.premio) }))
+}
+
+/** Ya los viste: no vuelven a aparecer. */
+export async function marcarAvisosVistos(base: Base, q: QuienReporto, ids: unknown): Promise<void> {
+  if (!Array.isArray(ids) || ids.length > 50 || !ids.every((x) => Number.isSafeInteger(x) && x > 0)) throw new ReporteRechazo('Avisos inválidos')
+  if (ids.length === 0 || (!q.cuentaId && q.invitadoId.length < 8)) return
+  await base.consultar(`update reportes set aviso_visto = true where id = any($3::bigint[]) and solucionado is not null and ${DE_QUIEN}`, [
+    q.cuentaId,
+    q.invitadoId,
+    ids,
+  ])
 }

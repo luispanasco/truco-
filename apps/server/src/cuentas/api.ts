@@ -33,7 +33,17 @@ import { invitarAlGrupo, muroDeGrupo, repeticion } from './muro'
 import { borrarDelChat, chatDeGrupo, LimiteChatGrupo, mandarAlChat } from './chatGrupo'
 import { cobrarMision, MisionRechazo, misiones } from './misiones'
 import { recibirse } from './tutorial'
-import { guardarReporte, LimiteReportes, listarReportes, reporteCompleto, ReporteRechazo, repeticionDeReporte } from './reportes'
+import {
+  avisosDeReportes,
+  guardarReporte,
+  LimiteReportes,
+  listarReportes,
+  marcarAvisosVistos,
+  reporteCompleto,
+  ReporteRechazo,
+  repeticionDeReporte,
+  solucionarReporte,
+} from './reportes'
 import { genteEnLinea } from '../salasVivas'
 import { borrarCuenta, borrarUsuarioSupabase } from './borrar'
 
@@ -83,6 +93,39 @@ export function rutasCuentas(c: Cuentas | null): Router {
     }
   })
   r.use(express.json({ limit: '16kb' }))
+
+  // Tus reportes que se arreglaron (el aviso de gracias del inicio). Con o sin cuenta: sin cuenta,
+  // por tu ID de invitado. Con cuenta, también el saldo (ya trae el premio).
+  const avisos =
+    (fn: (req: Request, res: Response, c: Cuentas, quien: { cuentaId: string | null; invitadoId: string }) => Promise<void>) =>
+    async (req: Request, res: Response) => {
+      if (!c) return void res.status(503).json({ motivo: 'Los reportes no están configurados' })
+      const token = /^Bearer (.+)$/.exec(req.get('authorization') ?? '')?.[1]
+      const u = token ? await c.verificar(token) : null
+      if (token && !u) return void res.status(401).json({ motivo: 'La sesión no es válida' })
+      const invitado = req.method === 'GET' ? req.query.invitado : (req.body as { invitadoId?: unknown } | undefined)?.invitadoId
+      try {
+        await fn(req, res, c, { cuentaId: u?.id ?? null, invitadoId: typeof invitado === 'string' ? invitado.slice(0, 64) : '' })
+      } catch (e) {
+        if (e instanceof ReporteRechazo) return void res.status(e.estado).json({ motivo: e.message })
+        console.error(e)
+        res.status(500).json({ motivo: 'Falló la base de datos' })
+      }
+    }
+  r.get(
+    '/reportes/avisos',
+    avisos(async (_req, res, c, quien) => {
+      const lista = await avisosDeReportes(c.base, quien)
+      res.json({ avisos: lista, ...(quien.cuentaId && lista.some((a) => a.premio > 0) ? { saldo: await saldo(c.base, quien.cuentaId) } : {}) })
+    }),
+  )
+  r.post(
+    '/reportes/avisos/vistos',
+    avisos(async (req, res, c, quien) => {
+      await marcarAvisosVistos(c.base, quien, (req.body as { ids?: unknown } | undefined)?.ids)
+      res.json({ ok: true })
+    }),
+  )
 
   r.get('/estado', (_req, res) => {
     res.json({ cuentas: c !== null, loginDePrueba: c?.loginDePrueba ?? false })
@@ -380,6 +423,14 @@ export function rutasCuentas(c: Cuentas | null): Router {
     conSesion(
       soloAdmin(async (req, res, c) => {
         res.json(await reporteCompleto(c.base, req.params.id))
+      }),
+    ),
+  )
+  r.post(
+    '/reportes/:id/solucionar',
+    conSesion(
+      soloAdmin(async (req, res, c) => {
+        res.json(await solucionarReporte(c.base, req.params.id, req.body))
       }),
     ),
   )

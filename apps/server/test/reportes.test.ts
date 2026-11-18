@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { ColyseusTestServer } from '@colyseus/testing'
 import { crearConfig } from '@truco/engine'
-import { MAX_DESCRIPCION_REPORTE, pasosDeRepeticion, type RepeticionPartida } from '@truco/shared'
+import { MAX_DESCRIPCION_REPORTE, MENSAJE_SOLUCIONADO, pasosDeRepeticion, PREMIO_REPORTE, type RepeticionPartida } from '@truco/shared'
 import { baseLocal, type Base } from '../src/cuentas/base'
 import { verificadorDePrueba } from '../src/cuentas/auth'
 import { LimiteReportes } from '../src/cuentas/reportes'
@@ -159,5 +159,77 @@ describe('reportes de problemas', () => {
     expect(ajeno.status).toBe(200)
     expect((await api('GET', `/reportes/${ajeno.datos.id}/repeticion`, { token: `prueba:${ADMIN}` })).status).toBe(404)
     await a.room.leave(true)
+  })
+})
+
+describe('reportes solucionados', () => {
+  const admin = `prueba:${ADMIN}`
+  const avisos = async (op: { token?: string; invitado?: string }) => {
+    const r = await api('GET', `/reportes/avisos${op.invitado ? `?invitado=${op.invitado}` : ''}`, { token: op.token })
+    expect(r.status, JSON.stringify(r.datos)).toBe(200)
+    return r.datos as { avisos: Datos[]; saldo?: number }
+  }
+
+  it('con cuenta: el admin lo marca, cobra el premio una sola vez y ve el aviso hasta que lo cierra', async () => {
+    const token = 'prueba:pepe-reporta@ejemplo.com'
+    await api('POST', '/entrar', { token, cuerpo: { apodo: 'Pepe' } })
+    const saldoAntes = (await api('GET', '/monedas', { token })).datos.saldo as number
+    const r = await api('POST', '/reportes', { token, cuerpo: reporte({ tipo: 'bot', descripcion: 'Cacho tiene como 5 cartas' }) })
+    const id = r.datos.id as number
+    expect((await avisos({ token })).avisos).toEqual([])
+
+    // Solo el admin.
+    expect((await api('POST', `/reportes/${id}/solucionar`, { token, cuerpo: {} })).status).toBe(403)
+    expect((await api('POST', `/reportes/${id}/solucionar`, { cuerpo: {} })).status).toBe(401)
+    const s = await api('POST', `/reportes/${id}/solucionar`, { token: admin, cuerpo: {} })
+    expect(s.status, JSON.stringify(s.datos)).toBe(200)
+    expect(s.datos.premio).toBe(PREMIO_REPORTE)
+    // Otra vez no: ni se marca ni se paga de nuevo.
+    expect((await api('POST', `/reportes/${id}/solucionar`, { token: admin, cuerpo: {} })).status).toBe(409)
+    expect((await api('GET', '/monedas', { token })).datos.saldo).toBe(saldoAntes + PREMIO_REPORTE)
+
+    const lista = await api('GET', '/reportes', { token: admin })
+    expect((lista.datos.reportes as Datos[]).find((x) => x.id === id)).toMatchObject({ premio: PREMIO_REPORTE, solucionado: expect.any(String) })
+
+    const a = await avisos({ token })
+    expect(a.avisos).toEqual([{ id, tipo: 'bot', descripcion: 'Cacho tiene como 5 cartas', mensaje: MENSAJE_SOLUCIONADO, premio: PREMIO_REPORTE }])
+    expect(a.saldo).toBe(saldoAntes + PREMIO_REPORTE)
+    // Otro no lo ve ni lo puede cerrar.
+    expect((await avisos({ token: 'prueba:otro-curioso@ejemplo.com' })).avisos).toEqual([])
+    await api('POST', '/reportes/avisos/vistos', { token: 'prueba:otro-curioso@ejemplo.com', cuerpo: { ids: [id] } })
+    expect((await avisos({ token })).avisos).toHaveLength(1)
+
+    expect((await api('POST', '/reportes/avisos/vistos', { token, cuerpo: { ids: [id] } })).status).toBe(200)
+    expect((await avisos({ token })).avisos).toEqual([])
+  })
+
+  it('sin cuenta: el aviso llega por el ID de invitado, con el mensaje del admin y sin monedas', async () => {
+    const invitadoId = `invitado-solucionado-${++n}`
+    const r = await api('POST', '/reportes', { cuerpo: reporte({ invitadoId, descripcion: 'Se trabaron las señas' }) })
+    const id = r.datos.id as number
+    const s = await api('POST', `/reportes/${id}/solucionar`, { token: admin, cuerpo: { mensaje: '  Ya no se traban. ¡Gracias!  ' } })
+    expect(s.datos.premio).toBe(0)
+    expect((await avisos({ invitado: invitadoId })).avisos).toEqual([
+      { id, tipo: 'reglas', descripcion: 'Se trabaron las señas', mensaje: 'Ya no se traban. ¡Gracias!', premio: 0 },
+    ])
+    expect((await avisos({ invitado: 'otro-invitado-cualquiera' })).avisos).toEqual([])
+    expect((await avisos({})).avisos).toEqual([])
+    await api('POST', '/reportes/avisos/vistos', { cuerpo: { invitadoId, ids: [id] } })
+    expect((await avisos({ invitado: invitadoId })).avisos).toEqual([])
+  })
+
+  it('el admin puede no premiarlo; valida el mensaje y el reporte', async () => {
+    const token = 'prueba:sin-premio@ejemplo.com'
+    await api('POST', '/entrar', { token, cuerpo: { apodo: 'Sin premio' } })
+    const r = await api('POST', '/reportes', { token, cuerpo: reporte() })
+    const id = r.datos.id as number
+    expect((await api('POST', `/reportes/${id}/solucionar`, { token: admin, cuerpo: { mensaje: 'x'.repeat(301) } })).status).toBe(400)
+    expect((await api('POST', '/reportes/999999/solucionar', { token: admin, cuerpo: {} })).status).toBe(404)
+    expect((await api('POST', '/reportes/abc/solucionar', { token: admin, cuerpo: {} })).status).toBe(404)
+    const s = await api('POST', `/reportes/${id}/solucionar`, { token: admin, cuerpo: { premiar: false } })
+    expect(s.datos.premio).toBe(0)
+    expect((await api('GET', '/monedas', { token })).datos.saldo).toBe(0)
+    expect((await avisos({ token })).avisos).toMatchObject([{ id, premio: 0 }])
+    expect((await api('POST', '/reportes/avisos/vistos', { token, cuerpo: { ids: 'todos' } })).status).toBe(400)
   })
 })

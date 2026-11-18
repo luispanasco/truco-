@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router'
 import { diaDeTienda, TODO_PERMITIDO, type DestinoMision } from '@truco/shared'
 import { mostrarBaraja } from '../baraja'
+import { AvisoReportes } from '../componentes/AvisoReportes'
 import { EditorAvatar } from '../componentes/EditorAvatar'
 import { Hoja } from '../componentes/Hoja'
 import { TarjetaCuenta } from '../componentes/TarjetaCuenta'
@@ -265,6 +266,8 @@ export function Inicio() {
       )}
 
       <RecorridoMenu paneles={PANELES.map((p) => p.id)} irA={irA} alCerrarHoja={cerrarHoja} alEntrar={() => setHoja('cuenta')} />
+      {/* Si arreglamos algo que reportaste: gracias (y las monedas, con cuenta). */}
+      <AvisoReportes />
 
       {hoja === 'perfil' && (
         <Hoja titulo="Tu perfil" alCerrar={cerrarHoja} clase="hoja-avatar hoja-perfil" claseFondo="hoja-fija">

@@ -1,4 +1,4 @@
-import type { ContextoReporte, RepeticionPartida, ReporteEnviado, ReporteListado, TipoReporte } from '@truco/shared'
+import type { AvisoReporte, ContextoReporte, RepeticionPartida, ReporteEnviado, ReporteListado, TipoReporte } from '@truco/shared'
 import type { ConexionOnline } from './conexion/online'
 import { direccionApi, useCuenta } from './cuenta/cuenta'
 import { useJuego } from './estado'
@@ -67,10 +67,13 @@ export async function mandarReporte(tipo: TipoReporte, descripcion: string): Pro
 }
 
 /** Solo el admin: los pedidos de la pantalla de reportes. */
-async function pedirAdmin<T>(ruta: string): Promise<T> {
+async function pedirAdmin<T>(ruta: string, cuerpo?: unknown): Promise<T> {
   const token = useCuenta.getState().token
   if (!token) throw new Error('Entrá a tu cuenta')
-  const r = await fetch(`${direccionApi()}${ruta}`, { headers: { authorization: `Bearer ${token}` } })
+  const r = await fetch(`${direccionApi()}${ruta}`, {
+    headers: { authorization: `Bearer ${token}`, ...(cuerpo === undefined ? {} : { 'content-type': 'application/json' }) },
+    ...(cuerpo === undefined ? {} : { method: 'POST', body: JSON.stringify(cuerpo) }),
+  })
   const datos = (await r.json().catch(() => ({}))) as T & { motivo?: string }
   if (!r.ok) throw new Error(datos.motivo ?? 'No se pudo. Probá de nuevo.')
   return datos
@@ -78,3 +81,28 @@ async function pedirAdmin<T>(ruta: string): Promise<T> {
 
 export const listarReportes = async () => (await pedirAdmin<{ reportes: ReporteListado[] }>('/reportes')).reportes
 export const repeticionDeReporte = (id: string) => pedirAdmin<RepeticionPartida>(`/reportes/${encodeURIComponent(id)}/repeticion`)
+export const solucionarReporte = (id: number, mensaje: string, premiar: boolean) =>
+  pedirAdmin<{ solucionado: string; premio: number }>(`/reportes/${id}/solucionar`, { mensaje, premiar })
+
+/** Tus reportes que se arreglaron y todavía no viste (con cuenta, también los de tu cuenta). */
+export async function avisosDeReportes(): Promise<AvisoReporte[]> {
+  const token = useCuenta.getState().token
+  const r = await fetch(`${direccionApi()}/reportes/avisos?invitado=${encodeURIComponent(leerPerfil().invitadoId)}`, {
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  })
+  if (!r.ok) return []
+  const datos = (await r.json()) as { avisos?: AvisoReporte[]; saldo?: number }
+  // El premio ya está cobrado: el saldo de arriba lo muestra.
+  if (typeof datos.saldo === 'number') useCuenta.setState({ saldo: datos.saldo })
+  return Array.isArray(datos.avisos) ? datos.avisos : []
+}
+
+/** Cerraste el aviso: esos no vuelven a aparecer. */
+export async function marcarAvisosVistos(ids: number[]): Promise<void> {
+  const token = useCuenta.getState().token
+  await fetch(`${direccionApi()}/reportes/avisos/vistos`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ ids, invitadoId: leerPerfil().invitadoId }),
+  })
+}

@@ -499,6 +499,42 @@ describe('resumen de señas sobre los compañeros', () => {
     expect(resumenDe(companiero)!.textContent).toContain('Un 3')
   })
 
+  it('en otra partida en la misma mesa (revancha o nivel siguiente) no vuelven las señas de la mano del mismo número', async () => {
+    // Reporte #5: en la mano 2 de la partida nueva, el resumen juntaba las dos manos 2 ("Cacho tiene como 5 cartas").
+    prender(true)
+    const datos = partida2v2()
+    const { llegar, enviados } = await entrar(datos)
+    const companiero = (datos.yo + 2) % 4
+    const mano = datos.vista.mano.numero
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'pieza4', mano } })
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'unoBravo', mano } })
+    let panel = abrir()
+    fireEvent.click(within(panel).getByRole('button', { name: nombre('perico') }))
+    fireEvent.click(within(panel).getByRole('button', { name: 'Cerrar' }))
+    // La partida sigue unas manos y después arranca otra: las manos se cuentan de nuevo.
+    llegar({ tipo: 'vista', datos: { ...datos.vista, mano: { ...datos.vista.mano, numero: mano + 4 } } })
+    llegar({ tipo: 'vista', datos: datos.vista })
+    expect(resumenDe(companiero)).toBeNull()
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'tres', mano } })
+    const textos = [...resumenDe(companiero)!.querySelectorAll('.resumen-senia')].map((e) => e.textContent!.replace(e.querySelector('.resumen-icono')!.textContent!, ''))
+    expect(textos).toEqual(['Un 3'])
+    // Tu seña de la otra partida tampoco cuenta: se puede volver a hacer.
+    panel = abrir()
+    fireEvent.click(within(panel).getByRole('button', { name: nombre('perico') }))
+    expect(seniasEnviadas(enviados)).toEqual(['perico', 'perico'])
+  })
+
+  it('también cuando la partida anterior terminó en la misma mano', async () => {
+    prender(true)
+    const datos = partida2v2()
+    const { llegar } = await entrar(datos)
+    const companiero = (datos.yo + 2) % 4
+    llegar({ tipo: 'senia', datos: { de: companiero, senia: 'pieza4', mano: datos.vista.mano.numero } })
+    llegar({ tipo: 'vista', datos: { ...datos.vista, ganador: 0 } })
+    llegar({ tipo: 'vista', datos: datos.vista })
+    expect(resumenDe(companiero)).toBeNull()
+  })
+
   it('se prende y se apaga desde el panel del compañero, y queda guardado', async () => {
     const datos = partida2v2()
     const { llegar } = await entrar(datos)

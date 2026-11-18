@@ -1,13 +1,76 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { textoTipoReporte, type ReporteListado } from '@truco/shared'
+import { MAX_MENSAJE_SOLUCIONADO, MENSAJE_SOLUCIONADO, PREMIO_REPORTE, textoTipoReporte, type ReporteListado } from '@truco/shared'
 import { CabeceraOnline } from '../componentes/Online'
 import { iniciarCuenta, useCuenta } from '../cuenta/cuenta'
-import { listarReportes } from '../reportes'
+import { listarReportes, solucionarReporte } from '../reportes'
 import '../estilos-reportes.css'
 
 const fecha = (iso: string) =>
   new Date(iso).toLocaleString('es-UY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+
+/**
+ * Marcar un reporte solucionado: quien lo mandó ve el mensaje al abrir la app y, si tiene cuenta
+ * y se premia, cobra las monedas.
+ */
+function Solucionar({ reporte, alSolucionar }: { reporte: ReporteListado; alSolucionar: (r: ReporteListado) => void }) {
+  const [abierto, setAbierto] = useState(false)
+  const [mensaje, setMensaje] = useState(MENSAJE_SOLUCIONADO)
+  const [premiar, setPremiar] = useState(reporte.cuentaId !== null)
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  if (reporte.solucionado) {
+    return (
+      <span className="reporte-solucionado">
+        ✔ Solucionado el {fecha(reporte.solucionado)}
+        {reporte.premio > 0 ? ` · +${reporte.premio} monedas` : ''}
+      </span>
+    )
+  }
+  if (!abierto) {
+    return (
+      <button type="button" className="boton boton-secundario" onClick={() => setAbierto(true)}>
+        Marcar solucionado
+      </button>
+    )
+  }
+  const confirmar = async () => {
+    setEnviando(true)
+    setError(null)
+    try {
+      const r = await solucionarReporte(reporte.id, mensaje, premiar)
+      alSolucionar({ ...reporte, ...r })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo')
+      setEnviando(false)
+    }
+  }
+  return (
+    <div className="reporte-solucionar" role="group" aria-label={`Solucionar el reporte ${reporte.id}`}>
+      <label>
+        <small>Lo que ve {reporte.apodo} al abrir la app</small>
+        <textarea value={mensaje} maxLength={MAX_MENSAJE_SOLUCIONADO} rows={2} onChange={(e) => setMensaje(e.target.value)} />
+      </label>
+      {reporte.cuentaId ? (
+        <label className="reporte-premiar">
+          <input type="checkbox" checked={premiar} onChange={(e) => setPremiar(e.target.checked)} />
+          Darle {PREMIO_REPORTE} monedas
+        </label>
+      ) : (
+        <small>Es invitado: ve el aviso, pero no tiene dónde cobrar monedas.</small>
+      )}
+      {error && <small className="reporte-error">⚠ {error}</small>}
+      <div className="reporte-solucionar-botones">
+        <button type="button" className="boton" disabled={enviando} onClick={() => void confirmar()}>
+          {enviando ? 'Marcando…' : 'Confirmar'}
+        </button>
+        <button type="button" className="boton boton-secundario" disabled={enviando} onClick={() => setAbierto(false)}>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  )
+}
 
 /** Solo el admin: los reportes de problemas de los testers, del más nuevo al más viejo. */
 export function AdminReportes() {
@@ -61,6 +124,7 @@ export function AdminReportes() {
                   Ver la partida
                 </button>
               )}
+              <Solucionar reporte={r} alSolucionar={(nuevo) => setReportes((rs) => rs!.map((x) => (x.id === nuevo.id ? nuevo : x)))} />
             </li>
           ))}
         </ul>

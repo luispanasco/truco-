@@ -59,6 +59,11 @@ interface EstadoJuego {
   conexion: Conexion | null
   sala: InfoSala | null
   vista: VistaPartida | null
+  /**
+   * Cuántas partidas van en esta mesa (sube con la revancha o el nivel siguiente). Las manos se
+   * vuelven a contar desde 1: lo que va por mano (las señas) se reinicia con la partida.
+   */
+  partida: number
   mesa: MesaVisible
   /** Globo de texto sobre el avatar de quien canta, por asiento. */
   globos: Record<number, Globo>
@@ -361,6 +366,9 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
           vista: m.datos,
           mesa: mesaDesdeVista(m.datos, s.mesa),
           ...(m.datos.ganador === null && s.mostradas.length > 0 ? { mostradas: [] } : {}),
+          // Arrancó otra partida en la misma mesa: las señas de la anterior no se mezclan con las
+          // de la mano del mismo número (en la mano 2 se veían las de las dos manos 2).
+          ...(esOtraPartida(s.vista, m.datos) ? { partida: s.partida + 1, senias: [], pescadas: [], pedidoSenias: null } : {}),
         }))
         break
       case 'eventos':
@@ -423,6 +431,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
     conexion: null,
     sala: null,
     vista: null,
+    partida: 0,
     mesa: MESA_VACIA,
     globos: {},
     registro: [],
@@ -484,6 +493,7 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
         conexion: null,
         sala: null,
         vista: null,
+        partida: 0,
         mesa: MESA_VACIA,
         globos: {},
         registro: [],
@@ -510,6 +520,11 @@ export const useJuego = create<EstadoJuego>()((set, get) => {
 })
 
 /** Las cartas del enfrentamiento en curso según la vista; si no cambió nada, deja la mesa como está. */
+/** Si la vista nueva es de otra partida: las manos vuelven a contarse, o la anterior ya había terminado. */
+function esOtraPartida(antes: VistaPartida | null, v: VistaPartida): boolean {
+  return antes !== null && (v.mano.numero < antes.mano.numero || (antes.ganador !== null && v.ganador === null))
+}
+
 function mesaDesdeVista(v: VistaPartida, antes: MesaVisible): MesaVisible {
   const e = v.mano.enfrentamientos[v.mano.actual]
   if (!e) return MESA_VACIA

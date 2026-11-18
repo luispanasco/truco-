@@ -2377,3 +2377,19 @@ El usuario va a subir la app a Google Play y se encarga de la cuenta de desarrol
   - Servidor: `test/borrar.test.ts`, que arma una cuenta con amigos, dos grupos, chat e historia, la borra por la API y revisa que no quede nada.
   - Web: el borrado con su confirmación, en `cuenta.test.tsx`.
 - **Pendiente:** cuando esté la consola, agregar a `assetlinks.json` la huella SHA-256 de la llave de firma de Play.
+
+## Reporte #5 (las señas de la partida anterior) y gracias con monedas por los reportes — 2026-11-18
+
+- **#5 (Pepe): "Cacho tiene como 5 cartas"** (modo historia, 3 vs 3, versión 9833308).
+  - La vista del reporte estaba bien: Cacho tenía 2 cartas, y armando esa mesa a 360×800 se dibuja bien. La partida repetida con el motor también.
+  - **Causa:** la web guardaba las señas que llegaban con el número de mano y solo las borraba al salir de la mesa. Al perder el nivel, la partida siguiente arranca en la misma mesa y las manos vuelven a contarse desde 1. En la mano 2 nueva, el resumen sobre Cacho juntaba las señas de las dos manos 2 y parecía que tenía 5 cartas.
+  - Tu "Ya se la hiciste en esta mano" (del arreglo anterior) también podía frenar una seña de la partida nueva. El servidor y la partida local ya reiniciaban bien lo suyo (`claveMano`).
+  - **Arreglo:** `partida` en el estado de la mesa sube cuando llega la vista de otra partida (las manos vuelven a empezar, o la anterior había terminado). Con eso se vacían las señas, las pescadas y el pedido de señas, y la mesa reinicia tus señas hechas, la mano abierta y el panel del pie.
+  - Dos pruebas nuevas en `senias.test.tsx`, que fallan sin el arreglo.
+- **Reportes solucionados:**
+  - **Migración 18:** `solucionado`, `mensaje`, `premio` y `aviso_visto` en `reportes`, y el tipo de movimiento `reporte`.
+  - **Admin:** "Marcar solucionado" en `/admin/reportes`, con el mensaje para quien reportó (viene escrito "¡Gracias por avisarnos! Ya lo arreglamos.") y "Darle 100 monedas" (solo si tiene cuenta). Después queda "✔ Solucionado el … · +100 monedas".
+  - **Servidor:** `POST /api/reportes/:id/solucionar` (solo el admin) paga `PREMIO_REPORTE` una sola vez: el movimiento lleva `reporte:<id>` y un reporte solucionado no se vuelve a marcar. `GET /api/reportes/avisos` y `POST /api/reportes/avisos/vistos` funcionan con la cuenta o, sin cuenta, con el ID de invitado. La cuenta ve también lo que mandó como invitado desde ese navegador.
+  - **Inicio:** la hoja "¡Gracias por tu reporte!" con lo que avisaste, el mensaje y "+100" (o, sin cuenta, la invitación a hacerse una). El saldo de arriba se actualiza y, al cerrarla, no vuelve.
+  - **Pruebas:** servidor `reportes.test.ts` (3 nuevas: el pago una sola vez, solo el admin, el invitado sin monedas, nadie ve ni cierra avisos ajenos) y web `reportes.test.tsx` (4 nuevas). Se revisó en el navegador con el servidor local.
+- **Pendiente:** publicar el servidor (la migración 18) y `main`, y después marcar solucionados el #2, el #3, el #4 y el #5. El #1 es del usuario.

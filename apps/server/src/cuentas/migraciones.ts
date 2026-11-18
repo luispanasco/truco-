@@ -257,4 +257,16 @@ export const MIGRACIONES: string[] = [
   `
   create or replace function movimientos_inmutables() returns trigger language plpgsql as $$ begin if tg_op = 'DELETE' and current_setting('truco.borrando_cuenta', true) = 'si' then return old; end if; raise exception 'Los movimientos de monedas no se cambian ni se borran'; end $$;
   `,
+  // 18. Reportes solucionados: el admin los marca, quien reportó ve un aviso de gracias (con su
+  //     mensaje) y, con cuenta, cobra el premio (un movimiento 'reporte' por reporte).
+  `
+  alter table reportes add column solucionado timestamptz;
+  alter table reportes add column mensaje text;
+  alter table reportes add column premio int not null default 0;
+  alter table reportes add column aviso_visto boolean not null default false;
+  create index reportes_avisos on reportes (cuenta_id, invitado_id) where solucionado is not null and not aviso_visto;
+  alter table movimientos drop constraint movimientos_tipo_check;
+  alter table movimientos add constraint movimientos_tipo_check
+    check (tipo in ('partida', 'victoria', 'bonusDiario', 'compra', 'ajuste', 'historia', 'mision', 'reporte'));
+  `,
 ]

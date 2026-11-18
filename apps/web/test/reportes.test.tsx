@@ -1,17 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
-import { pasosDeRepeticion, type ReporteEnviado, type ReporteListado } from '@truco/shared'
+import { MENSAJE_SOLUCIONADO, pasosDeRepeticion, type AvisoReporte, type ReporteEnviado, type ReporteListado } from '@truco/shared'
 import { ConexionLocal } from '../src/conexion/local'
 import { useCuenta } from '../src/cuenta/cuenta'
 import { useJuego } from '../src/estado'
 import { Mesa } from '../src/pantallas/Mesa'
 import { AdminReportes } from '../src/pantallas/AdminReportes'
+import { AvisoReportes, olvidarAvisosPedidos } from '../src/componentes/AvisoReportes'
 import { Ajustes } from '../src/menu/Ajustes'
 import { guardarPerfil, leerPerfil } from '../src/perfil'
 
 let pedidos: { url: string; metodo: string; cuerpo: unknown; auth: string | null }[] = []
 let falla = false
+let avisos: AvisoReporte[] = []
+let saldoAvisos: number | undefined
 
 const LISTA: ReporteListado[] = [
   {
@@ -27,6 +30,8 @@ const LISTA: ReporteListado[] = [
     version: 'abc123 (2026-11-10)',
     donde: 'Contra la compu',
     conRepeticion: true,
+    solucionado: null,
+    premio: 0,
   },
   {
     id: 6,
@@ -41,6 +46,8 @@ const LISTA: ReporteListado[] = [
     version: null,
     donde: 'Fuera de una partida',
     conRepeticion: false,
+    solucionado: null,
+    premio: 0,
   },
 ]
 
@@ -54,6 +61,13 @@ function servidor() {
         return falla ? Response.json({ motivo: 'Falló la base de datos' }, { status: 500 }) : Response.json({ id: 1 })
       }
       if (url.endsWith('/reportes')) return Response.json({ reportes: LISTA })
+      if (url.includes('/reportes/avisos?')) return Response.json({ avisos, ...(saldoAvisos === undefined ? {} : { saldo: saldoAvisos }) })
+      const solucionar = /\/reportes\/(\d+)\/solucionar$/.exec(url)
+      if (solucionar) {
+        const { premiar } = JSON.parse(init!.body as string) as { premiar: boolean }
+        const conCuenta = LISTA.find((r) => r.id === Number(solucionar[1]))!.cuentaId !== null
+        return Response.json({ solucionado: '2026-11-18T13:00:00Z', premio: conCuenta && premiar ? 100 : 0 })
+      }
       return Response.json({ ok: true })
     }),
   )
@@ -68,6 +82,9 @@ beforeEach(() => {
   guardarPerfil(leerPerfil())
   pedidos = []
   falla = false
+  avisos = []
+  saldoAvisos = undefined
+  olvidarAvisosPedidos()
   servidor()
 })
 afterEach(() => {
@@ -217,5 +234,88 @@ describe('reportes del admin', () => {
     )
     expect(screen.getByText('Esta pantalla es solo para el admin.')).toBeTruthy()
     expect(pedidos.some((p) => p.url.endsWith('/reportes'))).toBe(false)
+  })
+})
+
+describe('reportes solucionados', () => {
+  const comoAdmin = () =>
+    useCuenta.setState({
+      estado: 'adentro',
+      token: 'prueba:admin@ejemplo.com',
+      cuenta: { id: 'x', email: 'admin@ejemplo.com', apodo: 'Admin', avatar: null, preferencias: {}, nueva: false, admin: true },
+    })
+
+  it('el admin lo marca solucionado con el mensaje y el premio; a un invitado no se le ofrece', async () => {
+    comoAdmin()
+    render(
+      <MemoryRouter>
+        <AdminReportes />
+      </MemoryRouter>,
+    )
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Marcar solucionado' })).toHaveLength(2))
+    // El de Luis es de un invitado: sin monedas.
+    fireEvent.click(screen.getAllByRole('button', { name: 'Marcar solucionado' })[0]!)
+    const deLuis = screen.getByRole('group', { name: 'Solucionar el reporte 7' })
+    expect(deLuis.querySelector('input[type=checkbox]')).toBeNull()
+    expect(deLuis.textContent).toContain('no tiene dónde cobrar')
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    // El de Ana tiene cuenta: el mensaje viene escrito y el premio, marcado.
+    fireEvent.click(screen.getAllByRole('button', { name: 'Marcar solucionado' })[1]!)
+    const deAna = screen.getByRole('group', { name: 'Solucionar el reporte 6' })
+    const texto = deAna.querySelector('textarea')!
+    expect(texto.value).toBe(MENSAJE_SOLUCIONADO)
+    expect((screen.getByRole('checkbox', { name: 'Darle 100 monedas' }) as HTMLInputElement).checked).toBe(true)
+    fireEvent.change(texto, { target: { value: 'Arreglado, ¡gracias Ana!' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await waitFor(() => expect(screen.getByText(/Solucionado el .* · \+100 monedas/)).toBeTruthy())
+    const p = pedidos.find((x) => x.url.endsWith('/reportes/6/solucionar'))!
+    expect(p.metodo).toBe('POST')
+    expect(p.auth).toBe('Bearer prueba:admin@ejemplo.com')
+    expect(p.cuerpo).toEqual({ mensaje: 'Arreglado, ¡gracias Ana!', premiar: true })
+    expect(screen.getAllByRole('button', { name: 'Marcar solucionado' })).toHaveLength(1)
+  })
+
+  it('con cuenta: el inicio muestra el agradecimiento con las monedas, actualiza el saldo y al cerrarlo no vuelve', async () => {
+    useCuenta.setState({ estado: 'adentro', token: 'prueba:pepe@ejemplo.com', saldo: 20, cuenta: { id: 'p', email: 'pepe@ejemplo.com', apodo: 'Pepe', avatar: null, preferencias: {}, nueva: false } })
+    avisos = [{ id: 5, tipo: 'bot', descripcion: 'Cacho tiene como 5 cartas', mensaje: MENSAJE_SOLUCIONADO, premio: 100 }]
+    saldoAvisos = 120
+    render(<AvisoReportes />)
+    const hoja = await screen.findByRole('dialog', { name: '¡Gracias por tu reporte!' })
+    expect(hoja.textContent).toContain('“Cacho tiene como 5 cartas”')
+    expect(hoja.textContent).toContain(MENSAJE_SOLUCIONADO)
+    expect(screen.getByLabelText('Ganaste 100 monedas')).toBeTruthy()
+    expect(useCuenta.getState().saldo).toBe(120)
+    const pedido = pedidos.find((x) => x.url.includes('/reportes/avisos?'))!
+    expect(pedido.auth).toBe('Bearer prueba:pepe@ejemplo.com')
+    expect(pedido.url).toContain(`invitado=${leerPerfil().invitadoId}`)
+
+    fireEvent.click(screen.getByRole('button', { name: '¡Buenísimo!' }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    await waitFor(() => expect(pedidos.some((x) => x.url.endsWith('/reportes/avisos/vistos'))).toBe(true))
+    expect(pedidos.find((x) => x.url.endsWith('/reportes/avisos/vistos'))!.cuerpo).toEqual({ ids: [5], invitadoId: leerPerfil().invitadoId })
+    // Al volver al inicio no se piden otra vez.
+    cleanup()
+    render(<AvisoReportes />)
+    expect(pedidos.filter((x) => x.url.includes('/reportes/avisos?'))).toHaveLength(1)
+  })
+
+  it('sin cuenta: gracias sin monedas, y la invitación a hacerse una', async () => {
+    useCuenta.setState({ estado: 'afuera', token: null, cuenta: null })
+    avisos = [{ id: 3, tipo: 'trabado', descripcion: '', mensaje: 'Ya no se traban las señas.', premio: 0 }]
+    render(<AvisoReportes />)
+    const hoja = await screen.findByRole('dialog', { name: '¡Gracias por tu reporte!' })
+    expect(hoja.textContent).toContain('“Se trabó o no responde”')
+    expect(hoja.textContent).toContain('Ya no se traban las señas.')
+    expect(hoja.textContent).toContain('Con una cuenta, la próxima vez te llevás 100 monedas.')
+    expect(screen.queryByLabelText(/Ganaste/)).toBeNull()
+    expect(pedidos.find((x) => x.url.includes('/reportes/avisos?'))!.auth).toBeNull()
+  })
+
+  it('sin reportes arreglados no aparece nada', async () => {
+    useCuenta.setState({ estado: 'afuera', token: null, cuenta: null })
+    render(<AvisoReportes />)
+    await waitFor(() => expect(pedidos.some((x) => x.url.includes('/reportes/avisos?'))).toBe(true))
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 })

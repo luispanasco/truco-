@@ -334,7 +334,7 @@ export interface MensajeChat {
 
 /** Un movimiento de monedas, como lo ve el jugador. */
 export interface MovimientoMonedas {
-  tipo: 'partida' | 'victoria' | 'bonusDiario' | 'compra' | 'ajuste' | 'historia' | 'mision'
+  tipo: 'partida' | 'victoria' | 'bonusDiario' | 'compra' | 'ajuste' | 'historia' | 'mision' | 'reporte'
   monto: number
 }
 
