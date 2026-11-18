@@ -2392,4 +2392,7 @@ El usuario va a subir la app a Google Play y se encarga de la cuenta de desarrol
   - **Servidor:** `POST /api/reportes/:id/solucionar` (solo el admin) paga `PREMIO_REPORTE` una sola vez: el movimiento lleva `reporte:<id>` y un reporte solucionado no se vuelve a marcar. `GET /api/reportes/avisos` y `POST /api/reportes/avisos/vistos` funcionan con la cuenta o, sin cuenta, con el ID de invitado. La cuenta ve también lo que mandó como invitado desde ese navegador.
   - **Inicio:** la hoja "¡Gracias por tu reporte!" con lo que avisaste, el mensaje y "+100" (o, sin cuenta, la invitación a hacerse una). El saldo de arriba se actualiza y, al cerrarla, no vuelve.
   - **Pruebas:** servidor `reportes.test.ts` (3 nuevas: el pago una sola vez, solo el admin, el invitado sin monedas, nadie ve ni cierra avisos ajenos) y web `reportes.test.tsx` (4 nuevas). Se revisó en el navegador con el servidor local.
-- **Pendiente:** publicar el servidor (la migración 18) y `main`, y después marcar solucionados el #2, el #3, el #4 y el #5. El #1 es del usuario.
+- **Publicado** el mismo día: el servidor en Fly (con la migración 18) y `main` en 7c6ba18. Se marcaron solucionados el #2, el #4 y el #5 (100 monedas cada uno) y el #3 (invitado, sin monedas). El #1 es del usuario y quedó sin marcar.
+- **Llegaron del #6 al #10, de Pepe, todos del 17/11 con la versión 9833308:**
+  - Del #7 al #10 ("me dice unas cartas y juega una que no tiene", "Rubén marca 4 cartas o 4 señas", "Luna me dijo que tenía el 2") son este mismo bug: partidas que venían después de otra en el modo historia.
+  - El #6 ("Luna es mano: debería tener el mazo a su izquierda") es otra cosa. Queda para revisar.
