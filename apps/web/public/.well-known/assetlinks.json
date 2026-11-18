@@ -1,10 +1,16 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "uy.truco.app",
-      "sha256_cert_fingerprints": ["7A:4B:9F:6A:9B:12:55:15:81:22:99:68:F0:14:03:05:52:0E:1F:36:7D:8C:D6:45:EC:BC:99:AC:9F:57:79:38"]
+      "sha256_cert_fingerprints": [
+        "7A:4B:9F:6A:9B:12:55:15:81:22:99:68:F0:14:03:05:52:0E:1F:36:7D:8C:D6:45:EC:BC:99:AC:9F:57:79:38",
+        "C0:1F:BB:59:B4:45:E2:E3:20:5F:DD:25:CD:6E:1A:75:44:C1:3F:B3:55:D2:38:93:9B:0D:D9:67:97:7D:62:4D",
+        "6F:FE:3E:B6:A2:54:4B:76:95:05:A9:AD:0D:D3:31:9F:A1:21:4C:3C:B8:DD:D3:95:14:07:BE:43:E7:60:E8:48"
+      ]
     }
   }
 ]
