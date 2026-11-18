@@ -2439,3 +2439,12 @@ Pedido: un panel de novedades con fecha y versión, que al usuario le salga cuan
 - **Bajan a común (60):** las 7 bufandas, los 3 pañuelos, el gorro de lana, la gorra, la pajita y el escarbadientes. Todas las comunes eran de la cara: sin esto, a la vitrina (3 comunes por día) le quedaban unas 20 y se repetían seguido. Ahora hay 37 comunes, 32 raras, 45 épicas y 15 legendarias en la tienda.
 - **Devolución** (migración 19): a quien compró alguna de las 31 se le devuelve lo que pagó, con un movimiento `ajuste` por pieza (partida `devolucion:<item>`, una sola vez). La pieza queda en su inventario. Corre sola al arrancar el servidor publicado.
 - `NOMBRES-PIEZAS.md`, actualizado.
+
+## Ícono nuevo y la app de Android en versión 2 — 2026-11-18
+- **El ícono** lo hizo el usuario: el 2, el 4 y el 5 de oros en abanico, la bandera atrás y un mate adelante, sobre madera. La fuente quedó en `android/icono-fuente.png` (1024 × 1024); de ahí salen todos los tamaños.
+- **Web:** `iconos/icono-192.png` e `icono-512.png` con las esquinas redondeadas; `icono-maskable-512.png` y `apple-touch-icon.png` a sangre. El favicon (`favicon.svg`) y el logo de adentro de la app (`icono.svg`) no cambiaron.
+- **Android:** los `ic_launcher`, `ic_maskable` y `splash` de `android/app/src/main/res` se generaron a mano desde la fuente, sin `bubblewrap update`, porque ese comando los baja de la web publicada. `store_icon.png` es el ícono de la tienda.
+- **Versión 2 (1.1.0)** en `twa-manifest.json` y en `app/build.gradle`. `manifest-checksum.txt` es el SHA-1 de `twa-manifest.json`: si no coincide, `bubblewrap build` quiere regenerar el proyecto.
+- **Para armar en Windows:** `bubblewrap build` llama a `gradlew.bat` sin ruta. Desde Claude Code falla, porque viene definida `NoDefaultCurrentDirectoryInExePath`: hay que sacarla antes. Las contraseñas van en `BUBBLEWRAP_KEYSTORE_PASSWORD` y `BUBBLEWRAP_KEY_PASSWORD`.
+- **assetlinks.json:** se sumaron las huellas de la firma de Play: `deployment_cert` (la clave de firma de apps) y `hybrid_classical_cert`. Sigue la de nuestra llave, para la APK que se instala directo.
+- **Publicado en main** solo este commit, sacado aparte con cherry-pick. "La cara, gratis" (a808f61) sigue en develop sin publicar.
