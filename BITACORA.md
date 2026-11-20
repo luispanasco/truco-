@@ -2448,3 +2448,8 @@ Pedido: un panel de novedades con fecha y versión, que al usuario le salga cuan
 - **Para armar en Windows:** `bubblewrap build` llama a `gradlew.bat` sin ruta. Desde Claude Code falla, porque viene definida `NoDefaultCurrentDirectoryInExePath`: hay que sacarla antes. Las contraseñas van en `BUBBLEWRAP_KEYSTORE_PASSWORD` y `BUBBLEWRAP_KEY_PASSWORD`.
 - **assetlinks.json:** se sumaron las huellas de la firma de Play: `deployment_cert` (la clave de firma de apps) y `hybrid_classical_cert`. Sigue la de nuestra llave, para la APK que se instala directo.
 - **Publicado en main** solo este commit, sacado aparte con cherry-pick. "La cara, gratis" (a808f61) sigue en develop sin publicar.
+
+## Publicada la versión 1.2 — 2026-11-20
+- **Novedad 1.2** "Más caras gratis y un ícono nuevo": las piezas que pasaron a gratis, la devolución de lo pagado, los accesorios más baratos y el ícono.
+- **Servidor desplegado** (`fly deploy`). La base de producción quedó en la migración 19. No hubo devoluciones (0 movimientos `devolucion:`), porque nadie había comprado esas piezas.
+- **main** = develop (merge e6a5066). `android/tienda/icono.png` es la imagen original del ícono, en 1254 × 1254.
