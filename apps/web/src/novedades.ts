@@ -17,6 +17,17 @@ export interface Novedad {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: '1.2',
+    fecha: '2026-11-20',
+    titulo: 'Más caras gratis y un ícono nuevo',
+    cambios: [
+      { tipo: 'nuevo', texto: 'Más de 30 piezas del avatar pasan a ser gratis: pelados, motas, trenzas, ojos, bocas, cejas, bigote, arito, lentes finos y más.' },
+      { tipo: 'mejora', texto: 'Si ya habías comprado alguna de esas piezas, te devolvimos las monedas y la pieza sigue siendo tuya.' },
+      { tipo: 'mejora', texto: 'En la tienda, las bufandas, los pañuelos, la gorra, el gorro de lana, la pajita y el escarbadientes salen más baratos.' },
+      { tipo: 'nuevo', texto: 'Ícono nuevo: las piezas de oro con la bandera y el mate.' },
+    ],
+  },
+  {
     version: '1.1',
     fecha: '2026-11-18',
     titulo: 'Más cómodo en pantallas chicas',
