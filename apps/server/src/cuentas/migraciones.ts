@@ -269,4 +269,20 @@ export const MIGRACIONES: string[] = [
   alter table movimientos add constraint movimientos_tipo_check
     check (tipo in ('partida', 'victoria', 'bonusDiario', 'compra', 'ajuste', 'historia', 'mision', 'reporte'));
   `,
+  // 19. Piezas de la cara y del pelo que pasaron a ser gratis (2026-11-18): a quien las compró se
+  //     le devuelve lo que pagó (un movimiento 'ajuste' por pieza, con la partida
+  //     `devolucion:<item>`, así el índice único no deja devolverla dos veces). La pieza queda en
+  //     su inventario.
+  `
+  insert into movimientos (cuenta_id, monto, tipo, partida, detalle)
+  select cuenta_id, precio, 'ajuste', 'devolucion:' || item, jsonb_build_object('motivo', 'pasoAGratis', 'item', item)
+  from inventario
+  where precio > 0 and item in (
+    'avatar:pelo:24', 'avatar:pelo:25', 'avatar:pelo:27', 'avatar:pelo:29', 'avatar:pelo:38', 'avatar:pelo:43', 'avatar:pelo:46',
+    'avatar:cejas:6', 'avatar:cejas:11', 'avatar:cejas:12',
+    'avatar:ojos:9', 'avatar:ojos:10', 'avatar:ojos:11', 'avatar:ojos:12', 'avatar:ojos:13', 'avatar:ojos:16', 'avatar:ojos:18', 'avatar:ojos:22',
+    'avatar:boca:9', 'avatar:boca:12', 'avatar:boca:13', 'avatar:boca:15', 'avatar:boca:16', 'avatar:boca:17', 'avatar:boca:19', 'avatar:boca:22',
+    'avatar:barba:3', 'avatar:lentes:3', 'avatar:aros:2', 'avatar:ropa:3', 'avatar:ropa:8'
+  );
+  `,
 ]
